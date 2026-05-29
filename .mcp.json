@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "excalidraw": {
+      "command": "node",
+      "args": [
+        "/home/pearspringmind/Studying/FSDS/AIDE1/coursework/Financial-Distress-Data/excalidraw-mcp/dist/index.js",
+        "--stdio"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--headless=true",
+        "--isolated=true",
+        "--executablePath=/usr/bin/google-chrome-stable"
+      ]
+    }
+  }
+}

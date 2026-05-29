@@ -1,0 +1,15 @@
+excalidraw-mcp/
+.codex/
+.env
+.DS_Store
+__pycache__
+AGENTS.md
+.pytest_cache/
+.ruff_cache/
+.venv/
+*.pyc
+outputs/**/*.parquet
+outputs/**/*.csv
+outputs/**/*.json
+docs/evidence/**/*.png
+docs/evidence/**/*.jpg
