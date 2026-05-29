@@ -1,0 +1,13 @@
+critical:
+  - name: schema_matches_registry
+  - name: primary_key_not_null
+  - name: primary_key_unique
+  - name: fact_company_key_exists
+  - name: fact_date_key_exists
+
+warning:
+  - name: total_assets_non_negative
+  - name: sentiment_score_between_minus_1_and_1
+  - name: freshness_within_sla
+  - name: silver_ticker_retention_at_least_80_percent
+  - name: volume_drop_less_than_50_percent
