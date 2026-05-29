@@ -1,0 +1,24 @@
+sources:
+  vnstock:
+    adapter: vnstock
+    enabled: true
+    auth_required: false
+  cafe_f:
+    adapter: html_table
+    enabled: false
+    auth_required: false
+  tcbs:
+    adapter: http_json
+    enabled: false
+    auth_required: false
+
+datasets:
+  companies:
+    primary_source: vnstock
+    bronze_path: s3a://financial-distress-lake/bronze/companies/
+  financial_statements:
+    primary_source: vnstock
+    bronze_path: s3a://financial-distress-lake/bronze/financial_statements/
+  market_prices_daily:
+    primary_source: vnstock
+    bronze_path: s3a://financial-distress-lake/bronze/market_prices_daily/
