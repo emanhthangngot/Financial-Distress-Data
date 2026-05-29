@@ -1,0 +1,12 @@
+app_name: financial-distress-stage-1
+master: local[*]
+minio:
+  endpoint: http://minio:9000
+  access_key_env: MINIO_ROOT_USER
+  secret_key_env: MINIO_ROOT_PASSWORD
+  path_style_access: true
+  ssl_enabled: false
+paths:
+  bronze: s3a://financial-distress-lake/bronze
+  silver: s3a://financial-distress-lake/silver
+  gold: s3a://financial-distress-lake/gold
