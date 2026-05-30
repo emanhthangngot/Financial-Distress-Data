@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -78,4 +79,59 @@ def check_retention(
         ratio,
         threshold,
         None if ratio >= threshold else "Silver retained fewer records than expected",
+    )
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=UTC)
+    text = str(value).strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
+def check_freshness(
+    rows: Iterable[dict[str, Any]],
+    dataset_name: str,
+    reference_timestamp: str | datetime,
+    sla_minutes: float,
+    timestamp_field: str = "event_timestamp",
+) -> DQResult:
+    reference = _parse_timestamp(reference_timestamp)
+    if reference is None:
+        raise ValueError("reference_timestamp must be an ISO timestamp or datetime")
+
+    timestamps = [
+        timestamp
+        for row in rows
+        if (timestamp := _parse_timestamp(row.get(timestamp_field))) is not None
+    ]
+    if not timestamps:
+        return DQResult(
+            dataset_name,
+            f"{timestamp_field}_freshness",
+            "warning",
+            "warning",
+            None,
+            float(sla_minutes),
+            f"No parseable {timestamp_field} values found",
+        )
+
+    latest = max(timestamps)
+    lag_minutes = max((reference - latest).total_seconds() / 60, 0.0)
+    return DQResult(
+        dataset_name,
+        f"{timestamp_field}_freshness",
+        "pass" if lag_minutes <= sla_minutes else "warning",
+        "warning",
+        float(lag_minutes),
+        float(sla_minutes),
+        None if lag_minutes <= sla_minutes else "Latest event timestamp exceeds freshness SLA",
     )

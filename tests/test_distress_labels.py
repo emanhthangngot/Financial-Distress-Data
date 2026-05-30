@@ -69,3 +69,61 @@ def test_two_quarter_net_loss_triggers_for_consecutive_report_periods():
     )
 
     assert "two_quarter_net_loss" in labels[1]["distress_reason"]
+
+
+def test_financial_sector_rows_are_excluded_from_rule_based_labels():
+    row = {**BASE_ROW, "sector": "Banks", "total_liabilities": 950, "equity": 50}
+
+    label = compute_distress_label(row)
+
+    assert label.z_score is None
+    assert label.distress_label is None
+    assert label.label_source == "rule_based_v1"
+    assert label.label_confidence is None
+    assert label.training_eligible is False
+    assert "financial_sector_excluded" in label.distress_reason
+
+
+def test_gray_zone_label_is_low_confidence_and_not_training_eligible():
+    row = {
+        **BASE_ROW,
+        "current_assets": 250,
+        "current_liabilities": 200,
+        "retained_earnings": 40,
+        "ebit": 80,
+        "equity": 500,
+        "total_liabilities": 500,
+    }
+
+    label = compute_distress_label(row)
+
+    assert label.z_score == 2.046
+    assert label.distress_label == 0
+    assert label.label_confidence == "low"
+    assert label.training_eligible is False
+    assert "gray_zone_monitor" in label.distress_reason
+
+
+def test_zero_liabilities_keeps_z_score_positive_instead_of_null():
+    row = {**BASE_ROW, "total_liabilities": 0, "equity": 500}
+
+    label = compute_distress_label(row)
+
+    assert label.z_score is not None
+    assert label.z_score > 2.6
+    assert label.distress_label == 0
+    assert "zero_liabilities_x4_capped" in label.distress_reason
+
+
+def test_zero_interest_expense_does_not_trigger_weak_coverage_warning():
+    row = {
+        **BASE_ROW,
+        "interest_expense": 0,
+        "total_liabilities": 900,
+        "current_assets": 100,
+        "current_liabilities": 250,
+    }
+
+    label = compute_distress_label(row)
+
+    assert "weak_interest_coverage" not in label.distress_reason

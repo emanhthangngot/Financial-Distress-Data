@@ -25,6 +25,7 @@ class MetadataWriter:
     pipeline_run_log: list[dict[str, Any]] = field(default_factory=list)
     data_quality_result: list[dict[str, Any]] = field(default_factory=list)
     failed_records: list[dict[str, Any]] = field(default_factory=list)
+    dataset_freshness: list[dict[str, Any]] = field(default_factory=list)
     source_request_log: list[dict[str, Any]] = field(default_factory=list)
     collector_checkpoint: list[dict[str, Any]] = field(default_factory=list)
 
@@ -96,6 +97,27 @@ class MetadataWriter:
                 "failure_reason": failure_reason,
                 "raw_payload": raw_payload,
                 "created_at": utc_now_iso(),
+            }
+        )
+
+    def update_dataset_freshness(
+        self,
+        dataset_name: str,
+        latest_event_timestamp: str,
+        latest_ingest_ts: str | None,
+        freshness_lag_minutes: float,
+        sla_minutes: float,
+        status: str,
+    ) -> None:
+        self.dataset_freshness.append(
+            {
+                "dataset_name": dataset_name,
+                "latest_event_timestamp": latest_event_timestamp,
+                "latest_ingest_ts": latest_ingest_ts,
+                "freshness_lag_minutes": freshness_lag_minutes,
+                "sla_minutes": sla_minutes,
+                "status": status,
+                "checked_at": utc_now_iso(),
             }
         )
 
@@ -217,6 +239,41 @@ class PostgresMetadataWriter:
                 run_id,
                 failure_reason,
                 json.dumps(raw_payload, sort_keys=True),
+                utc_now_iso(),
+            ),
+        )
+
+    def update_dataset_freshness(
+        self,
+        dataset_name: str,
+        latest_event_timestamp: str,
+        latest_ingest_ts: str | None,
+        freshness_lag_minutes: float,
+        sla_minutes: float,
+        status: str,
+    ) -> None:
+        self._execute(
+            """
+            INSERT INTO project_metadata.dataset_freshness (
+                dataset_name, latest_event_timestamp, latest_ingest_ts,
+                freshness_lag_minutes, sla_minutes, status, checked_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (dataset_name) DO UPDATE SET
+                latest_event_timestamp = EXCLUDED.latest_event_timestamp,
+                latest_ingest_ts = EXCLUDED.latest_ingest_ts,
+                freshness_lag_minutes = EXCLUDED.freshness_lag_minutes,
+                sla_minutes = EXCLUDED.sla_minutes,
+                status = EXCLUDED.status,
+                checked_at = EXCLUDED.checked_at
+            """,
+            (
+                dataset_name,
+                latest_event_timestamp,
+                latest_ingest_ts,
+                freshness_lag_minutes,
+                sla_minutes,
+                status,
                 utc_now_iso(),
             ),
         )

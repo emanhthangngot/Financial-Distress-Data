@@ -81,12 +81,21 @@ def test_postgres_metadata_writer_executes_project_metadata_inserts():
     run_id = writer.log_run("dag", "task", "companies", "success", input_rows=1, output_rows=1)
     writer.log_dq_result("companies", "ticker_not_null", "pass", "critical", run_id=run_id)
     writer.log_failed_record("companies", "bad row", {"ticker": None}, run_id=run_id)
+    writer.update_dataset_freshness(
+        "companies",
+        latest_event_timestamp="2026-01-01T00:00:00+00:00",
+        latest_ingest_ts="2026-01-01T00:05:00+00:00",
+        freshness_lag_minutes=5,
+        sla_minutes=60,
+        status="pass",
+    )
 
     executed_sql = "\n".join(sql for sql, _params in connection.cursor_instance.executed)
     assert "project_metadata.pipeline_run_log" in executed_sql
     assert "project_metadata.data_quality_result" in executed_sql
     assert "project_metadata.failed_records" in executed_sql
-    assert connection.commits == 3
+    assert "project_metadata.dataset_freshness" in executed_sql
+    assert connection.commits == 4
 
 
 def test_configure_spark_builder_sets_minio_s3a_and_dynamic_overwrite():

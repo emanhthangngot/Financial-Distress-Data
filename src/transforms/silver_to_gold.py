@@ -150,6 +150,9 @@ def build_obt_company_quarter_risk(
             "distress_label": label.get("distress_label"),
             "distress_reason": label.get("distress_reason"),
             "z_score": label.get("z_score"),
+            "label_source": label.get("label_source"),
+            "label_confidence": label.get("label_confidence"),
+            "training_eligible": label.get("training_eligible"),
         }
         output.append(obt)
     return output
