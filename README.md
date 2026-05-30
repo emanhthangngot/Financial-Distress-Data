@@ -98,6 +98,13 @@ python -m pip install -r requirements.txt
 python -m pip install -e ".[dev]"
 ```
 
+Install local-runtime connectors when you are ready to run evidence jobs against
+PostgreSQL, Kafka, PySpark, and MinIO:
+
+```bash
+python -m pip install -e ".[runtime]"
+```
+
 Create local configuration:
 
 ```bash
@@ -138,6 +145,13 @@ docker compose config
 ```
 
 The Python tests are intentionally lightweight and do not require the full Docker stack. Docker is required when collecting runtime evidence from PostgreSQL, Kafka, MinIO, Airflow, DuckDB, and DBeaver.
+
+Runtime-capable Stage 1 adapters now live beside the deterministic test helpers:
+
+- `src/metadata/metadata_writer.py`: `PostgresMetadataWriter` writes run logs, DQ results, and failed records into `project_metadata`.
+- `src/transforms/spark_session.py`: builds a PySpark local session configured for MinIO S3A and dynamic partition overwrite.
+- `src/transforms/bronze_to_silver.py` and `src/transforms/silver_to_gold.py`: include Spark DataFrame transform helpers while preserving pure-Python unit-test helpers.
+- `src/streaming/kafka_to_bronze_consumer.py`: can consume JSON records from a real Kafka consumer into the existing micro-batch Bronze contract.
 
 ## Data Contracts
 

@@ -1,6 +1,13 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime
+
+from src.metadata.metadata_writer import (
+    MetadataWriter,
+    PostgresMetadataWriter,
+    psycopg_connection_factory,
+)
 
 
 def airflow_imports():
@@ -13,3 +20,10 @@ def airflow_imports():
 
 
 DEFAULT_ARGS = {"owner": "financial-distress", "start_date": datetime(2026, 1, 1)}
+
+
+def metadata_writer_from_env():
+    dsn = os.getenv("PROJECT_METADATA_DSN")
+    if dsn:
+        return PostgresMetadataWriter(psycopg_connection_factory(dsn))
+    return MetadataWriter()

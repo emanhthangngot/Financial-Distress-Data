@@ -54,6 +54,36 @@ def _round_float(value: Decimal | None, places: str = "0.0001") -> float | None:
     return float(value.quantize(Decimal(places), rounding=ROUND_HALF_UP))
 
 
+def _quarter_index(report_period: Any) -> int | None:
+    if report_period is None:
+        return None
+    value = str(report_period).strip().upper()
+    if len(value) != 6 or value[4] != "Q":
+        return None
+    try:
+        year = int(value[:4])
+        quarter = int(value[5])
+    except ValueError:
+        return None
+    if quarter not in {1, 2, 3, 4}:
+        return None
+    return year * 4 + quarter
+
+
+def _is_immediately_previous_quarter(
+    current_row: dict[str, Any], previous_row: dict[str, Any] | None
+) -> bool:
+    if previous_row is None:
+        return False
+    current_index = _quarter_index(current_row.get("report_period"))
+    previous_index = _quarter_index(previous_row.get("report_period"))
+    return (
+        current_index is not None
+        and previous_index is not None
+        and current_index - previous_index == 1
+    )
+
+
 def z_double_prime(row: dict[str, Any]) -> float | None:
     total_assets = row.get("total_assets")
     total_liabilities = row.get("total_liabilities")
@@ -89,6 +119,7 @@ def warning_rules(
     net_income = _decimal(row.get("net_income"))
     previous_net_income = _decimal(previous_row.get("net_income")) if previous_row else None
     equity = _decimal(row.get("equity"))
+    consecutive_period = _is_immediately_previous_quarter(row, previous_row)
 
     return {
         "high_debt_to_asset": bool(debt_to_asset is not None and debt_to_asset > Decimal("0.8")),
@@ -96,6 +127,7 @@ def warning_rules(
         "two_quarter_net_loss": bool(
             net_income is not None
             and previous_net_income is not None
+            and consecutive_period
             and net_income < 0
             and previous_net_income < 0
         ),

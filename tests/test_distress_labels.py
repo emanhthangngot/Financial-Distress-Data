@@ -1,4 +1,4 @@
-from src.transforms.compute_distress_labels import compute_distress_label
+from src.transforms.compute_distress_labels import compute_distress_label, compute_labels
 
 BASE_ROW = {
     "ticker": "AAA",
@@ -47,3 +47,25 @@ def test_null_z_score_with_insufficient_rules_returns_null_label():
     assert label.z_score is None
     assert label.distress_label is None
     assert "insufficient_data" in label.distress_reason
+
+
+def test_two_quarter_net_loss_requires_consecutive_report_periods():
+    labels = compute_labels(
+        [
+            {**BASE_ROW, "report_period": "2025Q1", "net_income": -10},
+            {**BASE_ROW, "report_period": "2025Q3", "net_income": -20},
+        ]
+    )
+
+    assert "two_quarter_net_loss" not in labels[1]["distress_reason"]
+
+
+def test_two_quarter_net_loss_triggers_for_consecutive_report_periods():
+    labels = compute_labels(
+        [
+            {**BASE_ROW, "report_period": "2025Q1", "net_income": -10},
+            {**BASE_ROW, "report_period": "2025Q2", "net_income": -20},
+        ]
+    )
+
+    assert "two_quarter_net_loss" in labels[1]["distress_reason"]

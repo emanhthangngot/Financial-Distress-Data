@@ -14,6 +14,11 @@ dev = [
     "ruff>=0.8",
     "black>=24.0",
 ]
+runtime = [
+    "kafka-python>=2.0",
+    "psycopg[binary]>=3.2",
+    "pyspark>=3.5",
+]
 
 [tool.black]
 line-length = 100
