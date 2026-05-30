@@ -282,6 +282,7 @@ interest_expense
 net_income
 operating_cash_flow
 retained_earnings
+statement_type
 report_release_date
 event_timestamp
 ```
@@ -345,10 +346,14 @@ created_ts
 distress_label
 distress_reason
 z_score
+label_source
+label_confidence
+training_eligible
 rule_version
 ```
 
-`rule_version` is currently `v1`.
+`rule_version` is currently `v1`; `label_source` is `rule_based_v1`.
+These labels are proxy rule-based distress indicators, not ground-truth bankruptcy labels.
 
 Stage 1 uses the non-manufacturing Altman Z double-prime style score:
 
@@ -370,6 +375,17 @@ Warning rules:
 - `negative_equity`: `equity < 0`
 - `weak_interest_coverage`: `ebit / interest_expense < 1.0`
 
+Financial sector exclusion:
+
+- Banks, insurance, securities, diversified financials, and GICS sector 40 are excluded from Altman Z''.
+- Excluded rows return `distress_label = NULL`, `distress_reason = financial_sector_excluded`, `label_confidence = NULL`, and `training_eligible = false`.
+- The documented exclusion list lives in `configs/sector_exclusion.yaml`.
+
+Special denominator handling:
+
+- `total_liabilities = 0` caps the Altman X4 term at `99.0` and appends `zero_liabilities_x4_capped`.
+- `interest_expense = 0` or null skips `weak_interest_coverage`.
+
 `two_quarter_net_loss` requires the previous row for that ticker to be the immediately
 preceding fiscal quarter. Missing quarter gaps such as `2025Q1` followed by `2025Q3`
 do not trigger the consecutive-loss warning by themselves.
@@ -378,9 +394,9 @@ Label policy:
 
 - `distress_label = 1` if `z_score < 1.1` or at least two warning rules are true.
 - `distress_label = 0` if `z_score > 2.6` and fewer than two warning rules are true.
-- If `1.1 <= z_score <= 2.6` and fewer than two warning rules are true, set `distress_label = 0` and include `gray_zone_monitor` in `distress_reason`.
+- If `1.1 <= z_score <= 2.6` and fewer than two warning rules are true, set `distress_label = 0`, include `gray_zone_monitor`, set `label_confidence = low`, and set `training_eligible = false`.
 - If `z_score` is null, still apply warning rules. If at least two warning rules are true, set `distress_label = 1` and include `z_score_null`; otherwise set `distress_label = NULL` and include `insufficient_data`.
-- Null or zero denominators make the affected ratio null instead of raising an exception.
+- Null denominators make the affected ratio null instead of raising an exception, except `total_liabilities = 0`, which receives the capped X4 treatment above.
 
 Acceptance criteria:
 
@@ -390,6 +406,8 @@ Distress label helper -> receives gray-zone Z'' and fewer than two warnings -> r
 Distress label helper -> receives null Z'' and fewer than two warnings -> returns distress_label NULL with insufficient_data.
 Distress label helper -> receives at least two warning rules -> returns distress_label 1 even when Z'' is null.
 Distress label helper -> receives two negative non-consecutive quarters -> does not trigger two_quarter_net_loss.
+Distress label helper -> receives financial-sector row -> returns distress_label NULL with financial_sector_excluded.
+Distress label helper -> receives gray-zone row -> marks training_eligible false and label_confidence low.
 ```
 
 ### 10.5 Stream Events
@@ -634,11 +652,12 @@ Implemented checks:
 - `check_unique()`
 - `check_referential_integrity()`
 - `check_retention()`
+- `check_freshness()`
 
 Implemented severity behavior:
 
 - Null, uniqueness, and referential-integrity failures return `status="fail"` and `severity="critical"`.
-- Retention below threshold returns `status="warning"` and `severity="warning"`.
+- Retention below threshold and freshness SLA breaches return `status="warning"` and `severity="warning"`.
 
 Test coverage:
 
@@ -650,11 +669,12 @@ Acceptance criteria:
 DQ not-null check -> receives null critical field -> returns fail with critical severity.
 DQ referential check -> receives unknown dimension key -> returns fail with critical severity.
 DQ retention check -> receives low retained row ratio -> returns warning with warning severity.
+DQ freshness check -> receives latest event timestamp outside SLA -> returns warning and lag minutes.
 ```
 
 Runtime note:
 
-The Python DQ helpers return result objects. Writing those results to PostgreSQL metadata is supported by `PostgresMetadataWriter.log_dq_result()` and by `project_metadata.data_quality_result` DDL, but an executed database-backed DQ job is still part of remaining runtime evidence work.
+The Python DQ helpers return result objects. Writing those results to PostgreSQL metadata is supported by `PostgresMetadataWriter.log_dq_result()` and by `project_metadata.data_quality_result` DDL. Freshness status can also be upserted into `project_metadata.dataset_freshness` through `update_dataset_freshness()`. An executed database-backed DQ job is still part of remaining runtime evidence work.
 
 ## 16. Metadata Contract
 
@@ -670,6 +690,7 @@ In-memory helper lists:
 
 - `pipeline_run_log`
 - `data_quality_result`
+- `dataset_freshness`
 - `failed_records`
 - `source_request_log`
 - `collector_checkpoint`
@@ -867,14 +888,14 @@ These are the operational gaps between the current repository implementation and
   - The `StreamEvent.news_sentiment()` factory exists in the codebase, but the live streaming news collector, `fact_news_sentiment` table, and `feat_company_news_30d` aggregator are still design contracts pending live integration.
 * **Feature Aggregation Builders**:
   - Unified company-quarter feature calculations are fully verified via `pit_join_features()` and the DuckDB `gold_feat_company_unified` view contract. Individual automated pipeline jobs for `feat_company_financial_4q` and `feat_company_market_30d` remain as design targets.
-* **Operational Runtime Execution Gaps (Ready to Run)**:
-  - **PySpark Integration**: Fully implemented in the code (via `spark_session.py`, `bronze_to_silver_spark()`, `build_fact_financial_statement_spark()`, `build_fact_market_price_spark()`). The remaining step is executing these Spark jobs inside the Spark Docker cluster.
-  - **PostgreSQL Persistence**: Fully implemented in the code (via `PostgresMetadataWriter` with transaction management in `metadata_writer.py`). The remaining step is launching the Postgres service, installing the `psycopg` library on the Airflow image, and writing live metadata logs.
-  - **Kafka Streaming**: Fully implemented in the code (via `create_kafka_consumer` and `consume_json_messages` in `kafka_to_bronze_consumer.py`). The remaining step is running a live broker to ingest streaming price events.
-  - **Airflow Orchestration**: The 8 DAGs are fully constructed and import-safe. They currently call in-memory smoke logic and need to be toggled to execute the live PySpark/Postgres tasks.
+* **Operational Runtime Execution Gaps (Ready for Evidence Runs)**:
+  - **PySpark Integration**: Spark-compatible helpers exist in code (`spark_session.py`, `bronze_to_silver_spark()`, `build_fact_financial_statement_spark()`, `build_fact_market_price_spark()`). The remaining step is executing these Spark jobs against the local Docker services and saving logs/output under `docs/evidence/`.
+  - **PostgreSQL Persistence**: `PostgresMetadataWriter` supports local metadata writes. The remaining step is launching Postgres, installing runtime dependencies in the execution image, and saving live metadata query evidence.
+  - **Kafka Streaming**: `create_kafka_consumer` and `consume_json_messages` implement the broker consumer boundary. The remaining step is running a live broker, creating topics with `init/kafka_init_topics.sh`, and saving consumer/topic evidence.
+  - **Airflow Orchestration**: The 8 DAGs are import-safe smoke scaffolds. They still need a live evidence run against the local stack.
   - **Evidence Collection**: The physical artifacts, SQL exports, and DBeaver screenshots showing data in MinIO/PostgreSQL still need to be captured and placed under `docs/evidence/` once the local cluster is kicked off.
 
-These gaps reflect that the project code itself is completely finished and enterprise-ready, and is designed to be toggled into live cluster mode once the local Docker Compose stack is running.
+Phase 1 code contracts are implemented and tested for local-first coursework scope. The repository should be described as production-inspired and ready for runtime evidence collection, not as enterprise-ready until an end-to-end local cluster run has been executed and documented.
 
 ## 23. Implementation Order for Remaining Evidence Work
 

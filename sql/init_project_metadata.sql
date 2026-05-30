@@ -106,7 +106,7 @@ VALUES
         'v1',
         CURRENT_TIMESTAMP,
         NULL,
-        '{"required": ["ticker", "report_period", "fiscal_year", "fiscal_quarter", "total_assets", "total_liabilities", "equity", "created_ts"], "nullable": ["retained_earnings", "interest_expense", "operating_cash_flow"]}'::jsonb,
+        '{"required": ["ticker", "report_period", "fiscal_year", "fiscal_quarter", "total_assets", "total_liabilities", "equity", "created_ts"], "nullable": ["current_assets", "current_liabilities", "revenue", "ebit", "interest_expense", "net_income", "operating_cash_flow", "retained_earnings", "statement_type", "report_release_date", "event_timestamp"]}'::jsonb,
         TRUE
     ),
     (

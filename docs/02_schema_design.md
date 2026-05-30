@@ -60,7 +60,9 @@ Columns: `date_key`, `calendar_date`, `day_of_week`, `month`, `quarter`, `year`,
 
 Grain: one row per company per report period.
 
-Columns include `company_key`, `date_key`, `ticker`, `report_period`, `fiscal_year`, `fiscal_quarter`, `total_assets`, `total_liabilities`, `equity`, `revenue`, `ebit`, `interest_expense`, `net_income`, `operating_cash_flow`, `current_assets`, `current_liabilities`, `retained_earnings`, `report_release_date`, `event_timestamp`, `created_ts`.
+Columns include `company_key`, `date_key`, `ticker`, `report_period`, `fiscal_year`, `fiscal_quarter`, `total_assets`, `total_liabilities`, `equity`, `revenue`, `ebit`, `interest_expense`, `net_income`, `operating_cash_flow`, `current_assets`, `current_liabilities`, `retained_earnings`, `statement_type`, `report_release_date`, `event_timestamp`, `created_ts`.
+
+`statement_type` is nullable and distinguishes consolidated from standalone statements when the source exposes that field.
 
 ### fact_market_price
 
@@ -79,6 +81,8 @@ Columns include `company_key`, `date_key`, `event_id`, `ticker`, `event_timestam
 Grain: one row per ticker per report period.
 
 The OBT joins financial facts to market and news aggregates using a 30-day window ending at `report_release_date`. It includes financial ratios, 30-day market signals, 30-day news signals, and `distress_labels`.
+
+Distress label fields include `distress_label`, `distress_reason`, `z_score`, `label_source`, `label_confidence`, and `training_eligible`. `label_source = rule_based_v1` marks these labels as proxy indicators rather than ground-truth bankruptcy outcomes.
 
 ### Feature Tables
 
@@ -112,6 +116,7 @@ Warning checks route flagged records to `failed_records` and allow processing:
 - row-count drop above 50 percent from prior run
 
 All checks write rows to `project_metadata.data_quality_result`.
+Freshness checks also upsert the latest dataset status into `project_metadata.dataset_freshness`.
 
 ## SLA And Backfill
 

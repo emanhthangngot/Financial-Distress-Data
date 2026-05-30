@@ -137,6 +137,11 @@ Trong thực tế đầu tư và quản trị rủi ro tín dụng tại Việt 
 5. **Khả năng bù đắp lãi vay suy kiệt (`weak_interest_coverage` < 1.0)**:
    $$\text{EBIT} / \text{Interest Expense} < 1.0$$
    Lợi nhuận từ hoạt động kinh doanh tạo ra không đủ để chi trả chi phí lãi vay của doanh nghiệp. Để tồn tại, doanh nghiệp buộc phải thanh lý tài sản hoặc vay đảo nợ liên tục.
+   Nếu `interest_expense = 0` hoặc null, hệ thống bỏ qua cảnh báo này thay vì phạt doanh nghiệp không có nợ vay tài chính.
+
+**Ngoại lệ ngành tài chính**: Banks, insurance, securities, diversified financials và GICS sector 40 bị loại khỏi phép tính Altman Z'' vì cấu trúc bảng cân đối kế toán của các ngành này có đòn bẩy cao một cách bình thường. Các dòng này nhận `distress_label = NULL`, `distress_reason = "financial_sector_excluded"`, `label_confidence = NULL`, và `training_eligible = false`.
+
+**Ngoại lệ mẫu số bằng 0**: Nếu `total_liabilities = 0`, thành phần $X_4$ được cap ở `99.0` và ghi lý do `"zero_liabilities_x4_capped"` để tránh biến một doanh nghiệp không nợ thành điểm Z'' null.
 
 ### 3.3. Chính sách Phân loại Nhãn Rủi ro (Labeling Policy)
 Nhãn rủi ro tài chính (`distress_label`) được tính toán động tại lớp Gold trước khi xây dựng bảng OBT theo chính sách sau:
@@ -147,9 +152,11 @@ Nhãn rủi ro tài chính (`distress_label`) được tính toán động tại
 * **Nhãn = 0 (An toàn - Safe Zone)**:
   * Nếu điểm số $Z'' > 2.6$ **VÀ** số cảnh báo sớm được kích hoạt nhỏ hơn 2.
 * **Vùng Giám sát Cần thiết (Gray Zone Monitor)**:
-  * Nếu điểm số nằm trong khoảng $1.1 \le Z'' \le 2.6$ và số cảnh báo ít hơn 2, hệ thống gán nhãn rủi ro bằng `0` nhưng đính kèm chuỗi lý do `"gray_zone_monitor"` vào cột `distress_reason` nhằm đưa doanh nghiệp vào danh sách theo dõi đặc biệt.
+  * Nếu điểm số nằm trong khoảng $1.1 \le Z'' \le 2.6$ và số cảnh báo ít hơn 2, hệ thống gán nhãn rủi ro bằng `0` nhưng đính kèm chuỗi lý do `"gray_zone_monitor"`, đặt `label_confidence = "low"` và `training_eligible = false`. Gray-zone rows không nên được đưa thẳng vào supervised training của Phase 2.
 * **Trường hợp thiếu thông tin dữ liệu (Insufficient Data)**:
   * Nếu điểm số $Z''$ bị rỗng (null) và số cảnh báo sớm được kích hoạt nhỏ hơn 2, nhãn được gán bằng `NULL` với lý do `"insufficient_data"`.
+
+`label_source = "rule_based_v1"` xác định đây là nhãn proxy rule-based, không phải ground-truth bankruptcy/delisting label.
 
 ---
 

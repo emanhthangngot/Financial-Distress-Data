@@ -133,6 +133,12 @@ Service endpoints:
 | PostgreSQL | `localhost:5432`, database `financial_distress` |
 | Kafka | `kafka:9092` inside Docker network |
 
+Create Stage 1 Kafka topics after the broker is healthy:
+
+```bash
+docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
+```
+
 ## Verification
 
 Run the local quality gates:

@@ -1,8 +1,8 @@
 from src.transforms.keys import stable_company_key
 from src.transforms.silver_to_gold import (
     build_dim_company,
-    build_obt_company_quarter_risk,
     build_fact_financial_statement,
+    build_obt_company_quarter_risk,
     pit_join_features,
 )
 

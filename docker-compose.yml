@@ -25,6 +25,8 @@ services:
     hostname: kafka
     ports:
       - "9092:9092"
+    volumes:
+      - ./init:/opt/financial-distress-init:ro
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
