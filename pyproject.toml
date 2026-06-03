@@ -15,7 +15,10 @@ dev = [
     "black>=24.0",
 ]
 runtime = [
+    "duckdb>=1.1",
     "kafka-python>=2.0",
+    "minio>=7.2",
+    "pyarrow>=17.0",
     "psycopg[binary]>=3.2",
     "pyspark>=3.5",
 ]

@@ -114,7 +114,7 @@ VALUES
         'v1',
         CURRENT_TIMESTAMP,
         NULL,
-        '{"required": ["ticker", "trading_date", "close_price", "volume", "created_ts"], "nullable": ["market_cap", "shares_outstanding"]}'::jsonb,
+        '{"required": ["ticker", "trading_date", "close_price", "volume", "created_ts"], "nullable": ["open_price", "high_price", "low_price", "market_cap", "shares_outstanding", "event_timestamp"]}'::jsonb,
         TRUE
     ),
     (

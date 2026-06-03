@@ -12,11 +12,13 @@ topics=(
 )
 
 for topic in "${topics[@]}"; do
-  /opt/kafka/bin/kafka-topics.sh \
-    --bootstrap-server "${BROKER}" \
-    --create \
-    --if-not-exists \
-    --topic "${topic}" \
-    --partitions "${PARTITIONS}" \
-    --replication-factor "${REPLICATION_FACTOR}"
+  until /opt/kafka/bin/kafka-topics.sh \
+      --bootstrap-server "${BROKER}" \
+      --create \
+      --if-not-exists \
+      --topic "${topic}" \
+      --partitions "${PARTITIONS}" \
+      --replication-factor "${REPLICATION_FACTOR}"; do
+    sleep 2
+  done
 done
