@@ -8,6 +8,7 @@ AGENTS.md
 .ruff_cache/
 .venv/
 *.pyc
+*.egg-info/
 outputs/**/*.parquet
 outputs/**/*.csv
 outputs/**/*.json

@@ -52,6 +52,37 @@ class StreamEvent:
             payload={"ticker": ticker, "alert_type": alert_type},
         )
 
+    @classmethod
+    def news_sentiment(
+        cls,
+        ticker: str,
+        event_timestamp: str,
+        created_ts: str,
+        sentiment_score: float,
+        risk_keyword_flag: bool,
+        severity_score: float,
+        source_url: str | None = None,
+    ) -> StreamEvent:
+        payload = {
+            "ticker": ticker,
+            "event_timestamp": event_timestamp,
+            "created_ts": created_ts,
+            "sentiment_score": sentiment_score,
+            "risk_keyword_flag": risk_keyword_flag,
+            "severity_score": severity_score,
+            "source_url": source_url,
+        }
+        event_hash = sha256(repr(sorted(payload.items())).encode("utf-8")).hexdigest()
+        return cls(
+            topic="financial.news_events",
+            event_id=event_hash,
+            event_type="news_sentiment",
+            ticker=ticker,
+            event_timestamp=event_timestamp,
+            created_ts=created_ts,
+            payload=payload,
+        )
+
     def as_record(self) -> dict[str, Any]:
         return {
             "topic": self.topic,

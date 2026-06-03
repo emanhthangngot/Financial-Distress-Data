@@ -1,0 +1,18 @@
+z_score_excluded_sectors:
+  - Banks
+  - Insurance
+  - Securities
+  - Diversified Financials
+  - Financial Services
+
+z_score_excluded_gics:
+  - "40"
+  - "4010"
+  - "4020"
+  - "4030"
+
+policy:
+  label_source: rule_based_v1
+  excluded_reason: financial_sector_excluded
+  distress_label: null
+  training_eligible: false

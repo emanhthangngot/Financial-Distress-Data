@@ -45,7 +45,9 @@ Grain: one row per ticker per report period.
 
 Required columns: `ticker`, `report_period`, `fiscal_year`, `fiscal_quarter`, `total_assets`, `total_liabilities`, `equity`, `created_ts`.
 
-Optional columns: `current_assets`, `current_liabilities`, `revenue`, `ebit`, `interest_expense`, `net_income`, `operating_cash_flow`, `retained_earnings`, `report_release_date`, `event_timestamp`, `schema_version`, `source_system`, `source_url`, `raw_payload_hash`.
+Optional columns: `current_assets`, `current_liabilities`, `revenue`, `ebit`, `interest_expense`, `net_income`, `operating_cash_flow`, `retained_earnings`, `statement_type`, `report_release_date`, `event_timestamp`, `schema_version`, `source_system`, `source_url`, `raw_payload_hash`.
+
+`statement_type` is nullable and should be one of `consolidated`, `standalone`, or null when the source does not distinguish statement scope.
 
 ### market_prices_daily
 
@@ -59,11 +61,13 @@ Optional columns: `open_price`, `high_price`, `low_price`, `market_cap`, `shares
 
 Grain: one row per ticker per report period.
 
-Columns: `ticker`, `report_period`, `event_timestamp`, `created_ts`, `distress_label`, `distress_reason`, `z_score`, `rule_version`.
+Columns: `ticker`, `report_period`, `event_timestamp`, `created_ts`, `distress_label`, `distress_reason`, `z_score`, `label_source`, `label_confidence`, `training_eligible`, `rule_version`.
 
 `distress_labels` is derived locally from Silver/Gold financial statement fields before building `obt_company_quarter_risk`.
 
 Rule version: `v1`.
+
+Label source: `rule_based_v1`. This is a proxy rule-based indicator, not ground-truth bankruptcy or delisting supervision.
 
 Altman Z double-prime:
 
@@ -83,12 +87,24 @@ Warning rules:
 - `equity < 0`
 - `ebit_interest_coverage < 1.0`
 
+Financial sector exclusion:
+
+- Banks, insurance, securities, diversified financials, and GICS sector 40 are excluded from Altman Z'' because their balance sheets are structurally leveraged.
+- Excluded rows return `distress_label = NULL`, `distress_reason = financial_sector_excluded`, `label_confidence = NULL`, and `training_eligible = false`.
+- The exclusion policy is documented in `configs/sector_exclusion.yaml`.
+
+Special denominator handling:
+
+- `total_liabilities = 0` caps the Altman X4 term at `99.0` and appends `zero_liabilities_x4_capped`.
+- `interest_expense = 0` or null skips `weak_interest_coverage` rather than penalizing zero-debt companies.
+
 Label policy:
 
 - `distress_label = 1` if `z_score < 1.1` or at least two warning rules are true.
 - `distress_label = 0` if `z_score > 2.6` and fewer than two warning rules are true.
 - If `z_score` is null, still apply warning rules. If fewer than two warning rules are true, set `distress_label = NULL` and `distress_reason = insufficient_data`.
-- If `1.1 <= z_score <= 2.6` and fewer than two warning rules are true, set `distress_label = 0` and include `gray_zone_monitor` in `distress_reason`.
+- If `1.1 <= z_score <= 2.6` and fewer than two warning rules are true, set `distress_label = 0`, include `gray_zone_monitor` in `distress_reason`, set `label_confidence = low`, and set `training_eligible = false`.
+- Safe-zone and distress-zone rows with direct Z'' support use `label_confidence = high`; warning-rule distress rows without direct Z'' support use `label_confidence = medium`.
 
 ## Streaming Datasets
 
@@ -118,6 +134,7 @@ Stage 1 fixtures and collectors must cover:
 - duplicate financial statements and Kafka events
 - late arrivals where `created_ts > event_timestamp`
 - outliers such as negative equity and large price drops
+- stock split or dividend adjustment gaps in raw close prices
 - bursty market-open/market-close traffic
 
 ## Volume Strategy
@@ -131,3 +148,5 @@ Approximate batch volume:
 | `price_events` | historical replay or polling stream | primary source for 20M target |
 
 The `>=20M` record target is reached mainly through high-volume `price_events` replay when source access and local machine resources allow. CI and smoke runs use small deterministic fixtures.
+
+Stage 1 market-price fixtures use raw close prices. Split-adjusted or dividend-adjusted price series are a known limitation until a live source provides adjustment factors or an explicit `price_adjustment_flag`.

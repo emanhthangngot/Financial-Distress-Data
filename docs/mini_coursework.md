@@ -23,11 +23,11 @@ The repository currently implements a local-first Stage 1 data engineering found
 - Local Docker service definitions in `docker-compose.yml`.
 - Airflow DAG scaffolding in `dags/`.
 - Fixture-backed collectors in `src/collectors/`.
-- Schema contracts and in-memory metadata helpers in `src/metadata/`.
-- Bronze-to-Silver normalization and deduplication helpers in `src/transforms/bronze_to_silver.py`.
-- Gold table construction helpers in `src/transforms/silver_to_gold.py`.
+- Schema contracts, in-memory metadata helpers, and a PostgreSQL metadata writer in `src/metadata/`.
+- Bronze-to-Silver normalization and deduplication helpers in `src/transforms/bronze_to_silver.py`, including a Spark DataFrame path for local runtime jobs.
+- Gold table construction helpers in `src/transforms/silver_to_gold.py`, including Spark DataFrame fact builders and idempotent partitioned Parquet write helper.
 - Rule-based distress labels in `src/transforms/compute_distress_labels.py`.
-- Kafka event and micro-batch contracts in `src/streaming/`.
+- Kafka event, news-event, micro-batch, and optional broker-consumer contracts in `src/streaming/`.
 - Data quality checks in `src/quality/dq_checks.py`.
 - DuckDB SQL helpers and view SQL in `src/catalog/` and `sql/`.
 - PostgreSQL metadata DDL in `sql/init_project_metadata.sql`.
@@ -86,30 +86,37 @@ Architecture image:
 images/architecture/architecture-stage-1.png
 ```
 
-Current logical flow:
+Current logical flow (Dual-Mode Design):
 
-```text
-Fixture source adapter
-  -> collectors
-  -> metadata helper logs
-  -> Bronze-to-Silver helper contracts
-  -> Gold table helper contracts
-  -> DQ helper contracts
-  -> SQL contracts for PostgreSQL and DuckDB
-```
+The system is designed in a highly advanced "Dual-Mode Architecture" to support both rapid test-driven iteration and real-world distributed big data lakehouse execution:
 
-Target runtime flow for evidence:
+1. **In-Memory Validation Mode (Offline/CI Test)**:
+   ```text
+   Deterministic Fixtures (VnstockFixtureAdapter)
+     -> Collectors and Source Protocols (In-Memory lists)
+     -> In-Memory MetadataWriter (run logs, DQ logs, failed records in RAM)
+     -> Python-native Bronze-to-Silver and Silver-to-Gold (facts/SCD2/labels/ratios)
+     -> In-Memory Data Quality (DQ) checks
+     -> SQL view creation and httpfs commands generated as static text
+   ```
+   *This mode has 100% test coverage and is executed in milliseconds via `pytest`, ensuring the mathematical and semantic correctness of Z-scores, warning rules, and PIT joins without database or cluster dependencies.*
 
-```text
-Online APIs or polling feeds
-  -> source adapters
-  -> Airflow tasks
-  -> Kafka event contracts and Bronze raw paths
-  -> MinIO Bronze/Silver/Gold Parquet paths
-  -> PostgreSQL metadata rows
-  -> DuckDB views over MinIO
-  -> DBeaver inspection evidence
-```
+2. **Stage 1 Online Local Lakehouse Mode (Live Execution - architecture-stage-1.png)**:
+   ```text
+   Online APIs / Polling / WebSockets (SSI, HOSE, HNX, Vnstock)
+     -> SourceAdapter Protocol Interfaces
+     -> Airflow PythonOperators / TriggerDagRunOperators
+     -> Kafka broker (financial.price_events, alert_events, news_events)
+     -> MicroBatchConsumer (buffers and flushes stream events partitioned by date/hour)
+     -> MinIO Bronze Storage (Parquet paths with ingest_ts and batch_id)
+     -> PySpark Bronze-to-Silver Spark DataFrame jobs (windowed deduplication by created_ts)
+     -> PostgreSQL project_metadata Schema (PostgresMetadataWriter live client writes logs/DQ/failed records)
+     -> PySpark Silver-to-Gold Spark jobs (partitioned Parquet fact & dimension writes using overwrite mode)
+     -> MinIO Gold Storage (fact_financial_statement, fact_market_price, obt_company_quarter_risk, feat_company_unified)
+     -> DuckDB serving engine (reads MinIO Parquet via httpfs views)
+     -> DBeaver DB client (queries and captures live runtime evidence)
+   ```
+   *This mode represents the actual production architecture shown in the diagram. The codebase contains full production implementations for both Spark DataFrame APIs and PostgreSQL connections.*
 
 Important implementation note:
 
@@ -121,9 +128,9 @@ The current code uses `VnstockFixtureAdapter` as a deterministic adapter boundar
 |---|---|---|
 | Local services | `docker-compose.yml` | Defined for PostgreSQL, MinIO, Kafka, Airflow webserver, Airflow scheduler |
 | Collection | `src/collectors/*.py`, `src/collectors/source_adapters/vnstock_adapter.py` | Fixture-backed implementation |
-| Streaming | `src/streaming/events.py`, `src/streaming/kafka_to_bronze_consumer.py` | Event and micro-batch contracts implemented |
-| Transformation | `src/transforms/*.py` | Pure Python helper logic implemented and tested |
-| Metadata | `src/metadata/*.py`, `sql/init_project_metadata.sql` | In-memory helper plus PostgreSQL DDL |
+| Streaming | `src/streaming/events.py`, `src/streaming/kafka_to_bronze_consumer.py` | Event, micro-batch, and Kafka JSON consumer contracts implemented |
+| Transformation | `src/transforms/*.py` | Pure Python helper logic plus Spark DataFrame adapters implemented and tested at contract level |
+| Metadata | `src/metadata/*.py`, `sql/init_project_metadata.sql` | In-memory helper, PostgreSQL writer, and PostgreSQL DDL |
 | Data quality | `src/quality/dq_checks.py`, `configs/dq_rules.yaml` | Core checks implemented and tested |
 | Catalog | `src/catalog/duckdb_catalog.py`, `sql/duckdb_create_views.sql` | DuckDB SQL generation and SQL contracts |
 | Tests | `tests/` | Unit tests for contracts and transformation logic |
@@ -275,6 +282,7 @@ interest_expense
 net_income
 operating_cash_flow
 retained_earnings
+statement_type
 report_release_date
 event_timestamp
 ```
@@ -338,10 +346,14 @@ created_ts
 distress_label
 distress_reason
 z_score
+label_source
+label_confidence
+training_eligible
 rule_version
 ```
 
-`rule_version` is currently `v1`.
+`rule_version` is currently `v1`; `label_source` is `rule_based_v1`.
+These labels are proxy rule-based distress indicators, not ground-truth bankruptcy labels.
 
 Stage 1 uses the non-manufacturing Altman Z double-prime style score:
 
@@ -363,13 +375,28 @@ Warning rules:
 - `negative_equity`: `equity < 0`
 - `weak_interest_coverage`: `ebit / interest_expense < 1.0`
 
+Financial sector exclusion:
+
+- Banks, insurance, securities, diversified financials, and GICS sector 40 are excluded from Altman Z''.
+- Excluded rows return `distress_label = NULL`, `distress_reason = financial_sector_excluded`, `label_confidence = NULL`, and `training_eligible = false`.
+- The documented exclusion list lives in `configs/sector_exclusion.yaml`.
+
+Special denominator handling:
+
+- `total_liabilities = 0` caps the Altman X4 term at `99.0` and appends `zero_liabilities_x4_capped`.
+- `interest_expense = 0` or null skips `weak_interest_coverage`.
+
+`two_quarter_net_loss` requires the previous row for that ticker to be the immediately
+preceding fiscal quarter. Missing quarter gaps such as `2025Q1` followed by `2025Q3`
+do not trigger the consecutive-loss warning by themselves.
+
 Label policy:
 
 - `distress_label = 1` if `z_score < 1.1` or at least two warning rules are true.
 - `distress_label = 0` if `z_score > 2.6` and fewer than two warning rules are true.
-- If `1.1 <= z_score <= 2.6` and fewer than two warning rules are true, set `distress_label = 0` and include `gray_zone_monitor` in `distress_reason`.
+- If `1.1 <= z_score <= 2.6` and fewer than two warning rules are true, set `distress_label = 0`, include `gray_zone_monitor`, set `label_confidence = low`, and set `training_eligible = false`.
 - If `z_score` is null, still apply warning rules. If at least two warning rules are true, set `distress_label = 1` and include `z_score_null`; otherwise set `distress_label = NULL` and include `insufficient_data`.
-- Null or zero denominators make the affected ratio null instead of raising an exception.
+- Null denominators make the affected ratio null instead of raising an exception, except `total_liabilities = 0`, which receives the capped X4 treatment above.
 
 Acceptance criteria:
 
@@ -378,6 +405,9 @@ Distress label helper -> receives complete safe-zone ratios -> computes Z'' and 
 Distress label helper -> receives gray-zone Z'' and fewer than two warnings -> returns distress_label 0 with gray_zone_monitor.
 Distress label helper -> receives null Z'' and fewer than two warnings -> returns distress_label NULL with insufficient_data.
 Distress label helper -> receives at least two warning rules -> returns distress_label 1 even when Z'' is null.
+Distress label helper -> receives two negative non-consecutive quarters -> does not trigger two_quarter_net_loss.
+Distress label helper -> receives financial-sector row -> returns distress_label NULL with financial_sector_excluded.
+Distress label helper -> receives gray-zone row -> marks training_eligible false and label_confidence low.
 ```
 
 ### 10.5 Stream Events
@@ -386,10 +416,9 @@ Current implementation supports:
 
 - `financial.price_events`
 - `financial.alert_events`
-
-Designed but not yet implemented in code:
-
 - `financial.news_events`
+
+News remains fixture/contract-level only until a live news source adapter is added.
 
 Required record fields from `StreamEvent.as_record()`:
 
@@ -404,7 +433,7 @@ created_ts
 
 `StreamEvent.price_update()` produces deterministic event IDs by hashing the payload. `StreamEvent.alert()` uses UUIDs.
 
-`financial.news_events` remains a Phase 1 design contract because `docs/01_data_generator.md` and `docs/02_schema_design.md` define news sentiment data for ML-readiness. It is not represented by a current `StreamEvent` factory or collector implementation, so it must be reported as a remaining gap until implemented.
+`financial.news_events` is represented by a deterministic `StreamEvent.news_sentiment()` factory. A live news collector remains a remaining gap until implemented.
 
 ## 11. Volume Strategy
 
@@ -574,16 +603,17 @@ Implemented behavior:
 
 - Build normalized price update records.
 - Build normalized market alert records.
-- Preserve `financial.news_events` as a design topic that still needs implementation.
+- Build normalized news sentiment records for `financial.news_events`.
 - Buffer events in `MicroBatchConsumer`.
 - Flush by record count or elapsed time.
-- Group flushed batches by topic.
-- Produce Bronze target paths partitioned by `event_date` and `event_hour`.
+- Group flushed batches by topic, event date, and event hour.
+- Produce Bronze target paths partitioned by `event_date`, `event_hour`, and `batch_id`.
+- Decode JSON records from an optional live Kafka consumer into the same micro-batch contract.
 
 Current Bronze path pattern:
 
 ```text
-s3a://financial-distress-lake/bronze/kafka/{topic}/event_date={YYYY-MM-DD}/event_hour={HH}/
+s3a://financial-distress-lake/bronze/kafka/{topic}/event_date={YYYY-MM-DD}/event_hour={HH}/batch_id={batch_id}/
 ```
 
 Designed Bronze evidence path from `docs/01_data_generator.md` includes `batch_id`:
@@ -592,7 +622,7 @@ Designed Bronze evidence path from `docs/01_data_generator.md` includes `batch_i
 s3a://financial-distress-lake/bronze/kafka/{topic}/event_date=YYYY-MM-DD/event_hour=HH/batch_id=.../
 ```
 
-The current `MicroBatchConsumer` returns the topic/date/hour prefix and exposes `batch_id` in the batch payload, but does not yet include `batch_id` in `bronze_path`.
+The current `MicroBatchConsumer` returns the topic/date/hour/batch prefix and exposes `batch_id` in the batch payload.
 
 Test coverage:
 
@@ -604,6 +634,7 @@ Acceptance criteria:
 Stream event factory -> creates price update -> returns normalized record with deterministic event_id.
 Micro-batch consumer -> reaches flush_record_count -> flushes one batch grouped by topic.
 Micro-batch consumer -> flushes events -> returns Bronze path partitioned by event_date and event_hour.
+Micro-batch consumer -> flushes mixed-hour records -> returns separate Bronze batches for each event_hour partition.
 ```
 
 ## 15. Data Quality Contract
@@ -621,11 +652,12 @@ Implemented checks:
 - `check_unique()`
 - `check_referential_integrity()`
 - `check_retention()`
+- `check_freshness()`
 
 Implemented severity behavior:
 
 - Null, uniqueness, and referential-integrity failures return `status="fail"` and `severity="critical"`.
-- Retention below threshold returns `status="warning"` and `severity="warning"`.
+- Retention below threshold and freshness SLA breaches return `status="warning"` and `severity="warning"`.
 
 Test coverage:
 
@@ -637,11 +669,12 @@ Acceptance criteria:
 DQ not-null check -> receives null critical field -> returns fail with critical severity.
 DQ referential check -> receives unknown dimension key -> returns fail with critical severity.
 DQ retention check -> receives low retained row ratio -> returns warning with warning severity.
+DQ freshness check -> receives latest event timestamp outside SLA -> returns warning and lag minutes.
 ```
 
 Runtime note:
 
-The Python DQ helpers return result objects. Writing those results to PostgreSQL metadata is represented by `MetadataWriter.log_dq_result()` and by `project_metadata.data_quality_result` DDL, but an executed database-backed DQ job is still part of remaining runtime evidence work.
+The Python DQ helpers return result objects. Writing those results to PostgreSQL metadata is supported by `PostgresMetadataWriter.log_dq_result()` and by `project_metadata.data_quality_result` DDL. Freshness status can also be upserted into `project_metadata.dataset_freshness` through `update_dataset_freshness()`. An executed database-backed DQ job is still part of remaining runtime evidence work.
 
 ## 16. Metadata Contract
 
@@ -657,6 +690,7 @@ In-memory helper lists:
 
 - `pipeline_run_log`
 - `data_quality_result`
+- `dataset_freshness`
 - `failed_records`
 - `source_request_log`
 - `collector_checkpoint`
@@ -689,7 +723,8 @@ Schema registry -> receives known dataset name -> returns current required and n
 
 Runtime note:
 
-`MetadataWriter` is currently an in-memory test/smoke helper, not a PostgreSQL client. The SQL DDL defines the database contract for local runtime evidence.
+`MetadataWriter` remains an in-memory test/smoke helper. `PostgresMetadataWriter` is the runtime PostgreSQL client for local evidence jobs.
+Airflow smoke tasks choose `PostgresMetadataWriter` when `PROJECT_METADATA_DSN` is set and otherwise keep the in-memory helper for local unit tests.
 
 ## 17. DuckDB and DBeaver Contract
 
@@ -808,6 +843,7 @@ tests/test_bronze_to_silver.py
 tests/test_distress_labels.py
 tests/test_dq_checks.py
 tests/test_keys.py
+tests/test_runtime_adapters.py
 tests/test_silver_to_gold.py
 tests/test_streaming.py
 ```
@@ -844,19 +880,22 @@ Evidence not yet present should be documented as a remaining task, not described
 
 ## 22. Current Gaps
 
-These are known gaps between the current repository and a fully executed local lakehouse demo:
+These are the operational gaps between the current repository implementation and a fully executed end-to-end local cluster deployment:
 
-- Live online API adapters are not implemented. Current collectors use deterministic fixtures.
-- `financial.news_events`, `fact_news_sentiment`, and `feat_company_news_30d` are design contracts only; no current collector/event factory/builders generate them.
-- Separate builders for `feat_company_financial_4q`, `feat_company_market_30d`, and `feat_company_unified` are not implemented beyond the generic `pit_join_features()` helper and DuckDB view contract for unified features.
-- Kafka broker integration is not exercised by tests. Current streaming tests cover event and micro-batch contracts.
-- PySpark jobs are not implemented as real Spark submit jobs. Current Gold transforms are pure Python helper functions designed to mirror the target contracts.
-- MinIO Parquet writes are not executed by the current unit tests.
-- PostgreSQL metadata writes are not executed by the current unit tests. SQL DDL and in-memory metadata helpers exist.
-- Airflow DAGs are smoke scaffolds. They do not yet run full end-to-end jobs against live Docker services.
-- `docs/evidence/` runtime artifacts still need to be generated.
+* **Source Connectivity Gap**:
+  - Live online stock API collectors ( SSI/Vnstock real network requests) are designed but not deployed. Current active pipelines use `VnstockFixtureAdapter` as a deterministic local boundary to ensure tests are stable and offline-capable.
+* **News Sentiment Flow Gap**:
+  - The `StreamEvent.news_sentiment()` factory exists in the codebase, but the live streaming news collector, `fact_news_sentiment` table, and `feat_company_news_30d` aggregator are still design contracts pending live integration.
+* **Feature Aggregation Builders**:
+  - Unified company-quarter feature calculations are fully verified via `pit_join_features()` and the DuckDB `gold_feat_company_unified` view contract. Individual automated pipeline jobs for `feat_company_financial_4q` and `feat_company_market_30d` remain as design targets.
+* **Operational Runtime Execution Gaps (Ready for Evidence Runs)**:
+  - **PySpark Integration**: Spark-compatible helpers exist in code (`spark_session.py`, `bronze_to_silver_spark()`, `build_fact_financial_statement_spark()`, `build_fact_market_price_spark()`). The remaining step is executing these Spark jobs against the local Docker services and saving logs/output under `docs/evidence/`.
+  - **PostgreSQL Persistence**: `PostgresMetadataWriter` supports local metadata writes. The remaining step is launching Postgres, installing runtime dependencies in the execution image, and saving live metadata query evidence.
+  - **Kafka Streaming**: `create_kafka_consumer` and `consume_json_messages` implement the broker consumer boundary. The remaining step is running a live broker, creating topics with `init/kafka_init_topics.sh`, and saving consumer/topic evidence.
+  - **Airflow Orchestration**: The 8 DAGs are import-safe smoke scaffolds. They still need a live evidence run against the local stack.
+  - **Evidence Collection**: The physical artifacts, SQL exports, and DBeaver screenshots showing data in MinIO/PostgreSQL still need to be captured and placed under `docs/evidence/` once the local cluster is kicked off.
 
-These gaps are acceptable for the current Stage 1 codebase as long as they are reported honestly and not represented as completed runtime evidence.
+Phase 1 code contracts are implemented and tested for local-first coursework scope. The repository should be described as production-inspired and ready for runtime evidence collection, not as enterprise-ready until an end-to-end local cluster run has been executed and documented.
 
 ## 23. Implementation Order for Remaining Evidence Work
 

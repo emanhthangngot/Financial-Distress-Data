@@ -150,9 +150,31 @@ def build_obt_company_quarter_risk(
             "distress_label": label.get("distress_label"),
             "distress_reason": label.get("distress_reason"),
             "z_score": label.get("z_score"),
+            "label_source": label.get("label_source"),
+            "label_confidence": label.get("label_confidence"),
+            "training_eligible": label.get("training_eligible"),
         }
         output.append(obt)
     return output
+
+
+def build_feat_company_unified(
+    company_quarter_rows: list[dict[str, Any]],
+    market_facts: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    references = []
+    for row in company_quarter_rows:
+        reference_timestamp = (
+            row.get("report_release_date") or row.get("event_timestamp") or row.get("created_ts")
+        )
+        references.append({**row, "event_timestamp": reference_timestamp})
+
+    feature_rows = []
+    for row in market_facts:
+        feature_timestamp = row.get("event_timestamp") or row.get("trading_date")
+        feature_rows.append({**row, "event_timestamp": feature_timestamp})
+
+    return pit_join_features(references, feature_rows)
 
 
 def pit_join_features(
@@ -179,3 +201,47 @@ def pit_join_features(
             {**reference, **{f"feature_{key}": value for key, value in candidate.items()}}
         )
     return output
+
+
+def build_fact_financial_statement_spark(dataframe: Any) -> Any:
+    try:
+        from pyspark.sql import functions as F
+    except ImportError as exc:
+        raise RuntimeError("PySpark is required for Spark Gold transforms.") from exc
+
+    reference_date = F.coalesce(
+        F.to_date("report_release_date"),
+        F.to_date("event_timestamp"),
+        F.to_date(F.concat(F.col("fiscal_year").cast("string"), F.lit("-01-01"))),
+    )
+    return (
+        dataframe.withColumn("ticker", F.upper(F.col("ticker")))
+        .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
+        .withColumn("date_key", F.date_format(reference_date, "yyyyMMdd").cast("int"))
+    )
+
+
+def build_fact_market_price_spark(dataframe: Any) -> Any:
+    try:
+        from pyspark.sql import functions as F
+        from pyspark.sql.window import Window
+    except ImportError as exc:
+        raise RuntimeError("PySpark is required for Spark Gold transforms.") from exc
+
+    window = Window.partitionBy(F.upper(F.col("ticker"))).orderBy(F.col("trading_date"))
+    previous_close = F.lag(F.col("close_price").cast("double")).over(window)
+    daily_return = F.when(
+        previous_close.isNull() | (previous_close == 0),
+        F.lit(None).cast("double"),
+    ).otherwise((F.col("close_price").cast("double") - previous_close) / previous_close)
+    return (
+        dataframe.withColumn("ticker", F.upper(F.col("ticker")))
+        .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
+        .withColumn("date_key", F.date_format(F.to_date("trading_date"), "yyyyMMdd").cast("int"))
+        .withColumn("daily_return", daily_return)
+        .withColumn("volatility_signal", F.abs(F.col("daily_return")) > F.lit(0.07))
+    )
+
+
+def write_partitioned_parquet(dataframe: Any, path: str, partition_columns: list[str]) -> None:
+    (dataframe.write.mode("overwrite").partitionBy(*partition_columns).parquet(path))

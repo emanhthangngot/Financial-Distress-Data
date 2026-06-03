@@ -43,6 +43,7 @@ DEFAULT_CONTRACTS = {
             "net_income",
             "operating_cash_flow",
             "retained_earnings",
+            "statement_type",
             "report_release_date",
             "event_timestamp",
         ],
