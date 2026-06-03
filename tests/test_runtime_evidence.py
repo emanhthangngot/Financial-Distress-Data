@@ -94,7 +94,10 @@ def test_evidence_runner_reads_postgres_host_port_from_env_file(tmp_path, monkey
     monkeypatch.delenv("PROJECT_METADATA_DSN", raising=False)
     monkeypatch.delenv("POSTGRES_HOST_PORT", raising=False)
 
-    assert metadata_dsn(env_file) == "postgresql://airflow:airflow@localhost:55432/financial_distress"
+    assert (
+        metadata_dsn(env_file)
+        == "postgresql://airflow:airflow@localhost:55432/financial_distress"
+    )
 
 
 def test_project_metadata_dsn_overrides_env_file(tmp_path, monkeypatch):
