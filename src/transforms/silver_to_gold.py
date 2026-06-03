@@ -158,6 +158,25 @@ def build_obt_company_quarter_risk(
     return output
 
 
+def build_feat_company_unified(
+    company_quarter_rows: list[dict[str, Any]],
+    market_facts: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    references = []
+    for row in company_quarter_rows:
+        reference_timestamp = (
+            row.get("report_release_date") or row.get("event_timestamp") or row.get("created_ts")
+        )
+        references.append({**row, "event_timestamp": reference_timestamp})
+
+    feature_rows = []
+    for row in market_facts:
+        feature_timestamp = row.get("event_timestamp") or row.get("trading_date")
+        feature_rows.append({**row, "event_timestamp": feature_timestamp})
+
+    return pit_join_features(references, feature_rows)
+
+
 def pit_join_features(
     references: list[dict[str, Any]], features: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
