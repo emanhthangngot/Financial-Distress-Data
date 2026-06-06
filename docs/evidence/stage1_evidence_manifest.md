@@ -1,8 +1,8 @@
 # Stage 1 Evidence Manifest
 
 This manifest separates implemented runtime contracts from design-only scope.
-Stage 1 is production-inspired and ready for local runtime evidence collection;
-it is not enterprise-ready.
+Stage 1 is production-inspired and has executable local runtime evidence; it is
+not enterprise-ready.
 
 ## Implemented
 
@@ -11,37 +11,50 @@ it is not enterprise-ready.
 - Bronze-to-Silver schema alignment and latest-`created_ts` deduplication.
 - Gold dimension, fact, OBT, distress-label, and PIT feature helper contracts.
 - Kafka stream event contracts and micro-batch Bronze path generation.
+- Kafka broker produce/consume path for fixture-backed price, news, and alert events.
 - PostgreSQL `project_metadata` DDL and runtime metadata writer.
 - DQ helpers plus runtime `DQRunner` with critical halt policy.
+- Runtime DQ checks over actual Silver/Gold Parquet, plus a DQ failure probe that
+  persists a critical failure before halting.
+- Backfill request, dataset freshness, source request, and collector checkpoint
+  metadata persistence.
 - MinIO Parquet evidence writer.
 - MinIO evidence artifact writer under `evidence/stage1/run_id=.../`.
 - DuckDB view and validation query runner.
+- Gold news sentiment and market alert facts.
+- Split Gold feature tables for financial, market, and news features.
+- Machine-readable runtime evidence audit summary.
 - Primary Airflow evidence DAG: `stage1_local_evidence_pipeline`.
+- Connected real E2E DAG: `stage1_real_e2e_pipeline`.
 - CI-style gates: PyTest, Ruff, Black, and Docker Compose config validation.
 
 ## Designed But Not Implemented
 
 - Live online vnstock/SSI/HOSE/HNX ingestion adapter.
 - Live news source collector.
-- `fact_news_sentiment` and dedicated `feat_company_news_30d` builder.
-- Full Spark-submit Airflow tasks for all Silver and Gold tables.
-- Kafka broker producer plus offset-commit-after-Bronze-write runtime path.
-- Full lineage table beyond run logs, DQ rows, freshness, and schema registry.
+- Full lineage table beyond run logs, DQ rows, freshness, backfill metadata, and
+  evidence artifacts.
+- External schema registry for Kafka events.
+- Iceberg/Delta/Hudi table format support.
 
 ## Remaining Evidence Work
 
-- Run `docker compose up -d` on the local machine.
-- Run `.venv/bin/python scripts/run_stage1_evidence.py`.
-- Confirm MinIO contains `evidence/stage1/run_id=.../` artifact JSON/text files.
-- Capture PostgreSQL query exports or DBeaver screenshots for:
+- Refresh evidence when code changes:
+  - `docker compose up -d`
+  - `.venv/bin/python scripts/run_stage1_real_e2e.py --execution-date <iso-ts> --export-evidence <dir>`
+  - `.venv/bin/python scripts/run_stage1_dq_failure_probe.py --run-id <id> --export-evidence <dir>`
+  - `.venv/bin/python scripts/audit_stage1_evidence.py <dir>`
+- Capture optional PostgreSQL query exports or DBeaver screenshots for:
   - `project_metadata.pipeline_run_log`
   - `project_metadata.data_quality_result`
   - `project_metadata.dataset_freshness`
+  - `project_metadata.backfill_request`
+  - `project_metadata.source_request_log`
+  - `project_metadata.collector_checkpoint`
   - `project_metadata.schema_version_registry`
-- Capture MinIO object screenshots for Bronze, Silver, and Gold prefixes.
-- Capture DuckDB validation query output against Gold views.
-- Trigger and capture Airflow evidence for `stage1_local_evidence_pipeline`.
-- Capture Kafka topic creation evidence from `init/kafka_init_topics.sh`.
+- Capture optional MinIO object screenshots for Bronze, Silver, Gold, and
+  `evidence/stage1/` prefixes.
+- Capture optional DuckDB/DBeaver screenshots for Gold views.
 
 ## Out Of Scope For Phase 1
 

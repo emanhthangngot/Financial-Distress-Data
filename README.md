@@ -42,7 +42,7 @@ The current Stage 1 pipeline uses deterministic fixture-backed collectors, then 
 ├── docs/                  - Specs and evidence notes
 ├── images/                - Architecture diagrams
 ├── init/                  - Kafka topic init script
-├── scripts/               - Local evidence runner
+├── scripts/               - Local E2E, DQ failure, and evidence audit runners
 ├── docker-compose.yml     - Local platform services
 ├── pyproject.toml         - Python package and tooling config
 └── README.md              - This README file
@@ -104,6 +104,35 @@ Run the fixture-backed Stage 1 evidence pipeline from the host.
 .venv/bin/python scripts/run_stage1_evidence.py
 ```
 
+Run the connected local E2E path through Airflow, Kafka, Spark, MinIO,
+PostgreSQL, and DuckDB.
+
+```bash
+.venv/bin/python scripts/run_stage1_real_e2e.py \
+  --execution-date 2026-06-06T10:04:00+00:00 \
+  --export-evidence /tmp/stage1-e2e
+```
+
+Generate a machine-readable audit summary for the E2E artifacts.
+
+```bash
+.venv/bin/python scripts/audit_stage1_evidence.py /tmp/stage1-e2e
+```
+
+Validate the checked-in submission evidence without regenerating files.
+
+```bash
+.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
+```
+
+Prove critical DQ failures are persisted before the pipeline halts.
+
+```bash
+.venv/bin/python scripts/run_stage1_dq_failure_probe.py \
+  --run-id stage1-dq-failure-probe \
+  --export-evidence /tmp/stage1-dq-failure-probe
+```
+
 For a no-service payload check:
 
 ```bash
@@ -131,15 +160,33 @@ stage1_stream_batches.json
 stage1_duckdb_validation.json
 ```
 
+The real E2E runner also exports:
+
+```txt
+stage1_real_airflow_dag_test.txt
+stage1_real_kafka_offsets.json
+stage1_real_minio_objects.json
+stage1_real_postgres_summary.json
+stage1_real_duckdb_validation.json
+stage1_runtime_audit_summary.json
+```
+
 ## Validation Commands
 
 Run local quality gates.
+
+```bash
+.venv/bin/python scripts/run_stage1_quality_gates.py
+```
+
+The one-shot gate runs the same checks individually listed below.
 
 ```bash
 .venv/bin/python -m pytest tests
 .venv/bin/ruff check src dags tests scripts
 .venv/bin/black --check src dags tests scripts
 docker compose config
+.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
 ```
 
 List Kafka topics.
@@ -177,6 +224,11 @@ docker compose exec postgres psql -U airflow -d financial_distress -c \
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
 "select dataset_name, status, freshness_lag_minutes, sla_minutes from project_metadata.dataset_freshness;"
+```
+
+```bash
+docker compose exec postgres psql -U airflow -d financial_distress -c \
+"select dataset_name, start_date, end_date, status, requested_by from project_metadata.backfill_request order by created_at desc limit 20;"
 ```
 
 DuckDB validation output is generated at:

@@ -37,6 +37,83 @@
     ]
   },
   {
+    "query": "SELECT COUNT(*) AS total_dim_date_rows\nFROM gold_dim_date",
+    "columns": [
+      "total_dim_date_rows"
+    ],
+    "rows": [
+      [
+        732
+      ]
+    ]
+  },
+  {
+    "query": "SELECT COUNT(*) AS total_news_sentiment_rows\nFROM gold_fact_news_sentiment",
+    "columns": [
+      "total_news_sentiment_rows"
+    ],
+    "rows": [
+      [
+        2
+      ]
+    ]
+  },
+  {
+    "query": "SELECT COUNT(*) AS total_market_alert_rows\nFROM gold_fact_market_alert",
+    "columns": [
+      "total_market_alert_rows"
+    ],
+    "rows": [
+      [
+        24
+      ]
+    ]
+  },
+  {
+    "query": "SELECT COUNT(*) AS total_financial_feature_rows\nFROM gold_feat_company_financial_4q",
+    "columns": [
+      "total_financial_feature_rows"
+    ],
+    "rows": [
+      [
+        16
+      ]
+    ]
+  },
+  {
+    "query": "SELECT COUNT(*) AS total_market_feature_rows\nFROM gold_feat_company_market_30d",
+    "columns": [
+      "total_market_feature_rows"
+    ],
+    "rows": [
+      [
+        12
+      ]
+    ]
+  },
+  {
+    "query": "SELECT COUNT(*) AS total_news_feature_rows\nFROM gold_feat_company_news_30d",
+    "columns": [
+      "total_news_feature_rows"
+    ],
+    "rows": [
+      [
+        2
+      ]
+    ]
+  },
+  {
+    "query": "SELECT COUNT(*) AS future_feature_leakage_rows\nFROM gold_feat_company_unified\nWHERE feature_event_timestamp IS NOT NULL\n  AND CAST(feature_event_timestamp AS TIMESTAMP) > CAST(event_timestamp AS TIMESTAMP)",
+    "columns": [
+      "future_feature_leakage_rows"
+    ],
+    "rows": [
+      [
+        0
+      ]
+    ]
+  },
+  {
     "query": "SELECT *\nFROM gold_feat_company_unified\nLIMIT 20",
     "columns": [
       "ticker",

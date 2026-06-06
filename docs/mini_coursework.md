@@ -27,17 +27,27 @@ The repository currently implements a local-first Stage 1 data engineering found
 - Bronze-to-Silver normalization and deduplication helpers in `src/transforms/bronze_to_silver.py`, including a Spark DataFrame path for local runtime jobs.
 - Gold table construction helpers in `src/transforms/silver_to_gold.py`, including Spark DataFrame fact builders and idempotent partitioned Parquet write helper.
 - Rule-based distress labels in `src/transforms/compute_distress_labels.py`.
-- Kafka event, news-event, micro-batch, and optional broker-consumer contracts in `src/streaming/`.
+- Kafka price, news, alert, micro-batch, and broker-consumer contracts in `src/streaming/`.
 - Data quality checks in `src/quality/dq_checks.py`.
 - DuckDB SQL helpers and view SQL in `src/catalog/` and `sql/`.
 - PostgreSQL metadata DDL in `sql/init_project_metadata.sql`.
 - Runtime evidence job wrappers in `src/jobs/`, local IO helpers in `src/io/`,
   DuckDB validation runner in `src/catalog/duckdb_runner.py`, and the primary
-  Airflow evidence DAG `dags/stage1_local_evidence_pipeline.py`.
+  Airflow evidence DAGs `dags/stage1_local_evidence_pipeline.py` and
+  `dags/stage1_real_e2e_pipeline.py`.
+- Runtime audit helpers in `scripts/`, including the real E2E runner, DQ failure
+  probe, and evidence summary auditor.
 - PyTest coverage in `tests/`.
 - Architecture image in `images/architecture/architecture-stage-1.png`.
 
-The repository does not yet contain a fully executed end-to-end runtime evidence package. The remaining evidence work is to run the Docker services, execute DAGs or scripts against the local services, produce MinIO objects, query them through DuckDB, and store DBeaver screenshots or query exports under `docs/evidence/`.
+The repository now supports a fully executed local end-to-end runtime evidence
+path. The current runtime evidence runner executes the Airflow E2E DAG against
+local Docker services, writes Bronze/Silver/Gold Parquet objects to MinIO,
+persists metadata and DQ rows to PostgreSQL, validates Gold views through
+DuckDB, and writes a machine-readable audit summary. Host-side evidence exports
+can be stored under `docs/evidence/` or `/tmp/...`; Airflow itself writes
+runtime artifacts to `/tmp/stage1-evidence` and MinIO to avoid bind-mounted
+repository permission issues.
 
 ## 2. Active Phase and Boundaries
 
@@ -115,7 +125,7 @@ The system is designed in a highly advanced "Dual-Mode Architecture" to support 
      -> PySpark Bronze-to-Silver Spark DataFrame jobs (windowed deduplication by created_ts)
      -> PostgreSQL project_metadata Schema (PostgresMetadataWriter live client writes logs/DQ/failed records)
      -> PySpark Silver-to-Gold Spark jobs (partitioned Parquet fact & dimension writes using overwrite mode)
-     -> MinIO Gold Storage (fact_financial_statement, fact_market_price, obt_company_quarter_risk, feat_company_unified)
+     -> MinIO Gold Storage (dimensions, financial/market/news/alert facts, distress labels, OBT, and feature tables)
      -> DuckDB serving engine (reads MinIO Parquet via httpfs views)
      -> DBeaver DB client (queries and captures live runtime evidence)
    ```
@@ -421,7 +431,9 @@ Current implementation supports:
 - `financial.alert_events`
 - `financial.news_events`
 
-News remains fixture/contract-level only until a live news source adapter is added.
+Price, news, and alert events are fixture-backed in Phase 1 and are exercised
+through the local Kafka broker in the real E2E evidence DAG. Live market/news
+source adapters remain out of scope for Phase 1.
 
 Required record fields from `StreamEvent.as_record()`:
 
@@ -436,7 +448,7 @@ created_ts
 
 `StreamEvent.price_update()` produces deterministic event IDs by hashing the payload. `StreamEvent.alert()` uses UUIDs.
 
-`financial.news_events` is represented by a deterministic `StreamEvent.news_sentiment()` factory. A live news collector remains a remaining gap until implemented.
+`financial.news_events` is represented by a deterministic `StreamEvent.news_sentiment()` factory and is materialized into `gold/fact_news_sentiment` by the runtime Spark job. `financial.alert_events` is materialized into `gold/fact_market_alert`.
 
 ## 11. Volume Strategy
 
@@ -503,8 +515,14 @@ Implemented helper outputs:
 - `dim_date`
 - `fact_financial_statement`
 - `fact_market_price`
+- `fact_news_sentiment`
+- `fact_market_alert`
 - `distress_labels`
 - `obt_company_quarter_risk`
+- `feat_company_financial_4q`
+- `feat_company_market_30d`
+- `feat_company_news_30d`
+- `feat_company_unified`
 - point-in-time feature joins through `pit_join_features()`
 
 Implemented behavior:
@@ -514,6 +532,7 @@ Implemented behavior:
 - SCD2-like `dim_company` rebuild behavior for tracked company fields.
 - Financial statement fact rows enriched with `company_key` and `date_key`.
 - Market price fact rows enriched with `daily_return` and `volatility_signal`.
+- News sentiment and market alert facts enriched with `company_key` and `date_key`.
 - Rule-based distress labels using Altman Z double-prime style components plus warning rules.
 - Risk OBT ratios such as current ratio, debt-to-asset, debt-to-equity, ROA, ROE, and EBIT interest coverage.
 - Point-in-time joins that do not use future feature timestamps.
@@ -546,7 +565,7 @@ AND (fact_reference_ts < dim_company.valid_to_ts OR dim_company.valid_to_ts IS N
 
 - `report_release_date` for financial statement facts.
 - `trading_date` for market price facts.
-- `event_timestamp` for news sentiment facts.
+- `event_timestamp` for news sentiment and market alert facts.
 
 This is an explicit Stage 1 design choice, not an accidental omission. A future `company_version_key` can be added only through a schema/code change that also updates fact builders and tests.
 
@@ -556,7 +575,7 @@ Implemented helper behavior:
 
 - `pit_join_features()` joins reference rows to the latest feature row for the same ticker where `feature.event_timestamp <= reference.event_timestamp`.
 
-Designed Gold feature tables, not yet fully implemented as separate builders:
+Implemented Gold feature builders:
 
 - `feat_company_financial_4q`
 - `feat_company_market_30d`
@@ -573,7 +592,8 @@ market/news aggregation window: 30 days ending at report_release_date for obt_co
 financial aggregation window: last 4 quarters available at or before the reference timestamp
 ```
 
-`feat_company_news_30d` and news-driven OBT fields are design contracts only until `financial.news_events` and `fact_news_sentiment` are implemented.
+The runtime DuckDB validation includes a point-in-time leakage check that returns
+zero when no unified feature row uses a future feature timestamp.
 
 Test coverage:
 
@@ -677,7 +697,11 @@ DQ freshness check -> receives latest event timestamp outside SLA -> returns war
 
 Runtime note:
 
-The Python DQ helpers return result objects. Writing those results to PostgreSQL metadata is supported by `PostgresMetadataWriter.log_dq_result()` and by `project_metadata.data_quality_result` DDL. Freshness status can also be upserted into `project_metadata.dataset_freshness` through `update_dataset_freshness()`. An executed database-backed DQ job is still part of remaining runtime evidence work.
+The Python DQ helpers return result objects. `DQRunner` executes those checks,
+persists results through `PostgresMetadataWriter.log_dq_result()`, and raises
+`CriticalDQFailure` after critical failures are written. Runtime E2E checks read
+actual Silver/Gold Parquet rows from MinIO and persist DQ, freshness, and
+failure-probe evidence to `project_metadata`.
 
 ## 16. Metadata Contract
 
@@ -721,6 +745,8 @@ Acceptance criteria:
 Metadata SQL -> runs against local PostgreSQL -> creates project_metadata schema and Phase 1 metadata tables.
 Metadata writer -> logs collector run -> appends run record with run_id, dag_id, task_id, dataset_name, status, and row counts.
 Metadata writer -> logs failed record -> appends record_id, dataset_name, failure_reason, raw_payload, and created_at.
+Metadata writer -> logs source request -> appends source system, endpoint, status, retry count, and payload hash evidence.
+Metadata writer -> upserts collector checkpoint -> stores the latest checkpoint for a collector/source/key tuple.
 Schema registry -> receives known dataset name -> returns current required and nullable field contract.
 ```
 
@@ -728,6 +754,8 @@ Runtime note:
 
 `MetadataWriter` remains an in-memory test/smoke helper. `PostgresMetadataWriter` is the runtime PostgreSQL client for local evidence jobs.
 Airflow smoke tasks choose `PostgresMetadataWriter` when `PROJECT_METADATA_DSN` is set and otherwise keep the in-memory helper for local unit tests.
+The real E2E metadata task writes run logs, DQ results, freshness, backfill,
+source request, and collector checkpoint evidence to `project_metadata`.
 
 ## 17. DuckDB and DBeaver Contract
 
@@ -748,17 +776,20 @@ Implemented behavior:
 
 Current Gold view names:
 
+- `gold_dim_date`
 - `gold_fact_financial_statement`
 - `gold_fact_market_price`
-- `gold_obt_company_quarter_risk`
-- `gold_feat_company_unified`
-
-Designed Gold views not yet present in `sql/duckdb_create_views.sql`:
-
+- `gold_fact_market_alert`
 - `gold_fact_news_sentiment`
+- `gold_obt_company_quarter_risk`
 - `gold_feat_company_financial_4q`
 - `gold_feat_company_market_30d`
 - `gold_feat_company_news_30d`
+- `gold_feat_company_unified`
+
+Runtime validation includes row counts, duplicate-key checks, distress-label
+distribution, market alert/news fact checks, and a point-in-time leakage query
+for `gold_feat_company_unified`.
 
 Acceptance criteria:
 
@@ -786,7 +817,12 @@ Current behavior:
 - DAGs are import-safe when Airflow is not installed.
 - DAGs use `PythonOperator` if Airflow imports are available.
 - DAG tasks call fixture-backed collectors or smoke helper functions.
-- DAGs are scaffolding for evidence, not yet full production DAGs with external API calls, Spark submit, MinIO writes, or PostgreSQL client transactions.
+- `stage1_real_e2e_pipeline` executes the Phase 1 local runtime path: fixture
+  Bronze materialization, Kafka produce/consume, Spark Bronze/Silver/Gold,
+  DQ gate, PostgreSQL metadata writes, DuckDB validation, and MinIO evidence
+  publishing.
+- The DAGs are still local-first coursework DAGs, not production DAGs with live
+  external API calls, remote Spark clusters, or enterprise deployment controls.
 
 Acceptance criteria:
 
@@ -824,7 +860,9 @@ docker compose up -d airflow-webserver airflow-scheduler
 
 Runtime note:
 
-The Docker stack definition exists, but this document does not claim that the full stack has already been executed end to end. That proof belongs in `docs/evidence/` after runtime evidence is captured.
+The Docker stack definition has been exercised through the Stage 1 real E2E
+runner. Submission evidence should include the exported runtime artifacts and
+audit summary, while enterprise production claims remain out of scope.
 
 ## 20. Verification Commands
 
@@ -881,42 +919,57 @@ Expected evidence artifacts:
 - DuckDB SQL query outputs against Gold views.
 - DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 - Airflow DAG screenshots if the local Airflow services are run.
+- Machine-readable audit summary from `scripts/audit_stage1_evidence.py`.
 
-Evidence not yet present should be documented as a remaining task, not described as already completed.
+Evidence should distinguish executed local runtime proof from design-only or
+out-of-scope production capabilities.
 
 ## 22. Current Gaps
 
-These are the operational gaps between the current repository implementation and a fully executed end-to-end local cluster deployment:
+These are the remaining gaps after the local Stage 1 E2E runtime path has been
+implemented and exercised:
 
-* **Source Connectivity Gap**:
-  - Live online stock API collectors ( SSI/Vnstock real network requests) are designed but not deployed. Current active pipelines use `VnstockFixtureAdapter` as a deterministic local boundary to ensure tests are stable and offline-capable.
-* **News Sentiment Flow Gap**:
-  - The `StreamEvent.news_sentiment()` factory exists in the codebase, but the live streaming news collector, `fact_news_sentiment` table, and `feat_company_news_30d` aggregator are still design contracts pending live integration.
-* **Feature Aggregation Builders**:
-  - Unified company-quarter feature calculations are fully verified via `pit_join_features()` and the DuckDB `gold_feat_company_unified` view contract. Individual automated pipeline jobs for `feat_company_financial_4q` and `feat_company_market_30d` remain as design targets.
-* **Operational Runtime Execution Gaps (Ready for Evidence Runs)**:
-  - **PySpark Integration**: Spark-compatible helpers exist in code (`spark_session.py`, `bronze_to_silver_spark()`, `build_fact_financial_statement_spark()`, `build_fact_market_price_spark()`). The remaining step is executing these Spark jobs against the local Docker services and saving logs/output under `docs/evidence/`.
-  - **PostgreSQL Persistence**: `PostgresMetadataWriter` supports local metadata writes. The remaining step is launching Postgres, installing runtime dependencies in the execution image, and saving live metadata query evidence.
-  - **Kafka Streaming**: `create_kafka_consumer` and `consume_json_messages` implement the broker consumer boundary. The remaining step is running a live broker, creating topics with `init/kafka_init_topics.sh`, and saving consumer/topic evidence.
-  - **Airflow Orchestration**: The 8 DAGs are import-safe smoke scaffolds. They still need a live evidence run against the local stack.
-  - **Evidence Collection**: The physical artifacts, SQL exports, and DBeaver screenshots showing data in MinIO/PostgreSQL still need to be captured and placed under `docs/evidence/` once the local cluster is kicked off.
+* **Live Source Connectivity Gap**:
+  - Live online stock/news API collectors (SSI/Vnstock/HOSE/HNX real network
+    requests) are designed but not deployed. Current active pipelines use
+    `VnstockFixtureAdapter` and deterministic fixture stream events as a stable
+    local boundary.
+* **Coursework Scale Gap**:
+  - Runtime data volume is intentionally small. It proves contracts,
+    orchestration, storage, DQ, metadata, and queryability; it does not prove
+    high-throughput or enterprise-scale performance.
+* **Enterprise Data Platform Gap**:
+  - Phase 1 uses raw Parquet folders rather than Iceberg/Delta/Hudi.
+  - Kafka contracts are implemented in Python, not in an external schema registry.
+  - Lineage is limited to run logs, DQ rows, freshness, backfill metadata, and
+    evidence artifacts; there is no OpenLineage/DataHub/Marquez-style platform.
+  - Observability is based on logs, query exports, and audit JSON rather than
+    metrics dashboards, traces, and alerting.
+  - Secrets/RBAC remain local-development defaults.
+* **Phase 2 Gap**:
+  - Drift scenarios, ML training, model serving, model monitoring, and LLM
+    functionality remain out of scope for Phase 1.
 
-Phase 1 code contracts are implemented and tested for local-first coursework scope. The repository should be described as production-inspired and ready for runtime evidence collection, not as enterprise-ready until an end-to-end local cluster run has been executed and documented.
+Phase 1 should be described as a production-inspired local-first lakehouse
+foundation with runtime evidence, not as enterprise-ready production.
 
-## 23. Implementation Order for Remaining Evidence Work
+## 23. Evidence Run Order
 
-Recommended next steps:
+Recommended evidence refresh steps:
 
-1. Run quality gates locally.
-2. Start PostgreSQL, MinIO, and Kafka with Docker Compose.
-3. Confirm PostgreSQL initializes `project_metadata` from `sql/init_project_metadata.sql`.
-4. Add or run a small script/DAG task that writes fixture collector outputs to local Bronze paths.
-5. Convert fixture Bronze rows through Silver and Gold helper contracts.
-6. Write sample outputs to MinIO-compatible paths or a local evidence substitute if Spark/MinIO runtime is not available.
-7. Run DuckDB view SQL or validation SQL against generated Parquet evidence.
-8. Capture DBeaver screenshots or query exports.
-9. Store evidence under `docs/evidence/`.
-10. Update this document only with evidence that actually exists.
+1. Run quality gates locally with `scripts/run_stage1_quality_gates.py`.
+2. Start the full local Docker stack with `docker compose up -d`.
+3. Confirm Airflow DAG import errors are empty.
+4. Run `scripts/run_stage1_real_e2e.py` with a unique execution date and an
+   evidence export directory.
+5. Run `scripts/run_stage1_dq_failure_probe.py` to prove critical DQ halt
+   semantics are persisted before failure.
+6. Run `scripts/audit_stage1_evidence.py` against the E2E evidence directory.
+7. Run `scripts/audit_stage1_evidence.py docs/evidence --check` after copying
+   the export artifacts into the submission evidence package.
+8. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
+9. Keep evidence claims tied only to artifacts that were produced by an actual
+   local run.
 
 ## 24. Acceptance Criteria Summary
 
