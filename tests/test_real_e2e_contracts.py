@@ -163,6 +163,7 @@ def test_stage1_dq_failure_probe_script_uses_intentional_failure_checks():
 
     assert "build_intentional_dq_failure_checks" in source_names
     assert "CriticalDQFailure" in source_names
+    assert "metadata_dsn" in source_names
 
 
 def test_real_e2e_postgres_summary_exports_operational_metadata_tables():

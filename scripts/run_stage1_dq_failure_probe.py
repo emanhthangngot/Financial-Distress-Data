@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -13,6 +12,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.jobs.stage1_dq_job import build_intentional_dq_failure_checks
+from src.jobs.stage1_evidence_job import metadata_dsn
 from src.metadata.metadata_writer import PostgresMetadataWriter, psycopg_connection_factory
 from src.quality.dq_runner import CriticalDQFailure, DQRunner
 
@@ -25,10 +25,7 @@ def main() -> None:
     parser.add_argument("--export-evidence", default="/tmp/stage1-dq-failure-probe")
     parser.add_argument(
         "--dsn",
-        default=os.getenv(
-            "PROJECT_METADATA_DSN",
-            "postgresql://airflow:airflow@localhost:55432/financial_distress",
-        ),
+        default=metadata_dsn(),
     )
     args = parser.parse_args()
 

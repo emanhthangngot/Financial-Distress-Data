@@ -134,6 +134,71 @@ def test_host_minio_endpoint_ignores_docker_network_endpoint(tmp_path, monkeypat
     assert minio_host_endpoint(env_file) == "localhost:9000"
 
 
+def test_real_e2e_minio_config_reads_env_file_credentials(tmp_path, monkeypatch):
+    from scripts.run_stage1_real_e2e import _minio_client_config
+
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "\n".join(
+            [
+                "MINIO_ENDPOINT=http://minio:9000",
+                "MINIO_ROOT_USER=custom_user",
+                "MINIO_ROOT_PASSWORD=custom_password",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("MINIO_ENDPOINT", raising=False)
+    monkeypatch.delenv("MINIO_ROOT_USER", raising=False)
+    monkeypatch.delenv("MINIO_ROOT_PASSWORD", raising=False)
+
+    config = _minio_client_config(env_file)
+
+    assert config == {
+        "endpoint": "localhost:9000",
+        "access_key": "custom_user",
+        "secret_key": "custom_password",
+        "secure": False,
+    }
+
+
+def test_real_e2e_minio_config_prefers_environment_credentials(tmp_path, monkeypatch):
+    from scripts.run_stage1_real_e2e import _minio_client_config
+
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "MINIO_ROOT_USER=file_user\nMINIO_ROOT_PASSWORD=file_password\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("MINIO_ROOT_USER", "env_user")
+    monkeypatch.setenv("MINIO_ROOT_PASSWORD", "env_password")
+
+    config = _minio_client_config(env_file)
+
+    assert config["access_key"] == "env_user"
+    assert config["secret_key"] == "env_password"
+
+
+def test_real_e2e_postgres_cli_args_derive_user_and_database_from_dsn(tmp_path, monkeypatch):
+    from scripts.run_stage1_real_e2e import _postgres_cli_args
+
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "\n".join(
+            [
+                "POSTGRES_USER=custom_user",
+                "POSTGRES_PASSWORD=custom_password",
+                "POSTGRES_HOST_PORT=15432",
+                "POSTGRES_DB=custom_db",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("PROJECT_METADATA_DSN", raising=False)
+
+    assert _postgres_cli_args(env_file) == ("custom_user", "custom_db")
+
+
 def test_airflow_init_user_create_command_is_single_valid_command():
     compose = yaml.safe_load(Path("docker-compose.yml").read_text(encoding="utf-8"))
     command = compose["services"]["airflow-init"]["command"]

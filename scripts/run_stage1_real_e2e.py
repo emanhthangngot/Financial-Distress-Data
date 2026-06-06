@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.catalog.duckdb_runner import run_duckdb_validation
+from src.jobs.stage1_evidence_job import metadata_dsn, minio_host_endpoint, read_env_file
 
 
 def run(command: list[str], timeout: int = 120) -> str:
@@ -47,14 +50,27 @@ def kafka_offsets() -> dict[str, list[str]]:
     return output
 
 
-def minio_objects() -> list[dict[str, int | str]]:
+def _minio_client_config(env_path: str | Path = ".env") -> dict[str, Any]:
+    env_file_values = read_env_file(env_path)
+    return {
+        "endpoint": minio_host_endpoint(env_path),
+        "access_key": os.getenv("MINIO_ROOT_USER")
+        or env_file_values.get("MINIO_ROOT_USER", "minioadmin"),
+        "secret_key": os.getenv("MINIO_ROOT_PASSWORD")
+        or env_file_values.get("MINIO_ROOT_PASSWORD", "minioadmin"),
+        "secure": False,
+    }
+
+
+def minio_objects(env_path: str | Path = ".env") -> list[dict[str, int | str]]:
     from minio import Minio
 
+    config = _minio_client_config(env_path)
     client = Minio(
-        "localhost:9000",
-        access_key="minioadmin",
-        secret_key="minioadmin",
-        secure=False,
+        config["endpoint"],
+        access_key=config["access_key"],
+        secret_key=config["secret_key"],
+        secure=config["secure"],
     )
     return [
         {"object_name": item.object_name, "size": item.size or 0}
@@ -62,7 +78,20 @@ def minio_objects() -> list[dict[str, int | str]]:
     ]
 
 
-def postgres_summary() -> dict[str, str]:
+def _postgres_cli_args(env_path: str | Path = ".env") -> tuple[str, str]:
+    dsn = metadata_dsn(env_path)
+    try:
+        _, credentials_and_host = dsn.split("://", 1)
+        credentials, host_and_database = credentials_and_host.split("@", 1)
+        user, _password = credentials.split(":", 1)
+        database = host_and_database.rsplit("/", 1)[1]
+    except ValueError as exc:
+        raise ValueError(f"Unsupported PROJECT_METADATA_DSN format for psql export: {dsn}") from exc
+    return user, database
+
+
+def postgres_summary(env_path: str | Path = ".env") -> dict[str, str]:
+    user, database = _postgres_cli_args(env_path)
     queries = {
         "pipeline_run_log": (
             "SELECT dag_id, task_id, dataset_name, status, count(*) "
@@ -101,9 +130,9 @@ def postgres_summary() -> dict[str, str]:
                 "financial-distress-data-postgres-1",
                 "psql",
                 "-U",
-                "airflow",
+                user,
                 "-d",
-                "financial_distress",
+                database,
                 "-c",
                 query,
             ]
