@@ -1,7 +1,7 @@
 [
   {
-    "batch_id": "8d6c89e2-578b-48cd-8998-81e59d395cd1",
-    "bronze_path": "s3a://financial-distress-lake/bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=8d6c89e2-578b-48cd-8998-81e59d395cd1/",
+    "batch_id": "474d58d3-d08a-4e81-b663-36a677cb287e",
+    "bronze_path": "s3a://financial-distress-lake/bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=474d58d3-d08a-4e81-b663-36a677cb287e/",
     "event_date": "2026-01-01",
     "event_hour": "09",
     "record_count": 2,
