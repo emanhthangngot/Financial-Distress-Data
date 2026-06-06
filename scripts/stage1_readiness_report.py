@@ -19,18 +19,23 @@ from scripts.check_stage1_services import check_services
 PROJECT_LABEL = "production-inspired local-first lakehouse foundation with runtime evidence"
 
 
-def _run_git(command: tuple[str, ...], *, cwd: Path = PROJECT_ROOT) -> str:
+def _run_git(
+    command: tuple[str, ...],
+    *,
+    cwd: Path = PROJECT_ROOT,
+    default: str = "unknown",
+) -> str:
     process = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
     if process.returncode != 0:
-        return "unknown"
-    return process.stdout.strip() or "unknown"
+        return default
+    return process.stdout.strip() or default
 
 
 def _git_summary(*, cwd: Path = PROJECT_ROOT) -> dict[str, str]:
     return {
         "branch": _run_git(("git", "branch", "--show-current"), cwd=cwd),
         "commit": _run_git(("git", "rev-parse", "--short", "HEAD"), cwd=cwd),
-        "status": _run_git(("git", "status", "--short"), cwd=cwd) or "clean",
+        "status": _run_git(("git", "status", "--short"), cwd=cwd, default="clean"),
     }
 
 

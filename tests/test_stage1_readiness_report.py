@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import subprocess
 
 
 def test_readiness_report_uses_evidence_only_by_default(monkeypatch):
@@ -94,3 +95,19 @@ def test_readiness_report_fails_when_evidence_fails(monkeypatch):
     assert report["status"] == "fail"
     assert report["coursework_ready"] is False
     assert report["failed_sections"] == ["evidence"]
+
+
+def test_git_summary_reports_clean_status_for_empty_git_status(monkeypatch):
+    module = importlib.import_module("scripts.stage1_readiness_report")
+
+    def fake_run(command, *, cwd, capture_output, text, check):
+        outputs = {
+            ("git", "branch", "--show-current"): "dev\n",
+            ("git", "rev-parse", "--short", "HEAD"): "abc1234\n",
+            ("git", "status", "--short"): "",
+        }
+        return subprocess.CompletedProcess(command, 0, stdout=outputs[tuple(command)], stderr="")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    assert module._git_summary() == {"branch": "dev", "commit": "abc1234", "status": "clean"}
