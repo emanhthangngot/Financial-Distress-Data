@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
-from src.collectors.source_adapters.vnstock_adapter import VnstockFixtureAdapter
+from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.transforms.silver_to_gold import build_distress_labels, build_fact_financial_statement
 
 DAG, PythonOperator = airflow_imports()
