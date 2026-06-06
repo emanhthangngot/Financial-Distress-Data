@@ -28,6 +28,7 @@ Suggested local commands:
 ```bash
 docker compose up -d postgres minio kafka
 docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
+.venv/bin/python scripts/check_stage1_services.py
 .venv/bin/python scripts/run_stage1_quality_gates.py
 ```
 
@@ -50,6 +51,7 @@ creates the MinIO bucket `financial-distress-lake`, and creates the Kafka topics
 cp .env.example .env
 docker compose up -d
 docker compose ps
+.venv/bin/python scripts/check_stage1_services.py
 ```
 
 Run the Stage 1 evidence materializer:

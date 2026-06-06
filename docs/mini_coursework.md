@@ -959,16 +959,18 @@ Recommended evidence refresh steps:
 
 1. Run quality gates locally with `scripts/run_stage1_quality_gates.py`.
 2. Start the full local Docker stack with `docker compose up -d`.
-3. Confirm Airflow DAG import errors are empty.
-4. Run `scripts/run_stage1_real_e2e.py` with a unique execution date and an
+3. Run `scripts/check_stage1_services.py` to confirm PostgreSQL, MinIO, Kafka,
+   and Airflow are ready.
+4. Confirm Airflow DAG import errors are empty.
+5. Run `scripts/run_stage1_real_e2e.py` with a unique execution date and an
    evidence export directory.
-5. Run `scripts/run_stage1_dq_failure_probe.py` to prove critical DQ halt
+6. Run `scripts/run_stage1_dq_failure_probe.py` to prove critical DQ halt
    semantics are persisted before failure.
-6. Run `scripts/audit_stage1_evidence.py` against the E2E evidence directory.
-7. Run `scripts/audit_stage1_evidence.py docs/evidence --check` after copying
+7. Run `scripts/audit_stage1_evidence.py` against the E2E evidence directory.
+8. Run `scripts/audit_stage1_evidence.py docs/evidence --check` after copying
    the export artifacts into the submission evidence package.
-8. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
-9. Keep evidence claims tied only to artifacts that were produced by an actual
+9. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
+10. Keep evidence claims tied only to artifacts that were produced by an actual
    local run.
 
 ## 24. Acceptance Criteria Summary

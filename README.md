@@ -77,6 +77,7 @@ Check service status.
 
 ```bash
 docker compose ps
+.venv/bin/python scripts/check_stage1_services.py
 ```
 
 Create Kafka topics manually if needed.
