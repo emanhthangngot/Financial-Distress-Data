@@ -44,6 +44,12 @@ REQUIRED_MINIO_PREFIXES = {
     "gold/feat_company_unified/",
     "evidence/stage1/",
 }
+REQUIRED_JSON_ARTIFACTS = (
+    "stage1_real_kafka_offsets.json",
+    "stage1_real_postgres_summary.json",
+    "stage1_real_duckdb_validation.json",
+    "stage1_real_minio_objects.json",
+)
 
 
 def _airflow_log_success(evidence_dir: Path) -> bool:
@@ -56,6 +62,20 @@ def _airflow_log_success(evidence_dir: Path) -> bool:
 
 def _load_json(evidence_dir: Path, filename: str) -> Any:
     return json.loads((evidence_dir / filename).read_text(encoding="utf-8"))
+
+
+def _load_required_json_artifacts(evidence_dir: Path) -> tuple[dict[str, Any], dict[str, bool]]:
+    artifacts = {}
+    checks = {}
+    for filename in REQUIRED_JSON_ARTIFACTS:
+        check_name = f"artifact_{filename}_readable"
+        try:
+            artifacts[filename] = _load_json(evidence_dir, filename)
+            checks[check_name] = True
+        except (FileNotFoundError, json.JSONDecodeError):
+            artifacts[filename] = None
+            checks[check_name] = False
+    return artifacts, checks
 
 
 def _dq_failure_probe_passed(evidence_dir: Path) -> bool:
@@ -109,14 +129,16 @@ def _topic_has_positive_offset(lines: list[str]) -> bool:
 
 def audit_evidence(evidence_dir: str | Path) -> dict[str, Any]:
     root = Path(evidence_dir)
-    kafka_offsets = _load_json(root, "stage1_real_kafka_offsets.json")
-    postgres_summary = _load_json(root, "stage1_real_postgres_summary.json")
-    duckdb_validation = _load_json(root, "stage1_real_duckdb_validation.json")
-    minio_objects = _load_json(root, "stage1_real_minio_objects.json")
+    artifacts, artifact_checks = _load_required_json_artifacts(root)
+    kafka_offsets = artifacts["stage1_real_kafka_offsets.json"] or {}
+    postgres_summary = artifacts["stage1_real_postgres_summary.json"] or {}
+    duckdb_validation = artifacts["stage1_real_duckdb_validation.json"] or []
+    minio_objects = artifacts["stage1_real_minio_objects.json"] or []
     metrics = _metric_rows(duckdb_validation)
     object_names = [item["object_name"] for item in minio_objects]
 
     checks = {
+        **artifact_checks,
         "airflow_log_success": _airflow_log_success(root),
         "all_kafka_topics_present": REQUIRED_TOPICS.issubset(kafka_offsets),
         "all_kafka_topics_have_offsets": all(kafka_offsets.get(topic) for topic in REQUIRED_TOPICS),

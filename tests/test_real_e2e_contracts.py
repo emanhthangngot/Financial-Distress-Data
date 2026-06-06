@@ -235,3 +235,27 @@ def test_stage1_evidence_audit_reports_failed_check_names(tmp_path: Path):
     assert summary["status"] == "fail"
     assert "minio_has_gold_alert_fact" in summary["failed_checks"]
     assert "minio_has_required_medallion_prefixes" in summary["failed_checks"]
+
+
+def test_stage1_evidence_audit_reports_missing_json_artifact_without_traceback(tmp_path: Path):
+    module = importlib.import_module("scripts.audit_stage1_evidence")
+    _write_complete_stage1_audit_artifacts(tmp_path)
+    (tmp_path / "stage1_real_kafka_offsets.json").unlink()
+
+    summary = module.audit_evidence(tmp_path)
+
+    assert summary["status"] == "fail"
+    assert "artifact_stage1_real_kafka_offsets.json_readable" in summary["failed_checks"]
+    assert "all_kafka_topics_present" in summary["failed_checks"]
+
+
+def test_stage1_evidence_audit_reports_malformed_json_artifact_without_traceback(tmp_path: Path):
+    module = importlib.import_module("scripts.audit_stage1_evidence")
+    _write_complete_stage1_audit_artifacts(tmp_path)
+    (tmp_path / "stage1_real_duckdb_validation.json").write_text("{broken json", encoding="utf-8")
+
+    summary = module.audit_evidence(tmp_path)
+
+    assert summary["status"] == "fail"
+    assert "artifact_stage1_real_duckdb_validation.json_readable" in summary["failed_checks"]
+    assert "duckdb_total_financial_statement_rows_ok" in summary["failed_checks"]
