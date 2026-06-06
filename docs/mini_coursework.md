@@ -829,7 +829,8 @@ Acceptance criteria:
 ```text
 Python test runner -> imports DAG files without Airflow installed -> import does not fail due to guarded Airflow imports.
 Airflow runtime -> loads DAG files with Airflow installed -> creates Stage 1 DAGs with manual schedules and stage tags.
-Stage 1 DAG task -> calls smoke helper -> returns deterministic rows or SQL strings for evidence scaffolding.
+Stage 1 local evidence DAG task -> calls deterministic smoke helper -> returns fixture-backed rows or SQL strings for lightweight evidence.
+Stage 1 real E2E DAG task chain -> runs local fixture, Kafka, Spark, DQ, PostgreSQL, DuckDB, and MinIO steps -> exported evidence passes the runtime audit.
 ```
 
 ## 19. Local Docker Contract
@@ -854,8 +855,8 @@ Useful commands:
 ```bash
 cp .env.example .env
 docker compose config
-docker compose up -d postgres minio kafka
-docker compose up -d airflow-webserver airflow-scheduler
+docker compose up -d
+.venv/bin/python scripts/check_stage1_services.py
 ```
 
 Runtime note:
@@ -869,37 +870,46 @@ audit summary, while enterprise production claims remain out of scope.
 Current local quality commands:
 
 ```bash
-pytest tests
-ruff check src dags tests
-black --check src dags tests
-docker compose config
+.venv/bin/python scripts/run_stage1_quality_gates.py
 ```
 
-The GitHub Actions workflow mirrors these gates for `main` and `dev` branch pushes and pull requests.
+The one-shot gate runs:
+
+```bash
+.venv/bin/python -m pytest tests
+.venv/bin/python -m ruff check src dags tests scripts
+.venv/bin/python -m black --check src dags tests scripts
+docker compose config
+.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
+```
+
+The GitHub Actions workflow runs the same one-shot gate for `main` and `dev`
+branch pushes and pull requests.
 
 Expected test coverage:
 
 ```text
+tests/test_airflow_stage1_dag.py
 tests/test_bronze_to_silver.py
 tests/test_distress_labels.py
 tests/test_dq_checks.py
 tests/test_keys.py
+tests/test_real_e2e_contracts.py
 tests/test_runtime_adapters.py
 tests/test_runtime_evidence.py
-tests/test_airflow_stage1_dag.py
-tests/test_stage1_jobs.py
 tests/test_silver_to_gold.py
+tests/test_stage1_jobs.py
+tests/test_stage1_quality_gates.py
+tests/test_stage1_service_checks.py
 tests/test_streaming.py
 ```
 
 Acceptance criteria:
 
 ```text
-Developer -> runs pytest tests -> all current unit tests pass.
-Developer -> runs ruff check src dags tests -> lint gate passes.
-Developer -> runs black --check src dags tests -> formatting gate passes.
-Developer -> runs docker compose config -> compose file is valid.
-GitHub Actions -> runs on dev pull request -> executes Ruff, Black, PyTest, and Docker Compose config gates.
+Developer -> runs scripts/run_stage1_quality_gates.py -> PyTest, Ruff, Black, Docker Compose config, and evidence audit gates pass.
+Developer -> runs scripts/check_stage1_services.py after docker compose up -d -> required local services, Kafka topics, MinIO bucket, PostgreSQL readiness, and Airflow imports pass.
+GitHub Actions -> runs on dev pull request or push -> executes the Stage 1 quality gate runner successfully.
 ```
 
 ## 21. Evidence Targets
@@ -912,14 +922,15 @@ docs/evidence/
 
 Expected evidence artifacts:
 
-- Test command output.
-- `docker compose config` output.
+- `scripts/run_stage1_quality_gates.py` output.
+- `scripts/check_stage1_services.py` output after the local stack starts.
 - PostgreSQL table screenshots or query exports for `project_metadata`.
 - MinIO bucket screenshots showing Bronze/Silver/Gold paths after data is written.
 - DuckDB SQL query outputs against Gold views.
 - DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 - Airflow DAG screenshots if the local Airflow services are run.
 - Machine-readable audit summary from `scripts/audit_stage1_evidence.py`.
+- DQ failure probe artifact from `scripts/run_stage1_dq_failure_probe.py`.
 
 Evidence should distinguish executed local runtime proof from design-only or
 out-of-scope production capabilities.
