@@ -1,0 +1,362 @@
+from __future__ import annotations
+
+import json
+import os
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from src.catalog.duckdb_runner import run_duckdb_validation
+from src.collectors.company_list_collector import collect_companies
+from src.collectors.financial_statement_collector import collect_financial_statements
+from src.collectors.market_price_collector import collect_market_prices
+from src.io.minio_writer import write_minio_dataset, write_minio_text
+from src.io.paths import DEFAULT_BUCKET, stage1_dataset_object_keys
+from src.metadata.metadata_writer import (
+    PostgresMetadataWriter,
+    psycopg_connection_factory,
+    utc_now_iso,
+)
+from src.metadata.schema_registry import InMemorySchemaRegistry
+from src.quality.dq_checks import check_freshness, check_not_null, check_unique
+from src.streaming.events import StreamEvent
+from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
+from src.transforms.bronze_to_silver import bronze_to_silver
+from src.transforms.silver_to_gold import (
+    build_dim_company,
+    build_distress_labels,
+    build_fact_financial_statement,
+    build_fact_market_price,
+    build_feat_company_unified,
+    build_obt_company_quarter_risk,
+)
+
+DEFAULT_EVIDENCE_DIR = Path("docs/evidence")
+DEFAULT_ENV_PATH = Path(".env")
+DEFAULT_EVIDENCE_PREFIX = "evidence/stage1"
+
+
+@dataclass(frozen=True)
+class EvidencePayload:
+    datasets: dict[str, list[dict[str, Any]]]
+    object_keys: list[str]
+    row_counts: dict[str, int]
+    stream_batches: list[dict[str, Any]]
+
+
+def read_env_file(path: str | Path = DEFAULT_ENV_PATH) -> dict[str, str]:
+    env_path = Path(path)
+    if not env_path.exists():
+        return {}
+
+    values: dict[str, str] = {}
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def _config_value(name: str, env_file_values: dict[str, str], default: str) -> str:
+    return os.getenv(name) or env_file_values.get(name) or default
+
+
+def metadata_dsn(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
+    if dsn := os.getenv("PROJECT_METADATA_DSN"):
+        return dsn
+
+    env_file_values = read_env_file(env_path)
+    user = _config_value("POSTGRES_USER", env_file_values, "airflow")
+    password = _config_value("POSTGRES_PASSWORD", env_file_values, "airflow")
+    database = _config_value("POSTGRES_DB", env_file_values, "financial_distress")
+    host_port = _config_value("POSTGRES_HOST_PORT", env_file_values, "5432")
+    return f"postgresql://{user}:{password}@localhost:{host_port}/{database}"
+
+
+def minio_host_endpoint(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
+    endpoint = os.getenv("MINIO_ENDPOINT")
+    if endpoint:
+        return endpoint.removeprefix("http://").removeprefix("https://")
+
+    env_file_values = read_env_file(env_path)
+    endpoint = env_file_values.get("MINIO_ENDPOINT", "localhost:9000")
+    endpoint = endpoint.removeprefix("http://").removeprefix("https://")
+    if endpoint.startswith("minio:"):
+        return endpoint.replace("minio:", "localhost:", 1)
+    return endpoint
+
+
+def current_evidence_run_id() -> str:
+    run_id = os.getenv("STAGE1_EVIDENCE_RUN_ID") or os.getenv("AIRFLOW_CTX_DAG_RUN_ID")
+    if not run_id:
+        run_id = utc_now_iso()
+    return _sanitize_evidence_run_id(run_id)
+
+
+def _sanitize_evidence_run_id(run_id: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.=\-]+", "_", run_id)
+
+
+def evidence_prefix(run_id: str | None = None) -> str:
+    safe_run_id = _sanitize_evidence_run_id(run_id) if run_id else current_evidence_run_id()
+    return f"{DEFAULT_EVIDENCE_PREFIX}/run_id={safe_run_id}"
+
+
+def _with_ingest_ts(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    ingest_ts = utc_now_iso()
+    return [{**row, "ingest_ts": ingest_ts} for row in rows]
+
+
+def _silver_dataset(
+    rows: list[dict[str, Any]], dataset_name: str, dedup_keys: list[str]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    contract = InMemorySchemaRegistry().get_current(dataset_name)
+    return bronze_to_silver(rows, contract.required, contract.nullable, dedup_keys)
+
+
+def _stream_batches() -> list[dict[str, Any]]:
+    consumer = MicroBatchConsumer(flush_record_count=2)
+    consumer.add_event(
+        StreamEvent.price_update(
+            "AAA",
+            "2026-01-01T09:00:00+00:00",
+            "2026-01-01T09:00:01+00:00",
+            10.0,
+            100,
+        ).as_record()
+    )
+    return consumer.add_event(
+        StreamEvent.price_update(
+            "AAA",
+            "2026-01-01T09:00:02+00:00",
+            "2026-01-01T09:00:03+00:00",
+            10.1,
+            120,
+        ).as_record()
+    )
+
+
+def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
+    tickers = ["AAA", "BBB"]
+    bronze_companies = _with_ingest_ts(collect_companies())
+    bronze_financial_statements = _with_ingest_ts(collect_financial_statements(tickers, 2024, 2025))
+    bronze_market_prices = _with_ingest_ts(collect_market_prices(tickers, 2024, 2025))
+
+    silver_companies, failed_companies = _silver_dataset(bronze_companies, "companies", ["ticker"])
+    silver_financial_statements, failed_financial_statements = _silver_dataset(
+        bronze_financial_statements,
+        "financial_statements",
+        ["ticker", "report_period"],
+    )
+    silver_market_prices, failed_market_prices = _silver_dataset(
+        bronze_market_prices,
+        "market_prices_daily",
+        ["ticker", "trading_date"],
+    )
+
+    gold_dim_company = build_dim_company(silver_companies)
+    gold_fact_financial_statement = build_fact_financial_statement(silver_financial_statements)
+    gold_fact_market_price = build_fact_market_price(silver_market_prices)
+    gold_distress_labels = build_distress_labels(gold_fact_financial_statement)
+    gold_obt_company_quarter_risk = build_obt_company_quarter_risk(
+        gold_fact_financial_statement,
+        gold_distress_labels,
+        gold_fact_market_price,
+    )
+    gold_feat_company_unified = build_feat_company_unified(
+        gold_obt_company_quarter_risk,
+        gold_fact_market_price,
+    )
+
+    datasets = {
+        "bronze_companies": bronze_companies,
+        "bronze_financial_statements": bronze_financial_statements,
+        "bronze_market_prices": bronze_market_prices,
+        "silver_companies": silver_companies,
+        "silver_financial_statements": silver_financial_statements,
+        "silver_market_prices": silver_market_prices,
+        "gold_dim_company": gold_dim_company,
+        "gold_fact_financial_statement": gold_fact_financial_statement,
+        "gold_fact_market_price": gold_fact_market_price,
+        "gold_distress_labels": gold_distress_labels,
+        "gold_obt_company_quarter_risk": gold_obt_company_quarter_risk,
+        "gold_feat_company_unified": gold_feat_company_unified,
+        "failed_records": [
+            *failed_companies,
+            *failed_financial_statements,
+            *failed_market_prices,
+        ],
+    }
+    return EvidencePayload(
+        datasets=datasets,
+        object_keys=stage1_dataset_object_keys(bucket),
+        row_counts={name: len(rows) for name, rows in datasets.items()},
+        stream_batches=_stream_batches(),
+    )
+
+
+def write_evidence_files(payload: EvidencePayload, evidence_dir: str | Path) -> None:
+    output_dir = Path(evidence_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "stage1_row_counts.json").write_text(
+        json.dumps(payload.row_counts, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    (output_dir / "stage1_minio_objects.txt").write_text(
+        "\n".join(payload.object_keys) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "stage1_stream_batches.json").write_text(
+        json.dumps(payload.stream_batches, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+
+
+def _minio_client() -> Any:
+    try:
+        from minio import Minio
+    except ImportError as exc:
+        raise RuntimeError(
+            "Install runtime dependencies with .venv/bin/python -m pip install -e '.[runtime]'."
+        ) from exc
+
+    return Minio(
+        minio_host_endpoint(),
+        access_key=os.getenv("MINIO_ROOT_USER", "minioadmin"),
+        secret_key=os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+        secure=False,
+    )
+
+
+def _ensure_bucket(client: Any, bucket: str) -> None:
+    if not client.bucket_exists(bucket):
+        client.make_bucket(bucket)
+
+
+def write_minio_outputs(payload: EvidencePayload, bucket: str) -> None:
+    client = _minio_client()
+    _ensure_bucket(client, bucket)
+
+    dataset_names = [name for name in payload.datasets if name != "failed_records"]
+    dataset_by_key = dict(
+        zip(
+            payload.object_keys,
+            [payload.datasets[name] for name in dataset_names],
+            strict=True,
+        )
+    )
+    for object_key, rows in dataset_by_key.items():
+        write_minio_dataset(client, bucket, object_key, rows)
+
+
+def build_evidence_artifacts(
+    payload: EvidencePayload,
+    duckdb_validation: list[dict[str, Any]] | None = None,
+) -> dict[str, str]:
+    artifacts = {
+        "stage1_row_counts.json": json.dumps(payload.row_counts, indent=2, sort_keys=True),
+        "stage1_minio_objects.txt": "\n".join(payload.object_keys) + "\n",
+        "stage1_stream_batches.json": json.dumps(
+            payload.stream_batches,
+            indent=2,
+            sort_keys=True,
+        ),
+    }
+    if duckdb_validation is not None:
+        artifacts["stage1_duckdb_validation.json"] = json.dumps(
+            duckdb_validation,
+            indent=2,
+            default=str,
+        )
+    return artifacts
+
+
+def write_minio_evidence_artifacts(
+    payload: EvidencePayload,
+    bucket: str,
+    run_id: str | None = None,
+    duckdb_validation: list[dict[str, Any]] | None = None,
+) -> str:
+    client = _minio_client()
+    _ensure_bucket(client, bucket)
+    prefix = evidence_prefix(run_id)
+    for filename, text in build_evidence_artifacts(payload, duckdb_validation).items():
+        content_type = "application/json" if filename.endswith(".json") else "text/plain"
+        write_minio_text(client, bucket, f"{prefix}/{filename}", text, content_type)
+    return f"s3://{bucket}/{prefix}/"
+
+
+def write_postgres_metadata(
+    payload: EvidencePayload,
+    dag_id: str = "stage1_runtime_evidence",
+    task_id: str = "materialize_fixture_lakehouse",
+    dataset_name: str = "stage1_evidence",
+) -> str:
+    writer = PostgresMetadataWriter(psycopg_connection_factory(metadata_dsn()))
+    run_id = writer.log_run(
+        dag_id,
+        task_id,
+        dataset_name,
+        "success",
+        output_rows=sum(payload.row_counts.values()),
+    )
+
+    for dataset_name in ("silver_companies", "gold_fact_financial_statement"):
+        result = check_unique(payload.datasets[dataset_name], dataset_name, ["ticker"])
+        if dataset_name == "gold_fact_financial_statement":
+            result = check_not_null(payload.datasets[dataset_name], dataset_name, "company_key")
+        writer.log_dq_result(
+            result.dataset_name,
+            result.check_name,
+            result.status,
+            result.severity,
+            result.metric_value,
+            result.threshold_value,
+            result.error_message,
+            run_id,
+        )
+
+    freshness = check_freshness(
+        payload.datasets["silver_market_prices"],
+        "silver_market_prices",
+        "2025-03-01T00:00:00+00:00",
+        120,
+        timestamp_field="event_timestamp",
+    )
+    writer.log_dq_result(
+        freshness.dataset_name,
+        freshness.check_name,
+        freshness.status,
+        freshness.severity,
+        freshness.metric_value,
+        freshness.threshold_value,
+        freshness.error_message,
+        run_id,
+    )
+    writer.update_dataset_freshness(
+        "silver_market_prices",
+        "2025-03-01T00:00:00+00:00",
+        utc_now_iso(),
+        freshness.metric_value or 0,
+        freshness.threshold_value or 120,
+        freshness.status,
+    )
+    return run_id
+
+
+def materialize_stage1_evidence(
+    bucket: str = DEFAULT_BUCKET,
+    evidence_dir: str | Path = DEFAULT_EVIDENCE_DIR,
+    dry_run: bool = False,
+) -> EvidencePayload:
+    payload = build_evidence_payload(bucket)
+    write_evidence_files(payload, evidence_dir)
+    if not dry_run:
+        write_minio_outputs(payload, bucket)
+        write_postgres_metadata(payload)
+        duckdb_validation = run_duckdb_validation(evidence_dir)
+        write_minio_evidence_artifacts(payload, bucket, duckdb_validation=duckdb_validation)
+    return payload

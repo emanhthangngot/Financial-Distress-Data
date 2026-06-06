@@ -1,0 +1,4 @@
+{
+  "pipeline_run_log": "dag_id          |            task_id            |  dataset_name   | status  | count \n--------------------------+-------------------------------+-----------------+---------+-------\n stage1_real_e2e_pipeline | write_project_metadata_rows   | stage1_real_e2e | success |    11\n stage1_runtime_evidence  | materialize_fixture_lakehouse | stage1_evidence | success |     7\n(2 rows)",
+  "data_quality_result": "dataset_name          |        check_name         | status | severity | count \n-------------------------------+---------------------------+--------+----------+-------\n gold_fact_financial_statement | company_key_not_null      | pass   | critical |    32\n silver_companies              | ticker_unique             | pass   | critical |    32\n silver_market_prices          | event_timestamp_freshness | pass   | warning  |    32\n(3 rows)"
+}

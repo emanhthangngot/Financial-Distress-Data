@@ -1,6 +1,8 @@
 # Evidence Collection Checklist
 
 Runtime evidence is intentionally stored here after running the local Docker stack.
+The repository is production-inspired and ready for runtime evidence collection,
+but it is not enterprise-ready until the local cluster evidence below is captured.
 
 Minimum Phase 1 submission artifacts:
 
@@ -22,6 +24,8 @@ docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 ```
 
 Only add artifacts that were produced by an actual local run.
+Use `stage1_evidence_manifest.md` to distinguish implemented behavior from
+design-only and out-of-scope items.
 
 ## Stage 1 Automated Evidence Run
 
@@ -46,6 +50,18 @@ Run the Stage 1 evidence materializer:
 .venv/bin/python scripts/run_stage1_evidence.py
 ```
 
+The materializer now uses runtime job wrappers under `src/jobs/`, IO helpers
+under `src/io/`, and DuckDB validation helpers under `src/catalog/`. Runtime
+evidence artifacts are also published to MinIO under:
+
+```text
+financial-distress-lake/evidence/stage1/run_id=.../
+```
+
+`docs/evidence/` remains the host-side submission package for exports and
+screenshots; Airflow should not rely on writing directly into this bind-mounted
+repository directory.
+
 For a no-service payload check:
 
 ```bash
@@ -58,6 +74,7 @@ Expected generated evidence files:
 - `stage1_minio_objects.txt`
 - `stage1_stream_batches.json`
 - `stage1_duckdb_validation.json` after a non-dry-run execution
+  and after Airflow publishes the same artifact to MinIO.
 
 ## Manual Inspection Targets
 

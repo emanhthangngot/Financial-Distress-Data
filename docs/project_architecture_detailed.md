@@ -5,29 +5,55 @@ Tài liệu này cung cấp một bản phân tích kiến trúc chuyên sâu, c
 
 ---
 
+## 🗂️ Bảng Tra cứu Nhanh: Thành phần & Phân tầng Hệ thống (Component-to-Layer Directory)
+
+Bảng dưới đây giúp người đọc dễ dàng định vị các thành phần công nghệ, công cụ, hoặc module mã nguồn thuộc về tầng nào trong cấu trúc Lakehouse Medallion và tầng Quản lý vận hành (Operational & Serving Layers):
+
+| Thành phần / Công cụ / Module | Phân tầng Kiến trúc (Layer) | Chức năng & Vai trò chính |
+| :--- | :--- | :--- |
+| **API VNStock & Mock Fixtures** | **Data Source (Nguồn dữ liệu)** | Điểm xuất phát của dữ liệu tài chính (danh sách doanh nghiệp, báo cáo tài chính, giá thị trường). |
+| **Source Adapters (`src/collectors/source_adapters/`)** | **Source / Interface Layer** | Lớp trừu tượng hóa chuẩn hóa dữ liệu từ API thô thành dữ liệu cấu trúc Python. |
+| **Airflow DAGs (`dags/01_` đến `dags/03_`)** | **Orchestration / Ingestion** | Tự động lập lịch, quét batch và kích hoạt các Collector kéo dữ liệu offline. |
+| **Kafka Producer & Event Publisher** | **Real-Time Ingestion (Producer)** | Đẩy dữ liệu giá khớp lệnh, cảnh báo, tin tức thời gian thực dạng JSON vào Kafka Broker. |
+| **Apache Kafka Broker** | **Streaming Transport Layer** | Streaming bus trung chuyển tin nhắn sự kiện thời gian thực một cách tuần tự và tin cậy. |
+| **MicroBatchConsumer (`src/streaming/`)** | **Bronze Layer (Consumer/Storage)** | Tiêu thụ tin nhắn từ Kafka, gom cụm (micro-batch) để ghi Parquet xuống MinIO. |
+| **MinIO Bucket (`bronze/`)** | **Bronze Layer (Raw Data Lake)** | Lưu trữ dữ liệu Parquet thô chưa biến đổi (cả dữ liệu batch và dữ liệu stream từ Kafka). |
+| **PySpark Engine (`src/transforms/`)** | **Processing & Transformation** | Động cơ xử lý dữ liệu lớn phân tán, thực hiện làm sạch, khử trùng lặp và tính toán. |
+| **MinIO Bucket (`silver/`)** | **Silver Layer (Cleaned & Validated)** | Lưu trữ dữ liệu Parquet sạch, đã được ép kiểu, chuẩn hóa schema và khử trùng lặp. |
+| **MinIO Bucket (`gold/`)** | **Gold Layer (Analytics & Features)** | Lưu trữ dữ liệu Parquet đa chiều (Dim, Fact, OBT, Feature Store) sẵn sàng cho ML và BI. |
+| **Data Quality Engine (`src/quality/`)** | **Data Quality & Governance** | Kiểm tra chất lượng dữ liệu (freshness, uniqueness, nulls) ở các cổng chuyển tiếp Medallion. |
+| **PostgreSQL Metadata DB (`src/metadata/`)** | **Operational Metadata Layer** | Lưu trữ nhật ký chạy pipeline, kết quả DQ, các record lỗi (Failed Records) và checkpoint. |
+| **DuckDB serving engine (`src/catalog/`)** | **Serving Layer (OLAP Engine)** | Truy vấn phân tích trực tiếp trên tệp Parquet ở MinIO sử dụng cơ chế Predicate Pushdown. |
+| **DBeaver Client** | **Serving / Analytical Interface** | Giao diện đồ họa để chạy các câu lệnh SQL DuckDB phục vụ phân tích và kiểm tra thủ công. |
+
+---
+
 ## 🗺️ 1. Bản đồ Liên kết Tài liệu Hệ thống (Spec/Design Traceability Matrix)
 
 Hệ thống được phát triển theo mô hình **Spec-Driven Development (SDD)** nghiêm ngặt của Nexlab. Mọi thành phần mã nguồn (Python, SQL, DAGs) đều có nguồn gốc trực tiếp từ các tài liệu đặc tả (specification). Dưới đây là sơ đồ ánh xạ mối quan hệ giữa các tài liệu đặc tả và các module mã nguồn tương ứng:
 
-```mermaid
-graph TD
-    AGENTS["Hiến pháp Dự án<br>(AGENTS.md)"] -->|Thiết lập nguyên tắc thiết kế & Stack cốt lõi| SPEC["SDD Guide & Spec Setup<br>(docs/spec.md)"]
-    PROPOSAL["PRD Constraints & Phase Gates<br>(docs/coursework_proposal.md)"] -->|Định hình yêu cầu đồ án & Phân chia giai đoạn| SPEC
-
-    SPEC -->|Phase 1: Nền tảng luồng dữ liệu| MINI["Mini-Coursework Spec<br>(docs/mini_coursework.md)"]
-    SPEC -.->|Phase 2: ML & Drift Expansion| FULL["Full Coursework Spec<br>(docs/coursework.md)"]
-
-    MINI -->|Đặc tả nguồn & Sinh dữ liệu| DGEN["Data Generator Spec<br>(docs/01_data_generator.md)"]
-    MINI -->|Đặc tả Medallion & Hợp đồng Schema| SCH["Schema Design Spec<br>(docs/02_schema_design.md)"]
-
-    %% Mối liên kết tới Codebase thực tế
-    DGEN -->|Hiện thực hóa| Coll["Collectors Adapter<br>(src/collectors/)"]
-    DGEN -->|Hiện thực hóa| Stream["Kafka Streaming Event Contracts<br>(src/streaming/)"]
-
-    SCH -->|Hiện thực hóa| Trans["PySpark Medallion Transforms<br>(src/transforms/)"]
-    SCH -->|Hiện thực hóa| Quality["Data Quality Suite<br>(src/quality/)"]
-    SCH -->|Hiện thực hóa| Metadata["PostgreSQL Metadata Writer<br>(src/metadata/ & sql/)"]
-    SCH -->|Hiện thực hóa| Catalog["DuckDB & MinIO Servings<br>(src/catalog/ & sql/)"]
+```text
+[Hiến pháp Dự án] (AGENTS.md)
+       │
+       │ (Thiết lập nguyên tắc thiết kế & Stack cốt lõi)
+       ▼
+[SDD Guide & Spec Setup] (docs/spec.md) ◄─── (Định hình yêu cầu đồ án & Phân chia giai đoạn) ─── [PRD Constraints & Phase Gates] (docs/coursework_proposal.md)
+       │
+       ├──────── [Phase 1: Nền tảng luồng dữ liệu] ───────► [Mini-Coursework Spec] (docs/mini_coursework.md)
+       │                                                             │
+       │                                                             ├─► [Data Generator Spec] (docs/01_data_generator.md)
+       │                                                             │         │
+       │                                                             │         ├─► [Collectors Adapter] (src/collectors/)
+       │                                                             │         └─► [Kafka Streaming Event Contracts] (src/streaming/)
+       │                                                             │
+       │                                                             └─► [Schema Design Spec] (docs/02_schema_design.md)
+       │                                                                       │
+       │                                                                       ├─► [PySpark Medallion Transforms] (src/transforms/)
+       │                                                                       ├─► [Data Quality Suite] (src/quality/)
+       │                                                                       ├─► [PostgreSQL Metadata Writer] (src/metadata/ & sql/)
+       │                                                                       └─► [DuckDB & MinIO Servings] (src/catalog/ & sql/)
+       │
+       └. . . . . [Phase 2: ML & Drift Expansion] . . . . .► [Full Coursework Spec] (docs/coursework.md)
 ```
 
 ### Bảng Ánh xạ và Tương tác Giữa Các File (Traceability Matrix)
@@ -164,6 +190,13 @@ Nhãn rủi ro tài chính (`distress_label`) được tính toán động tại
 
 Quy trình Medallion tại Stage 1 được hiện thực hóa thông qua các thư viện PySpark và module Python, giải quyết triệt để các thách thức đặc thù của dữ liệu tài chính lớn.
 
+### 4.0. Động cơ Biến đổi Dữ liệu Lớn (PySpark Engine)
+*   **Đầu vào (Input):** Dữ liệu Parquet từ lớp Bronze hoặc Silver trên MinIO; Hợp đồng Schema đăng ký tại `InMemorySchemaRegistry` để áp đặt cấu trúc dữ liệu; tệp cấu hình `configs/spark_config.yaml`.
+*   **Đầu ra kỳ vọng (Expected Output):** Các tệp tin Parquet sạch, được khử trùng lặp và tính toán các chỉ số phái sinh lưu tại lớp Silver và Gold trên MinIO.
+*   **Cơ chế xử lý chi tiết (Why & How):**
+    *   *Tại sao (Why):* PySpark cung cấp khả năng xử lý song song phân tán trên RAM cực kỳ mạnh mẽ, xử lý hàng triệu bản ghi tài chính và chuỗi giá giao dịch lịch sử mà không bị giới hạn bởi bộ nhớ đơn lẻ. Spark SQL Window functions tối ưu hóa các phép toán nhóm và sắp xếp quy mô lớn.
+    *   *Cơ chế (How):* Khởi tạo Spark Session cấu hình đầu nối S3A. Đọc tệp Parquet bằng Spark DataFrame. Áp dụng các phép biến đổi lười (Lazy Evaluation): chuẩn hóa tên cột thành chữ thường, ép kiểu, định tuyến bản ghi lỗi sang Dataframe Failed, chạy Window function (`row_number()`) để khử trùng lặp theo `created_ts` mới nhất. Khi có hành động ghi (`write`), Spark mới thực thi tính toán và ghi đè phân vùng động (`dynamic partition overwrite`) xuống MinIO để bảo toàn tính nhất quán (idempotency).
+
 ### 4.1. Hấp thụ dữ liệu thời gian thực (Ingestion & Streaming Layer)
 Mọi luồng dữ liệu thời gian thực (ví dụ: biến động giá khớp lệnh liên tục từ HOSE/HNX) được gửi qua Kafka broker dưới dạng JSON.
 * **Chống trùng lặp tại nguồn**: Để ngăn chặn hiện tượng lặp tin nhắn do mạng chập chờn (At-Least-Once Delivery), class `StreamEvent` tại `src/streaming/events.py` tự động sinh ra mã định danh sự kiện (`event_id`) bằng cách sắp xếp tất cả các trường dữ liệu khóa trong payload và băm SHA256:
@@ -174,6 +207,20 @@ Mọi luồng dữ liệu thời gian thực (ví dụ: biến động giá kh�
   * Đạt đủ số lượng bản ghi: `len(self._buffer) >= flush_record_count` (mặc định: 1000 bản ghi).
   * Đạt giới hạn thời gian lưu trữ: `self._elapsed_seconds >= flush_interval_seconds` (mặc định: 60 giây).
   Đặc biệt, consumer tự động phân loại và tách biệt dữ liệu nếu trong cùng một lô (batch) xuất hiện các sự kiện thuộc các khung giờ (`event_hour`) khác nhau, tạo ra các tệp Parquet phân vùng chính xác trên MinIO mà không làm xáo trộn cấu trúc dữ liệu.
+
+* **Đặc tả Quy trình Hấp thụ Dữ liệu Ngoại tuyến (Offline/Batch Data Ingestion)**:
+  * **Đầu vào (Input)**: Các tham số cấu hình danh sách mã cổ phiếu cần quét, khoảng thời gian năm (`start_year`, `end_year`). Dữ liệu lịch sử từ API VNStock hoặc các nguồn dữ liệu cố định trong kiểm thử (`VnstockFixtureAdapter`).
+  * **Đầu ra kỳ vọng (Expected Output)**: Các tệp tin Parquet chứa thông tin danh sách doanh nghiệp (`companies`), báo cáo tài chính lịch sử (`financial_statements`) và giá đóng cửa hàng ngày (`market_prices_daily`) được ghi thẳng xuống lớp Bronze của hồ dữ liệu MinIO theo đường dẫn tương ứng: `s3a://financial-distress-lake/bronze/{dataset_name}/`. Các mốc checkpoint đồng bộ được cập nhật vào bảng `project_metadata.collector_checkpoint` trong PostgreSQL.
+  * **Cơ chế xử lý chi tiết (Why & How)**:
+    * *Tại sao (Why)*: Báo cáo tài chính và dữ liệu giá lịch sử là dữ liệu tĩnh, tần suất cập nhật thấp. Việc thu thập theo lô (offline batch) giúp tối ưu hóa số lượng cuộc gọi API, tránh nghẽn băng thông của nhà cung cấp dịch vụ và đảm bảo có đủ dữ liệu lịch sử chất lượng phục vụ cho việc gán nhãn rủi ro dài hạn.
+    * *Cơ chế (How)*: Các bộ thu thập (`company_list_collector`, `financial_statement_collector`, `market_price_collector`) được kích hoạt thông qua Airflow DAGs (`01`, `02`, `03`) hoặc script thủ công. Chúng gửi yêu cầu HTTP lấy dữ liệu dạng JSON, đính kèm dấu thời gian hấp thụ `ingest_ts` (để phục vụ lineage), rồi ghi trực tiếp thành các tệp Parquet xuống MinIO.
+
+* **Đặc tả Quy trình Đẩy Dữ liệu Luồng vào Kafka (Streaming Data Production into Kafka)**:
+  * **Đầu vào (Input)**: Các sự kiện biến động giá khớp lệnh liên tục (từ Price Simulator / WebSocket), các bản tin cảnh báo thị trường (Market Alerts) và dữ liệu tin tức kèm điểm số cảm xúc (News Sentiment & Severity scores).
+  * **Đầu ra kỳ vọng (Expected Output)**: Bản ghi JSON được đẩy thành công vào các Topic của Kafka Broker (`financial.price_events`, `financial.alert_events`, `financial.news_events`) với khóa partition (`key`) là mã cổ phiếu (`ticker`).
+  * **Cơ chế xử lý chi tiết (Why & How)**:
+    * *Tại sao (Why)*: Phục vụ các bài toán phản hồi nhanh như gán nhãn rủi ro thời gian thực hoặc giám sát độ lệch phân phối đặc trưng (Drift Detection) mà không cần chờ tới chu kỳ quét batch cuối ngày.
+    * *Cơ chế (How)*: Các Publisher (hoặc Airflow DAG 04 / scripts test) sử dụng thư viện `kafka-python` khởi tạo `KafkaProducer`. Mỗi sự kiện được đóng gói qua class `StreamEvent` tại `src/streaming/events.py` để tự động hóa việc tính toán `event_id` (băm SHA256 dựa trên payload có sắp xếp) nhằm ngăn chặn tin nhắn trùng lặp. Producer đẩy dữ liệu dạng JSON được mã hóa UTF-8 sang Kafka Broker. Việc gán key là mã cổ phiếu đảm bảo tính tuần tự thời gian tuyệt đối của từng mã cổ phiếu trên cùng một partition.
 
 ### 4.2. Lớp Bronze sang Silver: Làm sạch & Ánh xạ Hợp đồng (Data Normalization)
 Pipeline chuyển đổi dữ liệu từ Bronze sang Silver thực hiện nhiệm vụ chuẩn hóa cấu trúc thô thành dữ liệu sạch:
@@ -242,6 +289,12 @@ daily_return = F.when(
 
 Dữ liệu trước khi được đưa vào khai thác hoặc chuyển tiếp giữa các lớp Medallion phải vượt qua hệ thống kiểm định chất lượng được định cấu hình tập trung tại `configs/dq_rules.yaml`.
 
+*   **Đầu vào (Input):** Spark DataFrames hoặc các bảng dữ liệu đích cần kiểm định; Quy tắc kiểm định định nghĩa trong `configs/dq_rules.yaml`.
+*   **Đầu ra kỳ vọng (Expected Output):** Các bản ghi kết quả kiểm định lưu vào bảng `project_metadata.data_quality_result`. Phát tín hiệu dừng hệ thống (raise Exception) nếu phát hiện lỗi nghiêm trọng (Critical), hoặc ghi nhận cảnh báo (Warning) và cho phép pipeline tiếp tục.
+*   **Cơ chế xử lý chi tiết (Why & How):**
+    *   *Tại sao (Why):* Đảm bảo tính toàn vẹn và sạch sẽ của dữ liệu lớp phục vụ (Gold Layer). Ngăn ngừa hiện tượng "Garbage in, Garbage out" trước khi đưa dữ liệu vào các ứng dụng phân tích tài chính hoặc huấn luyện mô hình AI của Giai đoạn 2.
+    *   *Cơ chế (How):* Duyệt qua từng quy tắc kiểm tra (Not Null, Unique, Referential Integrity, Retention, Freshness). Thực thi các câu lệnh đếm dữ liệu lỗi. Đối chiếu tỷ lệ lỗi với ngưỡng quy định trong cấu hình YAML. Ghi nhận chi tiết kết quả chạy kiểm thử vào cơ sở dữ liệu. Nếu phát hiện vi phạm quy tắc nghiêm trọng (Critical), động cơ sẽ ném lỗi ngoại lệ buộc Airflow đánh dấu Task thất bại và dừng toàn bộ downstream.
+
 ```
                                       [ Lô dữ liệu đầu ra của Tác vụ ]
                                                      |
@@ -287,73 +340,55 @@ Dữ liệu trước khi được đưa vào khai thác hoặc chuyển tiếp g
 
 Toàn bộ thông tin vận hành, giám sát chất lượng dữ liệu, nhật ký chạy và xử lý lỗi được lưu trữ tập trung tại cơ sở dữ liệu PostgreSQL cục bộ, nằm dưới schema chuyên biệt `project_metadata`. Dưới đây là lược đồ cơ sở dữ liệu chi tiết:
 
-```mermaid
-erDiagram
-    pipeline_run_log {
-        text run_id PK
-        text dag_id
-        text task_id
-        text dataset_name
-        text status
-        timestamp started_at
-        timestamp ended_at
-        bigint input_rows
-        bigint output_rows
-        text error_message
-        timestamp created_at
-    }
+*   **Đầu vào (Input):** Thông tin logs từ Airflow DAGs (`run_id`, `started_at`, `ended_at`, `status`, `input_rows`, `output_rows`); danh sách bản ghi lỗi cấu trúc từ lớp Silver-transform gửi sang; kết quả kiểm tra từ Data Quality Engine.
+*   **Đầu ra kỳ vọng (Expected Output):** Các dòng dữ liệu trạng thái được lưu trữ bền vững trong schema `project_metadata`. Cung cấp khả năng truy vấn bằng SQL trực tiếp trên các bảng `pipeline_run_log`, `failed_records`, `data_quality_result`.
+*   **Cơ chế xử lý chi tiết (Why & How):**
+    *   *Tại sao (Why):* Lưu trữ tập trung siêu dữ liệu vận hành giúp hệ thống đạt độ tin cậy cao, dễ dàng kiểm toán (Audit Trail) và phát hiện sớm các bất thường về chất lượng dữ liệu (Data Quality Drift). Tách riêng dữ liệu nghiệp vụ (trong hồ MinIO) và siêu dữ liệu vận hành (Postgres) giúp tối ưu hóa hiệu năng truy vấn.
+    *   *Cơ chế (How):* Metadata Writer kết nối qua SQLAlchemy. Bản ghi lỗi được lưu trữ trong cột kiểu `JSONB` của bảng `failed_records` giúp bảo toàn toàn bộ payload thô, hỗ trợ phân tích nguyên nhân lỗi mà không làm phình schema quan hệ.
 
-    data_quality_result {
-        text check_id PK
-        text run_id FK
-        text dataset_name
-        text check_name
-        text status
-        text severity
-        double_precision metric_value
-        double_precision threshold_value
-        timestamp checked_at
-        text error_message
-    }
+```text
+                       +-----------------------------------+
+                       |         pipeline_run_log          |
+                       +-----------------------------------+
+                       | run_id (PK)                       |
+                       | dag_id, task_id, dataset_name     |
+                       | status, started_at, ended_at      |
+                       | input_rows, output_rows           |
+                       | error_message, created_at         |
+                       +-----------------+-----------------+
+                                         |
+                                         | 1 (generates)
+                                         |
+                        +----------------+----------------+
+                        |  1..*                           |  1..* (logs)
+                        ▼                                 ▼
+   +------------------------------------+    +------------------------------------+
+   |        data_quality_result         |    |           failed_records           |
+   +------------------------------------+    +------------------------------------+
+   | check_id (PK)                      |    | record_id (PK)                     |
+   | run_id (FK)                        |    | dataset_name                       |
+   | dataset_name, check_name, status   |    | run_id (FK)                        |
+   | severity, metric_val, threshold_val|    | failure_reason, raw_payload        |
+   | checked_at, error_message          |    | created_at                         |
+   +------------------------------------+    +------------------------------------+
 
-    failed_records {
-        text record_id PK
-        text dataset_name
-        text run_id FK
-        text failure_reason
-        jsonb raw_payload
-        timestamp created_at
-    }
-
-    dataset_freshness {
-        text dataset_name PK
-        timestamp latest_event_timestamp
-        timestamp latest_ingest_ts
-        double_precision freshness_lag_minutes
-        double_precision sla_minutes
-        text status
-        timestamp checked_at
-    }
-
-    schema_version_registry {
-        text dataset_name PK
-        text schema_version PK
-        timestamp effective_from
-        timestamp effective_to
-        jsonb schema_json
-        boolean is_current
-    }
-
-    collector_checkpoint {
-        text collector_name PK
-        text source_system PK
-        text checkpoint_key PK
-        text checkpoint_value
-        timestamp updated_at
-    }
-
-    pipeline_run_log ||--o{ data_quality_result : "generates"
-    pipeline_run_log ||--o{ failed_records : "logs"
+   +------------------------------------+    +------------------------------------+
+   |         dataset_freshness          |    |      schema_version_registry       |
+   +------------------------------------+    +------------------------------------+
+   | dataset_name (PK)                  |    | dataset_name (PK)                  |
+   | latest_event_timestamp             |    | schema_version (PK)                |
+   | latest_ingest_ts                   |    | effective_from, effective_to       |
+   | freshness_lag_minutes              |    | schema_json, is_current            |
+   | sla_minutes, status, checked_at    |    +------------------------------------+
+   +------------------------------------+
+                                             +------------------------------------+
+                                             |        collector_checkpoint        |
+                                             +------------------------------------+
+                                             | collector_name (PK)                |
+                                             | source_system (PK)                 |
+                                             | checkpoint_key (PK)                |
+                                             | checkpoint_value, updated_at       |
+                                             +------------------------------------+
 ```
 
 ### Chi tiết vai trò của các bảng Metadata cốt lõi:
@@ -368,6 +403,27 @@ erDiagram
 ## 📊 7. Kiến trúc Truy vấn & Phục vụ Dữ liệu (Serving & Serving Layer)
 
 Kiến trúc phục vụ dữ liệu hướng tới việc tối ưu hóa hiệu năng và độc lập tài nguyên, mô phỏng cấu trúc truy vấn **Serverless Athena** ngay tại máy tính cục bộ thông qua sự kết hợp giữa **MinIO S3**, **DuckDB** và **DBeaver**.
+
+#### A. MinIO (Hồ dữ liệu Object Storage)
+*   **Đầu vào (Input):** Yêu cầu đọc/ghi tệp tin từ Spark (qua S3A connector), DuckDB (qua httpfs extension), hoặc MicroBatchConsumer.
+*   **Đầu ra kỳ vọng (Expected Output):** Lưu trữ bền vững các tệp tin Parquet được phân vùng; cung cấp API tương thích S3 để truy xuất dữ liệu với hiệu năng cao.
+*   **Cơ chế xử lý chi tiết (Why & How):**
+    *   *Tại sao (Why):* Giúp phát triển và kiểm thử cục bộ trong môi trường tương đương hoàn toàn với môi trường Cloud (AWS S3) mà không phát sinh chi phí hạ tầng. Định dạng Parquet lưu trữ dạng cột giúp tối ưu hóa dung lượng lưu trữ nhờ khả năng nén tốt (Snappy/Gzip) và đẩy nhanh tốc độ truy vấn cột.
+    *   *Cơ chế (How):* MinIO chạy trong Docker container, ánh xạ dữ liệu xuống đĩa cứng cục bộ. Các truy vấn đọc sẽ sử dụng giao thức HTTPS/HTTP S3, trả về các byte dữ liệu theo dải yêu cầu (Range Requests) giúp giảm băng thông truyền tải.
+
+#### B. DuckDB (Bộ máy Truy vấn Phục vụ Phân tích)
+*   **Đầu vào (Input):** Các câu lệnh SQL truy vấn từ phía người dùng (qua DBeaver/Python client); Metadata và dữ liệu từ các tệp Parquet lớp Gold lưu trên MinIO.
+*   **Đầu ra kỳ vọng (Expected Output):** Kết quả truy vấn SQL dạng bảng, phản hồi nhanh chóng dưới dạng mili-giây; các View ảo được ánh xạ trực tiếp đến thư mục Parquet trên hồ dữ liệu.
+*   **Cơ chế xử lý chi tiết (Why & How):**
+    *   *Tại sao (Why):* Cung cấp khả năng phân tích dữ liệu trực tiếp trên hồ dữ liệu (Serverless Queries over Lakehouse) mà không cần nạp dữ liệu vào cơ sở dữ liệu quan hệ truyền thống. Tiết kiệm tài nguyên bộ nhớ cực lớn so với việc triển khai các cụm Trino/Presto cồng kềnh trên môi trường phát triển cá nhân.
+    *   *Cơ chế (How):* Tải tiện ích mở rộng `httpfs` để hiểu và giao tiếp với giao thức S3. Khi người dùng thực hiện truy vấn có bộ lọc (`WHERE`), DuckDB thực hiện đọc siêu dữ liệu tệp Parquet trước, áp dụng cơ chế **Predicate Pushdown** và **Projection Pushdown** để chỉ tải về các nhóm dòng (Row Groups) và các cột cần thiết, tối ưu hóa đáng kể tốc độ mạng và hiệu suất xử lý CPU.
+
+#### C. DBeaver (SQL Client / User Interface)
+*   **Đầu vào (Input):** Các câu lệnh truy vấn SQL từ người dùng.
+*   **Đầu ra kỳ vọng (Expected Output):** Kết quả hiển thị bảng dữ liệu trực quan, biểu đồ hoặc thống kê.
+*   **Cơ chế xử lý chi tiết (Why & How):**
+    *   *Tại sao (Why):* Cung cấp giao diện đồ họa thân thiện để kiểm thử và phân tích dữ liệu ad-hoc mà không cần viết code Python hay Spark.
+    *   *Cơ chế (How):* Kết nối với DuckDB qua driver JDBC, hiển thị cấu trúc database schema và views đã đăng ký trên hồ dữ liệu MinIO.
 
 ```
     [ DBeaver SQL Client ]
@@ -419,34 +475,32 @@ Do Parquet là định dạng lưu trữ dạng cột (Columnar Storage) có ch�
 
 Toàn bộ các tiến trình xử lý dữ liệu được tự động hóa hoàn toàn thông qua cụm 8 DAGs được lập lịch trong Apache Airflow, phân chia phân vùng rõ ràng theo đúng chức năng nhiệm vụ:
 
-```mermaid
-flowchart TD
-    subgraph "Thu thập dữ liệu nguồn (Ingestion Pipelines)"
-        DAG1["01_collect_company_master_data<br>(Lấy thông tin DN)"]
-        DAG2["02_collect_financial_statement_api<br>(Lấy Báo cáo tài chính)"]
-        DAG3["03_collect_market_price_api<br>(Lấy Giá thị trường hàng ngày)"]
-        DAG4["04_stream_market_events_to_kafka<br>(Phát sự kiện thời gian thực)"]
-    end
+*   **Đầu vào (Input):** Các tệp định nghĩa DAG (`.py`) mô tả thứ tự và sự phụ thuộc giữa các tác vụ (Task Dependency); các trigger lập lịch (CRON schedule) hoặc sự kiện kích hoạt thủ công (manual trigger); thông tin kết nối (PostgreSQL Connection, Spark Connection, S3 Credentials) được cấu hình trong Airflow Metastore.
+*   **Đầu ra kỳ vọng (Expected Output):** Quy trình chạy tuần tự các Task thành công; các bản ghi trạng thái Task và log chạy lưu trong Airflow DB; cập nhật nhật ký chạy sang bảng `project_metadata.pipeline_run_log`.
+*   **Cơ chế xử lý chi tiết (Why & How):**
+    *   *Tại sao (Why):* Đảm bảo tính tuần tự và toàn vẹn của đường ống dẫn dữ liệu (Pipeline Lineage). Ví dụ: Spark Silver-to-Gold chỉ được chạy khi Spark Bronze-to-Silver hoàn thành, và DuckDB chỉ được đăng ký View mới khi Data Quality đạt trạng thái PASS. Airflow cung cấp khả năng chạy lại (backfill), cơ chế thử lại khi lỗi (retries) và giám sát tập trung.
+    *   *Cơ chế (How):* Sử dụng mô hình đồ thị có hướng không chu trình (DAG). Mỗi nút là một Task sử dụng các Operator chuyên biệt (ví dụ: `SparkSubmitOperator` để kích hoạt PySpark, `PythonOperator` để chạy DQ). XCom được sử dụng để truyền các biến động nhỏ (như `run_id` hoặc đường dẫn tệp) giữa các Task trong phiên chạy.
 
-    subgraph "Xử lý & Biến đổi Medallion (Transformations)"
-        DAG5["05_transform_bronze_to_silver<br>(Làm sạch, định dạng & khử trùng)"]
-        DAG6["06_pyspark_silver_to_gold<br>(Tính toán Fact, Dim, SCD2 & PIT Join)"]
-    end
-
-    subgraph "Kiểm tra & Cung cấp Dữ liệu (Quality & serving)"
-        DAG7["07_run_data_quality_checks<br>(Chạy bộ lọc DQ, phân loại lỗi)"]
-        DAG8["08_minio_duckdb_register_tables<br>(Đăng ký View ảo trên DuckDB)"]
-    end
-
-    %% Luồng liên kết logic vận hành
-    DAG1 -->|Trigger| DAG5
-    DAG2 -->|Trigger| DAG5
-    DAG3 -->|Trigger| DAG5
-    DAG4 -.->|Kafka Events| DAG5
-
-    DAG5 -->|Trigger| DAG6
-    DAG6 -->|Trigger| DAG7
-    DAG7 -->|Nếu Pass bộ DQ| DAG8
+```text
+   [ Thu thập dữ liệu nguồn (Ingestion) ]
+   ├── 01_collect_company_master_data (Lấy thông tin DN) ───────────────┐
+   ├── 02_collect_financial_statement_api (Lấy BC tài chính) ───────────┼─► [ 05_transform_bronze_to_silver ]
+   ├── 03_collect_market_price_api (Lấy giá thị trường) ────────────────┤      (Làm sạch, định dạng, khử trùng)
+   └── 04_stream_market_events_to_kafka (Phát event real-time) ∙ ∙ ∙ ∙ ┘                     │
+                                                                                             │ (Trigger)
+                                                                                             ▼
+                                                                        [ 06_pyspark_silver_to_gold ]
+                                                                        (Tính Fact, Dim, SCD2 & PIT Join)
+                                                                                             │
+                                                                                             │ (Trigger)
+                                                                                             ▼
+                                                                        [ 07_run_data_quality_checks ]
+                                                                        (Chạy bộ DQ, phân loại lỗi)
+                                                                                             │
+                                                                                             │ (Nếu vượt qua DQ)
+                                                                                             ▼
+                                                                        [ 08_minio_duckdb_register_tables ]
+                                                                        (Đăng ký View ảo trên DuckDB)
 ```
 
 ### Chi tiết các bước vận hành tự động hóa:
@@ -520,3 +574,4 @@ Hệ thống Giai đoạn 1 được thiết kế cẩn trọng để chuẩn b�
    docker compose up -d
    ```
    *Yêu cầu*: PostgreSQL, MinIO, Kafka và cụm Airflow khởi chạy thành công. Truy cập trang quản trị MinIO tại `http://localhost:9001` (tài khoản: `minioadmin/minioadmin`) để tạo sẵn bucket `financial-distress-lake` trước khi vận hành luồng Airflow.
+

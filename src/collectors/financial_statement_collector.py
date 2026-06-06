@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.collectors.source_adapters.vnstock_adapter import VnstockFixtureAdapter
+from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.metadata.metadata_writer import MetadataWriter
 
 

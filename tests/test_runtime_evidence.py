@@ -76,6 +76,18 @@ def test_stage1_evidence_dry_run_reports_deterministic_counts():
     json.dumps(payload.row_counts)
 
 
+def test_vnstock_fixture_adapter_new_and_legacy_import_paths_match():
+    from src.collectors.source_adapters.vnstock_adapter import (
+        VnstockFixtureAdapter as LegacyAdapter,
+    )
+    from src.collectors.source_adapters.vnstock_fixture_adapter import (
+        VnstockFixtureAdapter,
+    )
+
+    assert LegacyAdapter is VnstockFixtureAdapter
+    assert VnstockFixtureAdapter().fetch_companies()[0]["source_system"] == "vnstock_fixture"
+
+
 def test_evidence_runner_reads_postgres_host_port_from_env_file(tmp_path, monkeypatch):
     from scripts.run_stage1_evidence import metadata_dsn
 

@@ -60,7 +60,10 @@ services:
     command: bash /opt/financial-distress-init/kafka_init_topics.sh
 
   airflow-webserver:
-    image: apache/airflow:2.10.5-python3.11
+    build:
+      context: .
+      dockerfile: infra/airflow/Dockerfile
+    image: financial-distress-airflow:stage1
     command: webserver
     depends_on:
       airflow-init:
@@ -75,15 +78,26 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       PYTHONPATH: /opt/airflow
       PROJECT_METADATA_DSN: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
+      MINIO_ENDPOINT: http://minio:9000
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+      SPARK_LOCAL_IP: 127.0.0.1
+      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./configs:/opt/airflow/configs
+      - ./sql:/opt/airflow/sql
+      - ./docs:/opt/airflow/docs
     ports:
       - "8080:8080"
 
   airflow-init:
-    image: apache/airflow:2.10.5-python3.11
+    build:
+      context: .
+      dockerfile: infra/airflow/Dockerfile
+    image: financial-distress-airflow:stage1
     depends_on:
       - postgres
     command: >
@@ -97,13 +111,24 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       PYTHONPATH: /opt/airflow
       PROJECT_METADATA_DSN: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
+      MINIO_ENDPOINT: http://minio:9000
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+      SPARK_LOCAL_IP: 127.0.0.1
+      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./configs:/opt/airflow/configs
+      - ./sql:/opt/airflow/sql
+      - ./docs:/opt/airflow/docs
 
   airflow-scheduler:
-    image: apache/airflow:2.10.5-python3.11
+    build:
+      context: .
+      dockerfile: infra/airflow/Dockerfile
+    image: financial-distress-airflow:stage1
     command: scheduler
     depends_on:
       - airflow-webserver
@@ -113,7 +138,15 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       PYTHONPATH: /opt/airflow
       PROJECT_METADATA_DSN: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
+      MINIO_ENDPOINT: http://minio:9000
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+      SPARK_LOCAL_IP: 127.0.0.1
+      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./configs:/opt/airflow/configs
+      - ./sql:/opt/airflow/sql
+      - ./docs:/opt/airflow/docs
