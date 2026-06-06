@@ -31,6 +31,9 @@ The repository currently implements a local-first Stage 1 data engineering found
 - Data quality checks in `src/quality/dq_checks.py`.
 - DuckDB SQL helpers and view SQL in `src/catalog/` and `sql/`.
 - PostgreSQL metadata DDL in `sql/init_project_metadata.sql`.
+- Runtime evidence job wrappers in `src/jobs/`, local IO helpers in `src/io/`,
+  DuckDB validation runner in `src/catalog/duckdb_runner.py`, and the primary
+  Airflow evidence DAG `dags/stage1_local_evidence_pipeline.py`.
 - PyTest coverage in `tests/`.
 - Architecture image in `images/architecture/architecture-stage-1.png`.
 
@@ -844,6 +847,9 @@ tests/test_distress_labels.py
 tests/test_dq_checks.py
 tests/test_keys.py
 tests/test_runtime_adapters.py
+tests/test_runtime_evidence.py
+tests/test_airflow_stage1_dag.py
+tests/test_stage1_jobs.py
 tests/test_silver_to_gold.py
 tests/test_streaming.py
 ```
