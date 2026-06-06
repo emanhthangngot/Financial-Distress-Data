@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 import subprocess
 
 
@@ -33,6 +34,7 @@ def test_readiness_report_uses_evidence_only_by_default(monkeypatch):
     assert report["production_ready"] is False
     assert report["enterprise_ready"] is False
     assert report["services"] is None
+    assert report["quality_gates"] is None
     assert service_calls == []
 
 
@@ -95,6 +97,88 @@ def test_readiness_report_fails_when_evidence_fails(monkeypatch):
     assert report["status"] == "fail"
     assert report["coursework_ready"] is False
     assert report["failed_sections"] == ["evidence"]
+
+
+def test_readiness_report_can_include_quality_gates(monkeypatch):
+    module = importlib.import_module("scripts.stage1_readiness_report")
+    quality_gate_calls = []
+
+    monkeypatch.setattr(
+        module,
+        "audit_evidence",
+        lambda evidence_dir: {
+            "status": "pass",
+            "failed_checks": [],
+            "duckdb_metrics": {},
+            "kafka_topics": [],
+            "minio_object_count": 0,
+        },
+    )
+
+    def fake_run_quality_gates(**kwargs):
+        quality_gate_calls.append(kwargs)
+        return {"status": "pass", "returncode": 0, "command": ["quality"], "output_tail": "ok"}
+
+    monkeypatch.setattr(module, "_run_quality_gates", fake_run_quality_gates)
+    monkeypatch.setattr(
+        module,
+        "_git_summary",
+        lambda **kwargs: {"branch": "dev", "commit": "abc1234", "status": "clean"},
+    )
+
+    report = module.build_readiness_report("docs/evidence", include_quality_gates=True)
+
+    assert report["status"] == "pass"
+    assert report["quality_gates"]["status"] == "pass"
+    assert len(quality_gate_calls) == 1
+
+
+def test_readiness_report_fails_when_quality_gates_fail(monkeypatch):
+    module = importlib.import_module("scripts.stage1_readiness_report")
+
+    monkeypatch.setattr(
+        module,
+        "audit_evidence",
+        lambda evidence_dir: {
+            "status": "pass",
+            "failed_checks": [],
+            "duckdb_metrics": {},
+            "kafka_topics": [],
+            "minio_object_count": 0,
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "_run_quality_gates",
+        lambda **kwargs: {
+            "status": "fail",
+            "returncode": 1,
+            "command": ["quality"],
+            "output_tail": "failed",
+        },
+    )
+    monkeypatch.setattr(
+        module,
+        "_git_summary",
+        lambda **kwargs: {"branch": "dev", "commit": "abc1234", "status": "clean"},
+    )
+
+    report = module.build_readiness_report("docs/evidence", include_quality_gates=True)
+
+    assert report["status"] == "fail"
+    assert report["failed_sections"] == ["quality_gates"]
+
+
+def test_write_report_writes_json_artifact(tmp_path):
+    module = importlib.import_module("scripts.stage1_readiness_report")
+    output_path = tmp_path / "stage1_readiness_report.json"
+
+    module._write_report({"status": "pass", "coursework_ready": True}, output_path)
+
+    assert json.loads(output_path.read_text(encoding="utf-8")) == {
+        "status": "pass",
+        "coursework_ready": True,
+    }
 
 
 def test_git_summary_reports_clean_status_for_empty_git_status(monkeypatch):

@@ -6,6 +6,7 @@ import argparse
 import json
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,7 @@ from scripts.audit_stage1_evidence import audit_evidence
 from scripts.check_stage1_services import check_services
 
 PROJECT_LABEL = "production-inspired local-first lakehouse foundation with runtime evidence"
+QUALITY_GATE_COMMAND = (sys.executable, "scripts/run_stage1_quality_gates.py")
 
 
 def _run_git(
@@ -39,20 +41,39 @@ def _git_summary(*, cwd: Path = PROJECT_ROOT) -> dict[str, str]:
     }
 
 
+def _run_quality_gates(
+    *,
+    command: Sequence[str] = QUALITY_GATE_COMMAND,
+    cwd: Path = PROJECT_ROOT,
+) -> dict[str, Any]:
+    process = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
+    output = "\n".join(part.strip() for part in (process.stdout, process.stderr) if part.strip())
+    return {
+        "status": "pass" if process.returncode == 0 else "fail",
+        "returncode": process.returncode,
+        "command": list(command),
+        "output_tail": output[-4000:],
+    }
+
+
 def build_readiness_report(
     evidence_dir: str | Path,
     *,
     include_services: bool = False,
+    include_quality_gates: bool = False,
     cwd: Path = PROJECT_ROOT,
 ) -> dict[str, Any]:
     evidence = audit_evidence(evidence_dir)
     services = check_services(cwd=cwd) if include_services else None
+    quality_gates = _run_quality_gates(cwd=cwd) if include_quality_gates else None
     failed_sections = []
 
     if evidence["status"] != "pass":
         failed_sections.append("evidence")
     if services is not None and services["status"] != "pass":
         failed_sections.append("services")
+    if quality_gates is not None and quality_gates["status"] != "pass":
+        failed_sections.append("quality_gates")
 
     coursework_ready = not failed_sections
     return {
@@ -71,6 +92,7 @@ def build_readiness_report(
             "minio_object_count": evidence["minio_object_count"],
         },
         "services": services,
+        "quality_gates": quality_gates,
         "truthfulness_note": (
             "Use this report to claim Phase 1 local runtime evidence only; "
             "live ingestion, enterprise lineage, managed security, cloud deployment, "
@@ -96,7 +118,20 @@ def _print_text_report(report: dict[str, Any]) -> None:
         print(f"Services: {report['services']['status']}")
         for check in report["services"]["checks"]:
             print(f"  {check['status'].upper():4} {check['name']}: {check['detail']}")
+    if report["quality_gates"] is None:
+        print("Quality gates: not checked")
+    else:
+        print(
+            "Quality gates: "
+            f"{report['quality_gates']['status']} "
+            f"(returncode={report['quality_gates']['returncode']})"
+        )
     print(f"Truthfulness: {report['truthfulness_note']}")
+
+
+def _write_report(report: dict[str, Any], output_path: str | Path) -> None:
+    report_text = json.dumps(report, indent=2, sort_keys=True)
+    Path(output_path).write_text(f"{report_text}\n", encoding="utf-8")
 
 
 def main() -> None:
@@ -107,10 +142,22 @@ def main() -> None:
         action="store_true",
         help="Also check running Docker services. Requires docker compose services to be up.",
     )
+    parser.add_argument(
+        "--include-quality-gates",
+        action="store_true",
+        help="Also run scripts/run_stage1_quality_gates.py and include the result.",
+    )
+    parser.add_argument("--output", help="Write the readiness report JSON to this path.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
     args = parser.parse_args()
 
-    report = build_readiness_report(args.evidence_dir, include_services=args.include_services)
+    report = build_readiness_report(
+        args.evidence_dir,
+        include_services=args.include_services,
+        include_quality_gates=args.include_quality_gates,
+    )
+    if args.output:
+        _write_report(report, args.output)
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:
