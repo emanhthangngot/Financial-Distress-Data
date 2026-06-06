@@ -81,6 +81,32 @@ def test_postgres_metadata_writer_executes_project_metadata_inserts():
     run_id = writer.log_run("dag", "task", "companies", "success", input_rows=1, output_rows=1)
     writer.log_dq_result("companies", "ticker_not_null", "pass", "critical", run_id=run_id)
     writer.log_failed_record("companies", "bad row", {"ticker": None}, run_id=run_id)
+    writer.log_backfill_request(
+        "financial_statements",
+        "2024-01-01",
+        "2025-12-31",
+        "completed",
+        "stage1_e2e",
+        run_id=run_id,
+    )
+    writer.log_source_request(
+        run_id=run_id,
+        source_system="vnstock_fixture",
+        source_endpoint="fixture://companies",
+        ticker="AAA",
+        report_period=None,
+        request_status="success",
+        http_status_code=None,
+        retry_count=0,
+        raw_payload_hash="hash-1",
+        error_message=None,
+    )
+    writer.upsert_collector_checkpoint(
+        collector_name="company_list_collector",
+        source_system="vnstock_fixture",
+        checkpoint_key="last_successful_run_id",
+        checkpoint_value=run_id,
+    )
     writer.update_dataset_freshness(
         "companies",
         latest_event_timestamp="2026-01-01T00:00:00+00:00",
@@ -94,8 +120,11 @@ def test_postgres_metadata_writer_executes_project_metadata_inserts():
     assert "project_metadata.pipeline_run_log" in executed_sql
     assert "project_metadata.data_quality_result" in executed_sql
     assert "project_metadata.failed_records" in executed_sql
+    assert "project_metadata.backfill_request" in executed_sql
+    assert "project_metadata.source_request_log" in executed_sql
+    assert "project_metadata.collector_checkpoint" in executed_sql
     assert "project_metadata.dataset_freshness" in executed_sql
-    assert connection.commits == 4
+    assert connection.commits == 7
 
 
 def test_configure_spark_builder_sets_minio_s3a_and_dynamic_overwrite():

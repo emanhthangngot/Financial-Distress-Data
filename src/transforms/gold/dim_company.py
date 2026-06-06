@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from src.transforms.keys import date_key, stable_company_key
@@ -40,10 +40,22 @@ def build_dim_company(companies: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return output
 
 
-def build_dim_date(start: date, end: date) -> list[dict[str, Any]]:
+def _as_date(value: str | date | datetime) -> date:
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    return datetime.fromisoformat(str(value)[:10]).date()
+
+
+def build_dim_date(
+    start: str | date | datetime,
+    end: str | date | datetime,
+) -> list[dict[str, Any]]:
     rows = []
-    current = start
-    while current <= end:
+    current = _as_date(start)
+    end_date = _as_date(end)
+    while current <= end_date:
         rows.append(
             {
                 "date_key": date_key(current),

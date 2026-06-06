@@ -12,6 +12,7 @@ from src.jobs.kafka_to_bronze_job import (
     consume_stage1_stream_events_to_bronze,
     produce_stage1_stream_events,
 )
+from src.jobs.stage1_dq_job import build_actual_dq_checks
 from src.jobs.stage1_evidence_job import (
     build_evidence_payload,
     current_evidence_run_id,
@@ -80,37 +81,12 @@ def run_spark_bronze_to_silver_gold() -> dict[str, int]:
 def run_silver_gold_dq_gate() -> list[dict]:
     from src.metadata.metadata_writer import PostgresMetadataWriter, psycopg_connection_factory
 
-    payload = build_evidence_payload(_bucket())
     writer = PostgresMetadataWriter(
         psycopg_connection_factory(os.getenv("PROJECT_METADATA_DSN", ""))
     )
     runner = DQRunner(writer)
     run_id = current_evidence_run_id()
-    results = runner.run(
-        run_id,
-        [
-            {
-                "type": "unique",
-                "dataset_name": "silver_companies",
-                "rows": payload.datasets["silver_companies"],
-                "fields": ["ticker"],
-            },
-            {
-                "type": "not_null",
-                "dataset_name": "gold_fact_financial_statement",
-                "rows": payload.datasets["gold_fact_financial_statement"],
-                "field": "company_key",
-            },
-            {
-                "type": "freshness",
-                "dataset_name": "silver_market_prices",
-                "rows": payload.datasets["silver_market_prices"],
-                "reference_timestamp": "2025-03-01T00:00:00+00:00",
-                "sla_minutes": 120,
-                "timestamp_field": "event_timestamp",
-            },
-        ],
-    )
+    results = runner.run(run_id, build_actual_dq_checks(_bucket()))
     return [result.__dict__ for result in results]
 
 

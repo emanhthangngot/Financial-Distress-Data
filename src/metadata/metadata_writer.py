@@ -26,6 +26,7 @@ class MetadataWriter:
     data_quality_result: list[dict[str, Any]] = field(default_factory=list)
     failed_records: list[dict[str, Any]] = field(default_factory=list)
     dataset_freshness: list[dict[str, Any]] = field(default_factory=list)
+    backfill_request: list[dict[str, Any]] = field(default_factory=list)
     source_request_log: list[dict[str, Any]] = field(default_factory=list)
     collector_checkpoint: list[dict[str, Any]] = field(default_factory=list)
 
@@ -118,6 +119,87 @@ class MetadataWriter:
                 "sla_minutes": sla_minutes,
                 "status": status,
                 "checked_at": utc_now_iso(),
+            }
+        )
+
+    def log_backfill_request(
+        self,
+        dataset_name: str,
+        start_date: str,
+        end_date: str,
+        status: str,
+        requested_by: str,
+        run_id: str | None = None,
+    ) -> str:
+        backfill_id = run_id or str(uuid4())
+        self.backfill_request.append(
+            {
+                "backfill_id": backfill_id,
+                "dataset_name": dataset_name,
+                "start_date": start_date,
+                "end_date": end_date,
+                "status": status,
+                "requested_by": requested_by,
+                "created_at": utc_now_iso(),
+            }
+        )
+        return backfill_id
+
+    def log_source_request(
+        self,
+        run_id: str | None,
+        source_system: str,
+        source_endpoint: str | None,
+        ticker: str | None,
+        report_period: str | None,
+        request_status: str,
+        http_status_code: int | None = None,
+        retry_count: int = 0,
+        raw_payload_hash: str | None = None,
+        error_message: str | None = None,
+    ) -> str:
+        request_id = str(uuid4())
+        self.source_request_log.append(
+            {
+                "request_id": request_id,
+                "run_id": run_id,
+                "source_system": source_system,
+                "source_endpoint": source_endpoint,
+                "ticker": ticker,
+                "report_period": report_period,
+                "request_status": request_status,
+                "http_status_code": http_status_code,
+                "retry_count": retry_count,
+                "raw_payload_hash": raw_payload_hash,
+                "error_message": error_message,
+                "requested_at": utc_now_iso(),
+            }
+        )
+        return request_id
+
+    def upsert_collector_checkpoint(
+        self,
+        collector_name: str,
+        source_system: str,
+        checkpoint_key: str,
+        checkpoint_value: str | None,
+    ) -> None:
+        self.collector_checkpoint = [
+            row
+            for row in self.collector_checkpoint
+            if not (
+                row["collector_name"] == collector_name
+                and row["source_system"] == source_system
+                and row["checkpoint_key"] == checkpoint_key
+            )
+        ]
+        self.collector_checkpoint.append(
+            {
+                "collector_name": collector_name,
+                "source_system": source_system,
+                "checkpoint_key": checkpoint_key,
+                "checkpoint_value": checkpoint_value,
+                "updated_at": utc_now_iso(),
             }
         )
 
@@ -274,6 +356,107 @@ class PostgresMetadataWriter:
                 freshness_lag_minutes,
                 sla_minutes,
                 status,
+                utc_now_iso(),
+            ),
+        )
+
+    def log_backfill_request(
+        self,
+        dataset_name: str,
+        start_date: str,
+        end_date: str,
+        status: str,
+        requested_by: str,
+        run_id: str | None = None,
+    ) -> str:
+        backfill_id = run_id or str(uuid4())
+        self._execute(
+            """
+            INSERT INTO project_metadata.backfill_request (
+                backfill_id, dataset_name, start_date, end_date, status, requested_by, created_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (backfill_id) DO UPDATE SET
+                dataset_name = EXCLUDED.dataset_name,
+                start_date = EXCLUDED.start_date,
+                end_date = EXCLUDED.end_date,
+                status = EXCLUDED.status,
+                requested_by = EXCLUDED.requested_by
+            """,
+            (
+                backfill_id,
+                dataset_name,
+                start_date,
+                end_date,
+                status,
+                requested_by,
+                utc_now_iso(),
+            ),
+        )
+        return backfill_id
+
+    def log_source_request(
+        self,
+        run_id: str | None,
+        source_system: str,
+        source_endpoint: str | None,
+        ticker: str | None,
+        report_period: str | None,
+        request_status: str,
+        http_status_code: int | None = None,
+        retry_count: int = 0,
+        raw_payload_hash: str | None = None,
+        error_message: str | None = None,
+    ) -> str:
+        request_id = str(uuid4())
+        self._execute(
+            """
+            INSERT INTO project_metadata.source_request_log (
+                request_id, run_id, source_system, source_endpoint, ticker, report_period,
+                request_status, http_status_code, retry_count, raw_payload_hash,
+                error_message, requested_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                request_id,
+                run_id,
+                source_system,
+                source_endpoint,
+                ticker,
+                report_period,
+                request_status,
+                http_status_code,
+                retry_count,
+                raw_payload_hash,
+                error_message,
+                utc_now_iso(),
+            ),
+        )
+        return request_id
+
+    def upsert_collector_checkpoint(
+        self,
+        collector_name: str,
+        source_system: str,
+        checkpoint_key: str,
+        checkpoint_value: str | None,
+    ) -> None:
+        self._execute(
+            """
+            INSERT INTO project_metadata.collector_checkpoint (
+                collector_name, source_system, checkpoint_key, checkpoint_value, updated_at
+            )
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (collector_name, source_system, checkpoint_key) DO UPDATE SET
+                checkpoint_value = EXCLUDED.checkpoint_value,
+                updated_at = EXCLUDED.updated_at
+            """,
+            (
+                collector_name,
+                source_system,
+                checkpoint_key,
+                checkpoint_value,
                 utc_now_iso(),
             ),
         )

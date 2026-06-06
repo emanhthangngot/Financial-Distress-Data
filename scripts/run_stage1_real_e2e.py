@@ -72,6 +72,26 @@ def postgres_summary() -> dict[str, str]:
             "SELECT dataset_name, check_name, status, severity, count(*) "
             "FROM project_metadata.data_quality_result GROUP BY 1,2,3,4 ORDER BY 1,2;"
         ),
+        "dataset_freshness": (
+            "SELECT dataset_name, status, freshness_lag_minutes, sla_minutes "
+            "FROM project_metadata.dataset_freshness ORDER BY dataset_name;"
+        ),
+        "failed_records": (
+            "SELECT dataset_name, failure_reason, count(*) "
+            "FROM project_metadata.failed_records GROUP BY 1,2 ORDER BY 1,2;"
+        ),
+        "backfill_request": (
+            "SELECT dataset_name, start_date, end_date, status, requested_by, count(*) "
+            "FROM project_metadata.backfill_request GROUP BY 1,2,3,4,5 ORDER BY 1,2,3,4,5;"
+        ),
+        "source_request_log": (
+            "SELECT source_system, source_endpoint, request_status, count(*) "
+            "FROM project_metadata.source_request_log GROUP BY 1,2,3 ORDER BY 1,2,3;"
+        ),
+        "collector_checkpoint": (
+            "SELECT collector_name, source_system, checkpoint_key, count(*) "
+            "FROM project_metadata.collector_checkpoint GROUP BY 1,2,3 ORDER BY 1,2,3;"
+        ),
     }
     return {
         name: run(
@@ -123,6 +143,7 @@ def main() -> None:
         timeout=900,
     )
     evidence_dir = PROJECT_ROOT / args.export_evidence
+    evidence_dir.mkdir(parents=True, exist_ok=True)
     (evidence_dir / "stage1_real_airflow_dag_test.txt").write_text(dag_output, encoding="utf-8")
     write_json(evidence_dir / "stage1_real_kafka_offsets.json", kafka_offsets())
     write_json(evidence_dir / "stage1_real_minio_objects.json", minio_objects())

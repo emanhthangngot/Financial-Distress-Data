@@ -25,9 +25,15 @@ from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 from src.transforms.bronze_to_silver import bronze_to_silver
 from src.transforms.silver_to_gold import (
     build_dim_company,
+    build_dim_date,
     build_distress_labels,
     build_fact_financial_statement,
+    build_fact_market_alert,
     build_fact_market_price,
+    build_fact_news_sentiment,
+    build_feat_company_financial_4q,
+    build_feat_company_market_30d,
+    build_feat_company_news_30d,
     build_feat_company_unified,
     build_obt_company_quarter_risk,
 )
@@ -110,6 +116,11 @@ def _with_ingest_ts(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{**row, "ingest_ts": ingest_ts} for row in rows]
 
 
+def _date_key_to_iso(value: int) -> str:
+    text = str(value)
+    return f"{text[:4]}-{text[4:6]}-{text[6:8]}"
+
+
 def _silver_dataset(
     rows: list[dict[str, Any]], dataset_name: str, dedup_keys: list[str]
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -128,7 +139,7 @@ def _stream_batches() -> list[dict[str, Any]]:
             100,
         ).as_record()
     )
-    return consumer.add_event(
+    batches = consumer.add_event(
         StreamEvent.price_update(
             "AAA",
             "2026-01-01T09:00:02+00:00",
@@ -137,6 +148,28 @@ def _stream_batches() -> list[dict[str, Any]]:
             120,
         ).as_record()
     )
+    consumer.add_event(
+        StreamEvent.news_sentiment(
+            "AAA",
+            "2026-01-01T09:00:06+00:00",
+            "2026-01-01T09:00:07+00:00",
+            -0.2,
+            True,
+            0.5,
+        ).as_record()
+    )
+    batches.extend(
+        consumer.add_event(
+            StreamEvent.alert(
+                "BBB",
+                "2026-01-01T09:00:10+00:00",
+                "2026-01-01T09:00:11+00:00",
+                "price_drop",
+            ).as_record()
+        )
+    )
+    batches.extend(consumer.flush())
+    return batches
 
 
 def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
@@ -160,15 +193,60 @@ def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
     gold_dim_company = build_dim_company(silver_companies)
     gold_fact_financial_statement = build_fact_financial_statement(silver_financial_statements)
     gold_fact_market_price = build_fact_market_price(silver_market_prices)
+    gold_fact_news_sentiment = build_fact_news_sentiment(
+        [
+            StreamEvent.news_sentiment(
+                "AAA",
+                "2026-01-01T09:00:06+00:00",
+                "2026-01-01T09:00:07+00:00",
+                -0.2,
+                True,
+                0.5,
+                "https://example.local/news/aaa-risk",
+            ).as_record(),
+            StreamEvent.news_sentiment(
+                "BBB",
+                "2026-01-01T09:00:08+00:00",
+                "2026-01-01T09:00:09+00:00",
+                -0.7,
+                True,
+                0.9,
+                "https://example.local/news/bbb-distress",
+            ).as_record(),
+        ]
+    )
+    gold_fact_market_alert = build_fact_market_alert(
+        [
+            StreamEvent.alert(
+                "BBB",
+                "2026-01-01T09:00:10+00:00",
+                "2026-01-01T09:00:11+00:00",
+                "price_drop",
+            ).as_record()
+        ]
+    )
     gold_distress_labels = build_distress_labels(gold_fact_financial_statement)
     gold_obt_company_quarter_risk = build_obt_company_quarter_risk(
         gold_fact_financial_statement,
         gold_distress_labels,
         gold_fact_market_price,
     )
+    gold_feat_company_financial_4q = build_feat_company_financial_4q(gold_obt_company_quarter_risk)
+    gold_feat_company_market_30d = build_feat_company_market_30d(gold_fact_market_price)
+    gold_feat_company_news_30d = build_feat_company_news_30d(gold_fact_news_sentiment)
     gold_feat_company_unified = build_feat_company_unified(
         gold_obt_company_quarter_risk,
         gold_fact_market_price,
+    )
+    date_values = [
+        *(row["date_key"] for row in gold_fact_financial_statement),
+        *(row["date_key"] for row in gold_fact_market_price),
+        *(row["date_key"] for row in gold_fact_news_sentiment),
+        *(row["date_key"] for row in gold_fact_market_alert),
+    ]
+    gold_dim_date = build_dim_date(
+        _date_key_to_iso(min(date_values)),
+        _date_key_to_iso(max(date_values)),
     )
 
     datasets = {
@@ -179,10 +257,16 @@ def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
         "silver_financial_statements": silver_financial_statements,
         "silver_market_prices": silver_market_prices,
         "gold_dim_company": gold_dim_company,
+        "gold_dim_date": gold_dim_date,
         "gold_fact_financial_statement": gold_fact_financial_statement,
         "gold_fact_market_price": gold_fact_market_price,
+        "gold_fact_market_alert": gold_fact_market_alert,
+        "gold_fact_news_sentiment": gold_fact_news_sentiment,
         "gold_distress_labels": gold_distress_labels,
         "gold_obt_company_quarter_risk": gold_obt_company_quarter_risk,
+        "gold_feat_company_financial_4q": gold_feat_company_financial_4q,
+        "gold_feat_company_market_30d": gold_feat_company_market_30d,
+        "gold_feat_company_news_30d": gold_feat_company_news_30d,
         "gold_feat_company_unified": gold_feat_company_unified,
         "failed_records": [
             *failed_companies,
@@ -302,6 +386,30 @@ def write_postgres_metadata(
         dataset_name,
         "success",
         output_rows=sum(payload.row_counts.values()),
+    )
+    writer.log_backfill_request(
+        "stage1_lakehouse",
+        "2024-01-01",
+        "2026-01-01",
+        "completed",
+        dag_id,
+        run_id=run_id,
+    )
+    writer.log_source_request(
+        run_id=run_id,
+        source_system="vnstock_fixture",
+        source_endpoint="fixture://stage1",
+        ticker=None,
+        report_period=None,
+        request_status="success",
+        retry_count=0,
+        raw_payload_hash=None,
+    )
+    writer.upsert_collector_checkpoint(
+        collector_name="stage1_fixture_collectors",
+        source_system="vnstock_fixture",
+        checkpoint_key="last_successful_run_id",
+        checkpoint_value=run_id,
     )
 
     for dataset_name in ("silver_companies", "gold_fact_financial_statement"):

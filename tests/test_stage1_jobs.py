@@ -4,6 +4,7 @@ import pytest
 
 from src.catalog.duckdb_runner import create_views_sql
 from src.io.paths import dataset_object_key
+from src.jobs.stage1_dq_job import build_intentional_dq_failure_checks
 from src.jobs.stage1_evidence_job import (
     DEFAULT_BUCKET,
     build_evidence_artifacts,
@@ -30,6 +31,7 @@ def test_stage1_evidence_payload_keeps_existing_deterministic_counts():
     assert payload.row_counts["silver_companies"] == 2
     assert payload.row_counts["gold_fact_financial_statement"] == 16
     assert payload.row_counts["gold_fact_market_price"] == 12
+    assert payload.row_counts["gold_fact_market_alert"] == 1
     assert payload.row_counts["gold_obt_company_quarter_risk"] == 16
     assert payload.row_counts["gold_feat_company_unified"] == 16
     assert all(path.startswith("financial-distress-lake/") for path in payload.object_keys)
@@ -51,6 +53,27 @@ def test_duckdb_create_views_sql_can_use_container_minio_endpoint(tmp_path: Path
     monkeypatch.setenv("MINIO_ENDPOINT", "http://minio:9000")
 
     assert create_views_sql(sql_path) == "SET s3_endpoint='minio:9000';"
+
+
+def test_duckdb_create_views_sql_registers_all_claimed_gold_tables():
+    sql = create_views_sql()
+
+    for view_name in [
+        "gold_dim_date",
+        "gold_fact_market_alert",
+        "gold_fact_news_sentiment",
+        "gold_feat_company_financial_4q",
+        "gold_feat_company_market_30d",
+        "gold_feat_company_news_30d",
+    ]:
+        assert f"CREATE OR REPLACE VIEW {view_name}" in sql
+
+
+def test_duckdb_validation_sql_checks_point_in_time_feature_leakage():
+    sql = Path("sql/duckdb_validation_queries.sql").read_text(encoding="utf-8")
+
+    assert "future_feature_leakage_rows" in sql
+    assert "feature_event_timestamp" in sql
 
 
 def test_evidence_prefix_is_run_scoped_and_sanitized():
@@ -114,3 +137,25 @@ def test_dq_runner_logs_critical_failure_and_halts():
 
     assert writer.data_quality_result[0]["status"] == "fail"
     assert writer.data_quality_result[0]["severity"] == "critical"
+
+
+def test_stage1_intentional_dq_failure_probe_persists_before_halting():
+    writer = MetadataWriter()
+    runner = DQRunner(writer)
+
+    with pytest.raises(CriticalDQFailure, match="ticker_not_null"):
+        runner.run("dq-failure-probe", build_intentional_dq_failure_checks())
+
+    assert writer.data_quality_result == [
+        {
+            **writer.data_quality_result[0],
+            "run_id": "dq-failure-probe",
+            "dataset_name": "dq_failure_probe_companies",
+            "check_name": "ticker_not_null",
+            "status": "fail",
+            "severity": "critical",
+            "metric_value": 1.0,
+            "threshold_value": 0.0,
+            "error_message": "1 rows have null ticker",
+        }
+    ]

@@ -10,7 +10,11 @@ from src.streaming.events import StreamEvent
 from src.streaming.kafka_producer import produce_events
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 
-STREAM_TOPICS = ["financial.price_events"]
+STREAM_TOPICS = [
+    "financial.price_events",
+    "financial.news_events",
+    "financial.alert_events",
+]
 
 
 def build_stage1_stream_events(evidence_run_id: str) -> list[dict[str, Any]]:
@@ -35,6 +39,30 @@ def build_stage1_stream_events(evidence_run_id: str) -> list[dict[str, Any]]:
             "2026-01-01T09:00:05+00:00",
             8.0,
             90,
+        ).as_record(),
+        StreamEvent.news_sentiment(
+            "AAA",
+            "2026-01-01T09:00:06+00:00",
+            "2026-01-01T09:00:07+00:00",
+            -0.2,
+            True,
+            0.5,
+            "https://example.local/news/aaa-risk",
+        ).as_record(),
+        StreamEvent.news_sentiment(
+            "BBB",
+            "2026-01-01T09:00:08+00:00",
+            "2026-01-01T09:00:09+00:00",
+            -0.7,
+            True,
+            0.9,
+            "https://example.local/news/bbb-distress",
+        ).as_record(),
+        StreamEvent.alert(
+            "BBB",
+            "2026-01-01T09:00:10+00:00",
+            "2026-01-01T09:00:11+00:00",
+            "price_drop",
         ).as_record(),
     ]
     return [{**event, "evidence_run_id": evidence_run_id} for event in events]
