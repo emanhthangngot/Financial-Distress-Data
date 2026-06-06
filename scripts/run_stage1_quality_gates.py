@@ -33,16 +33,20 @@ DEFAULT_GATES: tuple[QualityGate, ...] = (
         ),
     ),
 )
+SERVICE_GATES: tuple[QualityGate, ...] = (
+    QualityGate("stage1-service-readiness", (sys.executable, "scripts/check_stage1_services.py")),
+)
+ALL_GATES: tuple[QualityGate, ...] = DEFAULT_GATES + SERVICE_GATES
 
 
 def _selected_gates(names: set[str] | None = None) -> tuple[QualityGate, ...]:
     if not names:
         return DEFAULT_GATES
-    known = {gate.name: gate for gate in DEFAULT_GATES}
+    known = {gate.name: gate for gate in ALL_GATES}
     unknown = sorted(names - set(known))
     if unknown:
         raise ValueError(f"Unknown quality gate(s): {', '.join(unknown)}")
-    return tuple(gate for gate in DEFAULT_GATES if gate.name in names)
+    return tuple(gate for gate in ALL_GATES if gate.name in names)
 
 
 def run_quality_gates(
@@ -61,12 +65,21 @@ def main() -> None:
     parser.add_argument(
         "--only",
         action="append",
-        choices=[gate.name for gate in DEFAULT_GATES],
+        choices=[gate.name for gate in ALL_GATES],
         help="Run only the selected gate. Can be passed multiple times.",
+    )
+    parser.add_argument(
+        "--include-services",
+        action="store_true",
+        help="Also run Docker service readiness checks. Requires docker compose services to be up.",
     )
     args = parser.parse_args()
 
-    gates = _selected_gates(set(args.only or []))
+    selected = set(args.only or [])
+    if args.include_services and not selected:
+        gates = DEFAULT_GATES + SERVICE_GATES
+    else:
+        gates = _selected_gates(selected)
     try:
         run_quality_gates(gates)
     except subprocess.CalledProcessError as exc:

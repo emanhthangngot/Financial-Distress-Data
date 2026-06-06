@@ -180,6 +180,12 @@ Run local quality gates.
 .venv/bin/python scripts/run_stage1_quality_gates.py
 ```
 
+Run quality gates plus Docker service readiness after the stack is up.
+
+```bash
+.venv/bin/python scripts/run_stage1_quality_gates.py --include-services
+```
+
 The one-shot gate runs the same checks individually listed below.
 
 ```bash

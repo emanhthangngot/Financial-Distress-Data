@@ -26,6 +26,7 @@ def test_quality_gate_runner_executes_default_gates_in_order():
     assert [command for command, _, _ in calls] == [gate.command for gate in module.DEFAULT_GATES]
     assert all(check is True for _, _, check in calls)
     assert all(cwd == module.PROJECT_ROOT for _, cwd, _ in calls)
+    assert "stage1-service-readiness" not in [gate.name for gate in module.DEFAULT_GATES]
 
 
 def test_quality_gate_selection_preserves_default_order():
@@ -34,6 +35,18 @@ def test_quality_gate_selection_preserves_default_order():
     selected = module._selected_gates({"stage1-evidence-audit", "pytest"})
 
     assert [gate.name for gate in selected] == ["pytest", "stage1-evidence-audit"]
+
+
+def test_quality_gate_selection_can_run_service_readiness_gate_explicitly():
+    module = importlib.import_module("scripts.run_stage1_quality_gates")
+
+    selected = module._selected_gates({"stage1-service-readiness"})
+
+    assert [gate.name for gate in selected] == ["stage1-service-readiness"]
+    assert selected[0].command == (
+        sys.executable,
+        "scripts/check_stage1_services.py",
+    )
 
 
 def test_quality_gate_selection_rejects_unknown_gate():

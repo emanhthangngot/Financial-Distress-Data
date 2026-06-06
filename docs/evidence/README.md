@@ -30,6 +30,7 @@ docker compose up -d postgres minio kafka
 docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 .venv/bin/python scripts/check_stage1_services.py
 .venv/bin/python scripts/run_stage1_quality_gates.py
+.venv/bin/python scripts/run_stage1_quality_gates.py --include-services
 ```
 
 Only add artifacts that were produced by an actual local run.

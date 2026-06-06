@@ -871,6 +871,7 @@ Current local quality commands:
 
 ```bash
 .venv/bin/python scripts/run_stage1_quality_gates.py
+.venv/bin/python scripts/run_stage1_quality_gates.py --include-services  # after docker compose up -d
 ```
 
 The one-shot gate runs:
@@ -908,6 +909,7 @@ Acceptance criteria:
 
 ```text
 Developer -> runs scripts/run_stage1_quality_gates.py -> PyTest, Ruff, Black, Docker Compose config, and evidence audit gates pass.
+Developer -> runs scripts/run_stage1_quality_gates.py --include-services after docker compose up -d -> quality gates and service readiness checks pass.
 Developer -> runs scripts/check_stage1_services.py after docker compose up -d -> required local services, Kafka topics, MinIO bucket, PostgreSQL readiness, and Airflow imports pass.
 GitHub Actions -> runs on dev pull request or push -> executes the Stage 1 quality gate runner successfully.
 ```
