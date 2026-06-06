@@ -32,7 +32,7 @@ docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 .venv/bin/python scripts/check_stage1_services.py
 .venv/bin/python scripts/run_stage1_quality_gates.py
 .venv/bin/python scripts/run_stage1_quality_gates.py --include-services
-.venv/bin/python scripts/stage1_readiness_report.py --include-services
+.venv/bin/python scripts/stage1_readiness_report.py --include-services --include-quality-gates
 ```
 
 Only add artifacts that were produced by an actual local run.
@@ -90,6 +90,7 @@ Validate the checked-in submission evidence without regenerating files:
 ```bash
 .venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
 .venv/bin/python scripts/stage1_readiness_report.py
+.venv/bin/python scripts/stage1_readiness_report.py --json --output /tmp/stage1_readiness_report.json
 ```
 
 The materializer now uses runtime job wrappers under `src/jobs/`, IO helpers
@@ -121,6 +122,7 @@ Expected generated evidence files:
 - `stage1_real_kafka_offsets.json`
 - `stage1_real_minio_objects.json`
 - `stage1_real_postgres_summary.json`
+- `stage1_readiness_report.json` if exported with `scripts/stage1_readiness_report.py --output ...`
 - `stage1_real_duckdb_validation.json`
 - `stage1_runtime_audit_summary.json`
 

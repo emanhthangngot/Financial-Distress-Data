@@ -130,6 +130,7 @@ Build a reviewer-facing readiness report from the checked-in evidence.
 
 ```bash
 .venv/bin/python scripts/stage1_readiness_report.py
+.venv/bin/python scripts/stage1_readiness_report.py --json --output /tmp/stage1_readiness_report.json
 ```
 
 Prove critical DQ failures are persisted before the pipeline halts.
@@ -196,6 +197,7 @@ Build a readiness report plus live service checks after the stack is up.
 
 ```bash
 .venv/bin/python scripts/stage1_readiness_report.py --include-services
+.venv/bin/python scripts/stage1_readiness_report.py --include-services --include-quality-gates
 ```
 
 The one-shot gate runs the same checks individually listed below.

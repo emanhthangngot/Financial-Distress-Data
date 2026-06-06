@@ -875,6 +875,7 @@ Current local quality commands:
 .venv/bin/python scripts/run_stage1_quality_gates.py
 .venv/bin/python scripts/run_stage1_quality_gates.py --include-services  # after docker compose up -d
 .venv/bin/python scripts/stage1_readiness_report.py
+.venv/bin/python scripts/stage1_readiness_report.py --include-services --include-quality-gates  # after docker compose up -d
 ```
 
 The one-shot gate runs:
@@ -915,6 +916,7 @@ Developer -> runs scripts/run_stage1_quality_gates.py -> PyTest, Ruff, Black, Do
 Developer -> runs scripts/run_stage1_quality_gates.py --include-services after docker compose up -d -> quality gates and service readiness checks pass.
 Developer -> runs scripts/check_stage1_services.py after docker compose up -d -> required local services, Kafka topics, MinIO bucket, PostgreSQL readiness, and Airflow imports pass.
 Reviewer -> runs scripts/stage1_readiness_report.py -> receives a pass/fail summary that uses checked-in evidence and explicitly labels the project as production-inspired, not production-ready.
+Reviewer -> runs scripts/stage1_readiness_report.py --include-services --include-quality-gates after docker compose up -d -> receives a combined evidence, service readiness, and quality gate report.
 GitHub Actions -> runs on dev pull request or push -> executes the Stage 1 quality gate runner successfully.
 ```
 
@@ -936,7 +938,8 @@ Expected evidence artifacts:
 - DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 - Airflow DAG screenshots if the local Airflow services are run.
 - Machine-readable audit summary from `scripts/audit_stage1_evidence.py`.
-- Reviewer-facing readiness report from `scripts/stage1_readiness_report.py`.
+- Reviewer-facing readiness report from `scripts/stage1_readiness_report.py`,
+  optionally exported as JSON with `--output`.
 - DQ failure probe artifact from `scripts/run_stage1_dq_failure_probe.py`.
 
 Evidence should distinguish executed local runtime proof from design-only or
@@ -987,8 +990,8 @@ Recommended evidence refresh steps:
 7. Run `scripts/audit_stage1_evidence.py` against the E2E evidence directory.
 8. Run `scripts/audit_stage1_evidence.py docs/evidence --check` after copying
    the export artifacts into the submission evidence package.
-9. Run `scripts/stage1_readiness_report.py` for the final reviewer-facing
-   Phase 1 readiness summary.
+9. Run `scripts/stage1_readiness_report.py --json --output /tmp/stage1_readiness_report.json`
+   for the final reviewer-facing Phase 1 readiness summary.
 10. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 11. Keep evidence claims tied only to artifacts that were produced by an actual
    local run.
