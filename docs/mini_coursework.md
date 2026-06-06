@@ -4,7 +4,7 @@
 
 This is the Phase 1 mini-coursework source of truth for the current repository state.
 
-It is intentionally written as an as-built specification, not an aspirational roadmap. If this document says a feature is implemented, there must be code, SQL, tests, DAG scaffolding, or configuration in this repository that supports that statement.
+It is intentionally written as an as-built specification, not an aspirational roadmap. If this document says a feature is implemented, there must be code, SQL, tests, DAGs, runtime evidence, or configuration in this repository that supports that statement.
 
 Phase 1 scope remains limited to:
 
@@ -21,7 +21,8 @@ The repository currently implements a local-first Stage 1 data engineering found
 
 - Documentation contracts in `docs/01_data_generator.md` and `docs/02_schema_design.md`.
 - Local Docker service definitions in `docker-compose.yml`.
-- Airflow DAG scaffolding in `dags/`.
+- Airflow DAGs in `dags/`, including the lightweight evidence DAG and the
+  connected real E2E evidence DAG.
 - Fixture-backed collectors in `src/collectors/`.
 - Schema contracts, in-memory metadata helpers, and a PostgreSQL metadata writer in `src/metadata/`.
 - Bronze-to-Silver normalization and deduplication helpers in `src/transforms/bronze_to_silver.py`, including a Spark DataFrame path for local runtime jobs.
@@ -36,7 +37,8 @@ The repository currently implements a local-first Stage 1 data engineering found
   Airflow evidence DAGs `dags/stage1_local_evidence_pipeline.py` and
   `dags/stage1_real_e2e_pipeline.py`.
 - Runtime audit helpers in `scripts/`, including the real E2E runner, DQ failure
-  probe, and evidence summary auditor.
+  probe, evidence summary auditor, service readiness check, quality gate runner,
+  and reviewer-facing readiness report.
 - PyTest coverage in `tests/`.
 - Architecture image in `images/architecture/architecture-stage-1.png`.
 
@@ -872,6 +874,7 @@ Current local quality commands:
 ```bash
 .venv/bin/python scripts/run_stage1_quality_gates.py
 .venv/bin/python scripts/run_stage1_quality_gates.py --include-services  # after docker compose up -d
+.venv/bin/python scripts/stage1_readiness_report.py
 ```
 
 The one-shot gate runs:
@@ -911,6 +914,7 @@ Acceptance criteria:
 Developer -> runs scripts/run_stage1_quality_gates.py -> PyTest, Ruff, Black, Docker Compose config, and evidence audit gates pass.
 Developer -> runs scripts/run_stage1_quality_gates.py --include-services after docker compose up -d -> quality gates and service readiness checks pass.
 Developer -> runs scripts/check_stage1_services.py after docker compose up -d -> required local services, Kafka topics, MinIO bucket, PostgreSQL readiness, and Airflow imports pass.
+Reviewer -> runs scripts/stage1_readiness_report.py -> receives a pass/fail summary that uses checked-in evidence and explicitly labels the project as production-inspired, not production-ready.
 GitHub Actions -> runs on dev pull request or push -> executes the Stage 1 quality gate runner successfully.
 ```
 
@@ -932,6 +936,7 @@ Expected evidence artifacts:
 - DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 - Airflow DAG screenshots if the local Airflow services are run.
 - Machine-readable audit summary from `scripts/audit_stage1_evidence.py`.
+- Reviewer-facing readiness report from `scripts/stage1_readiness_report.py`.
 - DQ failure probe artifact from `scripts/run_stage1_dq_failure_probe.py`.
 
 Evidence should distinguish executed local runtime proof from design-only or
@@ -982,8 +987,10 @@ Recommended evidence refresh steps:
 7. Run `scripts/audit_stage1_evidence.py` against the E2E evidence directory.
 8. Run `scripts/audit_stage1_evidence.py docs/evidence --check` after copying
    the export artifacts into the submission evidence package.
-9. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
-10. Keep evidence claims tied only to artifacts that were produced by an actual
+9. Run `scripts/stage1_readiness_report.py` for the final reviewer-facing
+   Phase 1 readiness summary.
+10. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
+11. Keep evidence claims tied only to artifacts that were produced by an actual
    local run.
 
 ## 24. Acceptance Criteria Summary

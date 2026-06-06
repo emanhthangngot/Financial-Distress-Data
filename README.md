@@ -126,6 +126,12 @@ Validate the checked-in submission evidence without regenerating files.
 .venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
 ```
 
+Build a reviewer-facing readiness report from the checked-in evidence.
+
+```bash
+.venv/bin/python scripts/stage1_readiness_report.py
+```
+
 Prove critical DQ failures are persisted before the pipeline halts.
 
 ```bash
@@ -184,6 +190,12 @@ Run quality gates plus Docker service readiness after the stack is up.
 
 ```bash
 .venv/bin/python scripts/run_stage1_quality_gates.py --include-services
+```
+
+Build a readiness report plus live service checks after the stack is up.
+
+```bash
+.venv/bin/python scripts/stage1_readiness_report.py --include-services
 ```
 
 The one-shot gate runs the same checks individually listed below.
