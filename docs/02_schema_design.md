@@ -451,10 +451,11 @@ sql/duckdb_validation_queries.sql
 
 Implemented DuckDB Gold views:
 
+- `gold_dim_company`
+- `gold_dim_date`
 - `gold_fact_financial_statement`
 - `gold_fact_market_price`
 - `gold_fact_market_alert`
-- `gold_dim_date`
 - `gold_fact_news_sentiment`
 - `gold_obt_company_quarter_risk`
 - `gold_feat_company_financial_4q`
@@ -462,13 +463,14 @@ Implemented DuckDB Gold views:
 - `gold_feat_company_news_30d`
 - `gold_feat_company_unified`
 
-Current SQL does not create a `gold_dim_company` view, although `gold/dim_company/` is produced in MinIO.
+`gold_dim_company` is exposed for DBeaver ER inspection and SCD2 temporal joins.
 
 Validation queries check:
 
 - financial statement row counts
 - duplicate financial statement keys
 - distress label distribution
+- `dim_company` row counts
 - `dim_date` row counts
 - news and alert fact row counts
 - feature table row counts

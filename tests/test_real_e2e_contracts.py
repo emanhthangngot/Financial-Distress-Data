@@ -52,6 +52,7 @@ def _write_complete_stage1_audit_artifacts(evidence_dir: Path) -> None:
         json.dumps(
             [
                 {"columns": ["total_financial_statement_rows"], "rows": [[16]]},
+                {"columns": ["total_dim_company_rows"], "rows": [[2]]},
                 {"columns": ["ticker", "report_period", "cnt"], "rows": []},
                 {"columns": ["distress_label", "row_count"], "rows": [[0, 12], [1, 4]]},
                 {"columns": ["total_news_sentiment_rows"], "rows": [[2]]},
@@ -78,6 +79,7 @@ def _write_complete_stage1_audit_artifacts(evidence_dir: Path) -> None:
                 {"object_name": "silver/market_prices_daily/part.parquet"},
                 {"object_name": "gold/fact_financial_statement/part.parquet"},
                 {"object_name": "gold/fact_market_price/part.parquet"},
+                {"object_name": "gold/dim_company/part.parquet"},
                 {"object_name": "gold/fact_news_sentiment/part.parquet"},
                 {"object_name": "gold/fact_market_alert/part.parquet"},
                 {"object_name": "gold/obt_company_quarter_risk/part.parquet"},
@@ -185,6 +187,8 @@ def test_stage1_evidence_audit_summary_passes_for_complete_artifacts(tmp_path: P
 
     assert summary["status"] == "pass"
     assert summary["failed_checks"] == []
+    assert summary["checks"]["duckdb_total_dim_company_rows_ok"] is True
+    assert summary["duckdb_metrics"]["total_dim_company_rows"] == 2
 
 
 def test_stage1_evidence_audit_check_mode_fails_when_summary_is_missing(

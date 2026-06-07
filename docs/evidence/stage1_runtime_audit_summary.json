@@ -12,6 +12,7 @@
     "duckdb_distress_label_distribution_has_safe_and_distress": true,
     "duckdb_financial_statement_duplicate_check_empty": true,
     "duckdb_future_feature_leakage_rows_ok": true,
+    "duckdb_total_dim_company_rows_ok": true,
     "duckdb_total_financial_feature_rows_ok": true,
     "duckdb_total_financial_statement_rows_ok": true,
     "duckdb_total_market_alert_rows_ok": true,
@@ -28,6 +29,7 @@
   },
   "duckdb_metrics": {
     "future_feature_leakage_rows": 0,
+    "total_dim_company_rows": 2,
     "total_dim_date_rows": 732,
     "total_financial_feature_rows": 16,
     "total_financial_statement_rows": 16,

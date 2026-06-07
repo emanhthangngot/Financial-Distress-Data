@@ -19,6 +19,10 @@ CREATE OR REPLACE VIEW gold_fact_market_alert AS
 SELECT *
 FROM read_parquet('s3://financial-distress-lake/gold/fact_market_alert/**/*.parquet');
 
+CREATE OR REPLACE VIEW gold_dim_company AS
+SELECT *
+FROM read_parquet('s3://financial-distress-lake/gold/dim_company/**/*.parquet');
+
 CREATE OR REPLACE VIEW gold_dim_date AS
 SELECT *
 FROM read_parquet('s3://financial-distress-lake/gold/dim_date/**/*.parquet');

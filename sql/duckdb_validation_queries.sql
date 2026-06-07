@@ -10,6 +10,9 @@ SELECT distress_label, COUNT(*) AS row_count
 FROM gold_obt_company_quarter_risk
 GROUP BY distress_label;
 
+SELECT COUNT(*) AS total_dim_company_rows
+FROM gold_dim_company;
+
 SELECT COUNT(*) AS total_dim_date_rows
 FROM gold_dim_date;
 

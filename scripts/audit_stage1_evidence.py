@@ -19,6 +19,7 @@ REQUIRED_TOPICS = {
 }
 REQUIRED_DUCKDB_METRICS = {
     "total_financial_statement_rows": 16,
+    "total_dim_company_rows": 2,
     "total_news_sentiment_rows": 2,
     "total_market_alert_rows": 1,
     "total_financial_feature_rows": 16,
@@ -36,6 +37,7 @@ REQUIRED_MINIO_PREFIXES = {
     "silver/companies/",
     "silver/financial_statements/",
     "silver/market_prices_daily/",
+    "gold/dim_company/",
     "gold/fact_financial_statement/",
     "gold/fact_market_price/",
     "gold/fact_news_sentiment/",

@@ -32,6 +32,13 @@ def test_market_price_schema_seed_matches_python_contract():
         assert nullable_field in sql
 
 
+def test_duckdb_views_expose_gold_dim_company_for_erd_evidence():
+    sql = Path("sql/duckdb_create_views.sql").read_text(encoding="utf-8")
+
+    assert "CREATE OR REPLACE VIEW gold_dim_company" in sql
+    assert "gold/dim_company/**/*.parquet" in sql
+
+
 def test_unified_feature_builder_excludes_future_market_rows():
     reference = {
         "ticker": "AAA",

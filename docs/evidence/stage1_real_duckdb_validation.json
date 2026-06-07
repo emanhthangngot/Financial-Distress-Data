@@ -37,6 +37,17 @@
     ]
   },
   {
+    "query": "SELECT COUNT(*) AS total_dim_company_rows\nFROM gold_dim_company",
+    "columns": [
+      "total_dim_company_rows"
+    ],
+    "rows": [
+      [
+        2
+      ]
+    ]
+  },
+  {
     "query": "SELECT COUNT(*) AS total_dim_date_rows\nFROM gold_dim_date",
     "columns": [
       "total_dim_date_rows"
