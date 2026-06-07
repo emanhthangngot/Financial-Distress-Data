@@ -1,0 +1,6 @@
+{
+  "error_message": "critical DQ checks failed: ticker_not_null",
+  "expected_outcome": "critical_failure_persisted_before_halt",
+  "halted": true,
+  "run_id": "stage1-dq-failure-probe-20260606"
+}

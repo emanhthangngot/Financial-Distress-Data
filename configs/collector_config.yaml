@@ -1,0 +1,46 @@
+source_mode: online
+primary_library: vnstock
+fallback_sources:
+  - cafe_f
+  - vietstock
+  - tcbs
+  - ssi
+
+markets:
+  - HOSE
+  - HNX
+  - UPCOM
+exclude_financial_sector: true
+
+max_companies: 300
+start_year: 2018
+end_year: 2025
+report_frequency: quarterly
+trading_days_per_year: 250
+
+request_timeout_seconds: 30
+max_retries: 3
+retry_backoff_seconds: 5
+min_request_delay_seconds: 1
+random_delay_jitter_seconds: 2
+checkpoint_every_tickers: 25
+
+persist_raw_payload: true
+raw_payload_format: json
+failed_ticker_policy: write_to_project_metadata_failed_records
+
+stream_source_mode: websocket_or_polling
+websocket_reconnect_seconds: 10
+poll_interval_seconds: 60
+stream_topics:
+  price: financial.price_events
+  news: financial.news_events
+  alert: financial.alert_events
+stream_topic_partitions: 3
+stream_flush_interval_seconds: 60
+stream_flush_record_count: 1000
+stream_target_batch_file_mb_min: 5
+stream_target_batch_file_mb_max: 50
+
+fixture_mode_enabled: true
+fixture_seed: 42

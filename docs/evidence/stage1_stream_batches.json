@@ -1,0 +1,32 @@
+[
+  {
+    "batch_id": "474d58d3-d08a-4e81-b663-36a677cb287e",
+    "bronze_path": "s3a://financial-distress-lake/bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=474d58d3-d08a-4e81-b663-36a677cb287e/",
+    "event_date": "2026-01-01",
+    "event_hour": "09",
+    "record_count": 2,
+    "records": [
+      {
+        "created_ts": "2026-01-01T09:00:01+00:00",
+        "event_id": "44f1ceca60741cb2ee58d16af2ca81a846205003824d2cde21d8d9b9ec070874",
+        "event_timestamp": "2026-01-01T09:00:00+00:00",
+        "event_type": "price_update",
+        "price": 10.0,
+        "ticker": "AAA",
+        "topic": "financial.price_events",
+        "volume": 100
+      },
+      {
+        "created_ts": "2026-01-01T09:00:03+00:00",
+        "event_id": "ef41c8c759c1a57200f18c5a250134f089a91a043bb82067804d071efbc76ad9",
+        "event_timestamp": "2026-01-01T09:00:02+00:00",
+        "event_type": "price_update",
+        "price": 10.1,
+        "ticker": "AAA",
+        "topic": "financial.price_events",
+        "volume": 120
+      }
+    ],
+    "topic": "financial.price_events"
+  }
+]
