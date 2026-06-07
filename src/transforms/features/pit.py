@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -79,6 +80,27 @@ def build_feat_company_unified(
     return pit_join_features(references, feature_rows)
 
 
+def _parse_timestamp(val: Any) -> datetime:
+    if not val:
+        return datetime.min.replace(tzinfo=UTC)
+    s = str(val).strip()
+    if len(s) == 10:
+        s += "T00:00:00+00:00"
+    if s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    if " " in s and "T" not in s:
+        s = s.replace(" ", "T")
+    if "+" not in s and "-" not in s.split("T")[-1]:
+        s += "+00:00"
+    try:
+        return datetime.fromisoformat(s)
+    except ValueError:
+        try:
+            return datetime.strptime(s, "%Y-%m-%dT%H:%M:%S%z")
+        except ValueError:
+            return datetime.min.replace(tzinfo=UTC)
+
+
 def pit_join_features(
     references: list[dict[str, Any]], features: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -87,15 +109,17 @@ def pit_join_features(
     for feature in features:
         by_ticker.setdefault(str(feature["ticker"]).upper(), []).append(feature)
     for ticker_features in by_ticker.values():
-        ticker_features.sort(key=lambda item: item["event_timestamp"], reverse=True)
+        ticker_features.sort(
+            key=lambda item: _parse_timestamp(item["event_timestamp"]), reverse=True
+        )
     for reference in references:
         ticker = str(reference["ticker"]).upper()
-        ref_ts = reference["event_timestamp"]
+        ref_ts = _parse_timestamp(reference["event_timestamp"])
         candidate = next(
             (
                 feature
                 for feature in by_ticker.get(ticker, [])
-                if str(feature["event_timestamp"]) <= str(ref_ts)
+                if _parse_timestamp(feature["event_timestamp"]) <= ref_ts
             ),
             {},
         )
