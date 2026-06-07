@@ -4,6 +4,7 @@ excalidraw-mcp/
 .DS_Store
 __pycache__
 AGENTS.md
+.mcp.json
 .pytest_cache/
 .ruff_cache/
 .venv/
