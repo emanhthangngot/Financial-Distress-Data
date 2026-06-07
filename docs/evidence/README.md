@@ -125,6 +125,7 @@ Expected generated evidence files:
 - `stage1_readiness_report.json` if exported with `scripts/stage1_readiness_report.py --output ...`
 - `stage1_real_duckdb_validation.json`
 - `stage1_runtime_audit_summary.json`
+- `images/schema/schema_evidence_erd.png` for the DBeaver ERD screenshot.
 
 ## Manual Inspection Targets
 
@@ -171,3 +172,8 @@ DBeaver DuckDB connection:
 3. Run `sql/duckdb_validation_queries.sql`.
 4. Capture row counts, duplicate-check output, distress-label distribution, and
    `gold_feat_company_unified` sample rows.
+
+For ERD evidence, generate or open the local `warehouse.db` artifact, then inspect
+`schema_evidence -> Tables` in DBeaver and open the ER Diagram. `warehouse.db` is
+ignored by Git because it is a generated local database; the screenshot artifact
+that should be committed is `images/schema/schema_evidence_erd.png`.

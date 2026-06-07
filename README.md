@@ -12,16 +12,68 @@ The current Stage 1 pipeline uses deterministic fixture-backed collectors, then 
   <img src="images/architecture/architecture-stage-1.png" style="width: 1188px; height: auto;">
 </div>
 
+## Runtime Evidence Snapshot
+
+The checked-in Stage 1 evidence proves the local pipeline has run end to end.
+The latest committed evidence package reports `status: pass` in
+`docs/evidence/stage1_runtime_audit_summary.json`.
+
+| Evidence area | Current proof |
+|---|---|
+| Airflow pipeline | `stage1_real_e2e_pipeline` finished successfully in `docs/evidence/stage1_real_airflow_dag_test.txt` |
+| Kafka streaming | Offsets exist for `financial.price_events`, `financial.news_events`, and `financial.alert_events` |
+| MinIO lakehouse | 436 objects across Bronze, Silver, Gold, and `evidence/stage1/` prefixes |
+| PostgreSQL metadata | `pipeline_run_log`, `data_quality_result`, `dataset_freshness`, `backfill_request`, `source_request_log`, and `collector_checkpoint` exported in `docs/evidence/stage1_real_postgres_summary.json` |
+| DuckDB validation | Gold row counts, duplicate checks, distress-label distribution, and PIT leakage checks exported in `docs/evidence/stage1_real_duckdb_validation.json` |
+| DQ failure handling | Critical DQ failure probe confirms failure is persisted before halt |
+
+Key DuckDB metrics from the checked-in evidence:
+
+| Metric | Value |
+|---|---:|
+| `total_financial_statement_rows` | 16 |
+| `total_dim_company_rows` | 2 |
+| `total_dim_date_rows` | 732 |
+| `total_market_feature_rows` | 12 |
+| `total_news_sentiment_rows` | 2 |
+| `future_feature_leakage_rows` | 0 |
+
+## Schema Evidence
+
+The local schema follows a Medallion design: raw Bronze-style tables, Silver
+staging tables, Gold dimensions/facts, distress labels, OBT, and feature tables.
+
+<div style="text-align: center;">
+  <img src="images/schema/schema_evidence_erd.png" style="width: 1188px; height: auto;">
+</div>
+
+DBeaver evidence can be reproduced by connecting to a local DuckDB file named
+`warehouse.db` and opening the `schema_evidence` schema. `warehouse.db` is a
+local generated artifact and is intentionally ignored by Git; regenerate it from
+the local pipeline when needed.
+
+## API Surface
+
+There is no REST/FastAPI service in Phase 1. This mini-coursework focuses on
+local data engineering evidence: collectors, Kafka contracts, Bronze/Silver/Gold
+lakehouse transforms, PostgreSQL metadata, DQ, and DuckDB/DBeaver inspection.
+API serving is documented only as a Phase 2 or optional extension in
+`docs/coursework.md`, so OpenAPI/Swagger docs are not part of the current
+submission scope.
+
 # Table of Contents
 
-1. [Project Structure](#project-structure)
-2. [Local Setup](#local-setup)
-3. [Running in Docker](#running-in-docker)
-4. [Service URLs](#service-urls)
-5. [Run Stage 1 Evidence](#run-stage-1-evidence)
-6. [Validation Commands](#validation-commands)
-7. [Useful Inspection Queries](#useful-inspection-queries)
-8. [Stop Services](#stop-services)
+1. [Runtime Evidence Snapshot](#runtime-evidence-snapshot)
+2. [Schema Evidence](#schema-evidence)
+3. [API Surface](#api-surface)
+4. [Project Structure](#project-structure)
+5. [Local Setup](#local-setup)
+6. [Running in Docker](#running-in-docker)
+7. [Service URLs](#service-urls)
+8. [Run Stage 1 Evidence](#run-stage-1-evidence)
+9. [Validation Commands](#validation-commands)
+10. [Useful Inspection Queries](#useful-inspection-queries)
+11. [Stop Services](#stop-services)
 
 ## Project Structure
 
