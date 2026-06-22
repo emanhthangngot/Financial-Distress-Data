@@ -1,3 +1,11 @@
+"""
+Fixture-backed vnstock adapter for offline and CI runs.
+
+Replays deterministic fixtures (offline + streaming) instead of calling the live vnstock SDK, with
+knobs for skew, cardinality, late arrivals, and burst rates documented in
+``docs/01_data_generator.md``. The default adapter for Phase 1 development and CI.
+"""
+
 from __future__ import annotations
 
 import random

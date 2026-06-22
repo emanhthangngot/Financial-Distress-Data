@@ -1,3 +1,10 @@
+"""
+PostgreSQL writer for ``project_metadata``.
+
+Centralized helpers to insert run records, DQ results, and failed-record rows. Every job must use
+this writer so metadata stays consistent.
+"""
+
 from __future__ import annotations
 
 import json

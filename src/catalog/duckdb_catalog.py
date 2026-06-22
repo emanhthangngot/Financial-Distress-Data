@@ -1,3 +1,10 @@
+"""
+DuckDB view catalog over MinIO Parquet.
+
+Defines the SQL DDL used to register Bronze, Silver, and Gold zones as DuckDB views. Also handles
+refresh-after-write and view invalidation.
+"""
+
 from __future__ import annotations
 
 

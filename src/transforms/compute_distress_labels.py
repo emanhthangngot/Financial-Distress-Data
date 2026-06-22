@@ -1,3 +1,10 @@
+"""
+Rule-based financial-distress labeler.
+
+Computes the per-company-per-quarter distress label used by the Gold zone and downstream ML.
+Encapsulates ``RULE_VERSION`` and the threshold table so rule changes are auditable in git history.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

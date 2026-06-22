@@ -1,3 +1,10 @@
+"""
+Point-in-time feature join helpers.
+
+Builds the unified 4Q-financial, 30D-market, and 30D-news feature frames for each company-quarter,
+respecting the as-of timestamp to avoid label leakage in downstream ML training.
+"""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime

@@ -1,3 +1,10 @@
+"""
+Gold-zone fact builder for news sentiment.
+
+Aggregates daily news sentiment per ticker from the Silver news table into a Gold fact with mean,
+positive, negative, and volume-weighted scores.
+"""
+
 from __future__ import annotations
 
 from typing import Any

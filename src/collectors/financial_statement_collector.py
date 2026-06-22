@@ -1,3 +1,10 @@
+"""
+Collector for periodic financial statements (balance sheet, income, cash flow).
+
+Fetches quarterly financial statements for each company in the company master and writes them to
+``bronze/financial_statement/`` partitioned by statement_type and report_period.
+"""
+
 from __future__ import annotations
 
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter

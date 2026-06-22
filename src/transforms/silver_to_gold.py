@@ -1,3 +1,11 @@
+"""
+Silver-to-Gold transform entry point.
+
+Re-exports dimension builders, fact builders, the rule-based distress labeler, and the unified
+feature builder from ``src.transforms.gold`` and ``src.transforms.features``. Callers depend on this
+module rather than the inner subpackages.
+"""
+
 from __future__ import annotations
 
 from typing import Any

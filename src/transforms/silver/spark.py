@@ -1,3 +1,11 @@
+"""
+PySpark implementation of the Bronze-to-Silver pipeline.
+
+Reads Bronze Parquet, applies the core transforms, and overwrites the affected Silver partitions.
+Handles schema drift by widening columns and logging rejected rows to
+``project_metadata.failed_records``.
+"""
+
 from __future__ import annotations
 
 from typing import Any

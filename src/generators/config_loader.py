@@ -1,3 +1,11 @@
+"""
+Loader and validator for generator configuration files.
+
+Reads YAML configs (e.g. ``configs/generator/*.yaml``), applies environment overrides, validates
+against the schema in ``docs/01_data_generator.md``, and returns a typed config object. The fixture
+adapter and streaming factory both consume this config.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
