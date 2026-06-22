@@ -20,6 +20,7 @@ from src.metadata.metadata_writer import (
 )
 from src.metadata.schema_registry import InMemorySchemaRegistry
 from src.quality.dq_checks import check_freshness, check_not_null, check_unique
+from src.security.secrets import require
 from src.streaming.events import StreamEvent
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 from src.transforms.bronze_to_silver import bronze_to_silver
@@ -66,8 +67,16 @@ def read_env_file(path: str | Path = DEFAULT_ENV_PATH) -> dict[str, str]:
     return values
 
 
-def _config_value(name: str, env_file_values: dict[str, str], default: str) -> str:
-    return os.getenv(name) or env_file_values.get(name) or default
+def _config_value(name: str, env_file_values: dict[str, str]) -> str:
+    value = os.getenv(name)
+    if value:
+        return value
+    candidate = env_file_values.get(name)
+    if candidate:
+        return candidate
+    raise RuntimeError(
+        f"Required env var {name!r} is missing. Add it to .env or export it."
+    )
 
 
 def metadata_dsn(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
@@ -75,10 +84,10 @@ def metadata_dsn(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
         return dsn
 
     env_file_values = read_env_file(env_path)
-    user = _config_value("POSTGRES_USER", env_file_values, "airflow")
-    password = _config_value("POSTGRES_PASSWORD", env_file_values, "airflow")
-    database = _config_value("POSTGRES_DB", env_file_values, "financial_distress")
-    host_port = _config_value("POSTGRES_HOST_PORT", env_file_values, "5432")
+    user = _config_value("POSTGRES_USER", env_file_values)
+    password = _config_value("POSTGRES_PASSWORD", env_file_values)
+    database = _config_value("POSTGRES_DB", env_file_values)
+    host_port = _config_value("POSTGRES_HOST_PORT", env_file_values)
     return f"postgresql://{user}:{password}@localhost:{host_port}/{database}"
 
 
@@ -309,8 +318,8 @@ def _minio_client() -> Any:
 
     return Minio(
         minio_host_endpoint(),
-        access_key=os.getenv("MINIO_ROOT_USER", "minioadmin"),
-        secret_key=os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+        access_key=require("MINIO_ROOT_USER"),
+        secret_key=require("MINIO_ROOT_PASSWORD"),
         secure=False,
     )
 

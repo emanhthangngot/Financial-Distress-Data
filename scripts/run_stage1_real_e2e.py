@@ -16,6 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.jobs.stage1_evidence_job import metadata_dsn, minio_host_endpoint, read_env_file
+from src.security.secrets import require
 
 
 def run(command: list[str], timeout: int = 120) -> str:
@@ -54,10 +55,16 @@ def _minio_client_config(env_path: str | Path = ".env") -> dict[str, Any]:
     env_file_values = read_env_file(env_path)
     return {
         "endpoint": minio_host_endpoint(env_path),
-        "access_key": os.getenv("MINIO_ROOT_USER")
-        or env_file_values.get("MINIO_ROOT_USER", "minioadmin"),
-        "secret_key": os.getenv("MINIO_ROOT_PASSWORD")
-        or env_file_values.get("MINIO_ROOT_PASSWORD", "minioadmin"),
+        "access_key": (
+            os.getenv("MINIO_ROOT_USER")
+            or env_file_values.get("MINIO_ROOT_USER")
+            or require("MINIO_ROOT_USER")
+        ),
+        "secret_key": (
+            os.getenv("MINIO_ROOT_PASSWORD")
+            or env_file_values.get("MINIO_ROOT_PASSWORD")
+            or require("MINIO_ROOT_PASSWORD")
+        ),
         "secure": False,
     }
 

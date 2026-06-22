@@ -7,6 +7,7 @@ from src.io.minio_writer import clear_minio_prefix
 from src.io.paths import DEFAULT_BUCKET
 from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
 from src.metadata.schema_registry import InMemorySchemaRegistry
+from src.security.secrets import require
 from src.transforms.bronze_to_silver import bronze_to_silver_spark
 from src.transforms.gold.dim_company import build_dim_date
 from src.transforms.gold.fact_financial_statement import build_fact_financial_statement_spark
@@ -21,8 +22,8 @@ def spark_runtime_config(minio_endpoint: str | None = None) -> dict[str, str]:
     return {
         "spark.jars.packages": f"{SPARK_HADOOP_AWS_PACKAGE},{SPARK_AWS_SDK_PACKAGE}",
         "spark.hadoop.fs.s3a.endpoint": endpoint,
-        "spark.hadoop.fs.s3a.access.key": os.getenv("MINIO_ROOT_USER", "minioadmin"),
-        "spark.hadoop.fs.s3a.secret.key": os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+        "spark.hadoop.fs.s3a.access.key": require("MINIO_ROOT_USER"),
+        "spark.hadoop.fs.s3a.secret.key": require("MINIO_ROOT_PASSWORD"),
         "spark.hadoop.fs.s3a.path.style.access": "true",
         "spark.hadoop.fs.s3a.connection.ssl.enabled": "false",
         "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
