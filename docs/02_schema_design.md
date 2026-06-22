@@ -68,6 +68,58 @@ DuckDB validation runner -> reads Gold objects -> uses local MinIO through httpf
 Maintainer -> lists MinIO objects -> sees Bronze, Silver, Gold, and evidence prefixes under financial-distress-lake.
 ```
 
+## Gold Naming Convention
+
+The Gold layer uses a single naming rule, enforced by
+`tests/test_naming_convention.py`. Both the DuckDB-side view names and
+the MinIO-side storage paths follow the same rule, so the two never
+drift apart.
+
+### DuckDB View Names
+
+Every `CREATE OR REPLACE VIEW` statement in
+`sql/duckdb_create_views.sql` matches
+`gold_{dim_|fact_|obt_|feat_}*`:
+
+| View prefix | Layer | Example |
+| --- | --- | --- |
+| `gold_dim_` | Conformed dimension | `gold_dim_company`, `gold_dim_date` |
+| `gold_fact_` | Event or measurement fact | `gold_fact_financial_statement`, `gold_fact_market_price`, `gold_fact_market_alert`, `gold_fact_news_sentiment` |
+| `gold_obt_` | One-big-table denormalized join | `gold_obt_company_quarter_risk` |
+| `gold_feat_` | Model-ready feature | `gold_feat_company_financial_4q`, `gold_feat_company_market_30d`, `gold_feat_company_news_30d`, `gold_feat_company_unified` |
+
+### MinIO Storage Paths
+
+Gold writes in `src/jobs/stage1_spark_lakehouse_job.py` go to one of
+the allowed layer folders under `gold/`:
+
+```text
+s3a://financial-distress-lake/gold/dim_*/
+s3a://financial-distress-lake/gold/fact_*/
+s3a://financial-distress-lake/gold/obt_*/
+s3a://financial-distress-lake/gold/feat_*/
+s3a://financial-distress-lake/gold/distress_labels/
+```
+
+`distress_labels` is the only Gold folder that does not use the
+`dim_/fact_/obt_/feat_` family because it carries the label targets
+that the Phase 2 ML training reads; it is intentionally a single
+top-level folder so the labels are easy to discover and audit.
+
+### Bronze And Silver Paths
+
+Bronze and Silver storage paths do not enforce a per-table prefix
+inside the layer folder — the dataset name is the only segment:
+
+```text
+s3a://financial-distress-lake/bronze/{dataset}/data.parquet
+s3a://financial-distress-lake/silver/{dataset}/
+```
+
+This keeps the raw ingest and dedup layers flexible enough to absorb
+new source adapters without forcing a schema rename on every
+addition.
+
 ## Schema Registry
 
 Authoritative files:

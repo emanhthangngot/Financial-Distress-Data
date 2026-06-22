@@ -1,0 +1,159 @@
+digraph W22Deployment {
+    graph [
+        rankdir=TB,
+        fontname="Helvetica",
+        fontsize=14,
+        label="Stage 1 Local Lakehouse - Deployable Units and Data Flow",
+        labelloc=t,
+        pad=0.4,
+        nodesep=0.4,
+        ranksep=0.65,
+        bgcolor="white",
+        splines=true
+    ];
+    node [
+        fontname="Helvetica",
+        fontsize=11,
+        shape=box,
+        style="rounded,filled",
+        color="#1f2937",
+        penwidth=1.4
+    ];
+    edge [
+        fontname="Helvetica",
+        fontsize=9,
+        color="#1f2937",
+        penwidth=1.2,
+        arrowsize=0.8
+    ];
+
+    subgraph cluster_collectors {
+        label="Source Adapters (fixture-backed)";
+        style="rounded,filled";
+        fillcolor="#f3f4f6";
+        color="#9ca3af";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        collectors [label="Source Adapters\n(vnstock / fixture)", fillcolor="#e0e7ff", color="#4338ca"];
+    }
+
+    subgraph cluster_airflow {
+        label="Apache Airflow (Docker)";
+        style="rounded,filled";
+        fillcolor="#fef3c7";
+        color="#d97706";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        airflow [label="Airflow\n(scheduler + webserver + worker)", fillcolor="#fde68a", color="#b45309"];
+    }
+
+    subgraph cluster_kafka {
+        label="Apache Kafka (Docker, single-node KRaft)";
+        style="rounded,filled";
+        fillcolor="#dbeafe";
+        color="#1d4ed8";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        kafka [label="Kafka broker\ntopics: financial.price_events\nfinancial.news_events\nfinancial.alert_events", fillcolor="#bfdbfe", color="#1e40af"];
+    }
+
+    subgraph cluster_flink {
+        label="Apache Flink 1.19 (opt-in: docker compose --profile flink)";
+        style="rounded,filled";
+        fillcolor="#fce7f3";
+        color="#9d174d";
+        fontname="Helvetica";
+        fontsize=10;
+        style="rounded,filled,dashed";
+        labeljust=l;
+        flink [label="Flink\njobmanager + taskmanager", fillcolor="#fbcfe8", color="#9d174d"];
+    }
+
+    subgraph cluster_minio {
+        label="MinIO (Docker, S3-compatible)";
+        style="rounded,filled";
+        fillcolor="#d1fae5";
+        color="#047857";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        minio [
+            label="MinIO S3\nbucket: financial-distress-lake\nbronze/  silver/  gold/  evidence/",
+            fillcolor="#a7f3d0",
+            color="#065f46"
+        ];
+    }
+
+    subgraph cluster_spark {
+        label="PySpark (local mode, S3A connector)";
+        style="rounded,filled";
+        fillcolor="#ede9fe";
+        color="#6d28d9";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        spark [label="PySpark local\nBronze -> Silver -> Gold\nDDL, SCD2, dedup, OBT, features", fillcolor="#ddd6fe", color="#5b21b6"];
+    }
+
+    subgraph cluster_postgres {
+        label="PostgreSQL 16 (Docker)";
+        style="rounded,filled";
+        fillcolor="#fee2e2";
+        color="#b91c1c";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        postgres [
+            label="PostgreSQL\nschema: project_metadata\npipeline_run_log\ndata_quality_result\ndataset_freshness\nfailed_records",
+            fillcolor="#fecaca",
+            color="#991b1b"
+        ];
+    }
+
+    subgraph cluster_duckdb {
+        label="DuckDB (local, httpfs)";
+        style="rounded,filled";
+        fillcolor="#ffedd5";
+        color="#c2410c";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        duckdb [
+            label="DuckDB\nwarehouse.db (gitignored)\nviews: gold_dim_*\ngold_fact_*  gold_obt_*  gold_feat_*",
+            fillcolor="#fed7aa",
+            color="#9a3412"
+        ];
+    }
+
+    subgraph cluster_dbeaver {
+        label="DBeaver (analyst client, local)";
+        style="rounded,filled";
+        fillcolor="#e0f2fe";
+        color="#0369a1";
+        fontname="Helvetica";
+        fontsize=10;
+        labeljust=l;
+        dbeaver [label="DBeaver\nread-only SQL client\nDuckDB + PostgreSQL", fillcolor="#bae6fd", color="#075985"];
+    }
+
+    collectors -> kafka [label="(1) ingest events", color="#1d4ed8"];
+    collectors -> airflow [label="(2) trigger DAGs", color="#b45309"];
+
+    kafka -> flink [label="(3a) consume (opt-in)", style=dashed, color="#9d174d"];
+    flink -> minio [label="(3b) write Bronze (opt-in)", style=dashed, color="#9d174d"];
+
+    kafka -> spark [label="(3) read Bronze kafka/*", color="#1d4ed8"];
+    minio -> spark [label="(4b) read Bronze for Silver", color="#047857"];
+    spark -> minio [label="(4) write Silver + Gold (overwrite)", color="#047857"];
+
+    airflow -> spark [label="(5) run lakehouse job", color="#b45309"];
+    spark -> postgres [label="(6) write run/DQ/freshness logs", color="#b91c1c"];
+
+    minio -> duckdb [label="(7) read Gold Parquet via httpfs", color="#c2410c"];
+
+    postgres -> dbeaver [label="(8) inspect metadata", color="#0369a1"];
+    duckdb -> dbeaver [label="(8b) inspect Gold views", color="#0369a1"];
+}

@@ -24,6 +24,26 @@ Each node in the diagram below is a **deployable unit**: Airflow, Kafka, Flink (
 
 ![Stage 1 architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
 
+## System Deployment Diagram
+
+The diagram below is the W22 unified deployment view: every cluster is a
+deployable unit (process or container) and every edge is a real data flow
+that exists in the Stage 1 pipeline. The Flink cluster and its two edges
+are drawn with dashed borders to signal the opt-in profile
+(`docker compose --profile flink up`); all other edges are the primary
+Stage 1 path.
+
+![Stage 1 system deployment diagram — Airflow, Kafka, Flink opt-in, MinIO, PySpark, PostgreSQL, DuckDB, DBeaver](images/architecture/system_deployment_diagram.png)
+
+The DOT source for the diagram lives at
+[`images/architecture/system_deployment_diagram.dot`](images/architecture/system_deployment_diagram.dot)
+so the diagram stays editable. Re-render after edits with:
+
+```bash
+dot -Tpng images/architecture/system_deployment_diagram.dot \
+    -o images/architecture/system_deployment_diagram.png
+```
+
 ## Runtime Evidence Snapshot
 
 The checked-in Stage 1 evidence proves the local pipeline has run end to end.
@@ -121,6 +141,57 @@ The README only summarizes the project. Detailed design notes, contracts, and ru
 - [Data generator contract (W17 knobs, evidence)](docs/01_data_generator.md) — how the fixture-backed adapter shapes the offline and streaming inputs.
 - [Schema design (Medallion, SCD2, feature tables)](docs/02_schema_design.md) — Bronze / Silver / Gold layout, naming convention, and the `obt_company_quarter_risk` contract.
 - [Runtime evidence](docs/evidence/) — Airflow run logs, MinIO inventory, PostgreSQL metadata exports, and DuckDB validation snapshots used to prove the pipeline ran end to end.
+
+## Naming Convention
+
+The Gold layer uses a single naming rule, enforced by
+`tests/test_naming_convention.py`. The rule covers both the
+DuckDB-side view names and the MinIO-side storage paths so the
+two never drift apart.
+
+### DuckDB Views
+
+Every view defined in `sql/duckdb_create_views.sql` matches
+`gold_{dim_|fact_|obt_|feat_}*`:
+
+| Layer prefix | Meaning | Examples |
+| --- | --- | --- |
+| `gold_dim_` | Conformed dimension tables | `gold_dim_company`, `gold_dim_date` |
+| `gold_fact_` | Event or measurement facts | `gold_fact_financial_statement`, `gold_fact_market_price`, `gold_fact_market_alert`, `gold_fact_news_sentiment` |
+| `gold_obt_` | One-big-table denormalized joins | `gold_obt_company_quarter_risk` |
+| `gold_feat_` | Model-ready feature tables | `gold_feat_company_financial_4q`, `gold_feat_company_market_30d`, `gold_feat_company_news_30d`, `gold_feat_company_unified` |
+
+### MinIO Storage Paths
+
+Gold writes in `src/jobs/stage1_spark_lakehouse_job.py` go to one of
+the allowed layer folders under the `gold/` prefix:
+
+```
+s3a://financial-distress-lake/gold/dim_*/
+s3a://financial-distress-lake/gold/fact_*/
+s3a://financial-distress-lake/gold/obt_*/
+s3a://financial-distress-lake/gold/feat_*/
+s3a://financial-distress-lake/gold/distress_labels/
+```
+
+`distress_labels` is the only Gold folder that does not use the
+`dim_/fact_/obt_/feat_` family because it carries the label targets
+that the Phase 2 ML training reads; it is intentionally a single
+top-level folder so the labels are easy to discover and audit.
+
+### Bronze and Silver
+
+Bronze and Silver storage paths do not enforce a per-table prefix
+inside the layer folder — the dataset name is the only segment:
+
+```
+s3a://financial-distress-lake/bronze/{dataset}/data.parquet
+s3a://financial-distress-lake/silver/{dataset}/
+```
+
+This keeps the raw ingest and dedup layers flexible enough to absorb
+new source adapters without forcing a schema rename on every
+addition.
 
 # LOCAL
 
