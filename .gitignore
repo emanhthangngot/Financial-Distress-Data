@@ -13,6 +13,4 @@ AGENTS.md
 outputs/**/*.parquet
 outputs/**/*.csv
 outputs/**/*.json
-docs/evidence/**/*.png
-docs/evidence/**/*.jpg
 warehouse.db
