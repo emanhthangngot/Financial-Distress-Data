@@ -1,3 +1,10 @@
+"""
+Canonical S3A path scheme for Bronze, Silver, and Gold zones.
+
+Single source of truth for MinIO bucket + zone + partition layout. Every PySpark job and DuckDB view
+must resolve paths via this module so that the lakehouse layout is rename-safe.
+"""
+
 from __future__ import annotations
 
 DEFAULT_BUCKET = "financial-distress-lake"

@@ -1,3 +1,11 @@
+"""
+DAG 02 - Collect financial statements (quarterly).
+
+Fetches quarterly income-statement, balance-sheet, and cash-flow rows for the watchlist
+from the financial-statement collector. Output goes to the Bronze zone; downstream
+transforms build Silver facts and Gold distress labels from this raw source.
+"""
+
 from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports

@@ -1,3 +1,11 @@
+"""
+Stage 1 evidence job.
+
+Builds the small evidence set (counts, sample rows, schema summary) consumed by
+``scripts/run_stage1_evidence.py`` and the rubric evidence screenshots. Read-only with respect to
+the zones it inspects.
+"""
+
 from __future__ import annotations
 
 import json

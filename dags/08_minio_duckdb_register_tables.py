@@ -1,3 +1,11 @@
+"""
+DAG 08 - Register MinIO Parquet as DuckDB views.
+
+Creates the DuckDB catalog that exposes Silver and Gold Parquet partitions as SQL
+views. The DAG also runs a smoke query so the catalog is verified end-to-end
+(``httpfs`` over MinIO + view materialisation) before downstream tasks read it.
+"""
+
 from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports

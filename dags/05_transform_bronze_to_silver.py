@@ -1,3 +1,11 @@
+"""
+DAG 05 - Transform Bronze to Silver (PySpark).
+
+Runs the PySpark Bronze-to-Silver job that normalises raw collector output, applies
+schema validation against the in-memory registry, and writes idempotent, partitioned
+Parquet to the Silver zone. Used by the Stage 1 evidence pipeline.
+"""
+
 from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports

@@ -1,3 +1,10 @@
+"""
+One-big-table (OBT) builder for company-quarter risk features.
+
+Joins the Gold dimensions, facts, and the rule-based distress label into a single wide table for
+analyst exploration. The OBT is registered as a DuckDB view for DBeaver evidence.
+"""
+
 from __future__ import annotations
 
 from typing import Any

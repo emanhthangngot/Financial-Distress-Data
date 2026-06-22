@@ -1,3 +1,10 @@
+"""
+Deterministic business keys used across Bronze, Silver, and Gold.
+
+Provides stable hashing for company tickers, date keys in ``YYYYMMDD`` form, and partition key
+helpers. Centralized here so the same key is used by dedup, PIT joins, and the labeler.
+"""
+
 from __future__ import annotations
 
 from datetime import date, datetime

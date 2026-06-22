@@ -1,3 +1,11 @@
+"""
+PySpark session and builder configuration.
+
+Applies MinIO/S3A settings, secret resolution via ``src.security.secrets``, and the project's
+standard Spark configs (driver memory, broadcast threshold, etc.). Imported by every PySpark job at
+startup.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path

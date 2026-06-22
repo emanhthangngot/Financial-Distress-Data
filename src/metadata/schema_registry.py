@@ -1,3 +1,11 @@
+"""
+Lightweight schema registry for the lakehouse.
+
+Persists canonical schemas for each Bronze, Silver, and Gold table to
+``project_metadata.schema_registry``. The PySpark transforms consult this registry to widen columns
+safely during schema evolution.
+"""
+
 from __future__ import annotations
 
 import json

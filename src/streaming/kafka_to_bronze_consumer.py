@@ -1,3 +1,11 @@
+"""
+Kafka-to-Bronze consumer job.
+
+Subscribes to the configured topic, validates each event against the shared schema, and writes valid
+records to the Bronze zone partitioned by event_type and event_date. Invalid records are routed to
+``project_metadata.failed_records`` with a rejection reason.
+"""
+
 from __future__ import annotations
 
 import json

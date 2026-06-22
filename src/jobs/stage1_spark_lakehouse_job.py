@@ -1,3 +1,10 @@
+"""
+Main Stage 1 Spark lakehouse job.
+
+Runs the end-to-end Bronze -> Silver -> Gold pipeline for Phase 1, including the distress labeler
+and the OBT builder. Invoked by the Spark DAGs and by the local evidence script.
+"""
+
 from __future__ import annotations
 
 import os

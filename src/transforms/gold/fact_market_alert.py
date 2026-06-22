@@ -1,3 +1,10 @@
+"""
+Gold-zone fact builder for market alerts.
+
+Builds the alert fact from the streaming topic, deriving simple thresholds (e.g. daily drop > 7%)
+and joining with company dimension. Powers the news/alert dashboard.
+"""
+
 from __future__ import annotations
 
 from typing import Any

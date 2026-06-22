@@ -1,3 +1,11 @@
+"""
+Stage 1 real end-to-end pipeline.
+
+The DAG that drives the Stage 1 real end-to-end run used for rubric evidence
+collection. It schedules collectors, Bronze/Silver/Gold transforms, DQ, and
+DuckDB view registration as a single Airflow graph.
+"""
+
 from __future__ import annotations
 
 import os
