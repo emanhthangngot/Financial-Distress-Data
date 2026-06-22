@@ -6,11 +6,23 @@ This project is a local-first data engineering foundation for Financial Distress
 
 The current Stage 1 pipeline uses deterministic fixture-backed collectors, then materializes Bronze, Silver, Gold, Data Quality, Metadata, and Evidence outputs locally.
 
+### Business Domain
+
+The platform is a **local-first financial-distress data lakehouse** for Vietnamese listed companies. It collects quarterly financial statements, daily market prices, and supporting reference data, then produces curated Bronze/Silver/Gold tables, distress labels (Altman Z-Score inspired), and audit-ready evidence that downstream analysts and ML engineers can trust.
+
+Primary users:
+
+- **Data engineer** — owns the Airflow DAGs, Kafka topics, PySpark transforms, MinIO layout, and PostgreSQL metadata.
+- **ML engineer** — consumes Gold features and `obt_company_quarter_risk` to train, score, and monitor financial-distress models (Phase 2).
+- **Analyst / reviewer** — opens DBeaver or DuckDB against the local lakehouse to validate row counts, SCD2 history, lineage, and data contracts.
+
+Why it matters: a missed early warning on a stressed issuer costs downstream capital and credit decisions. The platform compresses that feedback loop by putting curated, quality-checked, lineage-tracked data one query away from the consumer.
+
 ## Overall System Architecture
 
-<div style="text-align: center;">
-  <img src="images/architecture/architecture-stage-1.png" style="width: 1188px; height: auto;">
-</div>
+Each node in the diagram below is a **deployable unit**: Airflow, Kafka, Flink (opt-in), PySpark (local mode), MinIO, PostgreSQL, DuckDB, and DBeaver run as separate processes or containers. Arrows follow the data flow direction; solid arrows are the primary Stage 1 paths, dashed arrows mark optional or profile-gated flows (for example the Flink streaming path, which is started with `--profile flink`).
+
+![Stage 1 architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
 
 ## Runtime Evidence Snapshot
 
@@ -67,13 +79,14 @@ submission scope.
 2. [Schema Evidence](#schema-evidence)
 3. [API Surface](#api-surface)
 4. [Project Structure](#project-structure)
-5. [Local Setup](#local-setup)
-6. [Running in Docker](#running-in-docker)
-7. [Service URLs](#service-urls)
-8. [Run Stage 1 Evidence](#run-stage-1-evidence)
-9. [Validation Commands](#validation-commands)
-10. [Useful Inspection Queries](#useful-inspection-queries)
-11. [Stop Services](#stop-services)
+5. [Documentation](#documentation)
+6. [Local Setup](#local-setup)
+7. [Running in Docker](#running-in-docker)
+8. [Service URLs](#service-urls)
+9. [Run Stage 1 Evidence](#run-stage-1-evidence)
+10. [Validation Commands](#validation-commands)
+11. [Useful Inspection Queries](#useful-inspection-queries)
+12. [Stop Services](#stop-services)
 
 ## Project Structure
 
@@ -99,6 +112,15 @@ submission scope.
 ├── pyproject.toml         - Python package and tooling config
 └── README.md              - This README file
 ```
+
+## Documentation
+
+The README only summarizes the project. Detailed design notes, contracts, and runtime evidence live under `docs/`:
+
+- [Business problem and dataset scope](docs/idea.md) — Phase 0 problem discovery.
+- [Data generator contract (W17 knobs, evidence)](docs/01_data_generator.md) — how the fixture-backed adapter shapes the offline and streaming inputs.
+- [Schema design (Medallion, SCD2, feature tables)](docs/02_schema_design.md) — Bronze / Silver / Gold layout, naming convention, and the `obt_company_quarter_risk` contract.
+- [Runtime evidence](docs/evidence/) — Airflow run logs, MinIO inventory, PostgreSQL metadata exports, and DuckDB validation snapshots used to prove the pipeline ran end to end.
 
 # LOCAL
 

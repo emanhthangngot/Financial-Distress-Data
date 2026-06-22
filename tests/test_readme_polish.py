@@ -143,3 +143,25 @@ def test_no_broken_internal_markdown_image_link() -> None:
     assert img_match, "README must embed at least one images/... image"
     rel = img_match.group(1)
     assert Path(rel).is_file(), f"Referenced image {rel} not present on disk"
+
+
+def test_documentation_section_position_invariant() -> None:
+    # Rubric row 70 expects Documentation to sit in the project overview
+    # band (a peer of Project Structure), not inside the LOCAL setup band.
+    # Lock the heading order: Project Structure -> Documentation -> # LOCAL.
+    section_lines = [
+        (title, line_no)
+        for title, line_no in _sections()
+        if title in {"Project Structure", "Documentation"}
+    ]
+    assert len(section_lines) == 2, (
+        f"Expected exactly Project Structure and Documentation sections, got {section_lines}"
+    )
+    ps_line, doc_line = section_lines[0][1], section_lines[1][1]
+    assert ps_line < doc_line, "Documentation must come after Project Structure"
+    local_line = next(
+        (i + 1 for i, line in enumerate(LINES) if line.strip() == "# LOCAL"),
+        None,
+    )
+    assert local_line is not None, "README must have a # LOCAL separator"
+    assert doc_line < local_line, "Documentation must come before # LOCAL"
