@@ -14,3 +14,4 @@ outputs/**/*.parquet
 outputs/**/*.csv
 outputs/**/*.json
 warehouse.db
+docs/_plans/
