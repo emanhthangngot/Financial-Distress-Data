@@ -15,6 +15,15 @@ def _endpoint_from_env() -> str | None:
 
 
 def create_views_sql(sql_path: str | Path = "sql/duckdb_create_views.sql") -> str:
+    """Render the DuckDB view-creation SQL with runtime substitutions.
+
+    The endpoint placeholder is injected from the ``MINIO_ENDPOINT`` env
+    var when set; credentials are intentionally NOT injected here --
+    ``sql/duckdb_create_views.sql`` no longer carries demo strings, and
+    DuckDB resolves ``MINIO_ROOT_USER`` / ``MINIO_ROOT_PASSWORD`` from
+    its own env chain. This contract is enforced by
+    ``tests/test_secrets_no_defaults.py``.
+    """
     sql = Path(sql_path).read_text(encoding="utf-8")
     endpoint = _endpoint_from_env()
     if endpoint is None:
