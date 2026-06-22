@@ -1,3 +1,12 @@
+"""
+Stage 1 real end-to-end runner.
+
+Drives the real end-to-end Stage 1 run on the developer cluster: starts the
+local stack, triggers the real-e2e DAG, and collects evidence. Used by rubric
+rows 3 and 4 to prove the pipeline works against a live MinIO/PostgreSQL/Kafka
+setup.
+"""
+
 # ruff: noqa: E402
 
 from __future__ import annotations

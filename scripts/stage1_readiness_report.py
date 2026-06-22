@@ -1,3 +1,11 @@
+"""
+Stage 1 readiness report.
+
+Prints a one-shot report describing the developer cluster state, the Stage 1
+fixture config, and any missing prerequisites for the rubric evidence
+collection. Used as a smoke check before running the evidence pipeline.
+"""
+
 # ruff: noqa: E402
 
 from __future__ import annotations

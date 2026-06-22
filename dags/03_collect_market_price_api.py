@@ -1,3 +1,11 @@
+"""
+DAG 03 - Collect market prices.
+
+Pulls daily OHLCV bars for the watchlist from the market-price collector. Output is
+Bronze-zone raw price history; Silver and Gold transforms derive 30-day return
+volatility and distress features from this feed.
+"""
+
 from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports

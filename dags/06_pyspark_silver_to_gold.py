@@ -1,3 +1,11 @@
+"""
+DAG 06 - PySpark Silver to Gold.
+
+Runs the PySpark Silver-to-Gold job that builds dimension tables, fact tables, and
+the unified company-quarter risk OBT. Output lands in the Gold zone and is
+registered as DuckDB views for analyst queries.
+"""
+
 from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
