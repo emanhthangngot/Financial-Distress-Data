@@ -10,11 +10,10 @@ the failure mode is loud rather than a hidden production misconfig.
 RESULT: every credential lookup in the codebase goes through one of
 two helpers; demo strings can no longer mask a missing env var.
 """
+
 from __future__ import annotations
 
 import os
-from typing import Optional
-
 
 _ENV_FILE_HINT = (
     "Set it in the project-root .env file (gitignored) or export it in "
@@ -31,13 +30,11 @@ def require(name: str) -> str:
     """
     value = os.environ.get(name)
     if value is None or not value.strip():
-        raise RuntimeError(
-            f"Required environment variable {name!r} is not set. {_ENV_FILE_HINT}"
-        )
+        raise RuntimeError(f"Required environment variable {name!r} is not set. {_ENV_FILE_HINT}")
     return value
 
 
-def optional(name: str) -> Optional[str]:
+def optional(name: str) -> str | None:
     """Return the value of env var ``name`` or ``None`` if missing/blank.
 
     Useful for non-required knobs such as ``MINIO_ENDPOINT`` whose

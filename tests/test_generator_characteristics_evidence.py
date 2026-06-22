@@ -1,4 +1,5 @@
 """Tests for the generator characteristics evidence writer (W17.4)."""
+
 from __future__ import annotations
 
 import json

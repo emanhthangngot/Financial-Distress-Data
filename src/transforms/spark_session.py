@@ -16,12 +16,16 @@ def configure_spark_builder(builder: Any, config: dict[str, Any]) -> Any:
     minio = config.get("minio", {})
     app_name = config.get("app_name", "financial-distress-stage-1")
     master = config.get("master", "local[*]")
-    access_key = minio.get("access_key") or optional(
-        minio.get("access_key_env", "MINIO_ROOT_USER")
-    ) or require("MINIO_ROOT_USER")
-    secret_key = minio.get("secret_key") or optional(
-        minio.get("secret_key_env", "MINIO_ROOT_PASSWORD")
-    ) or require("MINIO_ROOT_PASSWORD")
+    access_key = (
+        minio.get("access_key")
+        or optional(minio.get("access_key_env", "MINIO_ROOT_USER"))
+        or require("MINIO_ROOT_USER")
+    )
+    secret_key = (
+        minio.get("secret_key")
+        or optional(minio.get("secret_key_env", "MINIO_ROOT_PASSWORD"))
+        or require("MINIO_ROOT_PASSWORD")
+    )
     path_style_access = _bool_string(minio.get("path_style_access", True))
     ssl_enabled = _bool_string(minio.get("ssl_enabled", False))
 

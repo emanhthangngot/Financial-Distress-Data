@@ -6,11 +6,12 @@ without touching the Kafka producer. The helpers consume and emit
 ``StreamEvent`` dataclasses from ``src.streaming.events`` so the wire
 contract is unchanged.
 """
+
 from __future__ import annotations
 
 import random
-from datetime import datetime, timedelta, timezone
-from typing import Iterable
+from collections.abc import Iterable
+from datetime import UTC, datetime, timedelta
 
 from src.streaming.events import StreamEvent
 
@@ -26,7 +27,7 @@ def _format(ts: datetime) -> str:
 def _latest_created_ts(events: Iterable[StreamEvent]) -> datetime:
     parsed = [_parse(e.created_ts) for e in events]
     if not parsed:
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
     return max(parsed)
 
 

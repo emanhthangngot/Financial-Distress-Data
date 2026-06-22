@@ -181,7 +181,7 @@ class VnstockFixtureAdapter:
 
     source_name = "vnstock_fixture"
 
-    def __init__(self, config: "GeneratorConfig | None" = None) -> None:
+    def __init__(self, config: GeneratorConfig | None = None) -> None:
         self._config = config
         self._rng_seed = config.fixture_seed if config is not None else 0
 
