@@ -34,12 +34,17 @@ def build_obt_company_quarter_risk(
         interest_expense = (
             float(row["interest_expense"]) if row.get("interest_expense") not in (None, 0) else None
         )
+        current_assets = (
+            float(row["current_assets"]) if row.get("current_assets") is not None else None
+        )
+        net_income = float(row["net_income"]) if row.get("net_income") is not None else None
+        ebit = float(row["ebit"]) if row.get("ebit") is not None else None
         obt = {
             **row,
             "current_ratio": (
                 None
-                if current_liabilities is None
-                else float(row.get("current_assets") or 0) / current_liabilities
+                if current_liabilities is None or current_assets is None
+                else current_assets / current_liabilities
             ),
             "debt_to_asset": (
                 None
@@ -50,11 +55,11 @@ def build_obt_company_quarter_risk(
                 None if equity is None or total_liabilities is None else total_liabilities / equity
             ),
             "roa": (
-                None if total_assets is None else float(row.get("net_income") or 0) / total_assets
+                None if total_assets is None or net_income is None else net_income / total_assets
             ),
-            "roe": None if equity is None else float(row.get("net_income") or 0) / equity,
+            "roe": (None if equity is None or net_income is None else net_income / equity),
             "ebit_interest_coverage": (
-                None if interest_expense is None else float(row.get("ebit") or 0) / interest_expense
+                None if interest_expense is None or ebit is None else ebit / interest_expense
             ),
             "distress_label": label.get("distress_label"),
             "distress_reason": label.get("distress_reason"),
