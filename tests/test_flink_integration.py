@@ -198,3 +198,45 @@ def test_dag_04_falls_back_to_microbatch_when_disabled(monkeypatch):
     assert isinstance(result, list)
     assert len(result) == 1
     assert result[0]["record_count"] == 2
+
+def test_flink_submit_rejects_non_http_scheme(monkeypatch):
+    """Submit must reject non-http(s) FLINK_JOBMANAGER_URL values so a
+    misconfigured env cannot turn the client into a local-file fetcher.
+
+    WHO: security review of the Flink opt-in path.
+    ACTION: set FLINK_JOBMANAGER_URL to a non-http scheme and call submit_job.
+    RESULT: RuntimeError mentioning the bad scheme; no HTTP request issued.
+    """
+
+    monkeypatch.setenv("FLINK_JOBMANAGER_URL", "file:///etc/passwd")
+    monkeypatch.setenv("ENABLE_FLINK", "1")
+
+    called = {"n": 0}
+
+    def should_not_be_called(*a, **kw):
+        called["n"] += 1
+        raise AssertionError("urlopen must not be called for a non-http scheme")
+
+    with patch.object(flink_client.urllib.request, "urlopen", side_effect=should_not_be_called):
+        with pytest.raises(RuntimeError, match="scheme"):
+            flink_client.submit_job(jar_id="stage1-burst-handler", program_args=[])
+    assert called["n"] == 0
+
+
+def test_flink_submit_rejects_jar_id_with_path_traversal(monkeypatch):
+    """jar_id is interpolated into the URL path; a value containing
+    slashes or `..` must be rejected so callers cannot pivot the
+    request to an unexpected jobmanager endpoint.
+
+    WHO: security review of the Flink opt-in path.
+    ACTION: pass jar_id='../../etc/passwd' to submit_job.
+    RESULT: RuntimeError; no HTTP request issued.
+    """
+    monkeypatch.setenv("FLINK_JOBMANAGER_URL", "http://flink-jobmanager:8081")
+    monkeypatch.setenv("ENABLE_FLINK", "1")
+
+    with patch.object(flink_client.urllib.request, "urlopen") as mock_urlopen:
+        with pytest.raises(RuntimeError, match="jar_id"):
+            flink_client.submit_job(jar_id="../../etc/passwd", program_args=[])
+    mock_urlopen.assert_not_called()
+

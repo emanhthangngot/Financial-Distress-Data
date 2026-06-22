@@ -16,14 +16,28 @@ Env contract (all optional except where noted):
 
 Failure mode: any REST error or missing required env raises ``RuntimeError``
 so DAG tasks fail loudly rather than silently swallow the Flink toggle.
+
+Security notes:
+
+* ``FLINK_JOBMANAGER_URL`` must use ``http`` or ``https``. Other schemes
+  (e.g. ``file://``) are rejected so a misconfigured env cannot turn this
+  client into a local-file fetcher.
+* ``jar_id`` is restricted to ``[A-Za-z0-9_.-]+`` because it is embedded
+  in a URL path segment.
+* ``program_args`` is joined into a single string and forwarded verbatim
+  to the jobmanager. Callers must hard-code their args; never pass
+  untrusted input here, as Flink will shell-split the string on the
+  worker side.
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from typing import Any
+from urllib.parse import urlparse
 
 DEFAULT_TIMEOUT_SECONDS = 10
 
@@ -31,6 +45,10 @@ DEFAULT_TIMEOUT_SECONDS = 10
 def is_enabled() -> bool:
     """Return True only when ENABLE_FLINK is set to a truthy value."""
     return os.getenv("ENABLE_FLINK", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+_ALLOWED_SCHEMES = frozenset({"http", "https"})
+_JAR_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
 
 
 def _jobmanager_url() -> str:
@@ -41,7 +59,28 @@ def _jobmanager_url() -> str:
             "http://flink-jobmanager:8081) or unset ENABLE_FLINK to fall back "
             "to the MicroBatchConsumer streaming path."
         )
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in _ALLOWED_SCHEMES:
+        raise RuntimeError(
+            f"FLINK_JOBMANAGER_URL has disallowed scheme {parsed.scheme!r}; "
+            f"only http and https are accepted (got {url!r})."
+        )
     return url.rstrip("/")
+
+
+def _validate_jar_id(jar_id: str) -> str:
+    """Reject jar_id values that are not safe path-segment material.
+
+    The jobmanager URL embeds the jar_id directly in a path segment
+    (e.g. ``/jars/{jar_id}/run``), so a value containing ``/`` or ``..``
+    could pivot the request to an unintended endpoint. Allow letters,
+    digits, ``_``, ``-``, and ``.`` only.
+    """
+    if not jar_id or not _JAR_ID_PATTERN.match(jar_id):
+        raise RuntimeError(
+            f"jar_id must match {_JAR_ID_PATTERN.pattern!r}; got {jar_id!r}."
+        )
+    return jar_id
 
 
 def _parallelism() -> int:
@@ -114,6 +153,7 @@ def submit_job(
         HTTP timeout for the submit request.
     """
     base = _jobmanager_url()
+    _validate_jar_id(jar_id)
     args = program_args or []
     payload: dict[str, Any] = {
         "programArgs": " ".join(args),
