@@ -125,7 +125,9 @@ def test_kafka_event_serializer_encodes_json_bytes():
     assert b'"evidence_run_id": "run-123"' in encoded
 
 
-def test_spark_runtime_config_includes_s3a_packages_and_local_minio_endpoint():
+def test_spark_runtime_config_includes_s3a_packages_and_local_minio_endpoint(monkeypatch):
+    monkeypatch.setenv("MINIO_ROOT_USER", "minioadmin")
+    monkeypatch.setenv("MINIO_ROOT_PASSWORD", "minioadmin")
     config = spark_runtime_config("http://minio:9000")
 
     assert "org.apache.hadoop:hadoop-aws" in config["spark.jars.packages"]

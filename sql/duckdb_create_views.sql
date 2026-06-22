@@ -2,8 +2,9 @@ INSTALL httpfs;
 LOAD httpfs;
 
 SET s3_endpoint='localhost:9000';
-SET s3_access_key_id='minioadmin';
-SET s3_secret_access_key='minioadmin';
+-- W14 S-B: credentials are intentionally not set in the SQL template.
+-- DuckDB resolves MINIO_ROOT_USER / MINIO_ROOT_PASSWORD from its own
+-- env chain (process env, .env, ~/.aws/credentials).
 SET s3_use_ssl=false;
 SET s3_url_style='path';
 
