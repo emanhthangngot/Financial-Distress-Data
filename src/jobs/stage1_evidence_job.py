@@ -264,7 +264,7 @@ def build_generator_characteristics() -> dict[str, Any]:
         plan_burst(
             base_stream_events,
             window_seconds=cfg.streaming.burst.window_seconds,
-            record_count=min(cfg.streaming.burst.record_count, 200),
+            record_count=cfg.streaming.burst.record_count,
         )
         if cfg.enabled
         else []
