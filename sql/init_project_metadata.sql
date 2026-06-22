@@ -126,3 +126,24 @@ VALUES
         TRUE
     )
 ON CONFLICT (dataset_name, schema_version) DO NOTHING;
+
+-- W10: hot-path indexes for batch lookups on pipeline_run_log, data_quality_result, failed_records.
+-- Created idempotently so re-running init is safe.
+
+CREATE INDEX IF NOT EXISTS idx_pipeline_run_log_dag_status_created
+    ON project_metadata.pipeline_run_log (dag_id, status, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_pipeline_run_log_dataset_created
+    ON project_metadata.pipeline_run_log (dataset_name, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_data_quality_result_dataset_checked
+    ON project_metadata.data_quality_result (dataset_name, checked_at);
+
+CREATE INDEX IF NOT EXISTS idx_data_quality_result_run_id
+    ON project_metadata.data_quality_result (run_id);
+
+CREATE INDEX IF NOT EXISTS idx_failed_records_dataset_created
+    ON project_metadata.failed_records (dataset_name, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_failed_records_run_id
+    ON project_metadata.failed_records (run_id);
