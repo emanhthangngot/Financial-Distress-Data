@@ -6,6 +6,7 @@ Read this at the start of every Codex session in this repository.
 
 - Orchestrator: Apache Airflow running locally in Docker.
 - Streaming: Apache Kafka single-node KRaft running locally in Docker.
+- Optional streaming runtime: Apache Flink 1.19 (jobmanager + taskmanager) gated by the `flink` Docker Compose profile and the `ENABLE_FLINK=1` env var. Used by DAG 04 and the W17/W20 streaming evidence; not started by `docker compose up`.
 - Batch processing: PySpark local mode with the S3A connector.
 - Operational metadata: PostgreSQL running locally in Docker, schema `project_metadata`.
 - Object storage: MinIO local S3-compatible storage, endpoint `http://minio:9000`.
@@ -61,6 +62,7 @@ Before editing code or pipeline configs, the agent must state:
 - `src/collectors/`: online API/WebSocket collectors and source adapters.
 - `src/generator/`: test fixtures and fallback synthetic generators only.
 - `src/streaming/`: Kafka producer and consumer logic.
+  - `src/streaming/flink/`: opt-in Flink REST client and job artifacts dir (W26).
 - `src/transforms/`: Bronze-to-Silver and Silver-to-Gold PySpark transforms.
 - `src/quality/`: data quality checks with hard-fail and soft-fail policy.
 - `src/catalog/`: MinIO bucket structure and DuckDB view registration.

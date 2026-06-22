@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This project is a local-first data engineering foundation for Financial Distress analytics. It runs a small lakehouse stack with Airflow, Kafka, MinIO, PostgreSQL, DuckDB, and PyTest-based validation.
+This project is a local-first data engineering foundation for Financial Distress analytics. It runs a small lakehouse stack with Airflow, Kafka, MinIO, PostgreSQL, DuckDB, and PyTest-based validation. Apache Flink is wired in as an **opt-in** streaming runtime (DAG 04) for W20/W17 evidence; it is not started by `docker compose up` and requires `--profile flink`.
 
 The current Stage 1 pipeline uses deterministic fixture-backed collectors, then materializes Bronze, Silver, Gold, Data Quality, Metadata, and Evidence outputs locally.
 
@@ -81,7 +81,7 @@ submission scope.
 ├── dags/                  - Airflow DAGs for Stage 1 workflows
 ├── src/                   - Python source code
 │   ├── collectors/        - Fixture-backed source adapters and collectors
-│   ├── streaming/         - Kafka event contracts and micro-batch logic
+│   ├── streaming/         - Kafka event contracts, micro-batch logic, and Flink opt-in client
 │   ├── transforms/        - Bronze/Silver/Gold transform logic
 │   ├── quality/           - Data quality checks and DQ runner
 │   ├── metadata/          - PostgreSQL metadata writers and schema registry
@@ -119,7 +119,7 @@ cp .env.example .env
 
 ## Running in Docker
 
-Start the complete local data platform.
+Start the complete local data platform (Flink stays disabled).
 
 ```bash
 docker compose up -d
@@ -131,6 +131,14 @@ Check service status.
 docker compose ps
 .venv/bin/python scripts/check_stage1_services.py
 ```
+
+Opt in to Apache Flink (jobmanager + taskmanager, profile `flink`):
+
+```bash
+ENABLE_FLINK=1 docker compose --profile flink up -d
+```
+
+DAG 04 (`dags/dag_04_stream_market_events_to_kafka.py`) automatically dispatches to the Flink REST endpoint when `ENABLE_FLINK=1`; otherwise it keeps the original `MicroBatchConsumer` smoke path so the default stack stays light.
 
 Create Kafka topics manually if needed.
 
@@ -148,6 +156,7 @@ docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 | PostgreSQL | `localhost:55432` | DB: `financial_distress`, user/password: `airflow` / `airflow` |
 | Kafka host listener | `localhost:9094` | Host-side access |
 | Kafka Docker listener | `kafka:9092` | Container-side access |
+| Flink jobmanager (opt-in) | `http://localhost:8081` | Start with `docker compose --profile flink up -d`; gated by `ENABLE_FLINK=1` |
 
 ## Run Stage 1 Evidence
 
