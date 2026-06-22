@@ -11,6 +11,13 @@ from src.catalog.duckdb_runner import run_duckdb_validation
 from src.collectors.company_list_collector import collect_companies
 from src.collectors.financial_statement_collector import collect_financial_statements
 from src.collectors.market_price_collector import collect_market_prices
+from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
+from src.generators.config_loader import load_generator_config
+from src.generators.streaming_problem_factory import (
+    inject_streaming_duplicates,
+    plan_burst,
+    plan_late_arrivals,
+)
 from src.io.minio_writer import write_minio_dataset, write_minio_text
 from src.io.paths import DEFAULT_BUCKET, stage1_dataset_object_keys
 from src.metadata.metadata_writer import (
@@ -21,13 +28,6 @@ from src.metadata.metadata_writer import (
 from src.metadata.schema_registry import InMemorySchemaRegistry
 from src.quality.dq_checks import check_freshness, check_not_null, check_unique
 from src.security.secrets import require
-from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
-from src.generators.config_loader import load_generator_config
-from src.generators.streaming_problem_factory import (
-    inject_streaming_duplicates,
-    plan_burst,
-    plan_late_arrivals,
-)
 from src.streaming.events import StreamEvent
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 from src.transforms.bronze_to_silver import bronze_to_silver
@@ -81,9 +81,7 @@ def _config_value(name: str, env_file_values: dict[str, str]) -> str:
     candidate = env_file_values.get(name)
     if candidate:
         return candidate
-    raise RuntimeError(
-        f"Required env var {name!r} is missing. Add it to .env or export it."
-    )
+    raise RuntimeError(f"Required env var {name!r} is missing. Add it to .env or export it.")
 
 
 def metadata_dsn(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
@@ -226,10 +224,7 @@ def build_generator_characteristics() -> dict[str, Any]:
     dup_count = sum(1 for r in financial_rows if r.get("_is_duplicate") is True)
     legacy_null_columns = cfg.evolution.legacy_null_columns if cfg.enabled else ()
     legacy_null_count = sum(
-        1
-        for r in financial_rows
-        for col in legacy_null_columns
-        if r.get(col) is None
+        1 for r in financial_rows for col in legacy_null_columns if r.get(col) is None
     )
 
     # After dedup: keep the business-key uniqueness that silver would apply.
@@ -337,7 +332,11 @@ def write_generator_characteristics_evidence(
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / "stage1_generator_characteristics.json"
     out_path.write_text(
-        json.dumps(payload if payload is not None else build_generator_characteristics(), indent=2, sort_keys=True),
+        json.dumps(
+            payload if payload is not None else build_generator_characteristics(),
+            indent=2,
+            sort_keys=True,
+        ),
         encoding="utf-8",
     )
     return out_path

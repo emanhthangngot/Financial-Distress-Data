@@ -7,10 +7,10 @@ env-var scenarios (set / unset / blank).
 RESULT: secrets are surfaced loudly when missing and returned verbatim
 when set, with no silent fallback to demo credentials.
 """
+
 from __future__ import annotations
 
 import importlib
-import os
 
 import pytest
 

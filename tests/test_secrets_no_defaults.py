@@ -9,12 +9,11 @@ patterns that would silently mask a missing env var.
 RESULT: contributors cannot reintroduce a silent default to a
 credential lookup; CI fails on regression.
 """
+
 from __future__ import annotations
 
 import ast
 from pathlib import Path
-
-import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCAN_DIRS = ("src", "dags", "scripts", "sql")
@@ -206,9 +205,7 @@ def _find_python_offenders(source: str) -> list[tuple[int, str]]:
                     and isinstance(default.value, str)
                     and default.value.strip() in PROTECTED_CREDENTIAL_LITERALS
                 ):
-                    offenders.append(
-                        (default.lineno, lines[default.lineno - 1].strip())
-                    )
+                    offenders.append((default.lineno, lines[default.lineno - 1].strip()))
 
     Visitor().visit(tree)
     return offenders
@@ -264,6 +261,5 @@ def test_no_credential_defaults_in_source_tree():
     assert not offenders, (
         "Hardcoded credential defaults found. Set these via env vars in "
         ".env (already gitignored) and let src.security.secrets.require() "
-        "raise when they are missing:\n"
-        + "\n".join(f"  {p} :: {line}" for p, line in offenders)
+        "raise when they are missing:\n" + "\n".join(f"  {p} :: {line}" for p, line in offenders)
     )

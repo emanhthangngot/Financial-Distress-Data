@@ -1,7 +1,8 @@
 """Tests for the streaming problem factory (W17.3)."""
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -19,7 +20,7 @@ def _iso(ts: datetime) -> str:
 
 @pytest.fixture
 def base_events() -> list[StreamEvent]:
-    base_ts = datetime(2026, 1, 1, 9, 0, 0, tzinfo=timezone.utc)
+    base_ts = datetime(2026, 1, 1, 9, 0, 0, tzinfo=UTC)
     return [
         StreamEvent.price_update(
             ticker="AAA",
@@ -59,11 +60,12 @@ def test_plan_burst_uses_base_ticker(base_events: list[StreamEvent]) -> None:
     assert all(e.ticker == "AAA" for e in burst)
 
 
-def test_plan_late_arrivals_offsets_event_timestamp_into_past(base_events: list[StreamEvent]) -> None:
+def test_plan_late_arrivals_offsets_event_timestamp_into_past(
+    base_events: list[StreamEvent],
+) -> None:
     late = plan_late_arrivals(base_events, max_lag_seconds=3600)
     assert len(late) == len(base_events)
-    for src, out in zip(base_events, late):
-        src_ts = datetime.fromisoformat(src.event_timestamp)
+    for src, out in zip(base_events, late, strict=True):
         out_ts = datetime.fromisoformat(out.event_timestamp)
         src_created = datetime.fromisoformat(src.created_ts)
         out_created = datetime.fromisoformat(out.created_ts)
@@ -87,7 +89,7 @@ def test_inject_streaming_duplicates_adds_expected_count(base_events: list[Strea
 
 def test_inject_streaming_duplicates_event_id_collides(base_events: list[StreamEvent]) -> None:
     out = inject_streaming_duplicates(base_events, rate=0.5)
-    extra = out[len(base_events):]
+    extra = out[len(base_events) :]
     assert extra, "expected at least one duplicate"
     original_ids = {e.event_id for e in base_events}
     assert all(e.event_id in original_ids for e in extra)

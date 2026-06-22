@@ -1,7 +1,6 @@
 """Tests for VnstockFixtureAdapter config knobs (W17.2)."""
-from __future__ import annotations
 
-import pytest
+from __future__ import annotations
 
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.generators.config_loader import (
@@ -103,7 +102,11 @@ def test_offline_duplication_adds_expected_count() -> None:
 
 
 def test_dup_rows_match_canonical_row() -> None:
-    adapter = VnstockFixtureAdapter(config=_enabled_config(duplication=DuplicationConfig(offline_rate=0.5, streaming_rate=0.015)))
+    adapter = VnstockFixtureAdapter(
+        config=_enabled_config(
+            duplication=DuplicationConfig(offline_rate=0.5, streaming_rate=0.015),
+        ),
+    )
     rows = adapter.fetch_financial_statements("AAA", 2020, 2020)
     canonical = next(r for r in rows if r.get("_is_duplicate") is not True)
     dup = next(r for r in rows if r.get("_is_duplicate") is True)
@@ -114,7 +117,11 @@ def test_dup_rows_match_canonical_row() -> None:
 
 
 def test_market_prices_also_receive_duplicates() -> None:
-    adapter = VnstockFixtureAdapter(config=_enabled_config(duplication=DuplicationConfig(offline_rate=0.1, streaming_rate=0.015)))
+    adapter = VnstockFixtureAdapter(
+        config=_enabled_config(
+            duplication=DuplicationConfig(offline_rate=0.1, streaming_rate=0.015),
+        ),
+    )
     rows = adapter.fetch_market_prices("AAA", 2020, 2020)
     base = sum(1 for r in rows if r.get("_is_duplicate") is not True)
     dups = sum(1 for r in rows if r.get("_is_duplicate") is True)
