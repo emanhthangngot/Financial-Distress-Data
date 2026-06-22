@@ -308,3 +308,45 @@ CI test suite -> runs fixture collectors -> produces deterministic row counts wi
 Real E2E DAG -> runs against local services -> produces Bronze batch rows and Kafka Bronze stream batches in MinIO.
 Maintainer -> inspects generated evidence -> can trace counts from Bronze inputs through Silver and Gold outputs.
 ```
+
+## Generator Configuration
+
+The fixture adapter is parameterised by an opt-in `GeneratorConfig` block at the bottom of `configs/collector_config.yaml`. The block is **default-off** (`enabled: false` at the dataclass level) so any path that constructs `VnstockFixtureAdapter()` with no argument keeps the previous deterministic behavior. The YAML file flips the master switch to `true` for the Stage 1 evidence path, which calls `load_generator_config()` and passes the result into the adapter.
+
+### Knobs
+
+| Group | Field | Effect |
+|---|---|---|
+| `skew` | `top_company_ticker` | Ticker that owns the long tail of company rows (default `AAA`). |
+| `skew` | `top_company_share` | Share of company rows the top ticker owns (0.0–1.0). |
+| `skew` | `tail_tickers` | The remaining tickers that fill the rest of the company list. |
+| `cardinality` | `industries_pool`, `sectors_pool` | Pools the adapter samples from when generating company rows. |
+| `cardinality` | `companies_count` | Number of company rows produced by `fetch_companies()`. |
+| `evolution` | `legacy_null_columns` | Columns where pre-cutoff rows may carry `None` to simulate backfill gaps. |
+| `evolution` | `legacy_partition_cutoff` | Partition boundary (`YYYYQN`) below which the legacy null policy applies. |
+| `duplication` | `offline_rate` | Probability of a duplicate financial-statement row tagged with `_is_duplicate: True`. |
+| `duplication` | `streaming_rate` | Probability of a duplicate `StreamEvent` produced by `inject_streaming_duplicates`. |
+| `streaming.burst` | `window_seconds`, `record_count` | Window and size of the burst sample produced by `plan_burst`. |
+| `streaming.late_arrival` | `max_lag_seconds` | Maximum lag applied to late-arrival events by `plan_late_arrivals`. |
+
+### Constructor wiring
+
+`VnstockFixtureAdapter(config: GeneratorConfig | None = None)` accepts an optional config object. When omitted, the adapter falls back to the legacy hard-coded fixture. When provided, the adapter seeds `random.Random(config.fixture_seed)` and the duplicate flag, skew, and legacy-null logic consult the config in the order they appear above.
+
+### Loader and factory helpers
+
+- `load_generator_config(path: Path | None = None) -> GeneratorConfig` reads `configs/collector_config.yaml` (or the path supplied) and returns the frozen config. Missing fields fall back to the dataclass defaults.
+- `plan_burst(events, window_seconds, record_count)`, `plan_late_arrivals(events, max_lag_seconds)`, and `inject_streaming_duplicates(events, rate)` live in `src/generators/streaming_problem_factory.py` and are pure functions over `StreamEvent` lists. They are used by the evidence writer to summarise the streaming problem distribution.
+
+### Evidence artifact
+
+`stage1_evidence_job.build_generator_characteristics()` and `write_generator_characteristics_evidence(evidence_dir)` produce `docs/evidence/stage1_generator_characteristics.json`. The payload has six sections:
+
+- `skew` — `top_ticker`, `top_share`, and per-ticker `ticker_counts`.
+- `cardinality` — distinct `tickers`, `industries`, `sectors`.
+- `evolution` — `legacy_partition_cutoff`, `legacy_null_columns`, and the `legacy_null_count` observed in the financial-statement rows.
+- `duplication` — `offline_rate`, `offline_base_count`, `offline_count`, and the post-silver `after_dedup` count.
+- `streaming` — counts of `burst`, `late`, and `duplicate` events produced by the factories.
+- `volume` — `format: "parquet"` and per-table bronze row counts.
+
+The legacy `build_evidence_payload` is unchanged so existing row-count assertions stay deterministic.
