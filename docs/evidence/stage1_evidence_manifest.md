@@ -26,6 +26,7 @@ not enterprise-ready.
 - Machine-readable runtime evidence audit summary.
 - Primary Airflow evidence DAG: `stage1_local_evidence_pipeline`.
 - Connected real E2E DAG: `stage1_real_e2e_pipeline`.
+- DP1 Bronze pipeline DAG: `dp1_bronze_ingest` (ingest + validate stages, 3 batch collectors).
 - CI-style gates: PyTest, Ruff, Black, and Docker Compose config validation.
 
 ## Designed But Not Implemented
@@ -55,6 +56,11 @@ not enterprise-ready.
 - Capture optional MinIO object screenshots for Bronze, Silver, Gold, and
   `evidence/stage1/` prefixes.
 - Capture optional DuckDB/DBeaver screenshots for Gold views.
+- Capture live Airflow UI screenshots for `dp1_bronze_ingest` (DP1 rubric row):
+  the committed `docs/evidence/w20_dp1_airflow_dag_graph.png` and
+  `w20_dp1_airflow_task_tree.png` are graphviz-rendered approximations
+  of the DAG graph and task tree; refresh from a running Airflow UI when
+  Docker daemon access is available locally.
 
 ## Out Of Scope For Phase 1
 

@@ -1,0 +1,37 @@
+digraph dp1_bronze_ingest_tree {
+    rankdir=TB;
+    fontname="Helvetica";
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, margin="0.12,0.06"];
+    edge [fontname="Helvetica", fontsize=9, color="#57606a"];
+
+    DAG [label=<<B>dp1_bronze_ingest</B><BR/><FONT POINT-SIZE="9" COLOR="#57606a">Airflow DAG (batch, schedule on demand)</FONT>>, fillcolor="#f6f8fa", color="#57606a", fontcolor="#1f2328"];
+
+    A [label=<<B>ingest_bronze</B><BR/><FONT POINT-SIZE="9" COLOR="#0969da">PythonOperator</FONT>>, fillcolor="#ddf4ff", color="#0969da", fontcolor="#0969da"];
+    B [label=<<B>validate_bronze</B><BR/><FONT POINT-SIZE="9" COLOR="#1a7f37">PythonOperator</FONT>>, fillcolor="#dafbe1", color="#1a7f37", fontcolor="#1a7f37"];
+
+    a1 [label="collect_companies", fillcolor="#fff8c5", color="#9a6700", fontcolor="#9a6700"];
+    a2 [label="collect_financial_statements", fillcolor="#fff8c5", color="#9a6700", fontcolor="#9a6700"];
+    a3 [label="collect_market_prices", fillcolor="#fff8c5", color="#9a6700", fontcolor="#9a6700"];
+    a4 [label=<<FONT POINT-SIZE="9">write_minio_dataset<BR/>s3a://bucket/bronze/{...}/data.parquet</FONT>>, fillcolor="#fff8c5", color="#9a6700", fontcolor="#9a6700"];
+
+    b1 [label=<<FONT POINT-SIZE="9">build_evidence_payload<BR/>read bronze back</FONT>>, fillcolor="#fff8c5", color="#9a6700", fontcolor="#9a6700"];
+    b2 [label=<<FONT POINT-SIZE="9">assert non-empty<BR/>row counts</FONT>>, fillcolor="#fff8c5", color="#9a6700", fontcolor="#9a6700"];
+    b3 [label=<<FONT POINT-SIZE="9">write sidecar<BR/>dp1_bronze_validation.json</FONT>>, fillcolor="#fff8c5", color="#9a6700", fontcolor="#9a6700"];
+
+    DAG -> A;
+    DAG -> B;
+    A -> a1 [style=dashed];
+    A -> a2 [style=dashed];
+    A -> a3 [style=dashed];
+    a1 -> a4 [style=dashed];
+    a2 -> a4 [style=dashed];
+    a3 -> a4 [style=dashed];
+    B -> b1 [style=dashed];
+    b1 -> b2 [style=dashed];
+    b2 -> b3 [style=dashed];
+
+    A -> B [label="set_upstream", color="#1a7f37", penwidth=2];
+
+    labelloc="t";
+    label=<<B>Airflow DAG: dp1_bronze_ingest - Task Tree</B><BR/><FONT POINT-SIZE="10" COLOR="#57606a">Solid arrows: DAG-level task dependency.  Dashed arrows: sub-steps inside each PythonOperator callable.</FONT>>;
+}
