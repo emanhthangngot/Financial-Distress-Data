@@ -29,6 +29,7 @@ Security notes:
   untrusted input here, as Flink will shell-split the string on the
   worker side.
 """
+
 from __future__ import annotations
 
 import json
@@ -77,9 +78,7 @@ def _validate_jar_id(jar_id: str) -> str:
     digits, ``_``, ``-``, and ``.`` only.
     """
     if not jar_id or not _JAR_ID_PATTERN.match(jar_id):
-        raise RuntimeError(
-            f"jar_id must match {_JAR_ID_PATTERN.pattern!r}; got {jar_id!r}."
-        )
+        raise RuntimeError(f"jar_id must match {_JAR_ID_PATTERN.pattern!r}; got {jar_id!r}.")
     return jar_id
 
 
@@ -94,8 +93,9 @@ def _parallelism() -> int:
     return value
 
 
-def _request_json(url: str, method: str, body: dict[str, Any] | None,
-                  timeout_seconds: int) -> dict[str, Any]:
+def _request_json(
+    url: str, method: str, body: dict[str, Any] | None, timeout_seconds: int
+) -> dict[str, Any]:
     """Issue an HTTP request and return the parsed JSON body.
 
     Translates HTTP errors and connection failures into ``RuntimeError``
@@ -117,9 +117,7 @@ def _request_json(url: str, method: str, body: dict[str, Any] | None,
             f"Flink jobmanager HTTP {exc.code} on {method} {url}: {detail!r}"
         ) from exc
     except urllib.error.URLError as exc:
-        raise RuntimeError(
-            f"Flink jobmanager unreachable on {method} {url}: {exc.reason}"
-        ) from exc
+        raise RuntimeError(f"Flink jobmanager unreachable on {method} {url}: {exc.reason}") from exc
     try:
         return json.loads(raw) if raw else {}
     except json.JSONDecodeError as exc:
@@ -163,9 +161,7 @@ def submit_job(
     body = _request_json(url, "POST", payload, timeout_seconds)
     job_id = body.get("jobid")
     if not job_id:
-        raise RuntimeError(
-            f"Flink jobmanager at {url} returned 2xx but no jobid. body={body!r}"
-        )
+        raise RuntimeError(f"Flink jobmanager at {url} returned 2xx but no jobid. body={body!r}")
     return str(job_id)
 
 

@@ -17,6 +17,7 @@ The smoke mode keeps the DAG runnable on any developer machine; the
 Flink mode is for the W20 screenshot evidence and CI integration
 when a Flink service is part of the compose profile.
 """
+
 from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports

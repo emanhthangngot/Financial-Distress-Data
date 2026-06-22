@@ -4,6 +4,7 @@ These tests pin the Flink client + DAG 04 opt-in behaviour. The HTTP
 client uses only the standard library (``urllib.request``) on purpose
 so this test file does not need ``requests`` installed in the venv.
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -199,6 +200,7 @@ def test_dag_04_falls_back_to_microbatch_when_disabled(monkeypatch):
     assert len(result) == 1
     assert result[0]["record_count"] == 2
 
+
 def test_flink_submit_rejects_non_http_scheme(monkeypatch):
     """Submit must reject non-http(s) FLINK_JOBMANAGER_URL values so a
     misconfigured env cannot turn the client into a local-file fetcher.
@@ -239,4 +241,3 @@ def test_flink_submit_rejects_jar_id_with_path_traversal(monkeypatch):
         with pytest.raises(RuntimeError, match="jar_id"):
             flink_client.submit_job(jar_id="../../etc/passwd", program_args=[])
     mock_urlopen.assert_not_called()
-
