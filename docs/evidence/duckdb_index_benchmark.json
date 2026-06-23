@@ -1,0 +1,13 @@
+{
+  "query": "SELECT debt_to_equity, current_ratio, roa FROM obt_company_quarter_risk WHERE ticker = 'TKR0123' ORDER BY report_period LIMIT 1",
+  "indexed_columns": [
+    "ticker",
+    "report_period"
+  ],
+  "table": "obt_company_quarter_risk",
+  "row_count": 200000,
+  "before_ms": 4.627,
+  "after_ms": 3.277,
+  "speedup_factor": 1.412,
+  "index_method": "duckdb_art"
+}

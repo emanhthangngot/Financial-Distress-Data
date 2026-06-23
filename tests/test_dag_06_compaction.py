@@ -31,28 +31,31 @@ def test_dag_06_imports() -> None:
 
 def test_dag_06_has_compact_gold_tables_task() -> None:
     module = _import_dag()
-    assert hasattr(module, "_compact_gold_tables") or hasattr(module, "compact_gold_tables"), (
-        "DAG 06 must define a callable named _compact_gold_tables or compact_gold_tables"
-    )
+    assert hasattr(module, "_compact_gold_tables") or hasattr(
+        module, "compact_gold_tables"
+    ), "DAG 06 must define a callable named _compact_gold_tables or compact_gold_tables"
 
 
 def test_dag_06_compaction_task_references_compact_small_files() -> None:
     source = DAG_PATH.read_text()
-    assert "compact_small_files" in source, (
-        "DAG 06 must call src.lakehouse.compaction.compact_small_files"
-    )
+    assert (
+        "compact_small_files" in source
+    ), "DAG 06 must call src.lakehouse.compaction.compact_small_files"
     assert "compact_gold_tables" in source, "DAG 06 must declare a compact_gold_tables task"
-    # Ordering invariant: compact task comes after spark_build_gold_tables
-    spark_idx = source.find("spark_build_gold_tables")
-    compact_idx = source.find("compact_gold_tables")
-    assert spark_idx != -1 and compact_idx != -1
-    # The compact task id should be declared (string literal) after the
-    # spark task id at least once.
-    assert compact_idx > spark_idx, "compact_gold_tables must be declared after spark_build_gold_tables"
+    # Ordering invariant: the compact_gold_tables task_id declaration comes
+    # after the spark_build_gold_tables task_id declaration.
+    spark_idx = source.find('task_id="spark_build_gold_tables"')
+    compact_idx = source.find('task_id="compact_gold_tables"')
+    assert spark_idx != -1 and compact_idx != -1, (
+        "DAG 06 must declare task_id='spark_build_gold_tables' and " "task_id='compact_gold_tables'"
+    )
+    assert (
+        compact_idx > spark_idx
+    ), "compact_gold_tables must be declared after spark_build_gold_tables"
 
 
 def test_dag_06_compaction_uses_avg_file_mb_threshold() -> None:
     source = DAG_PATH.read_text()
-    assert "AVG_FILE_MB" in source or "avg_file_mb" in source.lower(), (
-        "DAG 06 compaction must be guarded by an avg-file-size threshold (env or constant)"
-    )
+    assert (
+        "AVG_FILE_MB" in source or "avg_file_mb" in source.lower()
+    ), "DAG 06 compaction must be guarded by an avg-file-size threshold (env or constant)"

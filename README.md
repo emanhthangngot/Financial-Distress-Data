@@ -140,6 +140,7 @@ The README only summarizes the project. Detailed design notes, contracts, and ru
 - [Business problem and dataset scope](docs/idea.md) — Phase 0 problem discovery.
 - [Data generator contract (W17 knobs, evidence)](docs/01_data_generator.md) — how the fixture-backed adapter shapes the offline and streaming inputs.
 - [Schema design (Medallion, SCD2, feature tables)](docs/02_schema_design.md) — Bronze / Silver / Gold layout, naming convention, and the `obt_company_quarter_risk` contract.
+- [Storage optimization (compaction, Z-order, DuckDB indexes)](docs/05_storage_optimization.md) — Gold-zone small-file compaction, Z-order clustering, and DuckDB index benchmarks.
 - [Runtime evidence](docs/evidence/) — Airflow run logs, MinIO inventory, PostgreSQL metadata exports, and DuckDB validation snapshots used to prove the pipeline ran end to end.
 
 ## Naming Convention

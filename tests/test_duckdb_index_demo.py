@@ -36,7 +36,6 @@ def test_evidence_json_shape() -> None:
     # The test does not execute the script (that needs a running Spark env or
     # seeded DuckDB) — it asserts the file's contract when produced.
     if not EVIDENCE_PATH.is_file():
-        pytest_skip = True
         import pytest
 
         pytest.skip(f"{EVIDENCE_PATH} not yet produced; run scripts/demo_duckdb_index.py first")
