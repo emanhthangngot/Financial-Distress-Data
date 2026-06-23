@@ -1,0 +1,12 @@
+{
+  "dataset": "obt_company_quarter_risk",
+  "downstream": [
+    "Phase 2 ML training"
+  ],
+  "dp": "DP2",
+  "upstream": [
+    "fact_company_quarter_financials",
+    "distress_labels",
+    "dim_company"
+  ]
+}

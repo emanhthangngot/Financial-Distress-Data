@@ -1,0 +1,8 @@
+{
+  "contract_check": true,
+  "dataset": "obt_company_quarter_risk",
+  "dp": "DP2",
+  "dq_passed": true,
+  "row_count": 200,
+  "schema_match": true
+}
