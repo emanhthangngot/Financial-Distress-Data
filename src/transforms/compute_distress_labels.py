@@ -181,6 +181,37 @@ def warning_rules(
 def compute_distress_label(
     row: dict[str, Any], previous_row: dict[str, Any] | None = None
 ) -> DistressLabel:
+    """Compute the distress label for a single company-quarter row.
+
+    Data-flow contract (staging -> fact -> label):
+
+    - ``row`` is a flattened fact row produced by the **staging** step
+      (DAG 06 Silver -> Gold). The staging step joins the typed
+      ``dim_company`` and ``fact_financials`` intermediates and projects
+      the source-of-truth columns listed below into a single record.
+    - The function reads **only** these source-of-truth columns from
+      ``row`` (plus the optional ``previous_row`` for trend rules):
+
+      - ``ticker`` — company identifier (string)
+      - ``report_period`` — fiscal quarter key (string, e.g. ``"2024Q1"``)
+      - ``total_assets`` — period-end total assets (numeric)
+      - ``total_liabilities`` — period-end total liabilities (numeric)
+      - ``current_assets``, ``current_liabilities`` — for working-capital
+        ratio and current ratio
+      - ``retained_earnings``, ``ebit`` — for Altman z_double_prime
+      - ``market_value_equity``, ``total_revenue`` — for Altman z_double_prime
+      - ``sector`` — used by ``is_financial_sector`` to gate the exclusion
+        policy
+      - ``event_timestamp`` / ``report_release_date`` / ``created_ts`` —
+        propagated into the output label metadata
+    - The function does **not** read raw Silver columns; any change to
+      the upstream ``dim_company`` or ``fact_financials`` schema must be
+      reflected in the staging projection before this function is correct.
+
+    ``previous_row`` (optional) is a prior-quarter fact row with the same
+    column contract; it is consumed by trend-based warning rules
+    (``warning_rules``) only.
+    """
     if is_financial_sector(row):
         return DistressLabel(
             ticker=str(row.get("ticker")),

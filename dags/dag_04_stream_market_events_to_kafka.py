@@ -73,4 +73,4 @@ if DAG is not None:
         catchup=False,
         tags=["financial-distress", "stage-1", "flink-opt-in"],
     ) as dag:
-        PythonOperator(task_id="consume_events_microbatch", python_callable=_stream_smoke)
+        PythonOperator(task_id="produce_smoke_events_microbatch", python_callable=_stream_smoke)
