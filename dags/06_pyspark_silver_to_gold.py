@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
-from src.transforms.silver_to_gold import build_distress_labels, build_fact_financial_statement
+from src.transforms.compute_distress_labels import compute_labels
+from src.transforms.silver_to_gold import build_fact_financial_statement
 
 DAG, PythonOperator = airflow_imports()
 
@@ -19,7 +20,7 @@ def _gold_smoke() -> list[dict]:
     adapter = VnstockFixtureAdapter()
     statements = adapter.fetch_financial_statements("AAA", 2025, 2025)
     facts = build_fact_financial_statement(statements)
-    return build_distress_labels(facts)
+    return compute_labels(facts)
 
 
 if DAG is not None:

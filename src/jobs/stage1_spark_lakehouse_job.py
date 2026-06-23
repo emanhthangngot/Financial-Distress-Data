@@ -100,35 +100,57 @@ def _rows_with_schema(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]],
         StructType,
     )
 
+    # Single-pass per-field type inference. Priority order matches the original
+    # loop: bool -> int (non-bool) -> (int|float) (non-bool) -> string. A column
+    # that mixes types is coerced to StringType deterministically.
     fields: list[str] = []
-    for row in rows:
-        for field in row:
-            if field not in fields:
-                fields.append(field)
+    field_state: dict[str, dict[str, bool]] = {}
 
-    schema_fields = []
-    string_fields = set()
+    def _ensure_field(name: str) -> None:
+        if name not in field_state:
+            fields.append(name)
+            field_state[name] = {
+                "saw_value": False,
+                "all_bool": True,
+                "all_int_non_bool": True,
+                "all_numeric_non_bool": True,
+            }
+
+    for row in rows:
+        for name, value in row.items():
+            _ensure_field(name)
+            if value is None:
+                continue
+            state = field_state[name]
+            state["saw_value"] = True
+            if not isinstance(value, bool):
+                state["all_bool"] = False
+            if not (isinstance(value, int) and not isinstance(value, bool)):
+                state["all_int_non_bool"] = False
+            if not (isinstance(value, (int, float)) and not isinstance(value, bool)):
+                state["all_numeric_non_bool"] = False
+
+    schema_fields: list[StructField] = []
+    string_fields: set[str] = set()
     for field in fields:
-        values = [row.get(field) for row in rows if row.get(field) is not None]
-        if not values:
-            spark_type = StringType()
+        state = field_state[field]
+        if not state["saw_value"]:
+            spark_type: Any = StringType()
             string_fields.add(field)
-        elif all(isinstance(value, bool) for value in values):
+        elif state["all_bool"]:
             spark_type = BooleanType()
-        elif all(isinstance(value, int) and not isinstance(value, bool) for value in values):
+        elif state["all_int_non_bool"]:
             spark_type = LongType()
-        elif all(
-            isinstance(value, (int, float)) and not isinstance(value, bool) for value in values
-        ):
+        elif state["all_numeric_non_bool"]:
             spark_type = DoubleType()
         else:
             spark_type = StringType()
             string_fields.add(field)
         schema_fields.append(StructField(field, spark_type, nullable=True))
 
-    normalized_rows = []
+    normalized_rows: list[dict[str, Any]] = []
     for row in rows:
-        normalized = {}
+        normalized: dict[str, Any] = {}
         for field in fields:
             value = row.get(field)
             if field in string_fields and value is not None:
