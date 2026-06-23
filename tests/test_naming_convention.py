@@ -78,10 +78,8 @@ def test_duckdb_view_names_follow_convention() -> None:
     assert view_names, "No CREATE OR REPLACE VIEW statements found in duckdb_create_views.sql"
 
     for name in view_names:
-        assert name.startswith("gold_"), (
-            f"View {name!r} violates the gold_ layer prefix rule"
-        )
-        suffix = name[len("gold_"):]
+        assert name.startswith("gold_"), f"View {name!r} violates the gold_ layer prefix rule"
+        suffix = name[len("gold_") :]
         assert any(suffix.startswith(p) for p in ALLOWED_VIEW_LAYER_PREFIXES), (
             f"View {name!r} violates the convention: must start with one of "
             f"gold_{ALLOWED_VIEW_LAYER_PREFIXES}"
@@ -112,46 +110,44 @@ def test_gold_layers_actually_used() -> None:
         "feat_company_unified",
         "distress_labels",
     ):
-        assert required in folders_used, (
-            f"Expected Gold folder {required!r} missing from spark job paths"
-        )
+        assert (
+            required in folders_used
+        ), f"Expected Gold folder {required!r} missing from spark job paths"
 
 
 def test_readme_documents_naming_convention() -> None:
     """The README must have a Naming Convention section that lists the rules."""
     text = _read(README_FILE)
-    assert re.search(r"^##\s+Naming Convention\s*$", text, re.MULTILINE), (
-        "README is missing the '## Naming Convention' section"
-    )
+    assert re.search(
+        r"^##\s+Naming Convention\s*$", text, re.MULTILINE
+    ), "README is missing the '## Naming Convention' section"
     section = _extract_section(text, "Naming Convention")
     for token in ("dim_", "fact_", "obt_", "feat_", "distress_labels"):
-        assert token in section, (
-            f"README '## Naming Convention' section does not mention {token!r}"
-        )
+        assert token in section, f"README '## Naming Convention' section does not mention {token!r}"
 
 
 def test_schema_design_doc_documents_naming_convention() -> None:
     """The schema design doc must reference the Gold layer prefix rules."""
     text = _read(SCHEMA_DOC)
-    assert re.search(r"(?i)naming convention", text), (
-        "docs/02_schema_design.md is missing a 'naming convention' reference"
-    )
+    assert re.search(
+        r"(?i)naming convention", text
+    ), "docs/02_schema_design.md is missing a 'naming convention' reference"
     for token in ("dim_", "fact_", "obt_", "feat_", "distress_labels"):
-        assert token in text, (
-            f"docs/02_schema_design.md does not mention required Gold token {token!r}"
-        )
+        assert (
+            token in text
+        ), f"docs/02_schema_design.md does not mention required Gold token {token!r}"
 
 
 def test_readme_documents_deployment_diagram() -> None:
     """The README must reference the deployment diagram image by relative path."""
     text = _read(README_FILE)
-    assert re.search(r"^##\s+System Deployment Diagram\s*$", text, re.MULTILINE), (
-        "README is missing the '## System Deployment Diagram' section"
-    )
+    assert re.search(
+        r"^##\s+System Deployment Diagram\s*$", text, re.MULTILINE
+    ), "README is missing the '## System Deployment Diagram' section"
     section = _extract_section(text, "System Deployment Diagram")
-    assert "images/architecture/system_deployment_diagram.png" in section, (
-        "README '## System Deployment Diagram' must embed the diagram PNG by relative path"
-    )
+    assert (
+        "images/architecture/system_deployment_diagram.png" in section
+    ), "README '## System Deployment Diagram' must embed the diagram PNG by relative path"
 
 
 def _extract_section(text: str, heading: str) -> str:
