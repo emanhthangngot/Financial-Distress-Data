@@ -1,0 +1,19 @@
+{
+  "manifest": "/home/pearspringmind/Studying/FSDS/AIDE1/coursework/Financial-Distress-Data/configs/ingestion_manifest.yaml",
+  "per_source_counts": {},
+  "records": [],
+  "skipped": [
+    {
+      "reason": "disabled",
+      "source_id": "tcbs"
+    },
+    {
+      "reason": "disabled",
+      "source_id": "cafef"
+    }
+  ],
+  "sources": [
+    "tcbs",
+    "cafef"
+  ]
+}
