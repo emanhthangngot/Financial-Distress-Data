@@ -92,9 +92,7 @@ def print_summary(report: dict) -> None:
     for it in report["items"]:
         by_cat.setdefault(it["category"], []).append(it)
     for cat, items in by_cat.items():
-        c = sum(
-            i["points"] for i in items if i["status"] == "covered" and i["points"] > 0
-        )
+        c = sum(i["points"] for i in items if i["status"] == "covered" and i["points"] > 0)
         t = sum(i["points"] for i in items)
         print(f"== {cat} ({c}/{t} pts) ==")
         for i in items:
@@ -102,9 +100,7 @@ def print_summary(report: dict) -> None:
             if i["points"] == 0:
                 print(f"  {mark} idx {i['idx']:>2}  (sum row)")
             else:
-                print(
-                    f"  {mark} idx {i['idx']:>2}  {i['points']:>2}pt  {i['claim'][:70]}"
-                )
+                print(f"  {mark} idx {i['idx']:>2}  {i['points']:>2}pt  {i['claim'][:70]}")
         print()
 
 
@@ -124,9 +120,7 @@ def main() -> int:
     args = parser.parse_args()
     report = build_report()
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     if not args.quiet:
         print_summary(report)
     print(f"Wrote: {args.out.relative_to(PROJECT_ROOT)}")
