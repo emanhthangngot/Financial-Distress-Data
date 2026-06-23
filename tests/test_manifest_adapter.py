@@ -19,8 +19,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_YAML = REPO_ROOT / "configs" / "ingestion_manifest.yaml"
 ADAPTER_MODULE = "src.collectors.manifest_adapter"
@@ -60,14 +58,30 @@ def test_manifest_sources_have_required_fields() -> None:
         assert not missing, f"source {src.get('source_id')} missing: {missing}"
 
 
-def test_manifest_adapter_fetch_uses_field_map() -> None:
+def test_manifest_adapter_fetch_uses_field_map(
+    tmp_path: Path,
+) -> None:
     mod = importlib.import_module(ADAPTER_MODULE)
-    adapter = mod.ManifestAdapter(MANIFEST_YAML)
-    record = adapter.fetch("VCB", "tcbs")
-    assert isinstance(record, dict)
-    field_map = next(
-        s["field_map"] for s in adapter.sources() if s["source_id"] == "tcbs"
+    # Build an inline enabled manifest so the field-map assertion runs
+    # against a real handler invocation rather than the disabled
+    # shipped manifest.
+    manifest = tmp_path / "fieldmap.yaml"
+    manifest.write_text(
+        "sources:\n"
+        "  - source_id: tcbs\n"
+        "    enabled: true\n"
+        "    endpoint: fixture\n"
+        "    field_map:\n"
+        "      symbol: symbol\n"
+        "      price: close_price\n"
+        "    rate_limit_per_min: 60\n"
+        "    incremental_key: ts\n",
+        encoding="utf-8",
     )
+    adapter = mod.ManifestAdapter(manifest)
+    field_map = adapter.get_source("tcbs")["field_map"]
+    record = adapter.fetch("VCB", "tcbs")
+    assert record is not None
     # Every field in the manifest's field_map must appear as a key in
     # the record returned by fetch().
     for manifest_field in field_map:
