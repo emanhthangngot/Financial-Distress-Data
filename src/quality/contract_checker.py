@@ -177,9 +177,7 @@ def _parse_table(rows: list[list[str]]) -> dict | None:
     if header == ["field", "value"]:
         return {row[0].lower(): row[1] for row in body}
     if header == ["dataset", "upstream", "downstream"]:
-        return [
-            {"dataset": r[0], "upstream": r[1], "downstream": r[2]} for r in body
-        ]
+        return [{"dataset": r[0], "upstream": r[1], "downstream": r[2]} for r in body]
     return [dict(zip(header, r, strict=False)) for r in body]
 
 
@@ -191,9 +189,7 @@ def _iter_table_sections(md: str) -> Iterable[tuple[str, list[list[list[str]]]]]
     table_re = re.compile(r"(?m)(?:^\|.*\n)+", re.MULTILINE)
     # Walk headings (any level >= 2) and tables in document order, bucket tables
     # under the most recent heading.
-    pattern = re.compile(
-        r"^(?P<hash>##+)\s+(?P<title>.+?)\s*$", re.MULTILINE
-    )
+    pattern = re.compile(r"^(?P<hash>##+)\s+(?P<title>.+?)\s*$", re.MULTILINE)
     sections: list[tuple[str, list[list[list[str]]]]] = []
     current_title = "_root"
     current_tables: list[list[list[str]]] = []
@@ -328,9 +324,7 @@ def validate_against_schema(
             continue
         actual_dtype = actual_schema[col.name]
         if not _types_compatible(col.dtype, actual_dtype):
-            errors.append(
-                f"{col.name}: expected {col.dtype}, got {actual_dtype}"
-            )
+            errors.append(f"{col.name}: expected {col.dtype}, got {actual_dtype}")
     expected = {c.name for c in contract.columns}
     extra = sorted(set(actual_schema) - expected)
     return ValidationResult(
@@ -394,9 +388,7 @@ def _dp_head_entry(dp: str) -> dict | None:
     return entries[-1] if entries else None
 
 
-def write_dp_evidence(
-    contracts: dict[str, TableContract], dp: str, output_dir: Path
-) -> None:
+def write_dp_evidence(contracts: dict[str, TableContract], dp: str, output_dir: Path) -> None:
     """Write the lineage and validation evidence JSONs for one DP.
 
     - Lineage JSON: a single record describing the DP's head output and its

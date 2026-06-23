@@ -85,9 +85,9 @@ def test_contract_doc_has_lineage_section_per_dp() -> None:
     text = _read(CONTRACTS_DOC)
     for dp in ("DP1", "DP2", "DP3"):
         pattern = rf"##\s+Lineage\s+{dp}\b"
-        assert re.search(pattern, text), (
-            f"docs/07_data_contracts.md must have a '## Lineage {dp}' section"
-        )
+        assert re.search(
+            pattern, text
+        ), f"docs/07_data_contracts.md must have a '## Lineage {dp}' section"
 
 
 # --- Module import + API tests -------------------------------------------------
@@ -98,9 +98,7 @@ def test_contract_checker_module_loads() -> None:
 
     module = importlib.import_module(CONTRACT_CHECKER_MODULE)
     for attr in ("load_contracts", "validate_against_schema", "write_dp_evidence"):
-        assert hasattr(module, attr), (
-            f"src.quality.contract_checker must expose {attr}()"
-        )
+        assert hasattr(module, attr), f"src.quality.contract_checker must expose {attr}()"
 
 
 def test_load_contracts_parses_doc() -> None:
@@ -109,9 +107,9 @@ def test_load_contracts_parses_doc() -> None:
     contracts = load_contracts(CONTRACTS_DOC)
     assert isinstance(contracts, dict)
     expected_count = len(EXPECTED_GOLD_TABLES | EXPECTED_BRONZE_SILVER)
-    assert len(contracts) >= expected_count, (
-        f"load_contracts must return at least {expected_count} entries"
-    )
+    assert (
+        len(contracts) >= expected_count
+    ), f"load_contracts must return at least {expected_count} entries"
     for required in EXPECTED_GOLD_TABLES | EXPECTED_BRONZE_SILVER:
         assert required in contracts, f"load_contracts must include {required!r}"
 
