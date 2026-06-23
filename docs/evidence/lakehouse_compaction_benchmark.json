@@ -1,0 +1,12 @@
+{
+  "n_input_files": 100,
+  "n_output_files": 1,
+  "input_total_bytes": 176873,
+  "output_total_bytes": 119075,
+  "input_avg_bytes": 1768,
+  "output_avg_bytes": 119075,
+  "target_file_mb": 128,
+  "row_count_preserved": true,
+  "rows_in": 20000,
+  "rows_out": 20000
+}
