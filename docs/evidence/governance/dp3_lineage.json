@@ -1,0 +1,12 @@
+{
+  "dataset": "feat_company_unified",
+  "downstream": [
+    "Phase 2 ML training"
+  ],
+  "dp": "DP3",
+  "upstream": [
+    "feat_company_financial_4q",
+    "feat_company_market_30d",
+    "feat_company_news_30d"
+  ]
+}

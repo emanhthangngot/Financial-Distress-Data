@@ -1,0 +1,10 @@
+{
+  "dataset": "dim_company",
+  "downstream": [
+    "All Gold joins"
+  ],
+  "dp": "DP1",
+  "upstream": [
+    "stg_company"
+  ]
+}
