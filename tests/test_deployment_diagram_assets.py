@@ -40,9 +40,7 @@ def test_deployment_diagram_png_is_actual_png() -> None:
     assert PNG_PATH.exists(), f"Missing diagram PNG at {PNG_PATH}"
     with PNG_PATH.open("rb") as f:
         head = f.read(8)
-    assert head == b"\x89PNG\r\n\x1a\n", (
-        f"{PNG_PATH} is not a valid PNG (got magic bytes {head!r})"
-    )
+    assert head == b"\x89PNG\r\n\x1a\n", f"{PNG_PATH} is not a valid PNG (got magic bytes {head!r})"
 
 
 def test_deployment_diagram_dot_source_exists() -> None:
@@ -54,9 +52,7 @@ def test_deployment_diagram_dot_source_exists() -> None:
     # the lakehouse components by name.
     assert "digraph" in text, f"{DOT_PATH} is missing the digraph declaration"
     for required in ("Airflow", "Kafka", "MinIO", "DuckDB", "PostgreSQL"):
-        assert required in text, (
-            f"{DOT_PATH} does not mention required component {required!r}"
-        )
+        assert required in text, f"{DOT_PATH} does not mention required component {required!r}"
 
 
 def test_deployment_diagram_dot_has_required_components() -> None:
@@ -74,9 +70,7 @@ def test_deployment_diagram_dot_has_required_components() -> None:
         "cluster_duckdb",
         "cluster_dbeaver",
     ):
-        assert cluster in text, (
-            f"{DOT_PATH} is missing required cluster subgraph {cluster!r}"
-        )
+        assert cluster in text, f"{DOT_PATH} is missing required cluster subgraph {cluster!r}"
 
 
 def test_architecture_directory_contains_only_known_files() -> None:
@@ -97,9 +91,9 @@ def test_architecture_directory_contains_only_known_files() -> None:
 def test_dot_source_uses_tb_layout() -> None:
     """The W22 plan locks TB layout so all edge labels render (LR + ortho drops them)."""
     text = DOT_PATH.read_text(encoding="utf-8")
-    assert re.search(r"rankdir\s*=\s*TB", text), (
-        f"{DOT_PATH} does not declare rankdir=TB; LR layout drops edge labels"
-    )
-    assert re.search(r"splines\s*=\s*true", text), (
-        f"{DOT_PATH} does not declare splines=true; required for curved edges with labels"
-    )
+    assert re.search(
+        r"rankdir\s*=\s*TB", text
+    ), f"{DOT_PATH} does not declare rankdir=TB; LR layout drops edge labels"
+    assert re.search(
+        r"splines\s*=\s*true", text
+    ), f"{DOT_PATH} does not declare splines=true; required for curved edges with labels"
