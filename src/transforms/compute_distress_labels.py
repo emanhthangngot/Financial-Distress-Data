@@ -11,21 +11,11 @@ from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
+from src.transforms.sector_policy import load_sector_policy
+
 RULE_VERSION = "v1"
 LABEL_SOURCE = "rule_based_v1"
 ZERO_LIABILITIES_X4_CAP = Decimal("99.0")
-FINANCIAL_SECTOR_TERMS = {
-    "bank",
-    "banks",
-    "banking",
-    "insurance",
-    "insurers",
-    "securities",
-    "brokerage",
-    "diversified financials",
-    "financial services",
-}
-FINANCIAL_GICS_CODES = {"40", "4010", "4020", "4030"}
 
 
 @dataclass(frozen=True)
@@ -86,6 +76,7 @@ def _normalized_text(value: Any) -> str:
 
 
 def is_financial_sector(row: dict[str, Any]) -> bool:
+    policy = load_sector_policy()
     text_values = {
         _normalized_text(row.get("sector")),
         _normalized_text(row.get("industry")),
@@ -96,7 +87,7 @@ def is_financial_sector(row: dict[str, Any]) -> bool:
         str(row.get("gics_sector_code") or "").strip(),
         str(row.get("gics_code") or "").strip()[:2],
     }
-    return bool(text_values & FINANCIAL_SECTOR_TERMS or code_values & FINANCIAL_GICS_CODES)
+    return bool(text_values & policy.terms or code_values & policy.codes)
 
 
 def _quarter_index(report_period: Any) -> int | None:
