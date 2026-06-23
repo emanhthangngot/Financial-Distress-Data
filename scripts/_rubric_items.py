@@ -100,14 +100,18 @@ ITEMS: tuple[RubricItem, ...] = (
         category="Implement Data Generator",
         claim="Simulate offline data problems: skew",
         points=2,
-        evidence_check=lambda: _exists("docs/evidence/stage1_generator_characteristics.json"),
+        evidence_check=lambda: _exists(
+            "docs/evidence/stage1_generator_characteristics.json"
+        ),
     ),
     RubricItem(
         idx=4,
         category="Implement Data Generator",
         claim="Simulate offline data problems: high cardinality",
         points=2,
-        evidence_check=lambda: _exists("docs/evidence/stage1_generator_characteristics.json"),
+        evidence_check=lambda: _exists(
+            "docs/evidence/stage1_generator_characteristics.json"
+        ),
     ),
     RubricItem(
         idx=5,
@@ -272,7 +276,9 @@ ITEMS: tuple[RubricItem, ...] = (
         category="Data Storage",
         claim="Lakehouse optimization: compaction / z-order / partitioning",
         points=2,
-        evidence_check=lambda: _exists("docs/evidence/lakehouse_compaction_benchmark.json"),
+        evidence_check=lambda: _exists(
+            "docs/evidence/lakehouse_compaction_benchmark.json"
+        ),
     ),
     RubricItem(
         idx=24,
@@ -452,7 +458,9 @@ ITEMS: tuple[RubricItem, ...] = (
         category="README + Deployment Diagram",
         claim="System deployment diagram with deployable units, labelled arrows, numbered sequence",
         points=2,
-        evidence_check=lambda: _exists("images/architecture/system_deployment_diagram.png"),
+        evidence_check=lambda: _exists(
+            "images/architecture/system_deployment_diagram.png"
+        ),
     ),
     # 9. Novel Ideas (10 pts)
     RubricItem(

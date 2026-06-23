@@ -88,7 +88,9 @@ def test_generator_offline_skew_evidence() -> None:
     if not p.exists():
         pytest.xfail("stage1_generator_characteristics.json is generated at runtime")
     data = json.loads(p.read_text(encoding="utf-8"))
-    assert "skew" in json.dumps(data).lower() or "cardinality" in json.dumps(data).lower()
+    assert (
+        "skew" in json.dumps(data).lower() or "cardinality" in json.dumps(data).lower()
+    )
 
 
 def test_generator_offline_cardinality_evidence() -> None:
@@ -145,13 +147,17 @@ def test_spark_optimization_journey_documented() -> None:
     # W18 produced Spark optimization evidence
     p = DOCS / "evidence" / "w20_dp1_airflow_task_tree.png"
     assert p.exists(), "W18/W20 Spark optimization evidence PNG missing"
-    text = _read(DOCS / "01_data_generator.md") + _read(DOCS / "05_storage_optimization.md")
+    text = _read(DOCS / "01_data_generator.md") + _read(
+        DOCS / "05_storage_optimization.md"
+    )
     assert "spark" in text.lower()
 
 
 def test_spark_integrated_to_airflow() -> None:
     # dags/ should reference spark jobs
-    dags = list((REPO_ROOT / "dags").glob("*.py")) if (REPO_ROOT / "dags").exists() else []
+    dags = (
+        list((REPO_ROOT / "dags").glob("*.py")) if (REPO_ROOT / "dags").exists() else []
+    )
     spark_mentions = sum(1 for f in dags if "spark" in _read(f).lower())
     assert spark_mentions > 0, "No DAG references Spark"
 
@@ -209,15 +215,23 @@ def test_dp1_airflow_dag_graph_evidence(dp_prefix: str) -> None:
 
 def test_dp2_pipeline_exists() -> None:
     # DP2 = bronze -> silver -> gold
-    dags = list((REPO_ROOT / "dags").glob("*.py")) if (REPO_ROOT / "dags").exists() else []
-    candidates = [f for f in dags if "silver" in _read(f).lower() or "gold" in _read(f).lower()]
+    dags = (
+        list((REPO_ROOT / "dags").glob("*.py")) if (REPO_ROOT / "dags").exists() else []
+    )
+    candidates = [
+        f for f in dags if "silver" in _read(f).lower() or "gold" in _read(f).lower()
+    ]
     assert candidates, "No DAG references silver/gold for DP2"
 
 
 def test_dp3_pipeline_exists() -> None:
     # DP3 = feature table computation
-    dags = list((REPO_ROOT / "dags").glob("*.py")) if (REPO_ROOT / "dags").exists() else []
-    candidates = [f for f in dags if "feature" in _read(f).lower() or "feat_" in _read(f).lower()]
+    dags = (
+        list((REPO_ROOT / "dags").glob("*.py")) if (REPO_ROOT / "dags").exists() else []
+    )
+    candidates = [
+        f for f in dags if "feature" in _read(f).lower() or "feat_" in _read(f).lower()
+    ]
     assert candidates, "No DAG references features for DP3"
 
 
@@ -230,9 +244,9 @@ def test_dp_lineage_evidence(dp: str) -> None:
     p = EVIDENCE / "governance" / f"{dp}_lineage.json"
     assert p.exists(), f"{dp}_lineage.json missing"
     data = json.loads(p.read_text(encoding="utf-8"))
-    assert data.get("upstream") and data.get("downstream"), (
-        f"{dp} lineage missing upstream/downstream"
-    )
+    assert data.get("upstream") and data.get(
+        "downstream"
+    ), f"{dp} lineage missing upstream/downstream"
 
 
 @pytest.mark.parametrize("dp", ["dp1", "dp2", "dp3"])
@@ -249,19 +263,23 @@ def test_dp_validation_evidence(dp: str) -> None:
 
 
 def test_schema_erd_image_exists() -> None:
-    assert (IMAGES / "schema" / "schema_evidence_erd.png").exists(), "Schema ERD image missing"
+    assert (
+        IMAGES / "schema" / "schema_evidence_erd.png"
+    ).exists(), "Schema ERD image missing"
 
 
 def test_dim_scd2_documented() -> None:
     text = _read(DOCS / "02_schema_design.md").lower()
-    assert "valid_from_ts" in text and "is_current" in text, "SCD2 columns not documented"
+    assert (
+        "valid_from_ts" in text and "is_current" in text
+    ), "SCD2 columns not documented"
 
 
 def test_feat_table_columns_documented() -> None:
     text = _read(DOCS / "02_schema_design.md").lower()
-    assert "event_timestamp" in text and "created" in text, (
-        "feat table event_timestamp/created not documented"
-    )
+    assert (
+        "event_timestamp" in text and "created" in text
+    ), "feat table event_timestamp/created not documented"
 
 
 def test_dim_fact_relationship_documented() -> None:
@@ -289,7 +307,10 @@ def test_readme_has_business_domain() -> None:
 
 def test_readme_has_toc() -> None:
     text = _read(README).lower()
-    assert "table of contents" in text or re.search(r"^## .*$", text, re.MULTILINE) is not None
+    assert (
+        "table of contents" in text
+        or re.search(r"^## .*$", text, re.MULTILINE) is not None
+    )
 
 
 def test_readme_has_repo_structure() -> None:
@@ -299,9 +320,9 @@ def test_readme_has_repo_structure() -> None:
 
 def test_deployment_diagram_png_exists() -> None:
     # W22 added images/architecture/system_deployment_diagram.png
-    assert (IMAGES / "architecture" / "system_deployment_diagram.png").exists(), (
-        "Deployment diagram missing"
-    )
+    assert (
+        IMAGES / "architecture" / "system_deployment_diagram.png"
+    ).exists(), "Deployment diagram missing"
 
 
 def test_deployment_diagram_dot_in_sync() -> None:
@@ -343,8 +364,9 @@ def test_source_files_have_module_docstrings() -> None:
     with_docstring = sum(
         1
         for f in py_files
-        if _read(f).lstrip().startswith('\"\"\"')
-        or _read(f).lstrip().startswith("'''")
+        if _read(f).lstrip().startswith('"""') or _read(f).lstrip().startswith("'''")
     )
     coverage = with_docstring / len(py_files)
-    assert coverage > 0.8, f"Only {coverage:.0%} of src/*.py files have module docstrings"
+    assert (
+        coverage > 0.8
+    ), f"Only {coverage:.0%} of src/*.py files have module docstrings"
