@@ -8,8 +8,8 @@ Kafka. The task_id must therefore be ``produce_smoke_events_microbatch``
 
 from __future__ import annotations
 
-from dags._stage1_dag_utils import airflow_imports
 from dags import dag_04_stream_market_events_to_kafka as dag04_module
+from dags._stage1_dag_utils import airflow_imports
 
 _, _ = airflow_imports()
 
@@ -30,9 +30,9 @@ def test_dag04_task_id_is_produce_not_consume():
         "Kafka consumer that this DAG does not run."
     )
     # The renamed task_id must be present.
-    assert "produce_smoke_events_microbatch" in src, (
-        "DAG 04 task_id must be 'produce_smoke_events_microbatch' (W9 AC)."
-    )
+    assert (
+        "produce_smoke_events_microbatch" in src
+    ), "DAG 04 task_id must be 'produce_smoke_events_microbatch' (W9 AC)."
 
 
 def test_dag04_docstring_states_no_kafka_streaming_in_default_mode():
