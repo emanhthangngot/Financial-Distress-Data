@@ -247,11 +247,14 @@ def compute_distress_label(
 
 def compute_labels(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     rows_sorted = sorted(rows, key=lambda item: (item.get("ticker"), item.get("report_period")))
-    previous_by_ticker: dict[str, dict[str, Any]] = {}
+    # Holds the last *observed* row per ticker (whatever sort produced). Whether
+    # that row is strictly the prior quarter is decided downstream by the gating
+    # check  inside compute_distress_label.
+    last_observed_row_by_ticker: dict[str, dict[str, Any]] = {}
     labels: list[dict[str, Any]] = []
     for row in rows_sorted:
         ticker = str(row.get("ticker"))
-        label = compute_distress_label(row, previous_by_ticker.get(ticker))
+        label = compute_distress_label(row, last_observed_row_by_ticker.get(ticker))
         labels.append(label.as_dict())
-        previous_by_ticker[ticker] = row
+        last_observed_row_by_ticker[ticker] = row
     return labels

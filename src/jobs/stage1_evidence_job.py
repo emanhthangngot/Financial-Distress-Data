@@ -39,10 +39,10 @@ from src.security.secrets import require
 from src.streaming.events import StreamEvent
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 from src.transforms.bronze_to_silver import bronze_to_silver
+from src.transforms.compute_distress_labels import compute_labels
 from src.transforms.silver_to_gold import (
     build_dim_company,
     build_dim_date,
-    build_distress_labels,
     build_fact_financial_statement,
     build_fact_market_alert,
     build_fact_market_price,
@@ -403,7 +403,7 @@ def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
             ).as_record()
         ]
     )
-    gold_distress_labels = build_distress_labels(gold_fact_financial_statement)
+    gold_distress_labels = compute_labels(gold_fact_financial_statement)
     gold_obt_company_quarter_risk = build_obt_company_quarter_risk(
         gold_fact_financial_statement,
         gold_distress_labels,

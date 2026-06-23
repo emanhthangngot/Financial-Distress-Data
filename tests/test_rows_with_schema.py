@@ -2,6 +2,7 @@
 
 Covers P-C from docs/_plans/codebase_recon_followups.md: deterministic type inference.
 """
+
 from datetime import date, datetime
 
 from pyspark.sql.types import (
@@ -61,4 +62,3 @@ def test_datetime_values_in_string_field_pass_through():
     assert isinstance(schema.fields[0].dataType, StringType)
     assert normalized[0]["ts"] == "2026-01-01T09:00:00"
     assert normalized[1]["ts"] == "2026-01-02"
-
