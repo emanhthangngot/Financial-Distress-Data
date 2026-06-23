@@ -72,7 +72,6 @@ def test_compact_small_files_target_two_files(tmp_path) -> None:
     out_files = sorted((tmp_path / "out").glob("*.parquet"))
     assert len(out_files) <= 10
     assert len(out_files) >= 1
-    out_table = pq.read_table(out_files[0]) if out_files else None
     # Even if multiple files, union rows should equal input
     total_rows = sum(pq.read_table(f).num_rows for f in out_files)
     assert total_rows == 10 * 500
