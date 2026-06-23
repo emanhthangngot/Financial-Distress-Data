@@ -36,9 +36,7 @@ def test_macro_sql_file_exists() -> None:
 def test_runner_module_loads() -> None:
     mod = importlib.import_module(RUNNER_MODULE)
     assert hasattr(mod, "classify_view"), "runner must expose classify_view()"
-    assert hasattr(mod, "check_duckdb_views"), (
-        "runner must expose check_duckdb_views()"
-    )
+    assert hasattr(mod, "check_duckdb_views"), "runner must expose check_duckdb_views()"
 
 
 @pytest.mark.parametrize(
@@ -57,9 +55,7 @@ def test_runner_module_loads() -> None:
         ("gold_feat_company_unified", "feat"),
     ],
 )
-def test_classify_view_recognises_gold_prefixes(
-    view_name: str, expected_layer: str
-) -> None:
+def test_classify_view_recognises_gold_prefixes(view_name: str, expected_layer: str) -> None:
     mod = importlib.import_module(RUNNER_MODULE)
     assert mod.classify_view(view_name) == expected_layer
 

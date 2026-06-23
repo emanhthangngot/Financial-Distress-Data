@@ -60,19 +60,13 @@ class ManifestAdapter:
     def __init__(self, manifest_path: Path) -> None:
         self.manifest_path = Path(manifest_path)
         if not self.manifest_path.exists():
-            raise FileNotFoundError(
-                f"manifest not found: {self.manifest_path}"
-            )
+            raise FileNotFoundError(f"manifest not found: {self.manifest_path}")
         raw = yaml.safe_load(self.manifest_path.read_text(encoding="utf-8"))
         if not isinstance(raw, dict) or "sources" not in raw:
-            raise ValueError(
-                f"manifest {self.manifest_path} missing 'sources' list"
-            )
+            raise ValueError(f"manifest {self.manifest_path} missing 'sources' list")
         sources = raw["sources"]
         if not isinstance(sources, list):
-            raise ValueError(
-                f"manifest {self.manifest_path} 'sources' must be a list"
-            )
+            raise ValueError(f"manifest {self.manifest_path} 'sources' must be a list")
         self._sources: list[dict[str, Any]] = list(sources)
 
     def sources(self) -> list[dict[str, Any]]:
@@ -100,12 +94,8 @@ class ManifestAdapter:
         endpoint = src.get("endpoint")
         handler = _HANDLERS.get(endpoint)
         if handler is None:
-            raise KeyError(
-                f"no handler registered for endpoint {endpoint!r}"
-            )
+            raise KeyError(f"no handler registered for endpoint {endpoint!r}")
         field_map = src.get("field_map") or {}
         if not isinstance(field_map, dict):
-            raise ValueError(
-                f"source {source_id} 'field_map' must be a dict"
-            )
+            raise ValueError(f"source {source_id} 'field_map' must be a dict")
         return handler(symbol, field_map)

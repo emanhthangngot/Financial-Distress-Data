@@ -33,12 +33,7 @@ def _default_manifest() -> Path:
 
 
 def _default_evidence() -> Path:
-    return (
-        Path(__file__).resolve().parents[2]
-        / "docs"
-        / "evidence"
-        / "airbyte_manifest_run.json"
-    )
+    return Path(__file__).resolve().parents[2] / "docs" / "evidence" / "airbyte_manifest_run.json"
 
 
 def run_smoke(

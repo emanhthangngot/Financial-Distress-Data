@@ -43,9 +43,7 @@ def test_manifest_loads_with_two_sources() -> None:
     mod = importlib.import_module(ADAPTER_MODULE)
     adapter = mod.ManifestAdapter(MANIFEST_YAML)
     sources = adapter.sources()
-    assert len(sources) >= 2, (
-        "manifest must list at least TCBS and CafeF"
-    )
+    assert len(sources) >= 2, "manifest must list at least TCBS and CafeF"
     ids = {s["source_id"] for s in sources}
     assert {"tcbs", "cafef"}.issubset(ids)
 
@@ -85,9 +83,7 @@ def test_manifest_adapter_fetch_uses_field_map(
     # Every field in the manifest's field_map must appear as a key in
     # the record returned by fetch().
     for manifest_field in field_map:
-        assert manifest_field in record, (
-            f"fetch() result missing manifest field {manifest_field}"
-        )
+        assert manifest_field in record, f"fetch() result missing manifest field {manifest_field}"
 
 
 def test_manifest_adapter_disabled_source_returns_none() -> None:
@@ -137,9 +133,7 @@ def test_run_manifest_smoke_writes_evidence_json() -> None:
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert EVIDENCE_JSON.exists(), (
-        f"smoke runner must write evidence to {EVIDENCE_JSON}"
-    )
+    assert EVIDENCE_JSON.exists(), f"smoke runner must write evidence to {EVIDENCE_JSON}"
     payload = json.loads(EVIDENCE_JSON.read_text(encoding="utf-8"))
     assert "sources" in payload
     assert "records" in payload

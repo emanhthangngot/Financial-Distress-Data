@@ -49,10 +49,8 @@ def classify_view(name: str) -> str:
         If ``name`` does not start with ``gold_<allowed_layer>_``.
     """
     if not name.startswith("gold_"):
-        raise ValueError(
-            f"view {name!r} does not start with 'gold_'"
-        )
-    tail = name[len("gold_"):]
+        raise ValueError(f"view {name!r} does not start with 'gold_'")
+    tail = name[len("gold_") :]
     for layer in ALLOWED_LAYERS:
         prefix = f"{layer}_"
         if tail.startswith(prefix):
@@ -69,9 +67,7 @@ def _parse_view_names(sql_path: Path) -> list[str]:
     return _VIEW_NAME_RE.findall(text)
 
 
-def check_duckdb_views(
-    sql_path: Path, evidence_path: Path
-) -> dict[str, object]:
+def check_duckdb_views(sql_path: Path, evidence_path: Path) -> dict[str, object]:
     """Validate every view in ``sql_path`` and write the evidence JSON.
 
     Parameters
@@ -143,8 +139,7 @@ def main(argv: list[str] | None = None) -> int:
         "--evidence",
         type=Path,
         default=None,
-        help="Path to write the evidence JSON to "
-        "(default: docs/evidence/dbt_macro_check.json)",
+        help="Path to write the evidence JSON to " "(default: docs/evidence/dbt_macro_check.json)",
     )
     args = parser.parse_args(argv)
 
