@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.jobs.stage1_evidence_job import (
     DEFAULT_BUCKET,

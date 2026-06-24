@@ -22,6 +22,8 @@ Why it matters: a missed early warning on a stressed issuer costs downstream cap
 
 Each node in the diagram below is a **deployable unit**: Airflow, Kafka, Flink (opt-in), PySpark (local mode), MinIO, PostgreSQL, DuckDB, and DBeaver run as separate processes or containers. Arrows follow the data flow direction; solid arrows are the primary Stage 1 paths, dashed arrows mark optional or profile-gated flows (for example the Flink streaming path, which is started with `--profile flink`).
 
+DuckDB is used only as a local, single-node SQL inspection engine for DBeaver and reviewer evidence over MinIO Parquet. It is not a horizontally scalable serving layer, and pipeline correctness does not depend on DuckDB; governance records are stored in PostgreSQL `project_metadata` with MinIO Parquet evidence mirrors.
+
 ![Stage 1 architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
 
 ## System Deployment Diagram

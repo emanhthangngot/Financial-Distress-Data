@@ -144,7 +144,7 @@ Implemented helpers:
 
 ```text
 src/transforms/silver/core.py
-src/transforms/silver/spark.py
+src/transforms/silver/bronze_to_silver_spark.py
 src/transforms/bronze_to_silver.py
 ```
 
@@ -404,7 +404,7 @@ The function accepts market facts for extension, but the currently implemented r
 
 ### Feature Tables
 
-Implemented in `src/transforms/features/pit.py`.
+Implemented in `src/transforms/features/point_in_time.py`.
 
 Tables:
 

@@ -1,8 +1,10 @@
 """
 Point-in-time feature join helpers.
 
-Builds the unified 4Q-financial, 30D-market, and 30D-news feature frames for each company-quarter,
-respecting the as-of timestamp to avoid label leakage in downstream ML training.
+Point-in-time joins attach only feature rows whose event timestamp is less than
+or equal to a reference row's as-of timestamp. For Stage 1 this prevents future
+market or news observations from leaking into company-quarter feature rows that
+are keyed by ``report_release_date`` or ``report_period``.
 """
 
 from __future__ import annotations
