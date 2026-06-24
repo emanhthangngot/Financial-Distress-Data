@@ -160,6 +160,13 @@ ITEMS: tuple[RubricItem, ...] = (
         points=2,
         evidence_check=lambda: _exists("docs/01_data_generator.md"),
     ),
+    RubricItem(
+        idx=50,
+        category="Implement Data Generator",
+        claim="Streaming generator is driven by configuration",
+        points=2,
+        evidence_check=lambda: _exists("configs/collector_config.yaml"),
+    ),
     # 3. Processing Jobs (Spark + Flink) (20 pts)
     RubricItem(
         idx=12,
@@ -469,7 +476,7 @@ ITEMS: tuple[RubricItem, ...] = (
     ),
     # 10. Total row (CSV footer)
     RubricItem(
-        idx=49,
+        idx=51,
         category="Rubric total",
         claim="Sum",
         points=0,
