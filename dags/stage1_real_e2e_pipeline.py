@@ -83,7 +83,7 @@ def consume_kafka_events_to_bronze() -> list[dict]:
 
 
 def run_spark_bronze_to_silver_gold() -> dict[str, int]:
-    return run_stage1_spark_lakehouse(_bucket())
+    return run_stage1_spark_lakehouse(_bucket(), evidence_run_id=current_evidence_run_id())
 
 
 def run_silver_gold_dq_gate() -> list[dict]:

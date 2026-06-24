@@ -617,7 +617,9 @@ def build_feat_company_unified_spark(obt_df: Any, market_df: Any) -> Any:
     )
 
 
-def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
+def run_stage1_spark_lakehouse(
+    bucket: str = DEFAULT_BUCKET, evidence_run_id: str | None = None
+) -> dict[str, int]:
     _clear_output_prefixes(bucket)
     spark = _spark_session()
     registry = InMemorySchemaRegistry()
@@ -660,6 +662,10 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             streaming_prices_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.price_events/*/*/*/*.parquet"
             )
+            if evidence_run_id is not None and "evidence_run_id" in streaming_prices_df.columns:
+                streaming_prices_df = streaming_prices_df.filter(
+                    F.col("evidence_run_id") == evidence_run_id
+                )
             aligned_stream_df = streaming_prices_df.select(
                 F.col("ticker"),
                 F.substring(F.col("event_timestamp"), 1, 10).alias("trading_date"),
@@ -717,6 +723,8 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             news_bronze_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.news_events/*/*/*/*.parquet"
             )
+            if evidence_run_id is not None and "evidence_run_id" in news_bronze_df.columns:
+                news_bronze_df = news_bronze_df.filter(F.col("evidence_run_id") == evidence_run_id)
             news_fact_df = build_fact_news_sentiment_spark(news_bronze_df)
         except Exception:
             schema = StructType(
@@ -741,6 +749,10 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             alert_bronze_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.alert_events/*/*/*/*.parquet"
             )
+            if evidence_run_id is not None and "evidence_run_id" in alert_bronze_df.columns:
+                alert_bronze_df = alert_bronze_df.filter(
+                    F.col("evidence_run_id") == evidence_run_id
+                )
             alert_fact_df = build_fact_market_alert_spark(alert_bronze_df)
         except Exception:
             schema = StructType(
