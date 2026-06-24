@@ -8,7 +8,7 @@ module rather than the inner subpackages.
 
 from __future__ import annotations
 
-from src.transforms.features.pit import (
+from src.transforms.features.point_in_time import (
     build_feat_company_financial_4q,
     build_feat_company_market_30d,
     build_feat_company_news_30d,

@@ -13,7 +13,7 @@ This prevents a single invalid bronze row from silently passing the smoke gate.
 
 from __future__ import annotations
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
 from src.metadata.schema_registry import InMemorySchemaRegistry
 from src.transforms.bronze_to_silver import bronze_to_silver
 

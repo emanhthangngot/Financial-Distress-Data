@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.io.minio_writer import write_minio_dataset
 from src.io.paths import DEFAULT_BUCKET

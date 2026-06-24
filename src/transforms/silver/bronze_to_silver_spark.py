@@ -1,9 +1,10 @@
 """
 PySpark implementation of the Bronze-to-Silver pipeline.
 
-Reads Bronze Parquet, applies the core transforms, and overwrites the affected Silver partitions.
-Handles schema drift by widening columns and logging rejected rows to
-``project_metadata.failed_records``.
+Reads Bronze Parquet, applies the core transforms, and overwrites the affected
+Silver partitions. Handles schema drift by widening columns, routes rejected rows
+to ``project_metadata.failed_records``, and deduplicates by business keys using
+the newest ``created_ts``.
 """
 
 from __future__ import annotations
@@ -60,6 +61,8 @@ def bronze_to_silver_spark(
         .withColumn("raw_payload", raw_payload)
     )
     valid = normalized.filter(~missing_required_expr).select(*all_fields)
+
+    # Keep the latest source version per business key so Bronze replay is idempotent.
     window = Window.partitionBy(*dedup_keys).orderBy(F.col("created_ts").desc_nulls_last())
     silver = (
         valid.withColumn("_row_number", F.row_number().over(window))
