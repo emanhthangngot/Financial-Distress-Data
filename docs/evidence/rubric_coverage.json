@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-06-23T06:01:56.790001+00:00",
-  "rubric_total": 98,
-  "covered_points": 98,
+  "generated_at": "2026-06-24T09:40:08.006753+00:00",
+  "rubric_total": 100,
+  "covered_points": 100,
   "partial_points": 0,
   "missing_points": 0,
   "coverage_pct": 100.0,
@@ -114,6 +114,16 @@
       "status": "covered",
       "evidence": [
         "docs/01_data_generator.md"
+      ]
+    },
+    {
+      "idx": 50,
+      "category": "Implement Data Generator",
+      "claim": "Streaming generator is driven by configuration",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "configs/collector_config.yaml"
       ]
     },
     {
@@ -505,7 +515,7 @@
       ]
     },
     {
-      "idx": 49,
+      "idx": 51,
       "category": "Rubric total",
       "claim": "Sum",
       "points": 0,
