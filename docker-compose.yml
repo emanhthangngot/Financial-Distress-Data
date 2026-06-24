@@ -81,6 +81,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
@@ -117,6 +119,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
@@ -147,6 +151,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence

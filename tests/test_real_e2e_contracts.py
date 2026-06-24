@@ -7,7 +7,7 @@ import pytest
 
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.jobs.kafka_to_bronze_job import build_stage1_stream_events
-from src.jobs.stage1_spark_lakehouse_job import spark_runtime_config
+from src.jobs.stage1_spark_lakehouse_job import run_stage1_spark_lakehouse, spark_runtime_config
 from src.streaming.kafka_producer import serialize_event
 
 
@@ -158,6 +158,19 @@ def test_real_e2e_dq_task_uses_actual_lakehouse_outputs():
 
     assert "build_actual_dq_checks" in source_names
     assert "build_evidence_payload" not in source_names
+
+
+def test_real_e2e_spark_task_passes_current_run_id_to_filter_streaming_bronze():
+    module = importlib.import_module("dags.stage1_real_e2e_pipeline")
+
+    source_names = module.run_spark_bronze_to_silver_gold.__code__.co_names
+
+    assert "current_evidence_run_id" in source_names
+    assert "run_stage1_spark_lakehouse" in source_names
+
+
+def test_spark_lakehouse_job_accepts_evidence_run_id_filter():
+    assert "evidence_run_id" in run_stage1_spark_lakehouse.__code__.co_varnames
 
 
 def test_stage1_dq_failure_probe_script_uses_intentional_failure_checks():
