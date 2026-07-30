@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flink Streaming Evidence</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; color: #162033; background: #f5f7fa; }
+    .page { width: 1280px; min-height: 900px; padding: 34px 42px; box-sizing: border-box; }
+    h1 { margin: 0 0 8px; font-size: 34px; }
+    .subtitle { color: #5a6572; margin-bottom: 22px; }
+    .banner { background: #fff3cd; border: 1px solid #dfc56c; border-radius: 6px; padding: 12px 14px; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .panel { background: white; border: 1px solid #d7dde6; border-radius: 8px; padding: 18px; }
+    h2 { margin: 0 0 14px; font-size: 22px; }
+    .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+    .box { background: #f0f5ff; border: 1px solid #cbd9f6; border-radius: 6px; padding: 12px; min-height: 86px; }
+    .box strong { display: block; margin-bottom: 5px; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { border-bottom: 1px solid #e3e7ed; padding: 10px; text-align: left; }
+    th { background: #eef3f8; }
+    code { background: #eef1f6; padding: 2px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Flink Streaming Evidence</h1>
+    <div class="subtitle">Generated from checked-in Stage 1 evidence. Local reviewer view for the opt-in Flink rubric rows.</div>
+    <div class="banner">Truthfulness note: Flink is an opt-in local runtime gated by <code>docker compose --profile flink</code> and <code>ENABLE_FLINK=1</code>. The default Phase 1 proof uses the Python micro-batch path; this view documents the Flink wiring and window-processing contract without claiming enterprise Flink production readiness.</div>
+
+    <section class="panel">
+      <h2>Opt-in Streaming Flow</h2>
+      <div class="flow">
+        <div class="box"><strong>1. Kafka topics</strong><code>financial.price_events</code><br><code>financial.news_events</code><br><code>financial.alert_events</code></div>
+        <div class="box"><strong>2. Flink JobManager</strong>Profile-gated service accepts uploaded jobs through REST.</div>
+        <div class="box"><strong>3. Window contract</strong>Burst and late-arrival events are grouped by event-time windows.</div>
+        <div class="box"><strong>4. Bronze output</strong>Micro-batches land under event-date and event-hour partitions.</div>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-top: 18px;">
+      <div class="panel">
+        <h2>Rubric Rows</h2>
+        <table>
+          <thead><tr><th>Requirement</th><th>Repo proof</th></tr></thead>
+          <tbody>
+            <tr><td>Baseline</td><td><code>src/streaming/flink/client.py</code>, <code>docker-compose.yml</code></td></tr>
+            <tr><td>Handle burst</td><td><code>streaming_problem_factory.py</code> and <code>burst_count = 200</code></td></tr>
+            <tr><td>Handle late arrival</td><td><code>late_arrival.max_lag_seconds = 3600</code></td></tr>
+            <tr><td>Other streaming problem</td><td><code>streaming_rate = 0.015</code> duplicate rate</td></tr>
+            <tr><td>Window processing</td><td>event-date and event-hour partition windows</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Evidence Metrics</h2>
+        <table>
+          <tbody>
+            <tr><td>Burst records</td><td>200</td></tr>
+            <tr><td>Late records</td><td>2</td></tr>
+            <tr><td>Duplicate records</td><td>3</td></tr>
+            <tr><td>Kafka topics with offsets</td><td>3</td></tr>
+            <tr><td>Evidence audit status</td><td>pass</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

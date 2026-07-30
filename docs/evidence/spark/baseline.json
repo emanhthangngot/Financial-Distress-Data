@@ -1,0 +1,193 @@
+{
+  "duration": {
+    "max_seconds": 1.864839,
+    "median_seconds": 1.251296,
+    "min_seconds": 0.890868,
+    "runs_seconds": [
+      1.864839,
+      1.469318,
+      1.251296,
+      0.914447,
+      0.890868
+    ]
+  },
+  "input_counts": {
+    "companies": 10204,
+    "financial_statements": 80000
+  },
+  "input_digest": "bf26312958c541083f52b57d0398b68ed7061bdcb38478a1a4a0cf6e33517779",
+  "output": [
+    {
+      "company_count": 1000,
+      "sector": "Energy",
+      "source_id_count": 8000,
+      "statement_count": 8000,
+      "total_assets": "14428000000.00"
+    },
+    {
+      "company_count": 1000,
+      "sector": "Healthcare",
+      "source_id_count": 8000,
+      "statement_count": 8000,
+      "total_assets": "14428800000.00"
+    },
+    {
+      "company_count": 6000,
+      "sector": "Manufacturing",
+      "source_id_count": 48000,
+      "statement_count": 48000,
+      "total_assets": "62565600000.00"
+    },
+    {
+      "company_count": 1000,
+      "sector": "Retail",
+      "source_id_count": 8000,
+      "statement_count": 8000,
+      "total_assets": "14427200000.00"
+    },
+    {
+      "company_count": 1000,
+      "sector": "Technology",
+      "source_id_count": 8000,
+      "statement_count": 8000,
+      "total_assets": "14426400000.00"
+    }
+  ],
+  "output_digest": "404f6e52d8b959a4164974a6836d0c73837012e53fd014b2f85fcabc727b7b64",
+  "output_rows": 5,
+  "plan_signals": {
+    "broadcast_count": 0,
+    "exchange_count": 6,
+    "physical_plan": "*(13) Sort [sector#10956 ASC NULLS FIRST], true, 0\n+- Exchange rangepartitioning(sector#10956 ASC NULLS FIRST, 24), ENSURE_REQUIREMENTS, [plan_id=1681]\n   +- *(12) HashAggregate(keys=[sector#10956], functions=[count(ticker#11597), first(count(1)#11600L, true), count(source_record_id#11598), first(sum(CAST(total_assets AS DECIMAL(38,2)))#11602, true)], output=[sector#10956, company_count#11003L, statement_count#11005L, source_id_count#11006L, total_assets#11008])\n      +- Exchange hashpartitioning(sector#10956, 24), ENSURE_REQUIREMENTS, [plan_id=1677]\n         +- *(11) HashAggregate(keys=[sector#10956], functions=[partial_count(ticker#11597) FILTER (WHERE (gid#11596 = 1)), partial_first(count(1)#11600L, true) FILTER (WHERE (gid#11596 = 0)), partial_count(source_record_id#11598) FILTER (WHERE (gid#11596 = 2)), partial_first(sum(CAST(total_assets AS DECIMAL(38,2)))#11602, true) FILTER (WHERE (gid#11596 = 0))], output=[sector#10956, count#11900L, first#11901L, valueSet#11902, count#11903L, first#11904, valueSet#11905])\n            +- *(11) HashAggregate(keys=[sector#10956, ticker#11597, source_record_id#11598, gid#11596], functions=[count(1), sum(CAST(total_assets AS DECIMAL(38,2))#11599)], output=[sector#10956, ticker#11597, source_record_id#11598, gid#11596, count(1)#11600L, sum(CAST(total_assets AS DECIMAL(38,2)))#11602])\n               +- Exchange hashpartitioning(sector#10956, ticker#11597, source_record_id#11598, gid#11596, 24), ENSURE_REQUIREMENTS, [plan_id=1672]\n                  +- *(10) HashAggregate(keys=[sector#10956, ticker#11597, source_record_id#11598, gid#11596], functions=[partial_count(1), partial_sum(CAST(total_assets AS DECIMAL(38,2))#11599)], output=[sector#10956, ticker#11597, source_record_id#11598, gid#11596, count#11909L, sum#11910, isEmpty#11911])\n                     +- *(10) Expand [[sector#10956, null, null, 0, cast(total_assets#102L as decimal(38,2))], [sector#10956, ticker#98, null, 1, null], [sector#10956, null, source_record_id#118, 2, null]], [sector#10956, ticker#11597, source_record_id#11598, gid#11596, CAST(total_assets AS DECIMAL(38,2))#11599]\n                        +- *(10) Project [ticker#98, total_assets#102L, source_record_id#118, coalesce(sector#4, Unknown) AS sector#10956]\n                           +- *(10) SortMergeJoin [ticker#98], [ticker#0], Inner\n                              :- *(6) Sort [ticker#98 ASC NULLS FIRST], false, 0\n                              :  +- Exchange hashpartitioning(ticker#98, 24), ENSURE_REQUIREMENTS, [plan_id=1646]\n                              :     +- *(5) Project [ticker#98, total_assets#102L, source_record_id#118]\n                              :        +- *(5) Filter (_rn#10885 = 1)\n                              :           +- Window [row_number() windowspecdefinition(ticker#98, report_period#99, created_ts#116 DESC NULLS LAST, specifiedwindowframe(RowFrame, unboundedpreceding$(), currentrow$())) AS _rn#10885], [ticker#98, report_period#99], [created_ts#116 DESC NULLS LAST]\n                              :              +- WindowGroupLimit [ticker#98, report_period#99], [created_ts#116 DESC NULLS LAST], row_number(), 1, Final\n                              :                 +- *(4) Sort [ticker#98 ASC NULLS FIRST, report_period#99 ASC NULLS FIRST, created_ts#116 DESC NULLS LAST], false, 0\n                              :                    +- Exchange hashpartitioning(ticker#98, report_period#99, 24), ENSURE_REQUIREMENTS, [plan_id=1636]\n                              :                       +- WindowGroupLimit [ticker#98, report_period#99], [created_ts#116 DESC NULLS LAST], row_number(), 1, Partial\n                              :                          +- *(3) Sort [ticker#98 ASC NULLS FIRST, report_period#99 ASC NULLS FIRST, created_ts#116 DESC NULLS LAST], false, 0\n                              :                             +- Union\n                              :                                :- *(1) Project [ticker#98, report_period#99, total_assets#102L, created_ts#116, source_record_id#118]\n                              :                                :  +- *(1) Filter ((isnotnull(schema_version#119L) AND (schema_version#119L = 1)) AND isnotnull(ticker#98))\n                              :                                :     +- InMemoryTableScan [created_ts#116, report_period#99, schema_version#119L, source_record_id#118, ticker#98, total_assets#102L], [isnotnull(schema_version#119L), (schema_version#119L = 1), isnotnull(ticker#98)]\n                              :                                :           +- InMemoryRelation [ticker#98, report_period#99, fiscal_year#100L, fiscal_quarter#101L, total_assets#102L, total_liabilities#103L, equity#104L, current_assets#105L, current_liabilities#106L, revenue#107L, ebit#108L, interest_expense#109L, net_income#110L, operating_cash_flow#111L, retained_earnings#112L, statement_type#113, report_release_date#114, event_timestamp#115, created_ts#116, source_system#117, source_record_id#118, schema_version#119L], StorageLevel(disk, memory, deserialized, 1 replicas)\n                              :                                :                 +- *(1) ColumnarToRow\n                              :                                :                    +- FileScan parquet [ticker#98,report_period#99,fiscal_year#100L,fiscal_quarter#101L,total_assets#102L,total_liabilities#103L,equity#104L,current_assets#105L,current_liabilities#106L,revenue#107L,ebit#108L,interest_expense#109L,net_income#110L,operating_cash_flow#111L,retained_earnings#112L,statement_type#113,report_release_date#114,event_timestamp#115,created_ts#116,source_system#117,source_record_id#118,schema_version#119L] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[s3a://financial-distress-lake/source/generator/run_id=generator-eviden..., PartitionFilters: [], PushedFilters: [], ReadSchema: struct<ticker:string,report_period:string,fiscal_year:bigint,fiscal_quarter:bigint,total_assets:b...\n                              :                                +- *(2) Project [ticker#10837, report_period#10838, total_assets#10841L, created_ts#10855, source_record_id#10857]\n                              :                                   +- *(2) Filter ((isnotnull(schema_version#10858L) AND (schema_version#10858L = 2)) AND isnotnull(ticker#10837))\n                              :                                      +- InMemoryTableScan [created_ts#10855, report_period#10838, schema_version#10858L, source_record_id#10857, ticker#10837, total_assets#10841L], [isnotnull(schema_version#10858L), (schema_version#10858L = 2), isnotnull(ticker#10837)]\n                              :                                            +- InMemoryRelation [ticker#10837, report_period#10838, fiscal_year#10839L, fiscal_quarter#10840L, total_assets#10841L, total_liabilities#10842L, equity#10843L, current_assets#10844L, current_liabilities#10845L, revenue#10846L, ebit#10847L, interest_expense#10848L, net_income#10849L, operating_cash_flow#10850L, retained_earnings#10851L, statement_type#10852, report_release_date#10853, event_timestamp#10854, created_ts#10855, source_system#10856, source_record_id#10857, schema_version#10858L], StorageLevel(disk, memory, deserialized, 1 replicas)\n                              :                                                  +- *(1) ColumnarToRow\n                              :                                                     +- FileScan parquet [ticker#98,report_period#99,fiscal_year#100L,fiscal_quarter#101L,total_assets#102L,total_liabilities#103L,equity#104L,current_assets#105L,current_liabilities#106L,revenue#107L,ebit#108L,interest_expense#109L,net_income#110L,operating_cash_flow#111L,retained_earnings#112L,statement_type#113,report_release_date#114,event_timestamp#115,created_ts#116,source_system#117,source_record_id#118,schema_version#119L] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[s3a://financial-distress-lake/source/generator/run_id=generator-eviden..., PartitionFilters: [], PushedFilters: [], ReadSchema: struct<ticker:string,report_period:string,fiscal_year:bigint,fiscal_quarter:bigint,total_assets:b...\n                              +- *(9) Project [ticker#0, sector#4]\n                                 +- *(9) Filter (_rn#10631 = 1)\n                                    +- Window [row_number() windowspecdefinition(ticker#0, created_ts#8 DESC NULLS LAST, specifiedwindowframe(RowFrame, unboundedpreceding$(), currentrow$())) AS _rn#10631], [ticker#0], [created_ts#8 DESC NULLS LAST]\n                                       +- WindowGroupLimit [ticker#0], [created_ts#8 DESC NULLS LAST], row_number(), 1, Final\n                                          +- *(8) Sort [ticker#0 ASC NULLS FIRST, created_ts#8 DESC NULLS LAST], false, 0\n                                             +- Exchange hashpartitioning(ticker#0, 24), ENSURE_REQUIREMENTS, [plan_id=1656]\n                                                +- WindowGroupLimit [ticker#0], [created_ts#8 DESC NULLS LAST], row_number(), 1, Partial\n                                                   +- *(7) Sort [ticker#0 ASC NULLS FIRST, created_ts#8 DESC NULLS LAST], false, 0\n                                                      +- *(7) Filter isnotnull(ticker#0)\n                                                         +- InMemoryTableScan [ticker#0, sector#4, created_ts#8], [isnotnull(ticker#0)]\n                                                               +- InMemoryRelation [ticker#0, company_name#1, exchange#2, industry#3, sector#4, listing_date#5, delisted_flag#6, company_size#7, created_ts#8, source_system#9, source_record_id#10, high_cardinality_id#11, schema_version#12L, is_injected_duplicate#13], StorageLevel(disk, memory, deserialized, 1 replicas)\n                                                                     +- *(1) ColumnarToRow\n                                                                        +- FileScan parquet [ticker#0,company_name#1,exchange#2,industry#3,sector#4,listing_date#5,delisted_flag#6,company_size#7,created_ts#8,source_system#9,source_record_id#10,high_cardinality_id#11,schema_version#12L,is_injected_duplicate#13] Batched: true, DataFilters: [], Format: Parquet, Location: InMemoryFileIndex(1 paths)[s3a://financial-distress-lake/source/generator/run_id=generator-eviden..., PartitionFilters: [], PushedFilters: [], ReadSchema: struct<ticker:string,company_name:string,exchange:string,industry:string,sector:string,listing_da...\n",
+    "sort_count": 7,
+    "window_count": 6
+  },
+  "protocol": {
+    "adaptive_enabled": false,
+    "auto_broadcast_enabled": false,
+    "measured_runs": 5,
+    "salt_buckets": 0,
+    "shuffle_partitions": 24,
+    "warmup_runs": 1
+  },
+  "run_id": "generator-evidence-v1",
+  "runtime": {
+    "default_parallelism": 16,
+    "platform": "Linux-7.1.2-arch3-1-x86_64-with-glibc2.36",
+    "python": "3.11.11",
+    "spark": "3.5.6",
+    "ui_url": "http://localhost:4040"
+  },
+  "schema_version": 1,
+  "status": "pass",
+  "storage": {
+    "average_file_bytes": 232336.0,
+    "file_count": 24,
+    "files": [
+      {
+        "bytes": 232243,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00000-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232457,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00001-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232169,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00002-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232509,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00003-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232727,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00004-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232005,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00005-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232711,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00006-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232925,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00007-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232347,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00008-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 231973,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00009-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232728,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00010-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232673,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00011-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232764,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00012-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232217,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00013-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232194,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00014-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 233328,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00015-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232679,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00016-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232334,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00017-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 231937,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00018-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232625,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00019-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 231905,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00020-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 229068,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00021-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232877,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00022-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      },
+      {
+        "bytes": 232669,
+        "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline/part-00023-25660989-be49-4842-9783-618b68dee72c-c000.snappy.parquet"
+      }
+    ],
+    "filtered_read_seconds": 0.438756,
+    "filtered_row_count": 40000,
+    "filtered_year": 2024,
+    "path": "s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1/storage/baseline",
+    "row_count": 80000,
+    "total_bytes": 5576064,
+    "write_seconds": 3.035214
+  },
+  "variant": "baseline"
+}

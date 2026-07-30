@@ -1,0 +1,8 @@
+{
+  "contract_check": true,
+  "dataset": "feat_company_unified",
+  "dp": "DP3",
+  "dq_passed": true,
+  "row_count": 200,
+  "schema_match": true
+}

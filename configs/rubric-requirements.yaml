@@ -1,0 +1,56 @@
+schema_version: 1
+allowed_proof_types:
+  - code_reference
+  - config
+  - document
+  - log
+  - metrics
+  - query_output
+  - screenshot
+  - ui_export
+criteria:
+  - {id: R01, title: "README, domain, structure, TOC, docstrings, deployment diagram", category: documentation, points: 10, required_proof_types: [document, code_reference, screenshot]}
+  - {id: R02, title: "Docker and Docker Compose usage", category: engineering, points: 1, required_proof_types: [config, log]}
+  - {id: R03, title: "Dockerfile optimization", category: engineering, points: 1, required_proof_types: [document, metrics]}
+  - {id: R04, title: "Simulate offline skew", category: generator, points: 2, required_proof_types: [config, metrics, screenshot]}
+  - {id: R05, title: "Simulate high cardinality", category: generator, points: 2, required_proof_types: [config, metrics, query_output]}
+  - {id: R06, title: "Simulate schema evolution", category: generator, points: 2, required_proof_types: [config, metrics, screenshot]}
+  - {id: R07, title: "Simulate another offline problem", category: generator, points: 2, required_proof_types: [config, metrics, document]}
+  - {id: R08, title: "Use offline generator configuration", category: generator, points: 2, required_proof_types: [config, log]}
+  - {id: R09, title: "Store simulated offline data for Bronze ingestion", category: generator, points: 2, required_proof_types: [metrics, screenshot]}
+  - {id: R10, title: "Simulate streaming burst", category: generator, points: 2, required_proof_types: [config, metrics, screenshot]}
+  - {id: R11, title: "Simulate late arrivals", category: generator, points: 2, required_proof_types: [config, metrics, screenshot]}
+  - {id: R12, title: "Simulate another streaming problem", category: generator, points: 2, required_proof_types: [config, metrics, document]}
+  - {id: R13, title: "Use streaming generator configuration", category: generator, points: 2, required_proof_types: [config, log]}
+  - {id: R14, title: "Spark baseline", category: spark, points: 2, required_proof_types: [metrics, screenshot]}
+  - {id: R15, title: "Spark handles skew with explanation", category: spark, points: 2, required_proof_types: [document, metrics, screenshot]}
+  - {id: R16, title: "Spark handles high cardinality", category: spark, points: 2, required_proof_types: [document, metrics, screenshot]}
+  - {id: R17, title: "Spark handles schema evolution", category: spark, points: 2, required_proof_types: [code_reference, metrics, screenshot]}
+  - {id: R18, title: "Spark handles another offline problem", category: spark, points: 2, required_proof_types: [code_reference, metrics, screenshot]}
+  - {id: R19, title: "Spark job integrated into pipelines", category: spark, points: 2, required_proof_types: [log, screenshot]}
+  - {id: R20, title: "Flink baseline", category: flink, points: 2, required_proof_types: [metrics, screenshot]}
+  - {id: R21, title: "Flink handles burst", category: flink, points: 2, required_proof_types: [metrics, screenshot]}
+  - {id: R22, title: "Flink handles late arrival", category: flink, points: 2, required_proof_types: [code_reference, metrics, screenshot]}
+  - {id: R23, title: "Flink handles another streaming problem", category: flink, points: 2, required_proof_types: [code_reference, metrics, screenshot]}
+  - {id: R24, title: "Flink window processing", category: flink, points: 2, required_proof_types: [code_reference, query_output, screenshot]}
+  - {id: R25, title: "Lakehouse storage optimization", category: storage, points: 2, required_proof_types: [document, metrics, query_output]}
+  - {id: R26, title: "Data warehouse optimization", category: storage, points: 2, required_proof_types: [document, metrics, query_output]}
+  - {id: R27, title: "DP1 ingest stage", category: orchestration, points: 2, required_proof_types: [log, screenshot]}
+  - {id: R28, title: "DP1 validate stage", category: orchestration, points: 2, required_proof_types: [log, query_output, screenshot]}
+  - {id: R29, title: "DP2 ingest stage", category: orchestration, points: 2, required_proof_types: [log, screenshot]}
+  - {id: R30, title: "DP2 validate stage", category: orchestration, points: 2, required_proof_types: [log, query_output, screenshot]}
+  - {id: R31, title: "DP3 ingest stage", category: orchestration, points: 2, required_proof_types: [log, screenshot]}
+  - {id: R32, title: "DP3 validate stage", category: orchestration, points: 2, required_proof_types: [log, query_output, screenshot]}
+  - {id: R33, title: "DP1 lineage", category: governance, points: 2, required_proof_types: [ui_export, screenshot]}
+  - {id: R34, title: "DP1 validation and contract", category: governance, points: 2, required_proof_types: [ui_export, screenshot]}
+  - {id: R35, title: "DP2 lineage", category: governance, points: 2, required_proof_types: [ui_export, screenshot]}
+  - {id: R36, title: "DP2 validation and contract", category: governance, points: 2, required_proof_types: [ui_export, screenshot]}
+  - {id: R37, title: "DP3 lineage", category: governance, points: 2, required_proof_types: [ui_export, screenshot]}
+  - {id: R38, title: "DP3 validation and contract", category: governance, points: 2, required_proof_types: [ui_export, screenshot]}
+  - {id: R39, title: "Visualize tables on all zones", category: schema, points: 2, required_proof_types: [query_output, screenshot]}
+  - {id: R40, title: "SCD Type 2 dimension", category: schema, points: 1, required_proof_types: [query_output, screenshot]}
+  - {id: R41, title: "Feature tables have event and creation timestamps", category: schema, points: 1, required_proof_types: [code_reference, screenshot]}
+  - {id: R42, title: "Dimension and fact relationships", category: schema, points: 2, required_proof_types: [query_output, screenshot]}
+  - {id: R43, title: "Naming convention", category: schema, points: 2, required_proof_types: [document, screenshot]}
+  - {id: R44, title: "Cryptographic run manifest and evidence integrity", category: novel_idea, points: 5, required_proof_types: [document, code_reference, metrics]}
+  - {id: R45, title: "Point-in-time leakage prevention and audit", category: novel_idea, points: 5, required_proof_types: [document, code_reference, metrics]}

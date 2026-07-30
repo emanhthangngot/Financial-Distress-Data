@@ -1,0 +1,47 @@
+schema_version: 1
+seed: 42
+run_id: generator-evidence-v1
+
+offline:
+  companies: 10000
+  high_cardinality_ids: 10000
+  quarters: 8
+  dominant_sector: Manufacturing
+  dominant_sector_rate: 0.60
+  dominant_exchange: HOSE
+  dominant_exchange_rate: 0.70
+  duplicate_rate: 0.02
+  schema_change_quarter: 5
+
+streaming:
+  events: 50000
+  window_seconds: 10
+  baseline_events_per_window: 100
+  burst_window: 5
+  burst_multiplier: 10
+  late_rate: 0.05
+  duplicate_rate: 0.015
+  out_of_order_rate: 0.04
+  max_lateness_seconds: 300
+  max_out_of_order_seconds: 120
+
+output:
+  root: data/generated
+  format: jsonl
+  minio_bucket: financial-distress-lake
+  minio_prefix: source/generator
+  kafka_bootstrap_servers: kafka:9092
+
+profiles:
+  ci:
+    run_id: generator-ci-v1
+    offline:
+      companies: 100
+      high_cardinality_ids: 100
+      quarters: 4
+      schema_change_quarter: 3
+    streaming:
+      events: 200
+      baseline_events_per_window: 10
+      burst_window: 3
+  evidence: {}

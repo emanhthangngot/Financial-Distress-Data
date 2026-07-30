@@ -1,3 +1,10 @@
+"""
+Main Stage 1 Spark lakehouse job.
+
+Runs the end-to-end Bronze -> Silver -> Gold pipeline for Phase 1, including the distress labeler
+and the OBT builder. Invoked by the Spark DAGs and by the local evidence script.
+"""
+
 from __future__ import annotations
 
 import os
@@ -7,6 +14,7 @@ from src.io.minio_writer import clear_minio_prefix
 from src.io.paths import DEFAULT_BUCKET
 from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
 from src.metadata.schema_registry import InMemorySchemaRegistry
+from src.security.secrets import require
 from src.transforms.bronze_to_silver import bronze_to_silver_spark
 from src.transforms.gold.dim_company import build_dim_date
 from src.transforms.gold.fact_financial_statement import build_fact_financial_statement_spark
@@ -21,8 +29,8 @@ def spark_runtime_config(minio_endpoint: str | None = None) -> dict[str, str]:
     return {
         "spark.jars.packages": f"{SPARK_HADOOP_AWS_PACKAGE},{SPARK_AWS_SDK_PACKAGE}",
         "spark.hadoop.fs.s3a.endpoint": endpoint,
-        "spark.hadoop.fs.s3a.access.key": os.getenv("MINIO_ROOT_USER", "minioadmin"),
-        "spark.hadoop.fs.s3a.secret.key": os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+        "spark.hadoop.fs.s3a.access.key": require("MINIO_ROOT_USER"),
+        "spark.hadoop.fs.s3a.secret.key": require("MINIO_ROOT_PASSWORD"),
         "spark.hadoop.fs.s3a.path.style.access": "true",
         "spark.hadoop.fs.s3a.connection.ssl.enabled": "false",
         "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
@@ -92,35 +100,57 @@ def _rows_with_schema(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]],
         StructType,
     )
 
+    # Single-pass per-field type inference. Priority order matches the original
+    # loop: bool -> int (non-bool) -> (int|float) (non-bool) -> string. A column
+    # that mixes types is coerced to StringType deterministically.
     fields: list[str] = []
-    for row in rows:
-        for field in row:
-            if field not in fields:
-                fields.append(field)
+    field_state: dict[str, dict[str, bool]] = {}
 
-    schema_fields = []
-    string_fields = set()
+    def _ensure_field(name: str) -> None:
+        if name not in field_state:
+            fields.append(name)
+            field_state[name] = {
+                "saw_value": False,
+                "all_bool": True,
+                "all_int_non_bool": True,
+                "all_numeric_non_bool": True,
+            }
+
+    for row in rows:
+        for name, value in row.items():
+            _ensure_field(name)
+            if value is None:
+                continue
+            state = field_state[name]
+            state["saw_value"] = True
+            if not isinstance(value, bool):
+                state["all_bool"] = False
+            if not (isinstance(value, int) and not isinstance(value, bool)):
+                state["all_int_non_bool"] = False
+            if not (isinstance(value, (int, float)) and not isinstance(value, bool)):
+                state["all_numeric_non_bool"] = False
+
+    schema_fields: list[StructField] = []
+    string_fields: set[str] = set()
     for field in fields:
-        values = [row.get(field) for row in rows if row.get(field) is not None]
-        if not values:
-            spark_type = StringType()
+        state = field_state[field]
+        if not state["saw_value"]:
+            spark_type: Any = StringType()
             string_fields.add(field)
-        elif all(isinstance(value, bool) for value in values):
+        elif state["all_bool"]:
             spark_type = BooleanType()
-        elif all(isinstance(value, int) and not isinstance(value, bool) for value in values):
+        elif state["all_int_non_bool"]:
             spark_type = LongType()
-        elif all(
-            isinstance(value, (int, float)) and not isinstance(value, bool) for value in values
-        ):
+        elif state["all_numeric_non_bool"]:
             spark_type = DoubleType()
         else:
             spark_type = StringType()
             string_fields.add(field)
         schema_fields.append(StructField(field, spark_type, nullable=True))
 
-    normalized_rows = []
+    normalized_rows: list[dict[str, Any]] = []
     for row in rows:
-        normalized = {}
+        normalized: dict[str, Any] = {}
         for field in fields:
             value = row.get(field)
             if field in string_fields and value is not None:
@@ -587,7 +617,9 @@ def build_feat_company_unified_spark(obt_df: Any, market_df: Any) -> Any:
     )
 
 
-def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
+def run_stage1_spark_lakehouse(
+    bucket: str = DEFAULT_BUCKET, evidence_run_id: str | None = None
+) -> dict[str, int]:
     _clear_output_prefixes(bucket)
     spark = _spark_session()
     registry = InMemorySchemaRegistry()
@@ -630,6 +662,10 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             streaming_prices_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.price_events/*/*/*/*.parquet"
             )
+            if evidence_run_id is not None and "evidence_run_id" in streaming_prices_df.columns:
+                streaming_prices_df = streaming_prices_df.filter(
+                    F.col("evidence_run_id") == evidence_run_id
+                )
             aligned_stream_df = streaming_prices_df.select(
                 F.col("ticker"),
                 F.substring(F.col("event_timestamp"), 1, 10).alias("trading_date"),
@@ -687,6 +723,8 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             news_bronze_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.news_events/*/*/*/*.parquet"
             )
+            if evidence_run_id is not None and "evidence_run_id" in news_bronze_df.columns:
+                news_bronze_df = news_bronze_df.filter(F.col("evidence_run_id") == evidence_run_id)
             news_fact_df = build_fact_news_sentiment_spark(news_bronze_df)
         except Exception:
             schema = StructType(
@@ -711,6 +749,10 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             alert_bronze_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.alert_events/*/*/*/*.parquet"
             )
+            if evidence_run_id is not None and "evidence_run_id" in alert_bronze_df.columns:
+                alert_bronze_df = alert_bronze_df.filter(
+                    F.col("evidence_run_id") == evidence_run_id
+                )
             alert_fact_df = build_fact_market_alert_spark(alert_bronze_df)
         except Exception:
             schema = StructType(

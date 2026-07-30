@@ -1,0 +1,572 @@
+{
+  "status": "pass",
+  "run_id": "coursework-final-20260731T0030",
+  "earned_points": 100,
+  "total_points": 100,
+  "criteria": [
+    {
+      "id": "R01",
+      "title": "README, domain, structure, TOC, docstrings, deployment diagram",
+      "points": 10,
+      "status": "accepted",
+      "artifacts": [
+        "documents/readme.md",
+        "code/documentation-check.py",
+        "screenshots/architecture.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R02",
+      "title": "Docker and Docker Compose usage",
+      "points": 1,
+      "status": "accepted",
+      "artifacts": [
+        "config/compose.yaml",
+        "logs/quality-gates.txt"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R03",
+      "title": "Dockerfile optimization",
+      "points": 1,
+      "status": "accepted",
+      "artifacts": [
+        "documents/docker.md",
+        "metrics/docker.json"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R04",
+      "title": "Simulate offline skew",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "metrics/generator.json",
+        "screenshots/generator.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R05",
+      "title": "Simulate high cardinality",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "metrics/generator.json",
+        "queries/generator.json"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R06",
+      "title": "Simulate schema evolution",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "metrics/generator.json",
+        "screenshots/generator.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R07",
+      "title": "Simulate another offline problem",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "metrics/generator.json",
+        "documents/generator.md"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R08",
+      "title": "Use offline generator configuration",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "logs/generator.json"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R09",
+      "title": "Store simulated offline data for Bronze ingestion",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "metrics/generator.json",
+        "screenshots/generator.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R10",
+      "title": "Simulate streaming burst",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "metrics/generator.json",
+        "screenshots/generator.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R11",
+      "title": "Simulate late arrivals",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "metrics/generator.json",
+        "screenshots/generator.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R12",
+      "title": "Simulate another streaming problem",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "metrics/generator.json",
+        "documents/generator.md"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R13",
+      "title": "Use streaming generator configuration",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "config/generator.yaml",
+        "logs/generator.json"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R14",
+      "title": "Spark baseline",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "metrics/spark.json",
+        "screenshots/spark-baseline.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R15",
+      "title": "Spark handles skew with explanation",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "documents/spark.md",
+        "metrics/spark.json",
+        "screenshots/spark-optimized.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R16",
+      "title": "Spark handles high cardinality",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "documents/spark.md",
+        "metrics/spark.json",
+        "screenshots/spark-optimized.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R17",
+      "title": "Spark handles schema evolution",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "code/spark-optimized.py",
+        "metrics/spark.json",
+        "screenshots/spark-optimized.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R18",
+      "title": "Spark handles another offline problem",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "code/spark-optimized.py",
+        "metrics/spark.json",
+        "screenshots/spark-optimized.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R19",
+      "title": "Spark job integrated into pipelines",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "logs/airflow.json",
+        "screenshots/airflow-dp2.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R20",
+      "title": "Flink baseline",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "metrics/flink.json",
+        "screenshots/flink-baseline.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R21",
+      "title": "Flink handles burst",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "metrics/flink.json",
+        "screenshots/flink-optimized.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R22",
+      "title": "Flink handles late arrival",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "code/flink-job.py",
+        "metrics/flink.json",
+        "screenshots/flink-optimized.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R23",
+      "title": "Flink handles another streaming problem",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "code/flink-job.py",
+        "metrics/flink.json",
+        "screenshots/flink-restart.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R24",
+      "title": "Flink window processing",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "code/flink-job.py",
+        "queries/flink.json",
+        "screenshots/flink-optimized.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R25",
+      "title": "Lakehouse storage optimization",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "documents/spark.md",
+        "metrics/spark.json",
+        "queries/postgres-index.txt"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R26",
+      "title": "Data warehouse optimization",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "documents/spark.md",
+        "metrics/spark.json",
+        "queries/postgres-index.txt"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R27",
+      "title": "DP1 ingest stage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "logs/airflow.json",
+        "screenshots/airflow-dp1.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R28",
+      "title": "DP1 validate stage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "logs/airflow.json",
+        "queries/airflow.json",
+        "screenshots/airflow-dp1.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R29",
+      "title": "DP2 ingest stage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "logs/airflow.json",
+        "screenshots/airflow-dp2.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R30",
+      "title": "DP2 validate stage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "logs/airflow.json",
+        "queries/airflow.json",
+        "screenshots/airflow-dp2.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R31",
+      "title": "DP3 ingest stage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "logs/airflow.json",
+        "screenshots/airflow-dp3.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R32",
+      "title": "DP3 validate stage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "logs/airflow.json",
+        "queries/airflow.json",
+        "screenshots/airflow-dp3.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R33",
+      "title": "DP1 lineage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "ui/datahub.json",
+        "screenshots/datahub-dp1-lineage.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R34",
+      "title": "DP1 validation and contract",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "ui/datahub.json",
+        "screenshots/datahub-dp1-quality.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R35",
+      "title": "DP2 lineage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "ui/datahub.json",
+        "screenshots/datahub-dp2-lineage.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R36",
+      "title": "DP2 validation and contract",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "ui/datahub.json",
+        "screenshots/datahub-dp2-quality.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R37",
+      "title": "DP3 lineage",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "ui/datahub.json",
+        "screenshots/datahub-dp3-lineage.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R38",
+      "title": "DP3 validation and contract",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "ui/datahub.json",
+        "screenshots/datahub-dp3-quality.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R39",
+      "title": "Visualize tables on all zones",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "queries/schema.json",
+        "screenshots/schema.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R40",
+      "title": "SCD Type 2 dimension",
+      "points": 1,
+      "status": "accepted",
+      "artifacts": [
+        "queries/schema.json",
+        "screenshots/schema.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R41",
+      "title": "Feature tables have event and creation timestamps",
+      "points": 1,
+      "status": "accepted",
+      "artifacts": [
+        "code/schema.sql",
+        "screenshots/schema.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R42",
+      "title": "Dimension and fact relationships",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "queries/schema.json",
+        "screenshots/schema.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R43",
+      "title": "Naming convention",
+      "points": 2,
+      "status": "accepted",
+      "artifacts": [
+        "documents/schema.md",
+        "screenshots/schema.png"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R44",
+      "title": "Cryptographic run manifest and evidence integrity",
+      "points": 5,
+      "status": "accepted",
+      "artifacts": [
+        "documents/evidence-manifest.md",
+        "code/run-manifest.py",
+        "metrics/novel-ideas.json"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    },
+    {
+      "id": "R45",
+      "title": "Point-in-time leakage prevention and audit",
+      "points": 5,
+      "status": "accepted",
+      "artifacts": [
+        "documents/pit-leakage.md",
+        "code/pit.py",
+        "metrics/novel-ideas.json"
+      ],
+      "missing_proof_types": [],
+      "errors": []
+    }
+  ],
+  "failed_criteria": [],
+  "errors": []
+}

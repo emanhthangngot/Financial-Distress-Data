@@ -39,6 +39,78 @@ Only add artifacts that were produced by an actual local run.
 Use `stage1_evidence_manifest.md` to distinguish implemented behavior from
 design-only and out-of-scope items.
 
+## Generator Evidence
+
+The correlated generator run `generator-evidence-v1` is stored under
+`generator/`, with its reviewer screenshot under `screenshots/`. Reproduce it
+with:
+
+```bash
+python scripts/run_generator_and_profile.py \
+  --config configs/generator-config.yaml \
+  --profile evidence
+```
+
+Runtime publication writes Parquet to
+`financial-distress-lake/source/generator/run_id=generator-evidence-v1/` and
+events to `financial.price_events`. See `docs/data-generator.md` for measured
+characteristics and `generator/runtime-validation.json` for read-back proof.
+
+## Spark And Storage Evidence
+
+The `spark/` directory contains the correlated Stage 4 baseline, optimized,
+and comparison reports for `generator-evidence-v1`, plus immutable HTML
+snapshots from each live Spark application UI. Reviewer-facing rendered images
+are `screenshots/spark-ui-baseline.png` and
+`screenshots/spark-ui-optimized.png`.
+
+The comparison audit proves identical input/output digests, a 1.5595x median
+compute-time ratio, file compaction from 24 files to 2, and a 2.4194x filtered
+read ratio. `spark/postgres-index-benchmark.txt` records the PostgreSQL
+`EXPLAIN ANALYZE` change from sequential scan to index scan. Reproduction and
+interpretation are documented in `../spark-and-storage-optimization.md`.
+
+## Flink Streaming Evidence
+
+The `flink/` directory contains Stage 5 bounded baseline/optimized contracts,
+direct Flink REST job exports, checkpoint history, and savepoint restart
+evidence. Validate the correlated package with:
+
+```bash
+python scripts/audit_flink_evidence.py \
+  --output docs/evidence/flink/comparison.json
+```
+
+The runtime jobs consumed the same 50,212 Kafka records. The optimized job
+removed 959 duplicates with keyed TTL state and completed checkpoints. The
+restart evidence records one savepoint restore followed by completed idle
+checkpoints. Reproduction and metric interpretation are documented in
+`../flink-stream-processing.md`.
+
+## Airflow DP1/DP2/DP3 Evidence
+
+`airflow/phase6-runtime.json` is exported directly from the Airflow metadata
+database after successful DP1, DP2, and DP3 DAG tests. It records every task
+state and try number. Reproduce it with
+`scripts/export_phase6_airflow_evidence.py`; pipeline design and commands are
+documented in `../data-pipeline-orchestration.md`.
+
+## DataHub Governance Evidence
+
+`datahub/phase7-runtime.json` is produced by a live DataHub 1.6 GMS emit and
+GraphQL read-back. It records the three contract URNs, six assertion URNs,
+representative schema sizes, and upstream lineage counts. Reproduction and the
+Kafka port constraint are documented in `../data-governance.md`.
+
+## Phase 8 Reviewer Proof
+
+- `schema/phase8-schema-audit.json`: 15 tables across all zones, six foreign
+  keys, SCD2 history, and feature timestamp contract.
+- `docker/phase8-image-sizes.json`: measured baseline/optimized Airflow image
+  sizes and reduction.
+- `novel/phase8-novel-ideas.json`: manifest tamper detection and injected PIT
+  leakage negative controls.
+
 ## Stage 1 Automated Evidence Run
 
 Install runtime dependencies before materializing MinIO/PostgreSQL evidence:
@@ -104,6 +176,18 @@ financial-distress-lake/evidence/stage1/run_id=.../
 `docs/evidence/` remains the host-side submission package for exports and
 screenshots; Airflow should not rely on writing directly into this bind-mounted
 repository directory.
+
+The accepted immutable Phase 9 package is
+`docs/evidence/final/coursework-final-20260731T0030/`. Its outer run ID binds
+51 reviewed artifacts from the component executions into one SHA-256 manifest.
+Component benchmark and Airflow execution IDs remain inside their native
+metrics instead of being rewritten. Validate it with:
+
+```bash
+uv run python scripts/audit_mini_coursework_rubric.py \
+  --evidence-dir docs/evidence/final/coursework-final-20260731T0030 \
+  --require-score 100
+```
 
 For a no-service payload check:
 

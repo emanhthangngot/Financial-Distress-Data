@@ -127,3 +127,18 @@ def test_zero_interest_expense_does_not_trigger_weak_coverage_warning():
     label = compute_distress_label(row)
 
     assert "weak_interest_coverage" not in label.distress_reason
+
+
+# --- W15 C-B: rename previous_by_ticker -> last_observed_row_by_ticker ---
+
+
+def test_compute_labels_uses_last_observed_row_by_ticker_name():
+    """The local holding the prior row in compute_labels is now named
+    last_observed_row_by_ticker (C-B clarity). Old name is gone."""
+    from pathlib import Path
+
+    import src.transforms.compute_distress_labels as mod
+
+    src = Path(mod.__file__).read_text()
+    assert "last_observed_row_by_ticker" in src
+    assert "previous_by_ticker" not in src

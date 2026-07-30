@@ -81,9 +81,14 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      ENABLE_FLINK: ${ENABLE_FLINK:-0}
+      FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
+      FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -114,9 +119,14 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      ENABLE_FLINK: ${ENABLE_FLINK:-0}
+      FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
+      FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -141,12 +151,58 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      ENABLE_FLINK: ${ENABLE_FLINK:-0}
+      FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
+      FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
       - ./configs:/opt/airflow/configs
       - ./sql:/opt/airflow/sql
       - ./docs:/opt/airflow/docs
+
+  flink-jobmanager:
+    image: apache/flink:1.19-java17
+    profiles: ["flink"]
+    hostname: flink-jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 1
+        parallelism.default: 1
+        state.backend: filesystem
+        state.checkpoints.dir: file:///tmp/flink-checkpoints
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/overview || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    volumes:
+      - ./src/streaming/flink/jobs:/opt/flink/jobs:ro
+      - flink-checkpoints:/tmp/flink-checkpoints
+
+  flink-taskmanager:
+    image: apache/flink:1.19-java17
+    profiles: ["flink"]
+    depends_on:
+      flink-jobmanager:
+        condition: service_healthy
+    hostname: flink-taskmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 1
+        taskmanager.registration.timeout: 120s
+    volumes:
+      - flink-checkpoints:/tmp/flink-checkpoints
+
+volumes:
+  flink-checkpoints:

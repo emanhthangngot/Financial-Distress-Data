@@ -44,3 +44,54 @@ stream_target_batch_file_mb_max: 50
 
 fixture_mode_enabled: true
 fixture_seed: 42
+
+generator:
+  enabled: true
+  fixture_seed: 42
+  skew:
+    top_company_ticker: AAA
+    top_company_share: 0.60
+    tail_tickers:
+      - BBB
+      - CCC
+      - DDD
+      - EEE
+  cardinality:
+    industries_pool:
+      - Manufacturing
+      - Real Estate
+      - Technology
+      - Financials
+      - Energy
+      - Consumer Goods
+      - Healthcare
+      - Utilities
+      - Materials
+      - Industrials
+      - Telecom
+      - Retail
+    sectors_pool:
+      - Industrials
+      - Financials
+      - Technology
+      - Energy
+      - Consumer Discretionary
+      - Healthcare
+    companies_count: 5
+  evolution:
+    legacy_null_columns:
+      - ebit
+      - operating_cash_flow
+      - retained_earnings
+    legacy_partition_cutoff: 2020Q1
+  duplication:
+    offline_rate: 0.02
+    streaming_rate: 0.015
+  streaming:
+    burst:
+      enabled: true
+      window_seconds: 10
+      record_count: 200
+    late_arrival:
+      enabled: true
+      max_lag_seconds: 3600

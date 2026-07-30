@@ -1,9 +1,17 @@
+"""
+Stage 1 local evidence pipeline.
+
+The on-demand DAG that exercises the full Stage 1 path on the developer laptop:
+collectors, Bronze-to-Silver, Silver-to-Gold, DQ, and DuckDB catalog
+registration. Drives the rubric row 4 evidence collection.
+"""
+
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.jobs.stage1_evidence_job import (
     DEFAULT_BUCKET,

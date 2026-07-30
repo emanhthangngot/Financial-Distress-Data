@@ -1,0 +1,17 @@
+{
+  "allowed_layers": [
+    "dim",
+    "fact",
+    "obt",
+    "feat"
+  ],
+  "by_layer": {
+    "dim": 2,
+    "fact": 4,
+    "feat": 4,
+    "obt": 1
+  },
+  "source_sql": "/home/pearspringmind/Studying/FSDS/AIDE1/coursework/Financial-Distress-Data/sql/duckdb_create_views.sql",
+  "total_views": 11,
+  "violations": []
+}

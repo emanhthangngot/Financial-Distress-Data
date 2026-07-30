@@ -8,7 +8,8 @@ Your submission must include both:
 - design documents (.md)
 - runnable implementation artifacts (scripts/services/jobs + evidence)
 
-Reference examples are provided in [coursework/sample_design](coursework/sample_design).
+Reference examples are provided in the upstream `coursework/sample_design`
+directory; that external teaching repository is not vendored here.
 
 ---
 

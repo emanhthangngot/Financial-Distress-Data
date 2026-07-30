@@ -2,15 +2,49 @@
 
 ## Introduction
 
-This project is a local-first data engineering foundation for Financial Distress analytics. It runs a small lakehouse stack with Airflow, Kafka, MinIO, PostgreSQL, DuckDB, and PyTest-based validation.
+This project is a local-first data engineering foundation for Financial Distress analytics. It runs a small lakehouse stack with Airflow, Kafka, MinIO, PostgreSQL, DuckDB, and PyTest-based validation. Apache Flink is wired in as an **opt-in** streaming runtime (DAG 04) for W20/W17 evidence; it is not started by `docker compose up` and requires `--profile flink`.
 
 The current Stage 1 pipeline uses deterministic fixture-backed collectors, then materializes Bronze, Silver, Gold, Data Quality, Metadata, and Evidence outputs locally.
 
+### Business Domain
+
+The platform is a **local-first financial-distress data lakehouse** for Vietnamese listed companies. It collects quarterly financial statements, daily market prices, and supporting reference data, then produces curated Bronze/Silver/Gold tables, distress labels (Altman Z-Score inspired), and audit-ready evidence that downstream analysts and ML engineers can trust.
+
+Primary users:
+
+- **Data engineer** — owns the Airflow DAGs, Kafka topics, PySpark transforms, MinIO layout, and PostgreSQL metadata.
+- **ML engineer** — consumes Gold features and `obt_company_quarter_risk` to train, score, and monitor financial-distress models (Phase 2).
+- **Analyst / reviewer** — opens DBeaver or DuckDB against the local lakehouse to validate row counts, SCD2 history, lineage, and data contracts.
+
+Why it matters: a missed early warning on a stressed issuer costs downstream capital and credit decisions. The platform compresses that feedback loop by putting curated, quality-checked, lineage-tracked data one query away from the consumer.
+
 ## Overall System Architecture
 
-<div style="text-align: center;">
-  <img src="images/architecture/architecture-stage-1.png" style="width: 1188px; height: auto;">
-</div>
+Each node in the diagram below is a **deployable unit**: Airflow, Kafka, Flink (opt-in), PySpark (local mode), MinIO, PostgreSQL, DuckDB, and DBeaver run as separate processes or containers. Arrows follow the data flow direction; solid arrows are the primary Stage 1 paths, dashed arrows mark optional or profile-gated flows (for example the Flink streaming path, which is started with `--profile flink`).
+
+DuckDB is used only as a local, single-node SQL inspection engine for DBeaver and reviewer evidence over MinIO Parquet. It is not a horizontally scalable serving layer, and pipeline correctness does not depend on DuckDB; governance records are stored in PostgreSQL `project_metadata` with MinIO Parquet evidence mirrors.
+
+![Stage 1 architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
+
+## System Deployment Diagram
+
+The diagram below is the W22 unified deployment view: every cluster is a
+deployable unit (process or container) and every edge is a real data flow
+that exists in the Stage 1 pipeline. The Flink cluster and its two edges
+are drawn with dashed borders to signal the opt-in profile
+(`docker compose --profile flink up`); all other edges are the primary
+Stage 1 path.
+
+![Stage 1 system deployment diagram — Airflow, Kafka, Flink opt-in, MinIO, PySpark, PostgreSQL, DuckDB, DBeaver](images/architecture/system_deployment_diagram.png)
+
+The DOT source for the diagram lives at
+[`images/architecture/system_deployment_diagram.dot`](images/architecture/system_deployment_diagram.dot)
+so the diagram stays editable. Re-render after edits with:
+
+```bash
+dot -Tpng images/architecture/system_deployment_diagram.dot \
+    -o images/architecture/system_deployment_diagram.png
+```
 
 ## Runtime Evidence Snapshot
 
@@ -67,13 +101,14 @@ submission scope.
 2. [Schema Evidence](#schema-evidence)
 3. [API Surface](#api-surface)
 4. [Project Structure](#project-structure)
-5. [Local Setup](#local-setup)
-6. [Running in Docker](#running-in-docker)
-7. [Service URLs](#service-urls)
-8. [Run Stage 1 Evidence](#run-stage-1-evidence)
-9. [Validation Commands](#validation-commands)
-10. [Useful Inspection Queries](#useful-inspection-queries)
-11. [Stop Services](#stop-services)
+5. [Documentation](#documentation)
+6. [Local Setup](#local-setup)
+7. [Running in Docker](#running-in-docker)
+8. [Service URLs](#service-urls)
+9. [Run Stage 1 Evidence](#run-stage-1-evidence)
+10. [Validation Commands](#validation-commands)
+11. [Useful Inspection Queries](#useful-inspection-queries)
+12. [Stop Services](#stop-services)
 
 ## Project Structure
 
@@ -81,7 +116,7 @@ submission scope.
 ├── dags/                  - Airflow DAGs for Stage 1 workflows
 ├── src/                   - Python source code
 │   ├── collectors/        - Fixture-backed source adapters and collectors
-│   ├── streaming/         - Kafka event contracts and micro-batch logic
+│   ├── streaming/         - Kafka event contracts, micro-batch logic, and Flink opt-in client
 │   ├── transforms/        - Bronze/Silver/Gold transform logic
 │   ├── quality/           - Data quality checks and DQ runner
 │   ├── metadata/          - PostgreSQL metadata writers and schema registry
@@ -99,6 +134,67 @@ submission scope.
 ├── pyproject.toml         - Python package and tooling config
 └── README.md              - This README file
 ```
+
+## Documentation
+
+The README only summarizes the project. Detailed design notes, contracts, and runtime evidence live under `docs/`:
+
+- [Business problem and dataset scope](docs/idea.md) — Phase 0 problem discovery.
+- [Data generator contract (W17 knobs, evidence)](docs/01_data_generator.md) — how the fixture-backed adapter shapes the offline and streaming inputs.
+- [Schema design (Medallion, SCD2, feature tables)](docs/02_schema_design.md) — Bronze / Silver / Gold layout, naming convention, and the `obt_company_quarter_risk` contract.
+- [Storage optimization (compaction, Z-order, DuckDB indexes)](docs/05_storage_optimization.md) — Gold-zone small-file compaction, Z-order clustering, and DuckDB index benchmarks.
+- [Runtime evidence](docs/evidence/) — Airflow run logs, MinIO inventory, PostgreSQL metadata exports, and DuckDB validation snapshots used to prove the pipeline ran end to end.
+
+## Naming Convention
+
+The Gold layer uses a single naming rule, enforced by
+`tests/test_naming_convention.py`. The rule covers both the
+DuckDB-side view names and the MinIO-side storage paths so the
+two never drift apart.
+
+### DuckDB Views
+
+Every view defined in `sql/duckdb_create_views.sql` matches
+`gold_{dim_|fact_|obt_|feat_}*`:
+
+| Layer prefix | Meaning | Examples |
+| --- | --- | --- |
+| `gold_dim_` | Conformed dimension tables | `gold_dim_company`, `gold_dim_date` |
+| `gold_fact_` | Event or measurement facts | `gold_fact_financial_statement`, `gold_fact_market_price`, `gold_fact_market_alert`, `gold_fact_news_sentiment` |
+| `gold_obt_` | One-big-table denormalized joins | `gold_obt_company_quarter_risk` |
+| `gold_feat_` | Model-ready feature tables | `gold_feat_company_financial_4q`, `gold_feat_company_market_30d`, `gold_feat_company_news_30d`, `gold_feat_company_unified` |
+
+### MinIO Storage Paths
+
+Gold writes in `src/jobs/stage1_spark_lakehouse_job.py` go to one of
+the allowed layer folders under the `gold/` prefix:
+
+```
+s3a://financial-distress-lake/gold/dim_*/
+s3a://financial-distress-lake/gold/fact_*/
+s3a://financial-distress-lake/gold/obt_*/
+s3a://financial-distress-lake/gold/feat_*/
+s3a://financial-distress-lake/gold/distress_labels/
+```
+
+`distress_labels` is the only Gold folder that does not use the
+`dim_/fact_/obt_/feat_` family because it carries the label targets
+that the Phase 2 ML training reads; it is intentionally a single
+top-level folder so the labels are easy to discover and audit.
+
+### Bronze and Silver
+
+Bronze and Silver storage paths do not enforce a per-table prefix
+inside the layer folder — the dataset name is the only segment:
+
+```
+s3a://financial-distress-lake/bronze/{dataset}/data.parquet
+s3a://financial-distress-lake/silver/{dataset}/
+```
+
+This keeps the raw ingest and dedup layers flexible enough to absorb
+new source adapters without forcing a schema rename on every
+addition.
 
 # LOCAL
 
@@ -119,7 +215,7 @@ cp .env.example .env
 
 ## Running in Docker
 
-Start the complete local data platform.
+Start the complete local data platform (Flink stays disabled).
 
 ```bash
 docker compose up -d
@@ -131,6 +227,14 @@ Check service status.
 docker compose ps
 .venv/bin/python scripts/check_stage1_services.py
 ```
+
+Opt in to Apache Flink (jobmanager + taskmanager, profile `flink`):
+
+```bash
+ENABLE_FLINK=1 docker compose --profile flink up -d
+```
+
+DAG 04 (`dags/dag_04_stream_market_events_to_kafka.py`) automatically dispatches to the Flink REST endpoint when `ENABLE_FLINK=1`; otherwise it keeps the original `MicroBatchConsumer` smoke path so the default stack stays light.
 
 Create Kafka topics manually if needed.
 
@@ -148,6 +252,7 @@ docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 | PostgreSQL | `localhost:55432` | DB: `financial_distress`, user/password: `airflow` / `airflow` |
 | Kafka host listener | `localhost:9094` | Host-side access |
 | Kafka Docker listener | `kafka:9092` | Container-side access |
+| Flink jobmanager (opt-in) | `http://localhost:8081` | Start with `docker compose --profile flink up -d`; gated by `ENABLE_FLINK=1` |
 
 ## Run Stage 1 Evidence
 

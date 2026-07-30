@@ -8,6 +8,10 @@ def bronze_to_silver_spark(
     required: list[str],
     nullable: list[str],
     dedup_keys: list[str],
+    *,
+    field_types: dict[str, str] | None = None,
+    enum_values: dict[str, list[Any]] | None = None,
+    blank_as_null: bool = True,
 ) -> tuple[Any, Any]:
     try:
         from pyspark.sql import functions as F
@@ -38,6 +42,39 @@ def bronze_to_silver_spark(
         )
         return empty_silver, failed
 
+    raw_payload = F.to_json(F.struct(*[F.col(column) for column in normalized.columns]))
+    if blank_as_null:
+        for field in [*required, *nullable]:
+            if field in normalized.columns:
+                normalized = normalized.withColumn(
+                    field,
+                    F.when(F.trim(F.col(field).cast("string")) == "", F.lit(None)).otherwise(
+                        F.col(field)
+                    ),
+                )
+
+    spark_types = {
+        "string": "string",
+        "integer": "long",
+        "float": "double",
+        "boolean": "boolean",
+        "date": "date",
+        "timestamp": "timestamp",
+    }
+    invalid_expr = F.lit(False)
+    for field, field_type in (field_types or {}).items():
+        if field not in normalized.columns:
+            continue
+        original = F.col(field)
+        casted = original.cast(spark_types[field_type])
+        invalid_expr = invalid_expr | (original.isNotNull() & casted.isNull())
+        normalized = normalized.withColumn(field, casted)
+    for field, allowed in (enum_values or {}).items():
+        if field in normalized.columns:
+            invalid_expr = invalid_expr | (
+                F.col(field).isNotNull() & ~F.col(field).isin(list(allowed))
+            )
+
     missing_required_expr = None
     for field in required:
         condition = F.col(field).isNull()
@@ -45,13 +82,17 @@ def bronze_to_silver_spark(
             condition if missing_required_expr is None else missing_required_expr | condition
         )
 
-    raw_payload = F.to_json(F.struct(*[F.col(column) for column in normalized.columns]))
     failed = (
-        normalized.filter(missing_required_expr)
-        .withColumn("failure_reason", F.lit("missing required fields"))
+        normalized.filter(missing_required_expr | invalid_expr)
+        .withColumn(
+            "failure_reason",
+            F.when(missing_required_expr, F.lit("missing required fields")).otherwise(
+                F.lit("invalid typed fields")
+            ),
+        )
         .withColumn("raw_payload", raw_payload)
     )
-    valid = normalized.filter(~missing_required_expr).select(*all_fields)
+    valid = normalized.filter(~missing_required_expr & ~invalid_expr).select(*all_fields)
     window = Window.partitionBy(*dedup_keys).orderBy(F.col("created_ts").desc_nulls_last())
     silver = (
         valid.withColumn("_row_number", F.row_number().over(window))

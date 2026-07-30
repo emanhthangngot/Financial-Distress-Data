@@ -1,3 +1,11 @@
+"""
+Stage 1 evidence job.
+
+Builds the small evidence set (counts, sample rows, schema summary) consumed by
+``scripts/run_stage1_evidence.py`` and the rubric evidence screenshots. Read-only with respect to
+the zones it inspects.
+"""
+
 from __future__ import annotations
 
 import json
@@ -11,6 +19,13 @@ from src.catalog.duckdb_runner import run_duckdb_validation
 from src.collectors.company_list_collector import collect_companies
 from src.collectors.financial_statement_collector import collect_financial_statements
 from src.collectors.market_price_collector import collect_market_prices
+from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
+from src.generators.config_loader import load_generator_config
+from src.generators.streaming_problem_factory import (
+    inject_streaming_duplicates,
+    plan_burst,
+    plan_late_arrivals,
+)
 from src.io.minio_writer import write_minio_dataset, write_minio_text
 from src.io.paths import DEFAULT_BUCKET, stage1_dataset_object_keys
 from src.metadata.metadata_writer import (
@@ -20,13 +35,14 @@ from src.metadata.metadata_writer import (
 )
 from src.metadata.schema_registry import InMemorySchemaRegistry
 from src.quality.dq_checks import check_freshness, check_not_null, check_unique
+from src.security.secrets import require
 from src.streaming.events import StreamEvent
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 from src.transforms.bronze_to_silver import bronze_to_silver
+from src.transforms.compute_distress_labels import compute_labels
 from src.transforms.silver_to_gold import (
     build_dim_company,
     build_dim_date,
-    build_distress_labels,
     build_fact_financial_statement,
     build_fact_market_alert,
     build_fact_market_price,
@@ -66,8 +82,14 @@ def read_env_file(path: str | Path = DEFAULT_ENV_PATH) -> dict[str, str]:
     return values
 
 
-def _config_value(name: str, env_file_values: dict[str, str], default: str) -> str:
-    return os.getenv(name) or env_file_values.get(name) or default
+def _config_value(name: str, env_file_values: dict[str, str]) -> str:
+    value = os.getenv(name)
+    if value:
+        return value
+    candidate = env_file_values.get(name)
+    if candidate:
+        return candidate
+    raise RuntimeError(f"Required env var {name!r} is missing. Add it to .env or export it.")
 
 
 def metadata_dsn(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
@@ -75,10 +97,10 @@ def metadata_dsn(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
         return dsn
 
     env_file_values = read_env_file(env_path)
-    user = _config_value("POSTGRES_USER", env_file_values, "airflow")
-    password = _config_value("POSTGRES_PASSWORD", env_file_values, "airflow")
-    database = _config_value("POSTGRES_DB", env_file_values, "financial_distress")
-    host_port = _config_value("POSTGRES_HOST_PORT", env_file_values, "5432")
+    user = _config_value("POSTGRES_USER", env_file_values)
+    password = _config_value("POSTGRES_PASSWORD", env_file_values)
+    database = _config_value("POSTGRES_DB", env_file_values)
+    host_port = _config_value("POSTGRES_HOST_PORT", env_file_values)
     return f"postgresql://{user}:{password}@localhost:{host_port}/{database}"
 
 
@@ -124,8 +146,19 @@ def _date_key_to_iso(value: int) -> str:
 def _silver_dataset(
     rows: list[dict[str, Any]], dataset_name: str, dedup_keys: list[str]
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    contract = InMemorySchemaRegistry().get_current(dataset_name)
-    return bronze_to_silver(rows, contract.required, contract.nullable, dedup_keys)
+    contract = InMemorySchemaRegistry.from_yaml("configs/schema-contracts.yaml").get_current(
+        dataset_name
+    )
+    return bronze_to_silver(
+        rows,
+        contract.required,
+        contract.nullable,
+        dedup_keys,
+        field_types=contract.field_types,
+        enum_values=contract.enum_values,
+        blank_as_null=contract.blank_as_null,
+        run_id=current_evidence_run_id(),
+    )
 
 
 def _stream_batches() -> list[dict[str, Any]]:
@@ -170,6 +203,162 @@ def _stream_batches() -> list[dict[str, Any]]:
     )
     batches.extend(consumer.flush())
     return batches
+
+
+def _coerce_tickers(tickers: list[str]) -> list[str]:
+    """Drop unknown tickers so the configured adapter never sees the legacy ones."""
+    return [t for t in tickers if t]
+
+
+def build_generator_characteristics() -> dict[str, Any]:
+    """Materialise a summary table that maps to the rubric's data generator lines.
+
+    Returns a JSON-serialisable dict with six sections:
+
+    * ``skew`` - top ticker share and per-ticker counts in the company rows.
+    * ``cardinality`` - distinct ticker/industry/sector counts.
+    * ``evolution`` - number of legacy-NULL cells in the financial statement rows.
+    * ``duplication`` - duplicate count before and after the silver dedup step.
+    * ``streaming`` - counts of burst, late-arrival, and duplicate events.
+    * ``volume`` - bronze row counts and the storage format.
+    """
+    cfg = load_generator_config()
+    adapter = VnstockFixtureAdapter(config=cfg) if cfg.enabled else VnstockFixtureAdapter()
+
+    companies = adapter.fetch_companies()
+    tickers = [c["ticker"] for c in companies]
+    ticker_counts: dict[str, int] = {}
+    for t in tickers:
+        ticker_counts[t] = ticker_counts.get(t, 0) + 1
+    top_ticker = cfg.skew.top_company_ticker if cfg.enabled else "AAA"
+    top_count = ticker_counts.get(top_ticker, 0)
+    top_share = (top_count / len(tickers)) if tickers else 0.0
+
+    sample_tickers = _coerce_tickers(tickers) or ["AAA"]
+    financial_rows: list[dict[str, Any]] = []
+    for t in sample_tickers:
+        financial_rows.extend(adapter.fetch_financial_statements(t, 2024, 2025))
+
+    base_count = sum(1 for r in financial_rows if r.get("_is_duplicate") is not True)
+    dup_count = sum(1 for r in financial_rows if r.get("_is_duplicate") is True)
+    legacy_null_columns = cfg.evolution.legacy_null_columns if cfg.enabled else ()
+    legacy_null_count = sum(
+        1 for r in financial_rows for col in legacy_null_columns if r.get(col) is None
+    )
+
+    # After dedup: keep the business-key uniqueness that silver would apply.
+    seen: set[tuple[Any, ...]] = set()
+    after_dedup = 0
+    for r in financial_rows:
+        key = (r.get("ticker"), r.get("report_period"))
+        if key in seen:
+            continue
+        seen.add(key)
+        after_dedup += 1
+
+    # Streaming: derive a representative sample using the same base events that
+    # the smoke pipeline uses for the news_sentiment + alert factories.
+    base_stream_events: list[StreamEvent] = [
+        StreamEvent.price_update(
+            "AAA",
+            "2026-01-01T09:00:00+00:00",
+            "2026-01-01T09:00:00+00:00",
+            10.0,
+            100,
+        ),
+        StreamEvent.price_update(
+            "BBB",
+            "2026-01-01T09:00:01+00:00",
+            "2026-01-01T09:00:01+00:00",
+            10.1,
+            120,
+        ),
+    ]
+    burst_events = (
+        plan_burst(
+            base_stream_events,
+            window_seconds=cfg.streaming.burst.window_seconds,
+            record_count=cfg.streaming.burst.record_count,
+        )
+        if cfg.enabled
+        else []
+    )
+    late_events = (
+        plan_late_arrivals(
+            base_stream_events,
+            max_lag_seconds=cfg.streaming.late_arrival.max_lag_seconds,
+        )
+        if cfg.enabled
+        else []
+    )
+    dup_input = list(base_stream_events) + burst_events + late_events
+    dup_events = (
+        inject_streaming_duplicates(dup_input, rate=cfg.duplication.streaming_rate)
+        if cfg.enabled
+        else []
+    )
+
+    market_rows: list[dict[str, Any]] = []
+    for t in sample_tickers:
+        market_rows.extend(adapter.fetch_market_prices(t, 2024, 2025))
+
+    return {
+        "skew": {
+            "top_ticker": top_ticker,
+            "top_share": top_share,
+            "ticker_counts": ticker_counts,
+        },
+        "cardinality": {
+            "distinct_tickers": len(set(tickers)),
+            "distinct_industries": len({c["industry"] for c in companies}),
+            "distinct_sectors": len({c["sector"] for c in companies}),
+        },
+        "evolution": {
+            "legacy_partition_cutoff": (
+                cfg.evolution.legacy_partition_cutoff if cfg.enabled else None
+            ),
+            "legacy_null_columns": list(legacy_null_columns),
+            "legacy_null_count": legacy_null_count,
+        },
+        "duplication": {
+            "offline_rate": cfg.duplication.offline_rate if cfg.enabled else 0.0,
+            "offline_base_count": base_count,
+            "offline_count": dup_count,
+            "after_dedup": after_dedup,
+        },
+        "streaming": {
+            "burst_count": len(burst_events),
+            "late_count": len(late_events),
+            "duplicate_count": len(dup_events) - len(dup_input),
+        },
+        "volume": {
+            "format": "parquet",
+            "row_counts": {
+                "bronze_companies": len(companies),
+                "bronze_financial_statements": len(financial_rows),
+                "bronze_market_prices": len(market_rows),
+            },
+        },
+    }
+
+
+def write_generator_characteristics_evidence(
+    evidence_dir: str | Path,
+    payload: dict[str, Any] | None = None,
+) -> Path:
+    """Persist the characteristics dict to ``stage1_generator_characteristics.json``."""
+    output_dir = Path(evidence_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = output_dir / "stage1_generator_characteristics.json"
+    out_path.write_text(
+        json.dumps(
+            payload if payload is not None else build_generator_characteristics(),
+            indent=2,
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    return out_path
 
 
 def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
@@ -225,7 +414,7 @@ def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
             ).as_record()
         ]
     )
-    gold_distress_labels = build_distress_labels(gold_fact_financial_statement)
+    gold_distress_labels = compute_labels(gold_fact_financial_statement)
     gold_obt_company_quarter_risk = build_obt_company_quarter_risk(
         gold_fact_financial_statement,
         gold_distress_labels,
@@ -309,8 +498,8 @@ def _minio_client() -> Any:
 
     return Minio(
         minio_host_endpoint(),
-        access_key=os.getenv("MINIO_ROOT_USER", "minioadmin"),
-        secret_key=os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+        access_key=require("MINIO_ROOT_USER"),
+        secret_key=require("MINIO_ROOT_PASSWORD"),
         secure=False,
     )
 

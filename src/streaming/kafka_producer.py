@@ -1,3 +1,10 @@
+"""
+Kafka producer used by DAG 04 to publish synthetic market events.
+
+Serializes events from the streaming problem factory to JSON and writes them to the configured topic
+with idempotent producer settings. Failures are logged to ``project_metadata.failed_records``.
+"""
+
 from __future__ import annotations
 
 import json

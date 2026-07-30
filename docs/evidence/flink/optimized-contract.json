@@ -1,0 +1,40 @@
+{
+  "counts": {
+    "allowed_late": 1498,
+    "duplicates": 750,
+    "input": 50000,
+    "invalid": 0,
+    "too_late": 0,
+    "valid": 49250,
+    "window_results": 49250
+  },
+  "duration": {
+    "events_per_second": 116843.08,
+    "median_seconds": 0.427924,
+    "runs_seconds": [
+      0.396197,
+      0.427924,
+      0.449367,
+      0.427189,
+      0.450471
+    ]
+  },
+  "input_digest": "da844313f3b7e08b009bc653f69df45a8cc1dc9be76674bee5a0edd69d7a7ba8",
+  "input_events": 50000,
+  "protocol": {
+    "allowed_lateness_seconds": 180,
+    "checkpointing": true,
+    "dedup_ttl_seconds": 900,
+    "deduplicate": true,
+    "max_out_of_orderness_seconds": 120,
+    "parallelism": 4,
+    "runs": 5,
+    "warmups": 1,
+    "window_seconds": 10
+  },
+  "run_id": "generator-evidence-v1",
+  "schema_version": 1,
+  "status": "pass",
+  "variant": "optimized",
+  "window_digest": "dc37e3887ee6538e111fbe3f6bfe30716e8f630aa3a567c214c288c396857bc5"
+}

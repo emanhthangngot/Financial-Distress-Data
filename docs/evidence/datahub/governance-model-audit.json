@@ -1,0 +1,26 @@
+{
+  "contracts": {
+    "build_offline_features": {
+      "dataset": "gold.feat_company_unified",
+      "schema_assertion": true,
+      "volume_assertion": true
+    },
+    "build_silver_gold": {
+      "dataset": "gold.fact_financial_statement",
+      "schema_assertion": true,
+      "volume_assertion": true
+    },
+    "ingest_source_to_bronze": {
+      "dataset": "bronze.companies",
+      "schema_assertion": true,
+      "volume_assertion": true
+    }
+  },
+  "datahub_version": "1.6.0",
+  "dataset_count": 15,
+  "lineage_edges": 21,
+  "pipeline_count": 3,
+  "run_id": "phase7-model-v1",
+  "schema_version": 1,
+  "status": "pass"
+}

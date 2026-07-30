@@ -1,3 +1,10 @@
+"""
+PostgreSQL writer for ``project_metadata``.
+
+Centralized helpers to insert run records, DQ results, and failed-record rows. Every job must use
+this writer so metadata stays consistent.
+"""
+
 from __future__ import annotations
 
 import json
@@ -100,6 +107,21 @@ class MetadataWriter:
                 "created_at": utc_now_iso(),
             }
         )
+
+    def log_failed_records(
+        self,
+        dataset_name: str,
+        records: list[dict[str, Any]],
+        run_id: str | None = None,
+    ) -> None:
+        """Persist quarantined Silver records with their source run linkage."""
+        for record in records:
+            self.log_failed_record(
+                dataset_name,
+                str(record["failure_reason"]),
+                dict(record["raw_payload"]),
+                run_id=run_id,
+            )
 
     def update_dataset_freshness(
         self,
@@ -268,6 +290,50 @@ class PostgresMetadataWriter:
         )
         return run_id
 
+    def flush_pipeline_run_logs(self, rows: list[dict[str, Any]]) -> None:
+        """Persist a batch of pipeline_run_log rows in a single transaction.
+
+        Builds one multi-VALUES INSERT and commits once. Callers batch the rows
+        (e.g. one entry per task in a DAG run) to amortize commit overhead.
+        """
+        if not rows:
+            return
+
+        template = (
+            "INSERT INTO project_metadata.pipeline_run_log ("
+            "run_id, dag_id, task_id, dataset_name, status, started_at, ended_at, "
+            "input_rows, output_rows, error_message) VALUES %s"
+        )
+        placeholders = "(" + ", ".join(["%s"] * 10) + ")"
+        values_sql = ", ".join([placeholders] * len(rows))
+        sql = template.replace("VALUES %s", f"VALUES {values_sql}")
+
+        params: list[tuple[Any, ...]] = []
+        for row in rows:
+            params.append(
+                (
+                    row["run_id"],
+                    row["dag_id"],
+                    row["task_id"],
+                    row["dataset_name"],
+                    row["status"],
+                    row["started_at"],
+                    row["ended_at"],
+                    row["input_rows"],
+                    row["output_rows"],
+                    row["error_message"],
+                )
+            )
+
+        connection = self.connection_factory()
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(sql, params)
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+
     def log_dq_result(
         self,
         dataset_name: str,
@@ -324,6 +390,21 @@ class PostgresMetadataWriter:
                 utc_now_iso(),
             ),
         )
+
+    def log_failed_records(
+        self,
+        dataset_name: str,
+        records: list[dict[str, Any]],
+        run_id: str | None = None,
+    ) -> None:
+        """Persist a collection of quarantined records through the PostgreSQL writer."""
+        for record in records:
+            self.log_failed_record(
+                dataset_name,
+                str(record["failure_reason"]),
+                dict(record["raw_payload"]),
+                run_id=run_id,
+            )
 
     def update_dataset_freshness(
         self,

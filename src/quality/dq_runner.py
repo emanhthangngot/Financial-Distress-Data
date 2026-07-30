@@ -1,3 +1,11 @@
+"""
+Runner that executes the DQ check catalog and persists results.
+
+Loads the catalog, applies the hard/soft-fail policy, and writes each result to
+``project_metadata.data_quality_result``. Hard failures halt downstream tasks; soft failures route
+records to ``project_metadata.failed_records``.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

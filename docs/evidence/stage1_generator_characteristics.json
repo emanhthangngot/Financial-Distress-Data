@@ -1,0 +1,44 @@
+{
+  "cardinality": {
+    "distinct_industries": 5,
+    "distinct_sectors": 3,
+    "distinct_tickers": 3
+  },
+  "duplication": {
+    "after_dedup": 24,
+    "offline_base_count": 40,
+    "offline_count": 0,
+    "offline_rate": 0.02
+  },
+  "evolution": {
+    "legacy_null_columns": [
+      "ebit",
+      "operating_cash_flow",
+      "retained_earnings"
+    ],
+    "legacy_null_count": 0,
+    "legacy_partition_cutoff": "2020Q1"
+  },
+  "skew": {
+    "ticker_counts": {
+      "AAA": 3,
+      "BBB": 1,
+      "CCC": 1
+    },
+    "top_share": 0.6,
+    "top_ticker": "AAA"
+  },
+  "streaming": {
+    "burst_count": 200,
+    "duplicate_count": 3,
+    "late_count": 2
+  },
+  "volume": {
+    "format": "parquet",
+    "row_counts": {
+      "bronze_companies": 5,
+      "bronze_financial_statements": 40,
+      "bronze_market_prices": 30
+    }
+  }
+}

@@ -1,6 +1,14 @@
+"""
+DAG 01 - Collect company master data.
+
+Pulls the universe of tickers (HOSE, HNX, UPCOM) from the company-list collector and
+lands the result in the Bronze zone. The DAG runs on demand and is the first step of
+the Stage 1 evidence pipeline.
+"""
+
 from __future__ import annotations
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.company_list_collector import collect_companies
 
 DAG, PythonOperator = airflow_imports()

@@ -1,0 +1,45 @@
+# W24 Idea 2 - Airbyte-style declarative ingestion manifest.
+#
+# Each entry is one ingestion source. The manifest is consumed by
+# ``src.collectors.manifest_adapter.ManifestAdapter`` which dispatches
+# ``fetch()`` to a per-endpoint handler. All sources ship with
+# ``enabled: false`` by default: the manifest is a declaration of
+# intent, and turning a source on is an explicit code-reviewable action.
+#
+# Field reference (kept in lock-step with the Plan + tests):
+#   source_id            stable identifier used by callers
+#   enabled              if false, ``fetch()`` returns None
+#   endpoint             dispatch key (currently: "fixture" for the
+#                        bundled offline handler; reserved future keys
+#                        are "vnstock", "tcbs_http", "cafef_scrape")
+#   field_map            mapping from handler output keys to the
+#                        canonical record schema
+#   rate_limit_per_min   advisory cap shared with the eventual HTTP
+#                        handler; the fixture handler ignores it
+#   incremental_key      column used for incremental loads
+#
+# To enable a source: change ``enabled: false`` to ``true`` and confirm
+# the corresponding handler has been implemented.
+
+sources:
+  - source_id: tcbs
+    enabled: false
+    endpoint: fixture
+    field_map:
+      symbol: symbol
+      price: close_price
+      volume: volume
+      timestamp: ts
+    rate_limit_per_min: 60
+    incremental_key: ts
+
+  - source_id: cafef
+    enabled: false
+    endpoint: fixture
+    field_map:
+      symbol: symbol
+      price: close_price
+      volume: volume
+      timestamp: ts
+    rate_limit_per_min: 30
+    incremental_key: ts

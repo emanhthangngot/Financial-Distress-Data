@@ -1,3 +1,11 @@
+"""
+Gold-zone fact builder for financial statements.
+
+Projects the Silver financial_statement table into the Gold fact with surrogate keys,
+currency-normalized amounts, and period-end dates. Both pure-Python and PySpark variants are
+exposed.
+"""
+
 from __future__ import annotations
 
 from typing import Any

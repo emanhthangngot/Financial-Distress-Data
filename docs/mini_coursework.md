@@ -69,6 +69,12 @@ Allowed Phase 1 stack:
 - DBeaver for SQL evidence screenshots and inspection.
 - Python modules, fixtures, YAML configs, SQL files, and PyTest tests.
 
+DuckDB is used only as a local, single-node SQL inspection engine for DBeaver
+and reviewer evidence over MinIO Parquet. It is not a horizontally scalable
+serving/query layer, and the system does not depend on DuckDB for correctness.
+Authoritative governance state lives in PostgreSQL `project_metadata`, with
+MinIO Parquet evidence mirrors for local inspection.
+
 Not allowed in Phase 1:
 
 - AWS S3, Glue, Athena, RDS, EMR, MSK, Redshift, SageMaker.
@@ -128,7 +134,7 @@ The system is designed in a highly advanced "Dual-Mode Architecture" to support 
      -> PostgreSQL project_metadata Schema (PostgresMetadataWriter live client writes logs/DQ/failed records)
      -> PySpark Silver-to-Gold Spark jobs (partitioned Parquet fact & dimension writes using overwrite mode)
      -> MinIO Gold Storage (dimensions, financial/market/news/alert facts, distress labels, OBT, and feature tables)
-     -> DuckDB serving engine (reads MinIO Parquet via httpfs views)
+     -> DuckDB local inspection engine (reads MinIO Parquet via httpfs views)
      -> DBeaver DB client (queries and captures live runtime evidence)
    ```
    *This mode represents the actual production architecture shown in the diagram. The codebase contains full production implementations for both Spark DataFrame APIs and PostgreSQL connections.*
@@ -163,7 +169,8 @@ dags/
   06_pyspark_silver_to_gold.py
   07_run_data_quality_checks.py
   08_minio_duckdb_register_tables.py
-  _stage1_dag_utils.py
+  utils/
+    stage1_dag_utils.py
 
 src/
   collectors/
@@ -193,7 +200,7 @@ tests/
   test_streaming.py
 ```
 
-There is no `src/generator/` directory in the current implementation. Synthetic or fixture data lives behind `VnstockFixtureAdapter`, not in a separate generator module.
+`src/generator/` now contains the rubric problem generator with typed CI/evidence profiles, deterministic offline and streaming simulation, source-area persistence, and measured profile output. `VnstockFixtureAdapter` remains the stable fast-test collector boundary; the generator is a separate source workload for later DP1 ingestion.
 
 ## 8. Data Source Design
 
@@ -894,7 +901,6 @@ branch pushes and pull requests.
 Expected test coverage:
 
 ```text
-tests/test_airflow_stage1_dag.py
 tests/test_bronze_to_silver.py
 tests/test_distress_labels.py
 tests/test_dq_checks.py

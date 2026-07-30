@@ -1,3 +1,10 @@
+"""
+Gold-zone fact builder for market alerts.
+
+Builds the alert fact from the streaming topic, deriving simple thresholds (e.g. daily drop > 7%)
+and joining with company dimension. Powers the news/alert dashboard.
+"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,15 +14,16 @@ from src.transforms.keys import date_key, stable_company_key
 
 def build_fact_market_alert(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     facts = []
-    seen: set[str] = set()
+    latest: dict[str, dict[str, Any]] = {}
     for row in sorted(
         rows,
         key=lambda item: (item.get("event_id", ""), item.get("created_ts", "")),
+        reverse=True,
     ):
         event_id = str(row["event_id"])
-        if event_id in seen:
+        if event_id in latest:
             continue
-        seen.add(event_id)
+        latest[event_id] = row
         ticker = str(row["ticker"]).upper()
         fact = dict(row)
         fact["ticker"] = ticker

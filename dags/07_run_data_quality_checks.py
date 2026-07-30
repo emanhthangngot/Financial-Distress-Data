@@ -1,6 +1,15 @@
+"""
+DAG 07 - Run data quality checks.
+
+Executes the DQ framework against each lakehouse zone, classifies results as
+hard/soft failures, and writes them to ``project_metadata.data_quality_result``.
+Hard-fail DQ halts the downstream Gold transform; soft-fail routes records to
+``project_metadata.failed_records``.
+"""
+
 from __future__ import annotations
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports, metadata_writer_from_env
+from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports, metadata_writer_from_env
 from src.quality.dq_checks import check_not_null
 
 DAG, PythonOperator = airflow_imports()
