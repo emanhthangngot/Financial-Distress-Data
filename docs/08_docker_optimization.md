@@ -13,7 +13,7 @@ remain in the final image.
 
 The image size before / after is measured by
 `scripts/measure_docker_size.sh` and recorded in
-[`evidence/docker_size.json`](../evidence/docker_size.json). Target
+[`evidence/docker/phase8-image-sizes.json`](evidence/docker/phase8-image-sizes.json). Target
 reduction: **≥ 30%**.
 
 ## Why multistage

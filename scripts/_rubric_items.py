@@ -413,8 +413,7 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=41,
         category="Documentation",
         claim=(
-            "Naming convention (Gold: dim_/fact_/obt_/feat_; "
-            "Bronze/Silver: raw_/stg_ or similar)"
+            "Naming convention (Gold: dim_/fact_/obt_/feat_; Bronze/Silver: raw_/stg_ or similar)"
         ),
         points=2,
         evidence_check=lambda: _exists("README.md"),

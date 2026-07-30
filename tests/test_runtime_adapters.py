@@ -251,6 +251,6 @@ def test_init_project_metadata_sql_creates_w10_indexes():
         "idx_failed_records_run_id",
     ]
     for index_name in expected_indexes:
-        assert (
-            f"CREATE INDEX IF NOT EXISTS {index_name}" in sql
-        ), f"missing index {index_name} in init_project_metadata.sql"
+        assert f"CREATE INDEX IF NOT EXISTS {index_name}" in sql, (
+            f"missing index {index_name} in init_project_metadata.sql"
+        )

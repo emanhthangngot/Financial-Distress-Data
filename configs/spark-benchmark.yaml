@@ -1,0 +1,21 @@
+schema_version: 1
+run_id: generator-evidence-v1
+input_root: s3a://financial-distress-lake/source/generator/run_id=generator-evidence-v1/offline
+output_root: s3a://financial-distress-lake/benchmark/spark/run_id=generator-evidence-v1
+repetitions: 5
+warmup_runs: 1
+salt_buckets: 8
+baseline:
+  shuffle_partitions: 24
+  output_files: 24
+  adaptive_enabled: false
+  auto_broadcast_enabled: false
+optimized:
+  shuffle_partitions: 8
+  output_files: 4
+  adaptive_enabled: true
+  auto_broadcast_enabled: true
+storage:
+  query_filter_year: 2024
+  partition_columns: [fiscal_year]
+  target_files_per_partition: 1

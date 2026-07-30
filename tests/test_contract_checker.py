@@ -85,9 +85,9 @@ def test_contract_doc_has_lineage_section_per_dp() -> None:
     text = _read(CONTRACTS_DOC)
     for dp in ("DP1", "DP2", "DP3"):
         pattern = rf"##\s+Lineage\s+{dp}\b"
-        assert re.search(
-            pattern, text
-        ), f"docs/07_data_contracts.md must have a '## Lineage {dp}' section"
+        assert re.search(pattern, text), (
+            f"docs/07_data_contracts.md must have a '## Lineage {dp}' section"
+        )
 
 
 # --- Module import + API tests -------------------------------------------------
@@ -107,9 +107,9 @@ def test_load_contracts_parses_doc() -> None:
     contracts = load_contracts(CONTRACTS_DOC)
     assert isinstance(contracts, dict)
     expected_count = len(EXPECTED_GOLD_TABLES | EXPECTED_BRONZE_SILVER)
-    assert (
-        len(contracts) >= expected_count
-    ), f"load_contracts must return at least {expected_count} entries"
+    assert len(contracts) >= expected_count, (
+        f"load_contracts must return at least {expected_count} entries"
+    )
     for required in EXPECTED_GOLD_TABLES | EXPECTED_BRONZE_SILVER:
         assert required in contracts, f"load_contracts must include {required!r}"
 
@@ -212,9 +212,7 @@ def test_dag_09_data_governance_imports() -> None:
         assert task_id in text, f"dags/09_data_governance.py must define {task_id!r}"
     # The module must be importable in a subprocess so Airflow does not break CI.
     import_cmd = (
-        "import importlib; "
-        "m = importlib.import_module('dags.09_data_governance'); "
-        "print('ok')"
+        "import importlib; m = importlib.import_module('dags.09_data_governance'); print('ok')"
     )
     result = subprocess.run(
         [sys.executable, "-c", import_cmd],

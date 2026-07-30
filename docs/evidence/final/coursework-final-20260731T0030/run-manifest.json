@@ -1,0 +1,316 @@
+{
+  "artifacts": [
+    {
+      "path": "documents/readme.md",
+      "proof_type": "document",
+      "sha256": "c96317b27ad155e4d5660757bb6e241b52ab56f69d0c5e0d28df5c17e88b31ca",
+      "size_bytes": 4601
+    },
+    {
+      "path": "documents/generator.md",
+      "proof_type": "document",
+      "sha256": "d644aca1323008a1a5a32b96cfda3c63af7af9bf78915bb55236d1c425416971",
+      "size_bytes": 3761
+    },
+    {
+      "path": "documents/spark.md",
+      "proof_type": "document",
+      "sha256": "9f11a0efb359b629dcda07a86e503cd70dc353469058be291cb4d3d2186761c1",
+      "size_bytes": 3467
+    },
+    {
+      "path": "documents/flink.md",
+      "proof_type": "document",
+      "sha256": "fe0c7f4036b331c6ef9ef2089dfc6b0eca7c99310c3f940a63b7a2452d32ee4a",
+      "size_bytes": 3674
+    },
+    {
+      "path": "documents/orchestration.md",
+      "proof_type": "document",
+      "sha256": "238406f2503e919def883b437aeb696d0426239bf95bbb8e5277e9d59c070999",
+      "size_bytes": 2838
+    },
+    {
+      "path": "documents/governance.md",
+      "proof_type": "document",
+      "sha256": "52e61046232d7ff2e77ef7d0c52fcdd4eb577bcce2e0d70a59fb2330d8a2f0f4",
+      "size_bytes": 2485
+    },
+    {
+      "path": "documents/schema.md",
+      "proof_type": "document",
+      "sha256": "3a42fbc8b3db11dbfb6588f7ff5fce01c19a674e8198e31bcab31c47d3bee14f",
+      "size_bytes": 1243
+    },
+    {
+      "path": "documents/docker.md",
+      "proof_type": "document",
+      "sha256": "93ee32a420351ee6560c6193d708efbcce7f5e3f1f85fd394b7b5fb00cb62511",
+      "size_bytes": 1301
+    },
+    {
+      "path": "documents/evidence-manifest.md",
+      "proof_type": "document",
+      "sha256": "2a6af3f3efc032c7bd97d437a8ca510df5879d07a7c78be33ebbf802ac6c1689",
+      "size_bytes": 1122
+    },
+    {
+      "path": "documents/pit-leakage.md",
+      "proof_type": "document",
+      "sha256": "29fb130c79e272120bed24e3d44a3efb72431e3a0fc29e8a7827f688176c560f",
+      "size_bytes": 1037
+    },
+    {
+      "path": "code/documentation-check.py",
+      "proof_type": "code_reference",
+      "sha256": "7da0e8b50ca0e77156da3bd7e74bc5e924c15e9cf270a8b0caa6a31ff594a1a5",
+      "size_bytes": 2788
+    },
+    {
+      "path": "code/spark-optimized.py",
+      "proof_type": "code_reference",
+      "sha256": "23ea01bc517b7dc69a21106b263c2d43647f19177c4db56ceab3f5b882709c18",
+      "size_bytes": 2666
+    },
+    {
+      "path": "code/flink-job.py",
+      "proof_type": "code_reference",
+      "sha256": "f8ef274380f3a8e92a8fb475fb5dd2edf02380f31ce55342109483e9e321f58e",
+      "size_bytes": 7274
+    },
+    {
+      "path": "code/airflow-dp2.py",
+      "proof_type": "code_reference",
+      "sha256": "3bd73ea152824a0aaa8c9eaf8609da006482cbb2429e296839a56802c79c2335",
+      "size_bytes": 1844
+    },
+    {
+      "path": "code/schema.sql",
+      "proof_type": "code_reference",
+      "sha256": "96e2a704a082c4226bc00e534002a134350ba88e776bf5a963d0f6094ff0e94c",
+      "size_bytes": 3293
+    },
+    {
+      "path": "code/run-manifest.py",
+      "proof_type": "code_reference",
+      "sha256": "4a8a524414b0ee18e72ade4178d88c25e01069623f4aa0d2f1e9842f55a5a642",
+      "size_bytes": 4927
+    },
+    {
+      "path": "code/pit.py",
+      "proof_type": "code_reference",
+      "sha256": "a98921e97af7b2cc8017ae91680d0be9f2e1500a0a4d0eead91426670380e639",
+      "size_bytes": 4733
+    },
+    {
+      "path": "config/generator.yaml",
+      "proof_type": "config",
+      "sha256": "89f1e3377a3c79afa90de43cd3076d2fd5f1492a55e9c15102653d7c0afb4145",
+      "size_bytes": 977
+    },
+    {
+      "path": "config/compose.yaml",
+      "proof_type": "config",
+      "sha256": "e100beae8d1ba2ac4aae2857f916fe791488e262856991590c0ff3b083a64b16",
+      "size_bytes": 8968
+    },
+    {
+      "path": "config/governance.yaml",
+      "proof_type": "config",
+      "sha256": "6ff5d8697991203dc7e92d2bf71725fd0634daf935d8dab3a1c2ec88ddea73cb",
+      "size_bytes": 2813
+    },
+    {
+      "path": "metrics/generator.json",
+      "proof_type": "metrics",
+      "sha256": "40d37152c6aac6c330cc5841905dccde78893948f976f76b8a9104085ba297b9",
+      "size_bytes": 1113
+    },
+    {
+      "path": "metrics/spark.json",
+      "proof_type": "metrics",
+      "sha256": "4dec1923c1662e2824b64b8ba361fe73cbd220d40b156cf6e480b0dd6418e6ef",
+      "size_bytes": 903
+    },
+    {
+      "path": "metrics/flink.json",
+      "proof_type": "metrics",
+      "sha256": "9ab67dd782fa278468c57f46b9c3047509ade1c903fa6414496732e9d42f05d7",
+      "size_bytes": 876
+    },
+    {
+      "path": "metrics/docker.json",
+      "proof_type": "metrics",
+      "sha256": "2ba5ea30e9bb4e332494fdaa486bcc03c70abc7600e026f3d24ec2ae43e36dde",
+      "size_bytes": 285
+    },
+    {
+      "path": "metrics/novel-ideas.json",
+      "proof_type": "metrics",
+      "sha256": "af0cae7857a178fb3695bb61877a0953fa5735f658e260130ff2bc2b85a41ce9",
+      "size_bytes": 428
+    },
+    {
+      "path": "queries/generator.json",
+      "proof_type": "query_output",
+      "sha256": "18b880a3a71ad50acbd4ae73090cbfa96f3e7db80675232f9424bdfe23a43bef",
+      "size_bytes": 10135
+    },
+    {
+      "path": "queries/flink.json",
+      "proof_type": "query_output",
+      "sha256": "abf64b4c892b9dfe1ed6eb286b31dc9744756e5f772f1adaf24d4400f89cb1b2",
+      "size_bytes": 4427
+    },
+    {
+      "path": "queries/postgres-index.txt",
+      "proof_type": "query_output",
+      "sha256": "a98ae29d699ad15d1da6310e0301f356d1d1c50500092ce7e8e5302dea30127a",
+      "size_bytes": 17386
+    },
+    {
+      "path": "queries/airflow.json",
+      "proof_type": "query_output",
+      "sha256": "cd877971b4a787aff4c806435288203bbee4e1520ed8491e00ee735216ddf34e",
+      "size_bytes": 2522
+    },
+    {
+      "path": "queries/schema.json",
+      "proof_type": "query_output",
+      "sha256": "4a04d1d26a0b9316f32659b2dd2cd9fc24ba62ae5e961a86b6e6b4fcb6520f0c",
+      "size_bytes": 1458
+    },
+    {
+      "path": "logs/airflow.json",
+      "proof_type": "log",
+      "sha256": "cd877971b4a787aff4c806435288203bbee4e1520ed8491e00ee735216ddf34e",
+      "size_bytes": 2522
+    },
+    {
+      "path": "logs/generator.json",
+      "proof_type": "log",
+      "sha256": "40d37152c6aac6c330cc5841905dccde78893948f976f76b8a9104085ba297b9",
+      "size_bytes": 1113
+    },
+    {
+      "path": "ui/datahub.json",
+      "proof_type": "ui_export",
+      "sha256": "91d7c07a993a7ac9bd0f79a4e25863d13a065160f75a12b90f366a79a187a1c7",
+      "size_bytes": 4307
+    },
+    {
+      "path": "screenshots/architecture.png",
+      "proof_type": "screenshot",
+      "sha256": "177ec0edfd01116ad603e26e4cca38fe64930f35365b2024d2d3e0e460b9bb86",
+      "size_bytes": 55267
+    },
+    {
+      "path": "screenshots/schema.png",
+      "proof_type": "screenshot",
+      "sha256": "fd560994de41655c26ba1901d160c94a4a5735addc18fc66b7f6a1c2a13a66d9",
+      "size_bytes": 570250
+    },
+    {
+      "path": "screenshots/generator.png",
+      "proof_type": "screenshot",
+      "sha256": "816391cb44d33e4b6b7757c99c2f293dcf580bc35f38fb6e6e7272627bf59a20",
+      "size_bytes": 140286
+    },
+    {
+      "path": "screenshots/spark-baseline.png",
+      "proof_type": "screenshot",
+      "sha256": "fe6966205a9506464cf9f29b98b584753c3cbdda54dda01b0b6680a30a16e2df",
+      "size_bytes": 173103
+    },
+    {
+      "path": "screenshots/spark-optimized.png",
+      "proof_type": "screenshot",
+      "sha256": "dc110b5c6d0a4832f34c8a3df8b43b533be69e15f6387dc9a3bc781ace3069f1",
+      "size_bytes": 224009
+    },
+    {
+      "path": "screenshots/flink-baseline.png",
+      "proof_type": "screenshot",
+      "sha256": "17dca0b2c3b3633ef6606d8cd5eb37bb6e819b24ce578db49431c5c20e98d293",
+      "size_bytes": 108726
+    },
+    {
+      "path": "screenshots/flink-optimized.png",
+      "proof_type": "screenshot",
+      "sha256": "ad1a6197554c9e21048c727f7ffe473fb0b815ba73f2a41cb12456a4f978d5cb",
+      "size_bytes": 119655
+    },
+    {
+      "path": "screenshots/flink-restart.png",
+      "proof_type": "screenshot",
+      "sha256": "74635e2398041dad7138b9f95701f5d54416bffa42f536b6a86d100941fa3ea6",
+      "size_bytes": 8636
+    },
+    {
+      "path": "screenshots/airflow-dp1.png",
+      "proof_type": "screenshot",
+      "sha256": "3f732687cc76afa5e2490e3274412ad14909c73991def907d8bea835454fcd92",
+      "size_bytes": 122527
+    },
+    {
+      "path": "screenshots/airflow-dp2.png",
+      "proof_type": "screenshot",
+      "sha256": "f1725be200a41eddefff11fa5393facd6fdc28b22c96879a1120f23d8291eab1",
+      "size_bytes": 116798
+    },
+    {
+      "path": "screenshots/airflow-dp3.png",
+      "proof_type": "screenshot",
+      "sha256": "6f45487877bd74a914ee4513373b3f18c1866aa612aa2eb3d90fd23a13f32d69",
+      "size_bytes": 118631
+    },
+    {
+      "path": "screenshots/datahub-dp1-lineage.png",
+      "proof_type": "screenshot",
+      "sha256": "88b84a5c3a838158354910aec09edf0ee750483198d923c2c84c273246d25ea0",
+      "size_bytes": 155718
+    },
+    {
+      "path": "screenshots/datahub-dp1-quality.png",
+      "proof_type": "screenshot",
+      "sha256": "f657e7c5ed2fe3e1dee4a13bd970e9359aab1c627dd1d4bffd489afbd9aa5aa7",
+      "size_bytes": 118463
+    },
+    {
+      "path": "screenshots/datahub-dp2-lineage.png",
+      "proof_type": "screenshot",
+      "sha256": "12cc17dc0a5f3c631404c68ac415e950f5b16cb73bfab525d890eaa9bf134d5d",
+      "size_bytes": 158117
+    },
+    {
+      "path": "screenshots/datahub-dp2-quality.png",
+      "proof_type": "screenshot",
+      "sha256": "605f0cb1085f3728f45267c35794ce525e67eba3c72de0a4c490430aa51d97d5",
+      "size_bytes": 120929
+    },
+    {
+      "path": "screenshots/datahub-dp3-lineage.png",
+      "proof_type": "screenshot",
+      "sha256": "2853618772af3ad02ce1c8fdccdaeff274f5a6f584e35c71cf98608913a7b32f",
+      "size_bytes": 152460
+    },
+    {
+      "path": "screenshots/datahub-dp3-quality.png",
+      "proof_type": "screenshot",
+      "sha256": "3ef8a0a50b7b5df47b4566056b84b88cd45347f49d67960199e89357f2b51df1",
+      "size_bytes": 118978
+    },
+    {
+      "path": "logs/quality-gates.txt",
+      "proof_type": "log",
+      "sha256": "4e1ba336599971618257bd019d6df8180f47165f7229ab357da5c1593efe6ba3",
+      "size_bytes": 425
+    }
+  ],
+  "completed_at": "2026-07-30T17:25:00.830275+00:00",
+  "config_sha256": "679ef65cb8baf966b83c74814fea9072aecc30b4e24e71d21fd3e317a6924f85",
+  "git_sha": "9567656b4f4f26f4277e46df2304677b9a55108f",
+  "run_id": "coursework-final-20260731T0030",
+  "schema_version": 1,
+  "started_at": "2026-07-30T17:24:59.795517+00:00"
+}

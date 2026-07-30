@@ -1,0 +1,27 @@
+{
+  "checks": {
+    "bounded_contract_has_50000_events": true,
+    "contracts_share_run_and_input": true,
+    "optimized_contract_removes_duplicates": true,
+    "optimized_has_completed_checkpoint": true,
+    "restored_job_reached_idle_checkpoint": true,
+    "runtime_consumed_same_kafka_records": true,
+    "runtime_dedup_removed_records": true,
+    "runtime_jobs_finished": true,
+    "savepoint_was_restored": true
+  },
+  "metrics": {
+    "baseline_duration_ms": 43449,
+    "baseline_parallelism": 1,
+    "baseline_source_backpressure_ms": 34971,
+    "completed_checkpoints": 5,
+    "optimized_duration_ms": 46932,
+    "optimized_parallelism": 4,
+    "optimized_source_backpressure_ms_per_subtask": 22243.75,
+    "restart_completed_checkpoints": 21,
+    "runtime_duplicates_removed": 959
+  },
+  "run_id": "generator-evidence-v1",
+  "schema_version": 1,
+  "status": "pass"
+}

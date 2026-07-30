@@ -1,0 +1,64 @@
+schema_version: 1
+datasets:
+  companies:
+    version: v2
+    required: [ticker, company_name, exchange, created_ts]
+    nullable: [industry, sector, listing_date, delisted_flag, company_size]
+    blank_as_null: true
+    field_types:
+      ticker: string
+      company_name: string
+      exchange: string
+      created_ts: timestamp
+      industry: string
+      sector: string
+      listing_date: date
+      delisted_flag: boolean
+      company_size: string
+    enums:
+      exchange: [HOSE, HNX, UPCOM]
+  financial_statements:
+    version: v2
+    required: [ticker, report_period, fiscal_year, fiscal_quarter, total_assets, total_liabilities, equity, created_ts]
+    nullable: [current_assets, current_liabilities, revenue, ebit, interest_expense, net_income, operating_cash_flow, retained_earnings, statement_type, report_release_date, event_timestamp]
+    blank_as_null: true
+    field_types:
+      ticker: string
+      report_period: string
+      fiscal_year: integer
+      fiscal_quarter: integer
+      total_assets: float
+      total_liabilities: float
+      equity: float
+      created_ts: timestamp
+      current_assets: float
+      current_liabilities: float
+      revenue: float
+      ebit: float
+      interest_expense: float
+      net_income: float
+      operating_cash_flow: float
+      retained_earnings: float
+      statement_type: string
+      report_release_date: date
+      event_timestamp: timestamp
+    enums:
+      fiscal_quarter: [1, 2, 3, 4]
+      statement_type: [consolidated, separate]
+  market_prices_daily:
+    version: v2
+    required: [ticker, trading_date, close_price, volume, created_ts]
+    nullable: [open_price, high_price, low_price, market_cap, shares_outstanding, event_timestamp]
+    blank_as_null: true
+    field_types:
+      ticker: string
+      trading_date: date
+      close_price: float
+      volume: integer
+      created_ts: timestamp
+      open_price: float
+      high_price: float
+      low_price: float
+      market_cap: float
+      shares_outstanding: float
+      event_timestamp: timestamp

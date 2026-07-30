@@ -54,7 +54,7 @@ def create_views_sql(sql_path: str | Path = "sql/duckdb_create_views.sql") -> st
     secret_key = os.getenv("MINIO_ROOT_PASSWORD") or _read_dotenv_value("MINIO_ROOT_PASSWORD")
     if access_key and secret_key:
         credential_sql = (
-            f"SET s3_access_key_id='{access_key}';\n" f"SET s3_secret_access_key='{secret_key}';"
+            f"SET s3_access_key_id='{access_key}';\nSET s3_secret_access_key='{secret_key}';"
         )
         sql = sql.replace(
             "-- env chain (process env, .env, ~/.aws/credentials).",

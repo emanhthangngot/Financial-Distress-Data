@@ -200,7 +200,7 @@ tests/
   test_streaming.py
 ```
 
-There is no `src/generator/` directory in the current implementation. Synthetic or fixture data lives behind `VnstockFixtureAdapter`, not in a separate generator module.
+`src/generator/` now contains the rubric problem generator with typed CI/evidence profiles, deterministic offline and streaming simulation, source-area persistence, and measured profile output. `VnstockFixtureAdapter` remains the stable fast-test collector boundary; the generator is a separate source workload for later DP1 ingestion.
 
 ## 8. Data Source Design
 

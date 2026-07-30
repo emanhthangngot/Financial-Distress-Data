@@ -2,7 +2,7 @@
 
 ## Objective
 
-Stage 1 uses deterministic, fixture-backed source adapters to exercise the same data contracts that later live Vietnamese market collectors must satisfy. The current repository does not call live HOSE, HNX, SSI, or `vnstock` endpoints during tests or evidence runs; it uses `VnstockFixtureAdapter` as the stable boundary for collectors, Airflow tasks, Kafka events, Bronze writes, Silver normalization, Gold construction, metadata logging, DQ, and DuckDB evidence.
+Stage 1 uses deterministic source adapters to exercise the same data contracts that later live Vietnamese market collectors must satisfy. Fast contract tests retain `VnstockFixtureAdapter`; rubric-scale problem simulation uses the typed configurable generator documented in [Configurable Problem Generator](data-generator.md). The repository does not call live HOSE, HNX, SSI, or `vnstock` endpoints during tests or evidence runs.
 
 This document describes the current implemented contract, not a Phase 2 or cloud roadmap.
 
@@ -30,6 +30,8 @@ Out of scope:
 |---|---|
 | Batch adapter boundary | `src/collectors/source_adapters/base.py` |
 | Deterministic fixture adapter | `src/collectors/source_adapters/vnstock_fixture_adapter.py` |
+| Configurable problem generator | `src/generator/`, `configs/generator-config.yaml` |
+| Generator runner and profiler | `scripts/run_generator_and_profile.py` |
 | Batch collectors | `src/collectors/company_list_collector.py`, `src/collectors/financial_statement_collector.py`, `src/collectors/market_price_collector.py` |
 | Streaming event contract | `src/streaming/events.py` |
 | Micro-batch buffering | `src/streaming/kafka_to_bronze_consumer.py` |
@@ -297,7 +299,7 @@ This mode writes Bronze/Silver/Gold Parquet to MinIO, persists metadata and DQ r
 
 ## Volume Strategy
 
-The current committed fixtures are intentionally small and deterministic. They are designed for repeatable CI and local evidence, not for meeting a high-volume production benchmark.
+The committed adapter fixtures remain intentionally small. The configurable generator adds separate CI and evidence profiles; the verified evidence profile contains 10,000 base companies, 80,000 financial statements, 10,000 market prices, and 50,000 stream events.
 
 The previous `>=20M` record target is an optional replay/load-testing target for later source-access work. It is not an implemented Stage 1 guarantee.
 

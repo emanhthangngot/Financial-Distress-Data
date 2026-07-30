@@ -58,8 +58,7 @@ def test_duckdb_create_views_sql_can_use_container_minio_endpoint(tmp_path: Path
 def test_duckdb_create_views_sql_injects_minio_credentials_from_env(tmp_path: Path, monkeypatch):
     sql_path = tmp_path / "views.sql"
     sql_path.write_text(
-        "SET s3_endpoint='localhost:9000';\n"
-        "-- env chain (process env, .env, ~/.aws/credentials).",
+        "SET s3_endpoint='localhost:9000';\n-- env chain (process env, .env, ~/.aws/credentials).",
         encoding="utf-8",
     )
     monkeypatch.setenv("MINIO_ROOT_USER", "minio-user")
@@ -74,8 +73,7 @@ def test_duckdb_create_views_sql_injects_minio_credentials_from_env(tmp_path: Pa
 def test_duckdb_create_views_sql_injects_minio_credentials_from_dotenv(tmp_path: Path, monkeypatch):
     sql_path = tmp_path / "views.sql"
     sql_path.write_text(
-        "SET s3_endpoint='localhost:9000';\n"
-        "-- env chain (process env, .env, ~/.aws/credentials).",
+        "SET s3_endpoint='localhost:9000';\n-- env chain (process env, .env, ~/.aws/credentials).",
         encoding="utf-8",
     )
     dotenv = tmp_path / ".env"

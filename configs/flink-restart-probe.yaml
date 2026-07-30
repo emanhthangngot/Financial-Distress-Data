@@ -1,0 +1,20 @@
+schema_version: 1
+run_id: generator-evidence-v1-restart-probe
+flink_version: 1.20.3
+kafka_bootstrap_servers: kafka:9092
+source_topic: financial.price_events
+consumer_group: financial-distress-flink-restart-probe
+output_root: /opt/flink/output/restart-probe
+window_seconds: 10
+max_out_of_orderness_seconds: 120
+allowed_lateness_seconds: 180
+dedup_ttl_seconds: 900
+checkpoint_interval_ms: 5000
+baseline:
+  parallelism: 1
+  checkpointing: false
+  deduplicate: false
+optimized:
+  parallelism: 2
+  checkpointing: true
+  deduplicate: true

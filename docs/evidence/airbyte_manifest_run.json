@@ -1,5 +1,5 @@
 {
-  "manifest": "/home/pearspringmind/Studying/FSDS/AIDE1/coursework/Financial-Distress-Data/configs/ingestion_manifest.yaml",
+  "manifest": "/home/pearspringmind/Studying/FSDS/Financial-Distress-Data/configs/ingestion_manifest.yaml",
   "per_source_counts": {},
   "records": [],
   "skipped": [

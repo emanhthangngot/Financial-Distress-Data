@@ -139,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
         "--evidence",
         type=Path,
         default=None,
-        help="Path to write the evidence JSON to " "(default: docs/evidence/dbt_macro_check.json)",
+        help="Path to write the evidence JSON to (default: docs/evidence/dbt_macro_check.json)",
     )
     args = parser.parse_args(argv)
 

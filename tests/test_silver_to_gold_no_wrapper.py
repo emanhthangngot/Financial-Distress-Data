@@ -30,9 +30,9 @@ def test_no_remaining_build_distress_labels_imports_in_src_or_dags():
         text=True,
     )
     # grep exit 0 = found, 1 = not found. Empty stdout is what we want.
-    assert (
-        result.returncode == 1
-    ), f"build_distress_labels still referenced in src/ or dags/:\n{result.stdout}"
+    assert result.returncode == 1, (
+        f"build_distress_labels still referenced in src/ or dags/:\n{result.stdout}"
+    )
 
 
 def test_dag_06_imports_compute_labels_directly():

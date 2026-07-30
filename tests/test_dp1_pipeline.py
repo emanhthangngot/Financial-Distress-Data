@@ -42,12 +42,12 @@ def test_dp1_dag_id_is_dp1_bronze_ingest():
 
 def test_dp1_dag_has_ingest_and_validate_stages():
     source = _read_source()
-    assert re.search(
-        r'task_id\s*=\s*"ingest_bronze"', source
-    ), "DP1 DAG must define an `ingest_bronze` task (rubric: Ingest stage, 2 pts)"
-    assert re.search(
-        r'task_id\s*=\s*"validate_bronze"', source
-    ), "DP1 DAG must define a `validate_bronze` task (rubric: Validate stage, 2 pts)"
+    assert re.search(r'task_id\s*=\s*"ingest_bronze"', source), (
+        "DP1 DAG must define an `ingest_bronze` task (rubric: Ingest stage, 2 pts)"
+    )
+    assert re.search(r'task_id\s*=\s*"validate_bronze"', source), (
+        "DP1 DAG must define a `validate_bronze` task (rubric: Validate stage, 2 pts)"
+    )
 
 
 def test_dp1_validate_stage_depends_on_ingest():
@@ -70,12 +70,12 @@ def test_dp1_dag_uses_airflow_variable_for_bucket():
     source = _read_source()
     # Bucket is an Airflow Variable in the running cluster; the DAG code must
     # read it through ``Variable.get`` (rubric bonus: variables in Airflow).
-    assert (
-        "Variable.get" in source
-    ), "DP1 DAG must read at least one value from Airflow Variable (rubric bonus)"
-    assert (
-        "financial_distress_bucket" in source or "FINANCIAL_DISTRESS_BUCKET" in source
-    ), "DP1 DAG must reference the lakehouse bucket name (Variable or env fallback)"
+    assert "Variable.get" in source, (
+        "DP1 DAG must read at least one value from Airflow Variable (rubric bonus)"
+    )
+    assert "financial_distress_bucket" in source or "FINANCIAL_DISTRESS_BUCKET" in source, (
+        "DP1 DAG must reference the lakehouse bucket name (Variable or env fallback)"
+    )
 
 
 def test_dp1_ingest_stage_includes_all_three_collectors():
@@ -88,15 +88,15 @@ def test_dp1_ingest_stage_includes_all_three_collectors():
         "collect_market_prices",
     ]
     for callable_name in expected_callables:
-        assert (
-            callable_name in source
-        ), f"DP1 ingest stage must orchestrate the `{callable_name}` collector"
+        assert callable_name in source, (
+            f"DP1 ingest stage must orchestrate the `{callable_name}` collector"
+        )
 
 
 def test_dp1_module_has_docstring():
     source = _read_source()
     # First non-blank line must be a docstring (rubric row 5: module docstrings).
     first_meaningful = next((line.strip() for line in source.splitlines() if line.strip()), "")
-    assert first_meaningful.startswith('"""') or first_meaningful.startswith(
-        "'''"
-    ), "DP1 DAG module must start with a module-level docstring"
+    assert first_meaningful.startswith('"""') or first_meaningful.startswith("'''"), (
+        "DP1 DAG module must start with a module-level docstring"
+    )

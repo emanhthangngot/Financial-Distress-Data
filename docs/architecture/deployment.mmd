@@ -1,0 +1,23 @@
+flowchart LR
+    GEN["Generator / Collectors"]
+    KAFKA["Kafka"]
+    AIRFLOW["Airflow"]
+    SPARK["Spark"]
+    FLINK["Flink"]
+    MINIO["MinIO Lakehouse"]
+    POSTGRES["PostgreSQL Metadata"]
+    DATAHUB["DataHub"]
+    DUCKDB["DuckDB / DBeaver"]
+
+    GEN -->|"1. batch rows + run_id"| MINIO
+    GEN -->|"2. event JSON + event time"| KAFKA
+    AIRFLOW -->|"3. DP1 ingest commands"| GEN
+    KAFKA -->|"4. ordered event stream"| FLINK
+    FLINK -->|"5. windows + late/duplicate metrics"| MINIO
+    AIRFLOW -->|"6. DP2 Spark submission"| SPARK
+    MINIO -->|"7. Bronze Parquet"| SPARK
+    SPARK -->|"8. Silver/Gold/feature Parquet"| MINIO
+    AIRFLOW -->|"9. run state + DQ results"| POSTGRES
+    AIRFLOW -->|"10. flow/job/run metadata"| DATAHUB
+    MINIO -->|"11. dataset schemas + lineage URNs"| DATAHUB
+    MINIO -->|"12. Parquet inspection"| DUCKDB

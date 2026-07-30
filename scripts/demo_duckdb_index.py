@@ -66,9 +66,7 @@ def _build_index(conn: duckdb.DuckDBPyConnection) -> None:
     local equivalent to a warehouse clustered index.
     """
     for col in INDEX_COLUMNS:
-        conn.execute(
-            f"CREATE INDEX IF NOT EXISTS idx_{TABLE_NAME}_{col} " f"ON {TABLE_NAME}({col})"
-        )
+        conn.execute(f"CREATE INDEX IF NOT EXISTS idx_{TABLE_NAME}_{col} ON {TABLE_NAME}({col})")
 
 
 def main() -> dict[str, Any]:
