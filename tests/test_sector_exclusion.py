@@ -40,12 +40,12 @@ def test_load_sector_policy_returns_yaml_contents() -> None:
     assert hasattr(policy, "codes"), "policy must expose .codes"
     assert hasattr(policy, "policy"), "policy must expose .policy dict"
 
-    assert policy.terms == EXPECTED_TERMS_LOWER, (
-        f"Expected terms to be {EXPECTED_TERMS_LOWER!r}, got {policy.terms!r}"
-    )
-    assert policy.codes == EXPECTED_CODES, (
-        f"Expected codes to be {EXPECTED_CODES!r}, got {policy.codes!r}"
-    )
+    assert (
+        policy.terms == EXPECTED_TERMS_LOWER
+    ), f"Expected terms to be {EXPECTED_TERMS_LOWER!r}, got {policy.terms!r}"
+    assert (
+        policy.codes == EXPECTED_CODES
+    ), f"Expected codes to be {EXPECTED_CODES!r}, got {policy.codes!r}"
     assert policy.policy.get("excluded_reason") == "financial_sector_excluded"
 
 
@@ -63,9 +63,9 @@ def test_no_inline_financial_constants_in_src() -> None:
             if pat.search(text):
                 hits.append(f"{py_path.relative_to(REPO_ROOT)}: {sym}")
 
-    assert not hits, (
-        "src/ still defines FINANCIAL_SECTOR_TERMS / FINANCIAL_GICS_CODES: " + ", ".join(hits)
-    )
+    assert (
+        not hits
+    ), "src/ still defines FINANCIAL_SECTOR_TERMS / FINANCIAL_GICS_CODES: " + ", ".join(hits)
 
 
 def test_is_financial_sector_reads_yaml_at_call_time() -> None:
@@ -89,9 +89,9 @@ def test_is_financial_sector_reads_yaml_at_call_time() -> None:
         YAML_PATH.write_text(yaml.safe_dump(mutated), encoding="utf-8")
 
         row = {"sector": "timew12markersector", "gics_sector_code": "99"}
-        assert is_financial_sector(row) is True, (
-            "is_financial_sector must reflect YAML changes at call time"
-        )
+        assert (
+            is_financial_sector(row) is True
+        ), "is_financial_sector must reflect YAML changes at call time"
 
         non_match_row = {"sector": "Industrials", "gics_sector_code": "20"}
         assert is_financial_sector(non_match_row) is False

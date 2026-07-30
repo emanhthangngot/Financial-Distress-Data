@@ -17,44 +17,34 @@ def build_schema_evidence(sql_path: Path, output: Path) -> dict[str, object]:
     connection = duckdb.connect(str(output))
     try:
         connection.execute(sql_path.read_text(encoding="utf-8"))
-        connection.execute(
-            """
+        connection.execute("""
             INSERT INTO gold.dim_company VALUES
               ('aaa-v1', 'aaa', 'AAA', 'Alpha Old', '2025-01-01', '2026-01-01', false),
               ('aaa-v2', 'aaa', 'AAA', 'Alpha New', '2026-01-01', NULL, true)
-            """
-        )
-        tables = connection.execute(
-            """
+            """)
+        tables = connection.execute("""
             SELECT table_schema, table_name
             FROM information_schema.tables
             WHERE table_schema IN ('bronze', 'silver', 'gold')
             ORDER BY table_schema, table_name
-            """
-        ).fetchall()
-        feature_columns = connection.execute(
-            """
+            """).fetchall()
+        feature_columns = connection.execute("""
             SELECT table_name, list(column_name ORDER BY ordinal_position)
             FROM information_schema.columns
             WHERE table_schema = 'gold' AND table_name LIKE 'feat_%'
             GROUP BY table_name ORDER BY table_name
-            """
-        ).fetchall()
-        foreign_keys = connection.execute(
-            """
+            """).fetchall()
+        foreign_keys = connection.execute("""
             SELECT table_name, constraint_name
             FROM information_schema.table_constraints
             WHERE table_schema = 'gold' AND constraint_type = 'FOREIGN KEY'
             ORDER BY table_name, constraint_name
-            """
-        ).fetchall()
-        history = connection.execute(
-            """
+            """).fetchall()
+        history = connection.execute("""
             SELECT ticker, count(*) AS versions,
                    sum(CASE WHEN is_current THEN 1 ELSE 0 END) AS current_versions
             FROM gold.dim_company GROUP BY ticker
-            """
-        ).fetchall()
+            """).fetchall()
     finally:
         connection.close()
 
