@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 RULE_VERSION = "v1"
 LABEL_SOURCE = "rule_based_v1"
@@ -19,6 +22,28 @@ FINANCIAL_SECTOR_TERMS = {
     "financial services",
 }
 FINANCIAL_GICS_CODES = {"40", "4010", "4020", "4030"}
+
+
+@dataclass(frozen=True)
+class SectorExclusion:
+    """Configured sectors excluded from rule-based distress labeling."""
+
+    terms: frozenset[str]
+    gics_codes: frozenset[str]
+
+
+DEFAULT_SECTOR_EXCLUSION = SectorExclusion(
+    frozenset(FINANCIAL_SECTOR_TERMS), frozenset(FINANCIAL_GICS_CODES)
+)
+
+
+def load_sector_exclusion(path: str | Path) -> SectorExclusion:
+    """Load sector and GICS exclusions from YAML."""
+    payload = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    return SectorExclusion(
+        frozenset(_normalized_text(value) for value in payload["z_score_excluded_sectors"]),
+        frozenset(str(value).strip() for value in payload["z_score_excluded_gics"]),
+    )
 
 
 @dataclass(frozen=True)
@@ -78,7 +103,10 @@ def _normalized_text(value: Any) -> str:
     return str(value or "").strip().lower()
 
 
-def is_financial_sector(row: dict[str, Any]) -> bool:
+def is_financial_sector(
+    row: dict[str, Any], sector_exclusion: SectorExclusion | None = None
+) -> bool:
+    policy = sector_exclusion or DEFAULT_SECTOR_EXCLUSION
     text_values = {
         _normalized_text(row.get("sector")),
         _normalized_text(row.get("industry")),
@@ -89,7 +117,7 @@ def is_financial_sector(row: dict[str, Any]) -> bool:
         str(row.get("gics_sector_code") or "").strip(),
         str(row.get("gics_code") or "").strip()[:2],
     }
-    return bool(text_values & FINANCIAL_SECTOR_TERMS or code_values & FINANCIAL_GICS_CODES)
+    return bool(text_values & policy.terms or code_values & policy.gics_codes)
 
 
 def _quarter_index(report_period: Any) -> int | None:
@@ -181,9 +209,11 @@ def warning_rules(
 
 
 def compute_distress_label(
-    row: dict[str, Any], previous_row: dict[str, Any] | None = None
+    row: dict[str, Any],
+    previous_row: dict[str, Any] | None = None,
+    sector_exclusion: SectorExclusion | None = None,
 ) -> DistressLabel:
-    if is_financial_sector(row):
+    if is_financial_sector(row, sector_exclusion):
         return DistressLabel(
             ticker=str(row.get("ticker")),
             report_period=str(row.get("report_period")),
@@ -247,13 +277,68 @@ def compute_distress_label(
     )
 
 
-def compute_labels(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    rows_sorted = sorted(rows, key=lambda item: (item.get("ticker"), item.get("report_period")))
+def _enrich_with_company_sector(
+    rows: list[dict[str, Any]], company_rows: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    companies_by_ticker: dict[str, list[dict[str, Any]]] = {}
+    for company in company_rows:
+        companies_by_ticker.setdefault(str(company.get("ticker", "")).upper(), []).append(company)
+    for companies in companies_by_ticker.values():
+        companies.sort(key=lambda item: str(item.get("created_ts", "")), reverse=True)
+
+    enriched = []
+    for row in rows:
+        ticker = str(row.get("ticker", "")).upper()
+        reference = str(
+            row.get("event_timestamp")
+            or row.get("report_release_date")
+            or row.get("created_ts")
+            or ""
+        )
+        company = next(
+            (
+                item
+                for item in companies_by_ticker.get(ticker, [])
+                if str(item.get("created_ts", "")) <= reference
+            ),
+            {},
+        )
+        enriched.append(
+            {
+                **row,
+                **{
+                    field: company.get(field)
+                    for field in (
+                        "sector",
+                        "industry",
+                        "gics_sector",
+                        "gics_industry_group",
+                        "gics_sector_code",
+                        "gics_code",
+                    )
+                    if row.get(field) is None and company.get(field) is not None
+                },
+            }
+        )
+    return enriched
+
+
+def compute_labels(
+    rows: list[dict[str, Any]],
+    company_rows: list[dict[str, Any]] | None = None,
+    sector_exclusion: SectorExclusion | None = None,
+) -> list[dict[str, Any]]:
+    source_rows = _enrich_with_company_sector(rows, company_rows) if company_rows else rows
+    rows_sorted = sorted(
+        source_rows, key=lambda item: (item.get("ticker"), item.get("report_period"))
+    )
     previous_by_ticker: dict[str, dict[str, Any]] = {}
     labels: list[dict[str, Any]] = []
     for row in rows_sorted:
         ticker = str(row.get("ticker"))
-        label = compute_distress_label(row, previous_by_ticker.get(ticker))
+        label = compute_distress_label(
+            row, previous_by_ticker.get(ticker), sector_exclusion=sector_exclusion
+        )
         labels.append(label.as_dict())
         previous_by_ticker[ticker] = row
     return labels

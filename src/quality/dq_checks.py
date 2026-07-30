@@ -55,7 +55,9 @@ def check_referential_integrity(
     dataset_name: str,
     field: str,
 ) -> DQResult:
-    failures = sum(1 for row in fact_rows if row.get(field) not in dimension_keys)
+    failures = sum(
+        1 for row in fact_rows if row.get(field) is None or row.get(field) not in dimension_keys
+    )
     return DQResult(
         dataset_name,
         f"{field}_exists",
@@ -125,7 +127,17 @@ def check_freshness(
         )
 
     latest = max(timestamps)
-    lag_minutes = max((reference - latest).total_seconds() / 60, 0.0)
+    lag_minutes = (reference - latest).total_seconds() / 60
+    if lag_minutes < 0:
+        return DQResult(
+            dataset_name,
+            f"{timestamp_field}_freshness",
+            "fail",
+            "critical",
+            float(lag_minutes),
+            0.0,
+            "Latest event timestamp is in the future",
+        )
     return DQResult(
         dataset_name,
         f"{timestamp_field}_freshness",

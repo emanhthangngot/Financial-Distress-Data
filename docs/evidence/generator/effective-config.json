@@ -1,0 +1,35 @@
+{
+  "offline": {
+    "companies": 10000,
+    "dominant_exchange": "HOSE",
+    "dominant_exchange_rate": 0.7,
+    "dominant_sector": "Manufacturing",
+    "dominant_sector_rate": 0.6,
+    "duplicate_rate": 0.02,
+    "high_cardinality_ids": 10000,
+    "quarters": 8,
+    "schema_change_quarter": 5
+  },
+  "output": {
+    "format": "jsonl",
+    "kafka_bootstrap_servers": "kafka:9092",
+    "minio_bucket": "financial-distress-lake",
+    "minio_prefix": "source/generator",
+    "root": "/tmp/financial-generator-evidence-final-2"
+  },
+  "run_id": "generator-evidence-v1",
+  "schema_version": 1,
+  "seed": 42,
+  "streaming": {
+    "baseline_events_per_window": 100,
+    "burst_multiplier": 10,
+    "burst_window": 5,
+    "duplicate_rate": 0.015,
+    "events": 50000,
+    "late_rate": 0.05,
+    "max_lateness_seconds": 300,
+    "max_out_of_order_seconds": 120,
+    "out_of_order_rate": 0.04,
+    "window_seconds": 10
+  }
+}

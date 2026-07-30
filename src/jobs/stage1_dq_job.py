@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import Any
 
 from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
+from src.metadata.metadata_writer import utc_now_iso
 
 
 def read_minio_parquet_rows(bucket: str, prefix: str) -> list[dict[str, Any]]:
@@ -34,7 +35,9 @@ def read_minio_parquet_rows(bucket: str, prefix: str) -> list[dict[str, Any]]:
     return rows
 
 
-def build_actual_dq_checks(bucket: str) -> list[dict[str, Any]]:
+def build_actual_dq_checks(
+    bucket: str, reference_timestamp: str | None = None
+) -> list[dict[str, Any]]:
     silver_companies = read_minio_parquet_rows(bucket, "silver/companies/")
     gold_financial = read_minio_parquet_rows(bucket, "gold/fact_financial_statement/")
     gold_dim_company = read_minio_parquet_rows(bucket, "gold/dim_company/")
@@ -120,7 +123,7 @@ def build_actual_dq_checks(bucket: str) -> list[dict[str, Any]]:
             "type": "freshness",
             "dataset_name": "silver_market_prices",
             "rows": silver_market,
-            "reference_timestamp": "2025-03-01T00:00:00+00:00",
+            "reference_timestamp": reference_timestamp or utc_now_iso(),
             "sla_minutes": 120,
             "timestamp_field": "event_timestamp",
         },

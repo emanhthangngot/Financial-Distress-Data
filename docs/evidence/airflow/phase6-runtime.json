@@ -1,0 +1,98 @@
+{
+  "pipelines": {
+    "build_offline_features": {
+      "end_date": "2026-07-30T15:43:50.475320+00:00",
+      "execution_date": "2026-07-30T12:03:00+00:00",
+      "run_id": "manual__2026-07-30T12:03:00+00:00",
+      "start_date": "2026-07-30T12:03:00+00:00",
+      "state": "success",
+      "tasks": [
+        {
+          "state": "success",
+          "task_id": "compute_offline_features",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "publish_manifest",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "resolve_run",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "validate_point_in_time_features",
+          "try_number": 1
+        }
+      ]
+    },
+    "build_silver_gold": {
+      "end_date": "2026-07-30T15:40:21.676407+00:00",
+      "execution_date": "2026-07-30T12:02:00+00:00",
+      "run_id": "manual__2026-07-30T12:02:00+00:00",
+      "start_date": "2026-07-30T12:02:00+00:00",
+      "state": "success",
+      "tasks": [
+        {
+          "state": "success",
+          "task_id": "publish_manifest",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "resolve_run",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "spark_build_silver_gold",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "validate_silver_gold",
+          "try_number": 1
+        }
+      ]
+    },
+    "ingest_source_to_bronze": {
+      "end_date": "2026-07-30T15:43:21.512267+00:00",
+      "execution_date": "2026-07-30T12:02:00+00:00",
+      "run_id": "manual__2026-07-30T12:02:00+00:00",
+      "start_date": "2026-07-30T12:02:00+00:00",
+      "state": "success",
+      "tasks": [
+        {
+          "state": "success",
+          "task_id": "ingest_batch_to_bronze",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "ingest_stream_to_bronze",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "publish_manifest",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "resolve_run",
+          "try_number": 1
+        },
+        {
+          "state": "success",
+          "task_id": "validate_bronze",
+          "try_number": 1
+        }
+      ]
+    }
+  },
+  "schema_version": 1,
+  "status": "pass"
+}

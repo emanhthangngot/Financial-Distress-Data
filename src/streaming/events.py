@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Any
-from uuid import uuid4
+
+
+def _stable_event_id(event_type: str, payload: dict[str, Any]) -> str:
+    canonical = json.dumps(
+        {"event_type": event_type, **payload}, sort_keys=True, separators=(",", ":")
+    )
+    return sha256(canonical.encode("utf-8")).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -27,7 +34,7 @@ class StreamEvent:
             "price": price,
             "volume": volume,
         }
-        event_hash = sha256(repr(sorted(payload.items())).encode("utf-8")).hexdigest()
+        event_hash = _stable_event_id("price_update", payload)
         return cls(
             topic="financial.price_events",
             event_id=event_hash,
@@ -42,14 +49,20 @@ class StreamEvent:
     def alert(
         cls, ticker: str, event_timestamp: str, created_ts: str, alert_type: str
     ) -> StreamEvent:
+        payload = {
+            "ticker": ticker,
+            "event_timestamp": event_timestamp,
+            "created_ts": created_ts,
+            "alert_type": alert_type,
+        }
         return cls(
             topic="financial.alert_events",
-            event_id=str(uuid4()),
+            event_id=_stable_event_id("market_alert", payload),
             event_type="market_alert",
             ticker=ticker,
             event_timestamp=event_timestamp,
             created_ts=created_ts,
-            payload={"ticker": ticker, "alert_type": alert_type},
+            payload=payload,
         )
 
     @classmethod
@@ -72,7 +85,7 @@ class StreamEvent:
             "severity_score": severity_score,
             "source_url": source_url,
         }
-        event_hash = sha256(repr(sorted(payload.items())).encode("utf-8")).hexdigest()
+        event_hash = _stable_event_id("news_sentiment", payload)
         return cls(
             topic="financial.news_events",
             event_id=event_hash,

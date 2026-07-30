@@ -1,0 +1,13 @@
+$ docker compose config --quiet
+
+$ uv run pytest -q
+............s.s......................................................... [ 41%]
+........................................................................ [ 82%]
+...............................                                          [100%]
+173 passed, 2 skipped in 0.65s
+
+$ uv run ruff check .
+All checks passed!
+
+$ uv run ruff format --check .
+133 files already formatted

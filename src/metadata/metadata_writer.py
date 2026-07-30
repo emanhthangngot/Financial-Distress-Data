@@ -101,6 +101,21 @@ class MetadataWriter:
             }
         )
 
+    def log_failed_records(
+        self,
+        dataset_name: str,
+        records: list[dict[str, Any]],
+        run_id: str | None = None,
+    ) -> None:
+        """Persist quarantined Silver records with their source run linkage."""
+        for record in records:
+            self.log_failed_record(
+                dataset_name,
+                str(record["failure_reason"]),
+                dict(record["raw_payload"]),
+                run_id=run_id,
+            )
+
     def update_dataset_freshness(
         self,
         dataset_name: str,
@@ -324,6 +339,21 @@ class PostgresMetadataWriter:
                 utc_now_iso(),
             ),
         )
+
+    def log_failed_records(
+        self,
+        dataset_name: str,
+        records: list[dict[str, Any]],
+        run_id: str | None = None,
+    ) -> None:
+        """Persist a collection of quarantined records through the PostgreSQL writer."""
+        for record in records:
+            self.log_failed_record(
+                dataset_name,
+                str(record["failure_reason"]),
+                dict(record["raw_payload"]),
+                run_id=run_id,
+            )
 
     def update_dataset_freshness(
         self,

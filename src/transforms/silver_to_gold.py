@@ -10,7 +10,7 @@ from src.transforms.features.pit import (
     build_feat_company_unified,
     pit_join_features,
 )
-from src.transforms.gold.dim_company import build_dim_company, build_dim_date
+from src.transforms.gold.dim_company import build_dim_company, build_dim_date, merge_dim_company
 from src.transforms.gold.fact_financial_statement import (
     build_fact_financial_statement,
     build_fact_financial_statement_spark,
@@ -32,6 +32,7 @@ def build_distress_labels(financial_statement_rows: list[dict[str, Any]]) -> lis
 __all__ = [
     "build_dim_company",
     "build_dim_date",
+    "merge_dim_company",
     "build_distress_labels",
     "build_fact_financial_statement",
     "build_fact_financial_statement_spark",

@@ -1,0 +1,17 @@
+{
+  "evidence_manifest": {
+    "clean_verification_errors": [],
+    "tamper_detected": true,
+    "tamper_verification_errors": [
+      "artifact hash mismatch: metric.json"
+    ]
+  },
+  "pit_leakage_guard": {
+    "future_candidate_excluded": true,
+    "injected_future_snapshot_rejected": true,
+    "selected_feature": "past"
+  },
+  "run_id": "coursework-20260730T120200-bf92b2cdf0",
+  "schema_version": 1,
+  "status": "pass"
+}

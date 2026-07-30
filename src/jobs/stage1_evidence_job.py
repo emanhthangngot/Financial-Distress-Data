@@ -124,8 +124,19 @@ def _date_key_to_iso(value: int) -> str:
 def _silver_dataset(
     rows: list[dict[str, Any]], dataset_name: str, dedup_keys: list[str]
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    contract = InMemorySchemaRegistry().get_current(dataset_name)
-    return bronze_to_silver(rows, contract.required, contract.nullable, dedup_keys)
+    contract = InMemorySchemaRegistry.from_yaml("configs/schema-contracts.yaml").get_current(
+        dataset_name
+    )
+    return bronze_to_silver(
+        rows,
+        contract.required,
+        contract.nullable,
+        dedup_keys,
+        field_types=contract.field_types,
+        enum_values=contract.enum_values,
+        blank_as_null=contract.blank_as_null,
+        run_id=current_evidence_run_id(),
+    )
 
 
 def _stream_batches() -> list[dict[str, Any]]:

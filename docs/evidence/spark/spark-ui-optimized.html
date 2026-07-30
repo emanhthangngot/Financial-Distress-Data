@@ -1,0 +1,3257 @@
+<!DOCTYPE html><html>
+      <head>
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="/static/bootstrap.min.css" type="text/css"/><link rel="stylesheet" href="/static/vis-timeline-graph2d.min.css" type="text/css"/><link rel="stylesheet" href="/static/webui.css" type="text/css"/><link rel="stylesheet" href="/static/timeline-view.css" type="text/css"/><script src="/static/sorttable.js"></script><script src="/static/jquery-3.5.1.min.js"></script><script src="/static/vis-timeline-graph2d.min.js"></script><script src="/static/bootstrap.bundle.min.js"></script><script src="/static/initialize-tooltips.js"></script><script src="/static/table.js"></script><script src="/static/timeline-view.js"></script><script src="/static/log-view.js"></script><script src="/static/webui.js"></script><script>setUIRoot('')</script>
+        <script>setAppBasePath('')</script>
+        
+        
+        <link rel="shortcut icon" href="/static/spark-logo-77x50px-hd.png"></link>
+        <title>financial-distress-spark-optimized - Spark Jobs</title>
+      </head>
+      <body>
+        <nav class="navbar navbar-expand-md navbar-light bg-light mb-4">
+          <div class="navbar-header">
+            <div class="navbar-brand">
+              <a href="/">
+                <img src="/static/spark-logo-77x50px-hd.png"/>
+                <span class="version">3.5.6</span>
+              </a>
+            </div>
+          </div>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav mr-auto"><li class="nav-item active">
+        <a class="nav-link" href="/jobs/">Jobs</a>
+      </li><li class="nav-item">
+        <a class="nav-link" href="/stages/">Stages</a>
+      </li><li class="nav-item">
+        <a class="nav-link" href="/storage/">Storage</a>
+      </li><li class="nav-item">
+        <a class="nav-link" href="/environment/">Environment</a>
+      </li><li class="nav-item">
+        <a class="nav-link" href="/executors/">Executors</a>
+      </li><li class="nav-item">
+        <a class="nav-link" href="/SQL/">SQL / DataFrame</a>
+      </li></ul>
+            <span class="navbar-text navbar-right d-none d-md-block">
+              <strong title="financial-distress-spark-optimized" class="text-nowrap">financial-distress-spark-optimized</strong>
+              <span class="text-nowrap">application UI</span>
+            </span>
+          </div>
+        </nav>
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-12">
+              <h3 style="vertical-align: bottom; white-space: nowrap; overflow: hidden;
+                text-overflow: ellipsis;">
+                Spark Jobs
+                <sup>
+      (<a data-toggle="tooltip" data-placement="top" title="A job is triggered by an action, like count() or saveAsTextFile(). Click on a job to see information about the stages of tasks inside it.">?</a>)
+    </sup>
+              </h3>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              <div>
+        <ul class="list-unstyled">
+          <li>
+
+            <strong>User:</strong>
+            airflow
+          </li>
+          <li>
+            <strong>Total Uptime:</strong>
+            16 s
+          </li>
+          <li>
+            <strong>Scheduling Mode: </strong>
+            FIFO
+          </li>
+          
+          <li id="completed-summary">
+                <a href="#completed"><strong>Completed Jobs:</strong></a>
+                69
+              </li>
+          
+        </ul>
+      </div><span class="expand-application-timeline">
+      <span class="expand-application-timeline-arrow arrow-closed"></span>
+      <a data-toggle="tooltip" title="Shows when jobs started and ended and when executors joined or left. Drag to scroll.
+       Click Enable Zooming and use mouse wheel to zoom in/out." data-placement="top">
+        Event Timeline
+      </a>
+    </span><div id="application-timeline" class="collapsed">
+      
+      
+      <div class="control-panel">
+        <div id="application-timeline-zoom-lock">
+          <input type="checkbox"></input>
+          <span>Enable zooming</span>
+        </div>
+      </div>
+    </div><script type="text/javascript">
+      drawApplicationTimeline(
+[
+  {
+    'id': 'executors',
+    'content': '<div>Executors</div><div class="legend-area"><svg width="150px" height="55px">      <rect class="executor-added-legend" x="5px" y="5px" width="20px" height="15px" rx="2px" ry="2px"></rect>      <text x="35px" y="17px">Added</text>      <rect class="executor-removed-legend" x="5px" y="30px" width="20px" height="15px" rx="2px" ry="2px"></rect>      <text x="35px" y="42px">Removed</text>    </svg></div>',
+  },
+  {
+    'id': 'jobs',
+    'content': '<div>Jobs</div><div class="legend-area"><svg width="150px" height="85px">      <rect class="succeeded-job-legend" x="5px" y="5px" width="20px" height="15px" rx="2px" ry="2px"></rect>      <text x="35px" y="17px">Succeeded</text>      <rect class="failed-job-legend" x="5px" y="30px" width="20px" height="15px" rx="2px" ry="2px"></rect>      <text x="35px" y="42px">Failed</text>      <rect class="running-job-legend" x="5px" y="55px" width="20px" height="15px" rx="2px" ry="2px"></rect>      <text x="35px" y="67px">Running</text>    </svg></div>',
+  }
+]
+        ,[
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779063192),
+  'end': new Date(1784779063657),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="parquet at NativeMethodAccessorImpl.java:0 (Job 0)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:43' +
+     '<br>Completed: 2026/07/23 03:57:43">' +
+    'parquet at NativeMethodAccessorImpl.java:0 (Job 0)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779064360),
+  'end': new Date(1784779064419),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="parquet at NativeMethodAccessorImpl.java:0 (Job 1)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:44' +
+     '<br>Completed: 2026/07/23 03:57:44">' +
+    'parquet at NativeMethodAccessorImpl.java:0 (Job 1)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779064845),
+  'end': new Date(1784779065332),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 2)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:44' +
+     '<br>Completed: 2026/07/23 03:57:45">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 2)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779065408),
+  'end': new Date(1784779065511),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 3)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:45' +
+     '<br>Completed: 2026/07/23 03:57:45">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 3)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779065543),
+  'end': new Date(1784779065603),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 4)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:45' +
+     '<br>Completed: 2026/07/23 03:57:45">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 4)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779065696),
+  'end': new Date(1784779066389),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 5)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:45' +
+     '<br>Completed: 2026/07/23 03:57:46">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 5)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779066403),
+  'end': new Date(1784779066422),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 6)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:46' +
+     '<br>Completed: 2026/07/23 03:57:46">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 6)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779066438),
+  'end': new Date(1784779066451),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 7)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:46' +
+     '<br>Completed: 2026/07/23 03:57:46">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 7)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779067205),
+  'end': new Date(1784779067513),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 9)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:47' +
+     '<br>Completed: 2026/07/23 03:57:47">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 9)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779067581),
+  'end': new Date(1784779067700),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 10)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:47' +
+     '<br>Completed: 2026/07/23 03:57:47">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 10)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779067153),
+  'end': new Date(1784779068017),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 8)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:47' +
+     '<br>Completed: 2026/07/23 03:57:48">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 8)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779068101),
+  'end': new Date(1784779068481),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 11)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:48' +
+     '<br>Completed: 2026/07/23 03:57:48">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 11)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779068529),
+  'end': new Date(1784779068648),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 12)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:48' +
+     '<br>Completed: 2026/07/23 03:57:48">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 12)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779068694),
+  'end': new Date(1784779068749),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 13)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:48' +
+     '<br>Completed: 2026/07/23 03:57:48">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 13)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779068809),
+  'end': new Date(1784779068846),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 14)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:48' +
+     '<br>Completed: 2026/07/23 03:57:48">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 14)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779068853),
+  'end': new Date(1784779068888),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 15)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:48' +
+     '<br>Completed: 2026/07/23 03:57:48">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 15)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779068922),
+  'end': new Date(1784779068946),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 16)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:48' +
+     '<br>Completed: 2026/07/23 03:57:48">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 16)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069275),
+  'end': new Date(1784779069369),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 18)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 18)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069412),
+  'end': new Date(1784779069457),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 19)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 19)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069269),
+  'end': new Date(1784779069461),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 17)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 17)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069505),
+  'end': new Date(1784779069647),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 20)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 20)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069672),
+  'end': new Date(1784779069729),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 21)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 21)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069757),
+  'end': new Date(1784779069781),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 22)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 22)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069810),
+  'end': new Date(1784779069832),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 23)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 23)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069835),
+  'end': new Date(1784779069856),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 24)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 24)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779069880),
+  'end': new Date(1784779069901),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 25)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:49' +
+     '<br>Completed: 2026/07/23 03:57:49">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 25)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070236),
+  'end': new Date(1784779070342),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 27)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 27)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070210),
+  'end': new Date(1784779070416),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 26)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 26)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070371),
+  'end': new Date(1784779070417),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 28)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 28)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070453),
+  'end': new Date(1784779070556),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 29)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 29)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070586),
+  'end': new Date(1784779070633),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 30)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 30)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070653),
+  'end': new Date(1784779070674),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 31)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 31)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070702),
+  'end': new Date(1784779070720),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 32)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 32)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070722),
+  'end': new Date(1784779070741),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 33)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 33)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779070763),
+  'end': new Date(1784779070779),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 34)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:50' +
+     '<br>Completed: 2026/07/23 03:57:50">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 34)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071085),
+  'end': new Date(1784779071150),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 35)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 35)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071174),
+  'end': new Date(1784779071204),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 37)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 37)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071133),
+  'end': new Date(1784779071308),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 36)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 36)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071346),
+  'end': new Date(1784779071426),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 38)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 38)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071446),
+  'end': new Date(1784779071490),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 39)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 39)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071509),
+  'end': new Date(1784779071527),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 40)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 40)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071552),
+  'end': new Date(1784779071570),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 41)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 41)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071571),
+  'end': new Date(1784779071590),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 42)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 42)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071611),
+  'end': new Date(1784779071627),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 43)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 43)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071911),
+  'end': new Date(1784779071976),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 45)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:51">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 45)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072000),
+  'end': new Date(1784779072033),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 46)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 46)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779071906),
+  'end': new Date(1784779072084),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 44)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:51' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 44)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072107),
+  'end': new Date(1784779072180),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 47)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 47)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072205),
+  'end': new Date(1784779072266),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 48)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 48)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072283),
+  'end': new Date(1784779072302),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 49)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 49)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072326),
+  'end': new Date(1784779072341),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 50)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 50)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072343),
+  'end': new Date(1784779072361),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 51)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 51)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072379),
+  'end': new Date(1784779072394),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 52)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 52)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072656),
+  'end': new Date(1784779072709),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 54)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 54)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072734),
+  'end': new Date(1784779072772),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 55)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 55)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072652),
+  'end': new Date(1784779072802),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 53)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 53)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072830),
+  'end': new Date(1784779072903),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 56)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 56)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072922),
+  'end': new Date(1784779072965),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 57)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:52">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 57)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779072983),
+  'end': new Date(1784779073003),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 58)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:52' +
+     '<br>Completed: 2026/07/23 03:57:53">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 58)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779073028),
+  'end': new Date(1784779073042),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 59)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:53' +
+     '<br>Completed: 2026/07/23 03:57:53">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 59)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779073044),
+  'end': new Date(1784779073060),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 60)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:53' +
+     '<br>Completed: 2026/07/23 03:57:53">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 60)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779073079),
+  'end': new Date(1784779073093),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="collect at \/tmp\/run_spark_benchmark.py:32 (Job 61)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:53' +
+     '<br>Completed: 2026/07/23 03:57:53">' +
+    'collect at \/tmp\/run_spark_benchmark.py:32 (Job 61)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779073198),
+  'end': new Date(1784779073297),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="parquet at NativeMethodAccessorImpl.java:0 (Job 62)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:53' +
+     '<br>Completed: 2026/07/23 03:57:53">' +
+    'parquet at NativeMethodAccessorImpl.java:0 (Job 62)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779073447),
+  'end': new Date(1784779074636),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="parquet at NativeMethodAccessorImpl.java:0 (Job 63)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:53' +
+     '<br>Completed: 2026/07/23 03:57:54">' +
+    'parquet at NativeMethodAccessorImpl.java:0 (Job 63)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779075027),
+  'end': new Date(1784779075056),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="parquet at NativeMethodAccessorImpl.java:0 (Job 64)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:55' +
+     '<br>Completed: 2026/07/23 03:57:55">' +
+    'parquet at NativeMethodAccessorImpl.java:0 (Job 64)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779075100),
+  'end': new Date(1784779075133),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 65)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:55' +
+     '<br>Completed: 2026/07/23 03:57:55">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 65)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779075141),
+  'end': new Date(1784779075148),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 66)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:55' +
+     '<br>Completed: 2026/07/23 03:57:55">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 66)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779075162),
+  'end': new Date(1784779075171),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 67)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:55' +
+     '<br>Completed: 2026/07/23 03:57:55">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 67)</div>'
+}
+         ,
+{
+  'className': 'job application-timeline-object succeeded',
+  'group': 'jobs',
+  'start': new Date(1784779075182),
+  'end': new Date(1784779075195),
+  'content': '<div class="application-timeline-content"' +
+     'data-html="true" data-placement="top" data-toggle="tooltip"' +
+     'data-title="count at NativeMethodAccessorImpl.java:0 (Job 68)<br>' +
+     'Status: SUCCEEDED<br>' +
+     'Submitted: 2026/07/23 03:57:55' +
+     '<br>Completed: 2026/07/23 03:57:55">' +
+    'count at NativeMethodAccessorImpl.java:0 (Job 68)</div>'
+}
+         ,
+{
+  'className': 'executor added',
+  'group': 'executors',
+  'start': new Date(1784779061267),
+  'content': '<div class="executor-event-content"' +
+    'data-toggle="tooltip" data-placement="top"' +
+    'data-title="Executor driver<br>' +
+    'Added at 2026/07/23 03:57:41"' +
+    'data-html="true">Executor driver added</div>'
+}
+         ], 1784779059276, 0);
+    </script><span id="completed" class="collapse-aggregated-completedJobs collapse-table" onClick="collapseTable('collapse-aggregated-completedJobs','aggregated-completedJobs')">
+          <h4>
+            <span class="collapse-table-arrow arrow-open"></span>
+            <a>Completed Jobs (69)</a>
+          </h4>
+        </span><div class="aggregated-completedJobs collapsible-table">
+          <div>
+        <div>
+      <div>
+        <form id="form-completedJob-table-top-page" method="get" action="/jobs/?&completedJob.sort=Job+Id&completedJob.desc=true#completed" class="form-inline float-right justify-content-end" style="margin-bottom: 0px;">
+          <input type="hidden" name="completedJob.sort" value="Job Id"/><input type="hidden" name="completedJob.desc" value="true"/>
+          <label>1 Pages. Jump to</label>
+          <input type="text" name="completedJob.page" id="form-completedJob-table-top-page-no" value="1" class="col-1 form-control"/>
+
+          <label>. Show </label>
+          <input type="text" id="form-completedJob-table-top-page-size" name="completedJob.pageSize" value="100" class="col-1 form-control"/>
+          <label>items in a page.</label>
+
+          <button type="submit" class="btn btn-spark">Go</button>
+        </form>
+      </div>
+      <div>
+        <span style="float: left; padding-top: 4px; padding-right: 4px;">Page: </span>
+        <ul class="pagination">
+          
+          
+          <li class="page-item disabled"><a href="#" class="page-link">1</a></li>
+          
+          
+        </ul>
+      </div>
+    </div>
+        <table class="table table-bordered table-sm table-striped table-head-clickable table-cell-width-limited" id="completedJob-table">
+          <thead>
+      <tr><th>
+            <a href="/jobs/?&completedJob.sort=Job+Id&completedJob.desc=false&completedJob.pageSize=100#completed">
+              <span data-toggle="tooltip" data-placement="top" title="">
+                Job Id&nbsp;&#x25BE;
+              </span>
+            </a>
+          </th><th>
+              <a href="/jobs/?&completedJob.sort=Description&completedJob.pageSize=100#completed">
+                <span data-toggle="tooltip" data-placement="top" title="">
+                  Description
+                </span>
+              </a>
+            </th><th>
+              <a href="/jobs/?&completedJob.sort=Submitted&completedJob.pageSize=100#completed">
+                <span data-toggle="tooltip" data-placement="top" title="">
+                  Submitted
+                </span>
+              </a>
+            </th><th>
+              <a href="/jobs/?&completedJob.sort=Duration&completedJob.pageSize=100#completed">
+                <span data-toggle="tooltip" data-placement="top" title="Elapsed time since the job was submitted until execution completion of all its stages.">
+                  Duration
+                </span>
+              </a>
+            </th><th>
+              <span data-toggle="tooltip" data-placement="top" title="">
+                Stages: Succeeded/Total
+              </span>
+            </th><th>
+              <span data-toggle="tooltip" data-placement="top" title="">
+                Tasks (for all stages): Succeeded/Total
+              </span>
+            </th></tr>
+    </thead>
+          <tbody>
+            <tr id="job-68">
+      <td>
+        68 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=68" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:55
+      </td>
+      <td>13 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-67">
+      <td>
+        67 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=67" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:55
+      </td>
+      <td>9 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-66">
+      <td>
+        66 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=66" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:55
+      </td>
+      <td>7 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-65">
+      <td>
+        65 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=65" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:55
+      </td>
+      <td>33 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-64">
+      <td>
+        64 
+      </td>
+      <td>
+        <span class="description-input">parquet at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=64" class="name-link">parquet at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:55
+      </td>
+      <td>29 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-63">
+      <td>
+        63 
+      </td>
+      <td>
+        <span class="description-input">parquet at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=63" class="name-link">parquet at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:53
+      </td>
+      <td>1 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        2/2
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-62">
+      <td>
+        62 
+      </td>
+      <td>
+        <span class="description-input">parquet at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=62" class="name-link">parquet at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:53
+      </td>
+      <td>99 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-61">
+      <td>
+        61 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=61" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:53
+      </td>
+      <td>14 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (5 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (9 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-60">
+      <td>
+        60 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=60" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:53
+      </td>
+      <td>16 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-59">
+      <td>
+        59 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=59" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:53
+      </td>
+      <td>14 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-58">
+      <td>
+        58 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=58" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>20 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (3 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (7 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-57">
+      <td>
+        57 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=57" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>43 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (2 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (6 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-56">
+      <td>
+        56 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=56" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>73 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        4/4
+        
+        
+        (2 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-55">
+      <td>
+        55 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=55" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>38 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-54">
+      <td>
+        54 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=54" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>53 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-53">
+      <td>
+        53 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=53" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>0.2 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        2/2
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-52">
+      <td>
+        52 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=52" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>15 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (5 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (9 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-51">
+      <td>
+        51 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=51" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>18 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-50">
+      <td>
+        50 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=50" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>15 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-49">
+      <td>
+        49 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=49" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>19 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (3 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (7 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-48">
+      <td>
+        48 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=48" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>61 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (2 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (6 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-47">
+      <td>
+        47 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=47" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>73 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        4/4
+        
+        
+        (2 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-46">
+      <td>
+        46 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=46" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:52
+      </td>
+      <td>33 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-45">
+      <td>
+        45 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=45" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>65 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-44">
+      <td>
+        44 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=44" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>0.2 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        2/2
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-43">
+      <td>
+        43 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=43" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>16 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (5 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (9 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-42">
+      <td>
+        42 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=42" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>19 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-41">
+      <td>
+        41 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=41" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>18 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-40">
+      <td>
+        40 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=40" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>18 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (3 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (7 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-39">
+      <td>
+        39 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=39" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>44 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (2 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (6 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-38">
+      <td>
+        38 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=38" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>80 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        4/4
+        
+        
+        (2 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-37">
+      <td>
+        37 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=37" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>30 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-36">
+      <td>
+        36 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=36" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>0.2 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        2/2
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-35">
+      <td>
+        35 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=35" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:51
+      </td>
+      <td>65 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-34">
+      <td>
+        34 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=34" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>16 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (5 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (9 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-33">
+      <td>
+        33 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=33" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>19 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-32">
+      <td>
+        32 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=32" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>18 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-31">
+      <td>
+        31 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=31" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>21 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (3 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (7 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-30">
+      <td>
+        30 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=30" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>47 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (2 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (6 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-29">
+      <td>
+        29 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=29" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>0.1 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        4/4
+        
+        
+        (2 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-28">
+      <td>
+        28 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=28" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>46 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-27">
+      <td>
+        27 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=27" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>0.1 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-26">
+      <td>
+        26 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=26" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:50
+      </td>
+      <td>0.2 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        2/2
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-25">
+      <td>
+        25 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=25" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>21 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (5 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (9 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-24">
+      <td>
+        24 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=24" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>21 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-23">
+      <td>
+        23 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=23" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>22 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-22">
+      <td>
+        22 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=22" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>24 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (3 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (7 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-21">
+      <td>
+        21 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=21" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>57 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (2 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (6 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-20">
+      <td>
+        20 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=20" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>0.1 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        4/4
+        
+        
+        (2 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-19">
+      <td>
+        19 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=19" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>45 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-18">
+      <td>
+        18 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=18" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>94 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-17">
+      <td>
+        17 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=17" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:49
+      </td>
+      <td>0.2 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        2/2
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-16">
+      <td>
+        16 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=16" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:48
+      </td>
+      <td>24 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (5 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (9 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-15">
+      <td>
+        15 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=15" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:48
+      </td>
+      <td>35 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-14">
+      <td>
+        14 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=14" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:48
+      </td>
+      <td>37 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (4 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (8 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-13">
+      <td>
+        13 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=13" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:48
+      </td>
+      <td>55 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (3 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (7 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-12">
+      <td>
+        12 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=12" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:48
+      </td>
+      <td>0.1 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (2 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (6 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-11">
+      <td>
+        11 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=11" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:48
+      </td>
+      <td>0.4 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        4/4
+        
+        
+        (2 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-10">
+      <td>
+        10 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=10" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:47
+      </td>
+      <td>0.1 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-9">
+      <td>
+        9 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=9" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:47
+      </td>
+      <td>0.3 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-8">
+      <td>
+        8 
+      </td>
+      <td>
+        <span class="description-input">collect at /tmp/run_spark_benchmark.py:32</span> 
+        <a href="/jobs/job/?id=8" class="name-link">collect at /tmp/run_spark_benchmark.py:32</a>
+      </td>
+      <td>
+        2026/07/23 03:57:47
+      </td>
+      <td>0.9 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        2/2
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-7">
+      <td>
+        7 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=7" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:46
+      </td>
+      <td>13 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-6">
+      <td>
+        6 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=6" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:46
+      </td>
+      <td>19 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-5">
+      <td>
+        5 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=5" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:45
+      </td>
+      <td>0.7 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-4">
+      <td>
+        4 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=4" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:45
+      </td>
+      <td>60 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        (1 skipped)
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        (1 skipped)
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-3">
+      <td>
+        3 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=3" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:45
+      </td>
+      <td>0.1 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-2">
+      <td>
+        2 
+      </td>
+      <td>
+        <span class="description-input">count at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=2" class="name-link">count at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:44
+      </td>
+      <td>0.5 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-1">
+      <td>
+        1 
+      </td>
+      <td>
+        <span class="description-input">parquet at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=1" class="name-link">parquet at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:44
+      </td>
+      <td>59 ms</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr><tr id="job-0">
+      <td>
+        0 
+      </td>
+      <td>
+        <span class="description-input">parquet at NativeMethodAccessorImpl.java:0</span> 
+        <a href="/jobs/job/?id=0" class="name-link">parquet at NativeMethodAccessorImpl.java:0</a>
+      </td>
+      <td>
+        2026/07/23 03:57:43
+      </td>
+      <td>0.5 s</td>
+      <td class="stage-progress-cell">
+        1/1
+        
+        
+      </td>
+      <td class="progress-cell">
+        <div class="progress">
+      <span style="text-align:center; position:absolute; width:100%;">
+        1/1
+        
+        
+        
+        
+      </span>
+      <div class="progress-bar progress-completed" style="width: 100.0%"></div>
+      <div class="progress-bar progress-started" style="width: 0.0%"></div>
+    </div>
+      </td>
+    </tr>
+          </tbody>
+        </table>
+        <div>
+      <div>
+        <form id="form-completedJob-table-bottom-page" method="get" action="/jobs/?&completedJob.sort=Job+Id&completedJob.desc=true#completed" class="form-inline float-right justify-content-end" style="margin-bottom: 0px;">
+          <input type="hidden" name="completedJob.sort" value="Job Id"/><input type="hidden" name="completedJob.desc" value="true"/>
+          <label>1 Pages. Jump to</label>
+          <input type="text" name="completedJob.page" id="form-completedJob-table-bottom-page-no" value="1" class="col-1 form-control"/>
+
+          <label>. Show </label>
+          <input type="text" id="form-completedJob-table-bottom-page-size" name="completedJob.pageSize" value="100" class="col-1 form-control"/>
+          <label>items in a page.</label>
+
+          <button type="submit" class="btn btn-spark">Go</button>
+        </form>
+      </div>
+      <div>
+        <span style="float: left; padding-top: 4px; padding-right: 4px;">Page: </span>
+        <ul class="pagination">
+          
+          
+          <li class="page-item disabled"><a href="#" class="page-link">1</a></li>
+          
+          
+        </ul>
+      </div>
+    </div>
+      </div>
+        </div>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>

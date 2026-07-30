@@ -15,4 +15,8 @@ outputs/**/*.csv
 outputs/**/*.json
 docs/evidence/**/*.png
 docs/evidence/**/*.jpg
+!docs/evidence/screenshots/**/*.png
+!docs/evidence/screenshots/**/*.jpg
+!docs/evidence/final/**/*.png
+!docs/evidence/final/**/*.jpg
 warehouse.db

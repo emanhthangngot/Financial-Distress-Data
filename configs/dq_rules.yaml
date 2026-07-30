@@ -1,13 +1,13 @@
 critical:
-  - name: schema_matches_registry
-  - name: primary_key_not_null
-  - name: primary_key_unique
-  - name: fact_company_key_exists
-  - name: fact_date_key_exists
+  - {name: schema_matches_registry, type: schema}
+  - {name: primary_key_not_null, type: not_null}
+  - {name: primary_key_unique, type: unique}
+  - {name: fact_company_key_exists, type: referential_integrity}
+  - {name: fact_date_key_exists, type: referential_integrity}
 
 warning:
-  - name: total_assets_non_negative
-  - name: sentiment_score_between_minus_1_and_1
-  - name: freshness_within_sla
-  - name: silver_ticker_retention_at_least_80_percent
-  - name: volume_drop_less_than_50_percent
+  - {name: total_assets_non_negative, type: range, parameters: {minimum: 0}}
+  - {name: sentiment_score_between_minus_1_and_1, type: range, parameters: {minimum: -1, maximum: 1}}
+  - {name: freshness_within_sla, type: freshness}
+  - {name: silver_ticker_retention_at_least_80_percent, type: retention, parameters: {minimum: 0.8}}
+  - {name: volume_drop_less_than_50_percent, type: volume_change, parameters: {maximum_drop: 0.5}}

@@ -1,0 +1,23 @@
+{
+  "datasets": {
+    "companies": {
+      "rows": 10204,
+      "sha256": "313555f937de38f966b4940171af3040dc8096661815c2d3636b8cf61ab6d257"
+    },
+    "financial_statements": {
+      "rows": 80000,
+      "sha256": "b978a8ed8d4b62570d982f38a82075bf4eaab91b18cdf353c9998d76e5abb6aa"
+    },
+    "market_prices_daily": {
+      "rows": 10000,
+      "sha256": "8b08217b7947931119417bad4c8c5f9fb7aaf8598b698a5d17ca0b949f8a41ab"
+    },
+    "stream_events": {
+      "rows": 50000,
+      "sha256": "da844313f3b7e08b009bc653f69df45a8cc1dc9be76674bee5a0edd69d7a7ba8"
+    }
+  },
+  "format": "jsonl",
+  "run_id": "generator-evidence-v1",
+  "schema_version": 1
+}

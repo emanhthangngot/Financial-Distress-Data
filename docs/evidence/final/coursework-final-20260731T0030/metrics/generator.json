@@ -1,0 +1,34 @@
+{
+  "run_id": "generator-evidence-v1",
+  "status": "pass",
+  "logical_digest": "fcc33aa5b9855609807efef4f2387c004242725301e8a571d408b03e01396293",
+  "stream_event_digest": "da844313f3b7e08b009bc653f69df45a8cc1dc9be76674bee5a0edd69d7a7ba8",
+  "minio": {
+    "bucket": "financial-distress-lake",
+    "prefix": "source/generator/run_id=generator-evidence-v1",
+    "object_count": 6,
+    "bytes": 4594263,
+    "parquet_readback_rows": {
+      "companies": 10204,
+      "financial_statements": 80000,
+      "market_prices_daily": 10000
+    },
+    "manifest_run_id": "generator-evidence-v1"
+  },
+  "kafka": {
+    "topic": "financial.price_events",
+    "published_events": 50000,
+    "offsets_after_ci_and_evidence_publish": {
+      "0": 16885,
+      "1": 16580,
+      "2": 16747
+    },
+    "offset_total": 50212,
+    "preexisting_and_ci_probe_events": 212
+  },
+  "notes": [
+    "MinIO Parquet row counts were read back with PyArrow after publication.",
+    "Kafka offsets were read independently with kafka-get-offsets.sh.",
+    "The final MinIO contract update did not republish the unchanged stream event set."
+  ]
+}

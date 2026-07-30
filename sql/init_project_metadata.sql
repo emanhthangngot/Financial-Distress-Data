@@ -126,3 +126,41 @@ VALUES
         TRUE
     )
 ON CONFLICT (dataset_name, schema_version) DO NOTHING;
+
+UPDATE project_metadata.schema_version_registry
+SET is_current = FALSE,
+    effective_to = COALESCE(effective_to, CURRENT_TIMESTAMP)
+WHERE dataset_name IN ('companies', 'financial_statements', 'market_prices_daily')
+  AND schema_version = 'v1';
+
+INSERT INTO project_metadata.schema_version_registry
+    (dataset_name, schema_version, effective_from, effective_to, schema_json, is_current)
+VALUES
+    (
+        'companies',
+        'v2',
+        CURRENT_TIMESTAMP,
+        NULL,
+        '{"required": ["ticker", "company_name", "exchange", "created_ts"], "nullable": ["industry", "sector", "listing_date", "delisted_flag", "company_size"], "field_types": {"ticker": "string", "company_name": "string", "exchange": "string", "created_ts": "timestamp", "listing_date": "date", "delisted_flag": "boolean"}, "blank_as_null": true}'::jsonb,
+        TRUE
+    ),
+    (
+        'financial_statements',
+        'v2',
+        CURRENT_TIMESTAMP,
+        NULL,
+        '{"required": ["ticker", "report_period", "fiscal_year", "fiscal_quarter", "total_assets", "total_liabilities", "equity", "created_ts"], "nullable": ["current_assets", "current_liabilities", "revenue", "ebit", "interest_expense", "net_income", "operating_cash_flow", "retained_earnings", "statement_type", "report_release_date", "event_timestamp"], "field_types": {"fiscal_year": "integer", "fiscal_quarter": "integer", "total_assets": "float", "total_liabilities": "float", "equity": "float", "created_ts": "timestamp", "report_release_date": "date", "event_timestamp": "timestamp"}, "blank_as_null": true}'::jsonb,
+        TRUE
+    ),
+    (
+        'market_prices_daily',
+        'v2',
+        CURRENT_TIMESTAMP,
+        NULL,
+        '{"required": ["ticker", "trading_date", "close_price", "volume", "created_ts"], "nullable": ["open_price", "high_price", "low_price", "market_cap", "shares_outstanding", "event_timestamp"], "field_types": {"trading_date": "date", "close_price": "float", "volume": "integer", "created_ts": "timestamp", "event_timestamp": "timestamp"}, "blank_as_null": true}'::jsonb,
+        TRUE
+    )
+ON CONFLICT (dataset_name, schema_version) DO UPDATE SET
+    schema_json = EXCLUDED.schema_json,
+    is_current = TRUE,
+    effective_to = NULL;
