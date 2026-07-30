@@ -1,9 +1,17 @@
+"""
+Stage 1 real end-to-end pipeline.
+
+The DAG that drives the Stage 1 real end-to-end run used for rubric evidence
+collection. It schedules collectors, Bronze/Silver/Gold transforms, DQ, and
+DuckDB view registration as a single Airflow graph.
+"""
+
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.io.minio_writer import write_minio_dataset
 from src.io.paths import DEFAULT_BUCKET
@@ -75,7 +83,7 @@ def consume_kafka_events_to_bronze() -> list[dict]:
 
 
 def run_spark_bronze_to_silver_gold() -> dict[str, int]:
-    return run_stage1_spark_lakehouse(_bucket())
+    return run_stage1_spark_lakehouse(_bucket(), evidence_run_id=current_evidence_run_id())
 
 
 def run_silver_gold_dq_gate() -> list[dict]:

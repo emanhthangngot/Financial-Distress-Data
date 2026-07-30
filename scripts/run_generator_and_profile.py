@@ -32,8 +32,8 @@ def _minio_client() -> Any:
     endpoint = endpoint.removeprefix("http://").removeprefix("https://")
     return Minio(
         endpoint,
-        access_key=os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
-        secret_key=os.getenv("MINIO_SECRET_KEY", "minioadmin"),
+        access_key=os.environ["MINIO_ACCESS_KEY"],
+        secret_key=os.environ["MINIO_SECRET_KEY"],
         secure=secure,
     )
 

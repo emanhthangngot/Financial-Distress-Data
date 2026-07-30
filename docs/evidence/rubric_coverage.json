@@ -1,0 +1,526 @@
+{
+  "generated_at": "2026-06-24T09:40:08.006753+00:00",
+  "rubric_total": 100,
+  "covered_points": 100,
+  "partial_points": 0,
+  "missing_points": 0,
+  "coverage_pct": 100.0,
+  "items": [
+    {
+      "idx": 1,
+      "category": "Engineering Fundamentals",
+      "claim": "Use Docker & Docker Compose",
+      "points": 1,
+      "status": "covered",
+      "evidence": [
+        "docker-compose.yml"
+      ]
+    },
+    {
+      "idx": 2,
+      "category": "Engineering Fundamentals",
+      "claim": "Optimize Dockerfile (e.g. multistage build) with size evidence",
+      "points": 1,
+      "status": "covered",
+      "evidence": [
+        "docs/08_docker_optimization.md"
+      ]
+    },
+    {
+      "idx": 3,
+      "category": "Implement Data Generator",
+      "claim": "Simulate offline data problems: skew",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/stage1_generator_characteristics.json"
+      ]
+    },
+    {
+      "idx": 4,
+      "category": "Implement Data Generator",
+      "claim": "Simulate offline data problems: high cardinality",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/stage1_generator_characteristics.json"
+      ]
+    },
+    {
+      "idx": 5,
+      "category": "Implement Data Generator",
+      "claim": "Simulate offline data problems: schema evolution",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/01_data_generator.md"
+      ]
+    },
+    {
+      "idx": 6,
+      "category": "Implement Data Generator",
+      "claim": "Simulate another offline data problem (e.g. 2% duplicate rate)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/01_data_generator.md"
+      ]
+    },
+    {
+      "idx": 7,
+      "category": "Implement Data Generator",
+      "claim": "Generator is driven by configuration",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "src/generators/config_loader.py"
+      ]
+    },
+    {
+      "idx": 8,
+      "category": "Implement Data Generator",
+      "claim": "Generator output lands in Bronze zone for downstream ingest",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/01_data_generator.md"
+      ]
+    },
+    {
+      "idx": 9,
+      "category": "Implement Data Generator",
+      "claim": "Simulate streaming data problems: burst",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/01_data_generator.md"
+      ]
+    },
+    {
+      "idx": 10,
+      "category": "Implement Data Generator",
+      "claim": "Simulate streaming data problems: late arrivals",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/01_data_generator.md"
+      ]
+    },
+    {
+      "idx": 11,
+      "category": "Implement Data Generator",
+      "claim": "Simulate another streaming problem (e.g. 1.5% duplicate rate)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/01_data_generator.md"
+      ]
+    },
+    {
+      "idx": 50,
+      "category": "Implement Data Generator",
+      "claim": "Streaming generator is driven by configuration",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "configs/collector_config.yaml"
+      ]
+    },
+    {
+      "idx": 12,
+      "category": "Processing Jobs (Spark)",
+      "claim": "Spark baseline (without optimization) with explanation",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/05_transform_bronze_to_silver.py",
+        "dags/06_pyspark_silver_to_gold.py",
+        "docs/01_data_generator.md",
+        "docs/05_storage_optimization.md"
+      ]
+    },
+    {
+      "idx": 13,
+      "category": "Processing Jobs (Spark)",
+      "claim": "Handle skew with explanation (Spark UI evidence)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/05_transform_bronze_to_silver.py",
+        "dags/06_pyspark_silver_to_gold.py",
+        "docs/01_data_generator.md",
+        "docs/05_storage_optimization.md"
+      ]
+    },
+    {
+      "idx": 14,
+      "category": "Processing Jobs (Spark)",
+      "claim": "Handle high cardinality with explanation",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/05_transform_bronze_to_silver.py",
+        "dags/06_pyspark_silver_to_gold.py",
+        "docs/01_data_generator.md",
+        "docs/05_storage_optimization.md"
+      ]
+    },
+    {
+      "idx": 15,
+      "category": "Processing Jobs (Spark)",
+      "claim": "Handle schema evolution with explanation",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/05_transform_bronze_to_silver.py",
+        "dags/06_pyspark_silver_to_gold.py",
+        "docs/01_data_generator.md",
+        "docs/05_storage_optimization.md"
+      ]
+    },
+    {
+      "idx": 16,
+      "category": "Processing Jobs (Spark)",
+      "claim": "Handle other offline data problem with explanation",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/05_transform_bronze_to_silver.py",
+        "dags/06_pyspark_silver_to_gold.py",
+        "docs/01_data_generator.md",
+        "docs/05_storage_optimization.md"
+      ]
+    },
+    {
+      "idx": 17,
+      "category": "Processing Jobs (Spark)",
+      "claim": "Spark job integrated into Airflow data pipeline",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/05_transform_bronze_to_silver.py"
+      ]
+    },
+    {
+      "idx": 18,
+      "category": "Processing Jobs (Flink)",
+      "claim": "Flink baseline (without optimization) with Flink UI evidence",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "src/streaming/flink/jobs/README.md",
+        "src/streaming/flink/__init__.py"
+      ]
+    },
+    {
+      "idx": 19,
+      "category": "Processing Jobs (Flink)",
+      "claim": "Handle streaming burst with explanation",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "src/streaming/flink/jobs/README.md"
+      ]
+    },
+    {
+      "idx": 20,
+      "category": "Processing Jobs (Flink)",
+      "claim": "Handle streaming late arrival with explanation",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "src/streaming/flink/jobs/README.md"
+      ]
+    },
+    {
+      "idx": 21,
+      "category": "Processing Jobs (Flink)",
+      "claim": "Handle other streaming problem with explanation",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "src/streaming/flink/jobs/README.md"
+      ]
+    },
+    {
+      "idx": 22,
+      "category": "Processing Jobs (Flink)",
+      "claim": "Window processing in Flink (code capture)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "src/streaming/flink/jobs/README.md"
+      ]
+    },
+    {
+      "idx": 23,
+      "category": "Data Storage",
+      "claim": "Lakehouse optimization: compaction / z-order / partitioning",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/lakehouse_compaction_benchmark.json"
+      ]
+    },
+    {
+      "idx": 24,
+      "category": "Data Storage",
+      "claim": "Datawarehouse optimization: indexing",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/duckdb_index_benchmark.json"
+      ]
+    },
+    {
+      "idx": 25,
+      "category": "Data Pipeline Orchestration",
+      "claim": "DP1 (bronze ingest) - Ingest stage pipeline on Airflow UI",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/w20_dp1_airflow_dag_graph.png"
+      ]
+    },
+    {
+      "idx": 26,
+      "category": "Data Pipeline Orchestration",
+      "claim": "DP1 (bronze ingest) - Validate stage pipeline on Airflow UI",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/w20_dp1_airflow_task_tree.png"
+      ]
+    },
+    {
+      "idx": 27,
+      "category": "Data Pipeline Orchestration",
+      "claim": "DP2 (bronze -> silver/gold) - Ingest stage pipeline on Airflow UI",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/06_pyspark_silver_to_gold.py"
+      ]
+    },
+    {
+      "idx": 28,
+      "category": "Data Pipeline Orchestration",
+      "claim": "DP2 (bronze -> silver/gold) - Validate stage pipeline on Airflow UI",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/07_run_data_quality_checks.py"
+      ]
+    },
+    {
+      "idx": 29,
+      "category": "Data Pipeline Orchestration",
+      "claim": "DP3 (offline feature table) - Ingest stage pipeline on Airflow UI",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/06_pyspark_silver_to_gold.py"
+      ]
+    },
+    {
+      "idx": 30,
+      "category": "Data Pipeline Orchestration",
+      "claim": "DP3 (offline feature table) - Validate stage pipeline on Airflow UI",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "dags/07_run_data_quality_checks.py"
+      ]
+    },
+    {
+      "idx": 31,
+      "category": "Data Governance",
+      "claim": "DP1 lineage between pipeline and tables (DataHub-style evidence)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/governance/dp1_lineage.json"
+      ]
+    },
+    {
+      "idx": 32,
+      "category": "Data Governance",
+      "claim": "DP1 data validation and data contract",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/governance/dp1_validation.json"
+      ]
+    },
+    {
+      "idx": 33,
+      "category": "Data Governance",
+      "claim": "DP2 lineage between pipeline and tables",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/governance/dp2_lineage.json"
+      ]
+    },
+    {
+      "idx": 34,
+      "category": "Data Governance",
+      "claim": "DP2 data validation and data contract",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/governance/dp2_validation.json"
+      ]
+    },
+    {
+      "idx": 35,
+      "category": "Data Governance",
+      "claim": "DP3 lineage between pipeline and tables",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/governance/dp3_lineage.json"
+      ]
+    },
+    {
+      "idx": 36,
+      "category": "Data Governance",
+      "claim": "DP3 data validation and data contract",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/evidence/governance/dp3_validation.json"
+      ]
+    },
+    {
+      "idx": 37,
+      "category": "Documentation",
+      "claim": "Schema design: visualize tables on all zones (DBeaver capture)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "images/schema/schema_evidence_erd.png"
+      ]
+    },
+    {
+      "idx": 38,
+      "category": "Documentation",
+      "claim": "Dim table with SCD2 (valid_from_ts, valid_to_ts, is_current)",
+      "points": 1,
+      "status": "covered",
+      "evidence": [
+        "docs/02_schema_design.md"
+      ]
+    },
+    {
+      "idx": 39,
+      "category": "Documentation",
+      "claim": "Feature tables (feat_*) with event_timestamp and created columns",
+      "points": 1,
+      "status": "covered",
+      "evidence": [
+        "docs/02_schema_design.md"
+      ]
+    },
+    {
+      "idx": 40,
+      "category": "Documentation",
+      "claim": "Relationship between dim & fact tables (DBeaver or similar export)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "docs/02_schema_design.md"
+      ]
+    },
+    {
+      "idx": 41,
+      "category": "Documentation",
+      "claim": "Naming convention (Gold: dim_/fact_/obt_/feat_; Bronze/Silver: raw_/stg_ or similar)",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "README.md"
+      ]
+    },
+    {
+      "idx": 42,
+      "category": "README + Deployment Diagram",
+      "claim": "README: business domain introduction",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "README.md"
+      ]
+    },
+    {
+      "idx": 43,
+      "category": "README + Deployment Diagram",
+      "claim": "README: Repo Structure section",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "README.md"
+      ]
+    },
+    {
+      "idx": 44,
+      "category": "README + Deployment Diagram",
+      "claim": "README: Table of Contents",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "README.md"
+      ]
+    },
+    {
+      "idx": 45,
+      "category": "README + Deployment Diagram",
+      "claim": "Module/function docstrings on source files",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "src/transforms"
+      ]
+    },
+    {
+      "idx": 46,
+      "category": "README + Deployment Diagram",
+      "claim": "System deployment diagram with deployable units, labelled arrows, numbered sequence",
+      "points": 2,
+      "status": "covered",
+      "evidence": [
+        "images/architecture/system_deployment_diagram.png"
+      ]
+    },
+    {
+      "idx": 47,
+      "category": "Novel Ideas",
+      "claim": "Idea 1 documented with proof",
+      "points": 5,
+      "status": "covered",
+      "evidence": [
+        "docs/09_novel_idea_1.md",
+        "docs/evidence/dbt_macro_check.json"
+      ]
+    },
+    {
+      "idx": 48,
+      "category": "Novel Ideas",
+      "claim": "Idea 2 documented with proof",
+      "points": 5,
+      "status": "covered",
+      "evidence": [
+        "docs/10_novel_idea_2.md",
+        "docs/evidence/airbyte_manifest_run.json"
+      ]
+    },
+    {
+      "idx": 51,
+      "category": "Rubric total",
+      "claim": "Sum",
+      "points": 0,
+      "status": "missing",
+      "evidence": []
+    }
+  ]
+}

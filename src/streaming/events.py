@@ -1,3 +1,11 @@
+"""
+Event schemas and serializers for the streaming pipeline.
+
+Defines the canonical Pydantic / dataclass models for market ticks, news sentiment, and alert events
+flowing through Kafka. Producers and consumers must import from this module to keep schema evolution
+disciplined.
+"""
+
 from __future__ import annotations
 
 import json

@@ -1,3 +1,11 @@
+"""
+MinIO/S3 writer for the financial-distress lakehouse.
+
+Thin wrapper around the S3A filesystem with helpers to write partitioned Parquet, append to Bronze,
+and overwrite Silver/Gold partitions idempotently. All paths go through ``src.io.paths`` so bucket
+and zone conventions stay consistent.
+"""
+
 from __future__ import annotations
 
 import io

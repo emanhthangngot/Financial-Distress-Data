@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>DP1 Bronze Ingest Pipeline</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: #fff; color: #1f2328; margin: 24px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #57606a; font-size: 13px; margin-bottom: 18px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .ingest { background: #ddf4ff; color: #0969da; }
+  .validate { background: #dafbe1; color: #1a7f37; }
+  .collect { background: #fff8c5; color: #9a6700; }
+  .mermaid { background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; padding: 16px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+<h1>Airflow DAG: dp1_bronze_ingest</h1>
+<div class="sub">
+  <span class="pill ingest">Ingest stage</span>
+  <span class="pill collect">3 batch collectors</span>
+  <span class="pill validate">Validate stage</span>
+  &nbsp;Rubric row: DP1 Pipeline (Ingest 2pts + Validate 2pts)
+</div>
+<div class="mermaid">
+graph LR
+  A[ingest_bronze<br/><i>collect_companies</i><br/><i>collect_financial_statements</i><br/><i>collect_market_prices</i><br/><i>write_minio_dataset → bronze/</i><br/>Variable.get: financial_distress_bucket] --> B[validate_bronze<br/><i>build_evidence_payload</i><br/><i>assert non-empty row counts</i><br/><i>sidecar: dp1_bronze_validation.json</i><br/>BaseHook: project_metadata]
+
+  classDef ingestStage fill:#ddf4ff,stroke:#0969da,color:#0969da
+  classDef validateStage fill:#dafbe1,stroke:#1a7f37,color:#1a7f37
+  class A ingestStage
+  class B validateStage
+</div>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+</body>
+</html>

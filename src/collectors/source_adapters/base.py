@@ -1,3 +1,11 @@
+"""
+Common contract for source adapters in the financial-distress pipeline.
+
+Defines the ``SourceAdapter`` protocol that all vendor adapters must implement, plus shared helpers
+for symbol normalization, pagination, and error classification. Concrete adapters live in sibling
+modules.
+"""
+
 from __future__ import annotations
 
 from typing import Protocol

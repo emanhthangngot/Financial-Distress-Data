@@ -1,3 +1,10 @@
+"""
+Gold-zone fact builder for market prices.
+
+Projects the Silver market_price table into the Gold fact with adjusted close, daily return, and the
+volume aggregate. Partitioned by year and month for analyst queries.
+"""
+
 from __future__ import annotations
 
 from typing import Any

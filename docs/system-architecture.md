@@ -3,7 +3,7 @@
 The diagram uses only deployable runtime units as major nodes. Arrows are
 numbered in execution order and name the payload crossing each boundary.
 
-![Deployment architecture](../images/architecture/deployment-architecture.png)
+![Deployment architecture](../images/architecture/system_deployment_diagram.png)
 
 ## Runtime Boundaries
 

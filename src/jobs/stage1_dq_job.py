@@ -1,3 +1,10 @@
+"""
+Stage 1 data quality job.
+
+Runs the DQ check catalog against the Bronze, Silver, and Gold zones and persists the results. Used
+by DAG 07 to gate downstream tasks.
+"""
+
 from __future__ import annotations
 
 from io import BytesIO

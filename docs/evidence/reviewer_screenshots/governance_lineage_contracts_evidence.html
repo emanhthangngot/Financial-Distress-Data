@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Governance Lineage Evidence</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; color: #162033; background: #f5f7fa; }
+    .page { width: 1280px; min-height: 900px; padding: 34px 42px; box-sizing: border-box; }
+    h1 { margin: 0 0 8px; font-size: 34px; }
+    .subtitle { color: #5a6572; margin-bottom: 22px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .panel { background: white; border: 1px solid #d7dde6; border-radius: 8px; padding: 18px; }
+    h2 { margin: 0 0 12px; font-size: 21px; }
+    .lineage { display: grid; gap: 8px; }
+    .node { padding: 10px; border-radius: 6px; background: #eef4ff; border: 1px solid #ccd9f4; }
+    .arrow { text-align: center; color: #536071; font-weight: 700; }
+    .status { display: inline-block; padding: 5px 8px; border-radius: 4px; background: #e8f5ec; color: #17613c; font-weight: 700; font-size: 12px; }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; margin-top: 16px; }
+    th, td { border-bottom: 1px solid #e3e7ed; padding: 10px; text-align: left; }
+    th { background: #eef3f8; }
+    code { background: #eef1f6; padding: 2px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Governance Lineage and Contract Evidence</h1>
+    <div class="subtitle">Generated from checked-in Stage 1 evidence. DataHub-style local evidence view for DP1, DP2, and DP3 rubric rows.</div>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>DP1 Bronze Ingest</h2>
+        <div class="lineage">
+          <div class="node">Fixture collectors and Kafka events</div>
+          <div class="arrow">downstream</div>
+          <div class="node">Bronze MinIO prefixes</div>
+          <div class="arrow">validated by</div>
+          <div class="node">dp1_validation.json <span class="status">pass</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>DP2 Silver and Gold</h2>
+        <div class="lineage">
+          <div class="node">Bronze datasets</div>
+          <div class="arrow">downstream</div>
+          <div class="node">Silver normalized rows and Gold facts</div>
+          <div class="arrow">validated by</div>
+          <div class="node">dp2_validation.json <span class="status">pass</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>DP3 Feature Tables</h2>
+        <div class="lineage">
+          <div class="node">Gold facts and labels</div>
+          <div class="arrow">downstream</div>
+          <div class="node">feat_company_* and OBT tables</div>
+          <div class="arrow">validated by</div>
+          <div class="node">dp3_validation.json <span class="status">pass</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 18px;">
+      <h2>Contract Files</h2>
+      <table>
+        <thead><tr><th>Pipeline</th><th>Lineage artifact</th><th>Validation artifact</th><th>Rubric result</th></tr></thead>
+        <tbody>
+          <tr><td>DP1</td><td><code>governance/dp1_lineage.json</code></td><td><code>governance/dp1_validation.json</code></td><td>covered</td></tr>
+          <tr><td>DP2</td><td><code>governance/dp2_lineage.json</code></td><td><code>governance/dp2_validation.json</code></td><td>covered</td></tr>
+          <tr><td>DP3</td><td><code>governance/dp3_lineage.json</code></td><td><code>governance/dp3_validation.json</code></td><td>covered</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

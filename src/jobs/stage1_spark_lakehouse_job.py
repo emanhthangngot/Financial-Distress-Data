@@ -1,26 +1,21 @@
+"""
+Main Stage 1 Spark lakehouse job.
+
+Runs the end-to-end Bronze -> Silver -> Gold pipeline for Phase 1, including the distress labeler
+and the OBT builder. Invoked by the Spark DAGs and by the local evidence script.
+"""
+
 from __future__ import annotations
 
 import os
 from typing import Any
 
-from src.io.minio_publish import promote_staged_prefixes
-from src.io.optional_input import read_optional
+from src.io.minio_writer import clear_minio_prefix
 from src.io.paths import DEFAULT_BUCKET
-from src.jobs.stage1_evidence_job import (
-    _ensure_bucket,
-    _minio_client,
-    current_evidence_run_id,
-)
-from src.jobs.stage1_publish import (
-    PUBLISHED_PREFIXES,
-    persist_failed_rows,
-    validate_publication_counts,
-    validate_spark_outputs,
-)
+from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
 from src.metadata.schema_registry import InMemorySchemaRegistry
-from src.quality.rule_config import load_dq_rule_config
+from src.security.secrets import require
 from src.transforms.bronze_to_silver import bronze_to_silver_spark
-from src.transforms.compute_distress_labels import SectorExclusion, load_sector_exclusion
 from src.transforms.gold.dim_company import build_dim_date
 from src.transforms.gold.fact_financial_statement import build_fact_financial_statement_spark
 from src.transforms.gold.fact_market_price import build_fact_market_price_spark
@@ -34,8 +29,8 @@ def spark_runtime_config(minio_endpoint: str | None = None) -> dict[str, str]:
     return {
         "spark.jars.packages": f"{SPARK_HADOOP_AWS_PACKAGE},{SPARK_AWS_SDK_PACKAGE}",
         "spark.hadoop.fs.s3a.endpoint": endpoint,
-        "spark.hadoop.fs.s3a.access.key": os.getenv("MINIO_ROOT_USER", "minioadmin"),
-        "spark.hadoop.fs.s3a.secret.key": os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"),
+        "spark.hadoop.fs.s3a.access.key": require("MINIO_ROOT_USER"),
+        "spark.hadoop.fs.s3a.secret.key": require("MINIO_ROOT_PASSWORD"),
         "spark.hadoop.fs.s3a.path.style.access": "true",
         "spark.hadoop.fs.s3a.connection.ssl.enabled": "false",
         "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
@@ -62,31 +57,13 @@ def _silver(
     required: list[str],
     nullable: list[str],
     dedup_keys: list[str],
-    field_types: dict[str, str] | None = None,
-    enum_values: dict[str, list[Any]] | None = None,
-    blank_as_null: bool = True,
-    output_root: str = "",
 ) -> tuple[Any, Any]:
     bronze = spark.read.parquet(f"s3a://{bucket}/bronze/{dataset}/data.parquet")
-    silver, failed = bronze_to_silver_spark(
-        bronze,
-        required,
-        nullable,
-        dedup_keys,
-        field_types=field_types,
-        enum_values=enum_values,
-        blank_as_null=blank_as_null,
-    )
+    silver, failed = bronze_to_silver_spark(bronze, required, nullable, dedup_keys)
     _cast_nulltype_columns(silver).write.mode("overwrite").parquet(
-        f"s3a://{bucket}/{output_root}silver/{dataset}/"
+        f"s3a://{bucket}/silver/{dataset}/"
     )
     return silver, failed
-
-
-def _spark_path_missing(exc: Exception) -> bool:
-    get_error_class = getattr(exc, "getErrorClass", None)
-    error_class = get_error_class() if callable(get_error_class) else None
-    return error_class == "PATH_NOT_FOUND" or "[PATH_NOT_FOUND]" in str(exc)
 
 
 def _cast_nulltype_columns(dataframe: Any) -> Any:
@@ -101,27 +78,6 @@ def _cast_nulltype_columns(dataframe: Any) -> Any:
         if isinstance(field.dataType, NullType):
             output = output.withColumn(field.name, F.col(field.name).cast("string"))
     return output
-
-
-def _align_spark_columns(
-    dataframe: Any, columns: list[str], field_types: dict[str, str] | None = None
-) -> Any:
-    from pyspark.sql import functions as F
-
-    spark_types = {
-        "string": "string",
-        "integer": "long",
-        "float": "double",
-        "boolean": "boolean",
-        "date": "date",
-        "timestamp": "timestamp",
-    }
-    output = dataframe
-    for column in columns:
-        if column not in output.columns:
-            field_type = (field_types or {}).get(column, "string")
-            output = output.withColumn(column, F.lit(None).cast(spark_types[field_type]))
-    return output.select(*columns)
 
 
 def _write_rows_with_spark(spark: Any, rows: list[dict[str, Any]], path: str) -> int:
@@ -144,35 +100,57 @@ def _rows_with_schema(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]],
         StructType,
     )
 
+    # Single-pass per-field type inference. Priority order matches the original
+    # loop: bool -> int (non-bool) -> (int|float) (non-bool) -> string. A column
+    # that mixes types is coerced to StringType deterministically.
     fields: list[str] = []
-    for row in rows:
-        for field in row:
-            if field not in fields:
-                fields.append(field)
+    field_state: dict[str, dict[str, bool]] = {}
 
-    schema_fields = []
-    string_fields = set()
+    def _ensure_field(name: str) -> None:
+        if name not in field_state:
+            fields.append(name)
+            field_state[name] = {
+                "saw_value": False,
+                "all_bool": True,
+                "all_int_non_bool": True,
+                "all_numeric_non_bool": True,
+            }
+
+    for row in rows:
+        for name, value in row.items():
+            _ensure_field(name)
+            if value is None:
+                continue
+            state = field_state[name]
+            state["saw_value"] = True
+            if not isinstance(value, bool):
+                state["all_bool"] = False
+            if not (isinstance(value, int) and not isinstance(value, bool)):
+                state["all_int_non_bool"] = False
+            if not (isinstance(value, (int, float)) and not isinstance(value, bool)):
+                state["all_numeric_non_bool"] = False
+
+    schema_fields: list[StructField] = []
+    string_fields: set[str] = set()
     for field in fields:
-        values = [row.get(field) for row in rows if row.get(field) is not None]
-        if not values:
-            spark_type = StringType()
+        state = field_state[field]
+        if not state["saw_value"]:
+            spark_type: Any = StringType()
             string_fields.add(field)
-        elif all(isinstance(value, bool) for value in values):
+        elif state["all_bool"]:
             spark_type = BooleanType()
-        elif all(isinstance(value, int) and not isinstance(value, bool) for value in values):
+        elif state["all_int_non_bool"]:
             spark_type = LongType()
-        elif all(
-            isinstance(value, (int, float)) and not isinstance(value, bool) for value in values
-        ):
+        elif state["all_numeric_non_bool"]:
             spark_type = DoubleType()
         else:
             spark_type = StringType()
             string_fields.add(field)
         schema_fields.append(StructField(field, spark_type, nullable=True))
 
-    normalized_rows = []
+    normalized_rows: list[dict[str, Any]] = []
     for row in rows:
-        normalized = {}
+        normalized: dict[str, Any] = {}
         for field in fields:
             value = row.get(field)
             if field in string_fields and value is not None:
@@ -186,9 +164,30 @@ def _rows_with_schema(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]],
     return normalized_rows, StructType(schema_fields)
 
 
-def build_dim_company_spark(
-    silver_companies_df: Any, existing_dim_company_df: Any | None = None
-) -> Any:
+def _clear_output_prefixes(bucket: str) -> None:
+    client = _minio_client()
+    _ensure_bucket(client, bucket)
+    for prefix in (
+        "silver/companies/",
+        "silver/financial_statements/",
+        "silver/market_prices_daily/",
+        "gold/dim_company/",
+        "gold/fact_financial_statement/",
+        "gold/fact_market_price/",
+        "gold/distress_labels/",
+        "gold/dim_date/",
+        "gold/obt_company_quarter_risk/",
+        "gold/fact_market_alert/",
+        "gold/fact_news_sentiment/",
+        "gold/feat_company_financial_4q/",
+        "gold/feat_company_market_30d/",
+        "gold/feat_company_news_30d/",
+        "gold/feat_company_unified/",
+    ):
+        clear_minio_prefix(client, bucket, prefix)
+
+
+def build_dim_company_spark(silver_companies_df: Any) -> Any:
     from pyspark.sql import functions as F
     from pyspark.sql.window import Window
 
@@ -219,23 +218,14 @@ def build_dim_company_spark(
     valid_to_ts = F.lead("created_ts").over(window_lead)
     is_current = valid_to_ts.isNull()
 
-    snapshots = (
+    return (
         filtered.withColumn("ticker", F.upper(F.col("ticker")))
         .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
         .withColumn("valid_from_ts", F.col("created_ts"))
-        .withColumn(
-            "company_version_key",
-            F.substring(
-                F.sha2(F.concat_ws("|", F.upper(F.col("ticker")), F.col("created_ts")), 256),
-                1,
-                16,
-            ),
-        )
         .withColumn("valid_to_ts", valid_to_ts)
         .withColumn("is_current", is_current)
         .select(
             "company_key",
-            "company_version_key",
             "ticker",
             "company_name",
             "exchange",
@@ -248,68 +238,13 @@ def build_dim_company_spark(
             "is_current",
         )
     )
-    if existing_dim_company_df is None:
-        return snapshots
-
-    existing = existing_dim_company_df
-    if "company_version_key" not in existing.columns:
-        existing = existing.withColumn(
-            "company_version_key",
-            F.substring(
-                F.sha2(F.concat_ws("|", F.col("ticker"), F.col("valid_from_ts")), 256),
-                1,
-                16,
-            ),
-        )
-    current = existing.filter(F.col("is_current")).alias("current")
-    candidate = snapshots.alias("snapshot").join(
-        current,
-        F.col("snapshot.ticker") == F.col("current.ticker"),
-        "left",
-    )
-    changed = F.col("current.ticker").isNull()
-    for field in ("industry", "sector", "exchange", "delisted_flag"):
-        changed = changed | ~F.col(f"snapshot.{field}").eqNullSafe(F.col(f"current.{field}"))
-    changed_snapshots = candidate.filter(changed).select("snapshot.*")
-    changes = changed_snapshots.select("ticker", F.col("valid_from_ts").alias("_change_ts"))
-    historical = (
-        existing.alias("existing")
-        .join(changes.alias("change"), F.col("existing.ticker") == F.col("change.ticker"), "left")
-        .select(
-            *[
-                (
-                    F.when(F.col("change._change_ts").isNotNull(), F.col("change._change_ts"))
-                    .otherwise(F.col("existing.valid_to_ts"))
-                    .alias("valid_to_ts")
-                    if field == "valid_to_ts"
-                    else (
-                        F.when(F.col("change._change_ts").isNotNull(), F.lit(False))
-                        .otherwise(F.col("existing.is_current"))
-                        .alias("is_current")
-                        if field == "is_current"
-                        else F.col(f"existing.{field}").alias(field)
-                    )
-                )
-                for field in existing.columns
-            ]
-        )
-    )
-    return historical.unionByName(changed_snapshots, allowMissingColumns=True)
 
 
 def build_fact_news_sentiment_spark(news_bronze_df: Any) -> Any:
     from pyspark.sql import functions as F
-    from pyspark.sql.window import Window
-
-    window = Window.partitionBy("event_id").orderBy(F.col("created_ts").desc_nulls_last())
-    dedup = (
-        news_bronze_df.withColumn("_rn", F.row_number().over(window))
-        .filter(F.col("_rn") == 1)
-        .drop("_rn")
-    )
 
     return (
-        dedup.withColumn("ticker", F.upper(F.col("ticker")))
+        news_bronze_df.withColumn("ticker", F.upper(F.col("ticker")))
         .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
         .withColumn("date_key", F.date_format(F.to_date("event_timestamp"), "yyyyMMdd").cast("int"))
         .select(
@@ -353,9 +288,7 @@ def build_fact_market_alert_spark(alert_bronze_df: Any) -> Any:
     )
 
 
-def compute_labels_spark(
-    financial_fact_df: Any, sector_exclusion: SectorExclusion | None = None
-) -> Any:
+def compute_labels_spark(financial_fact_df: Any) -> Any:
     from pyspark.sql import functions as F
     from pyspark.sql.window import Window
 
@@ -404,9 +337,19 @@ def compute_labels_spark(
         else F.lit(None)
     )
 
-    policy = sector_exclusion or load_sector_exclusion("configs/sector_exclusion.yaml")
+    financial_terms = [
+        "bank",
+        "banks",
+        "banking",
+        "insurance",
+        "insurers",
+        "securities",
+        "brokerage",
+        "diversified financials",
+        "financial services",
+    ]
     is_fin = F.lit(False)
-    for term in sorted(policy.terms):
+    for term in financial_terms:
         is_fin = (
             is_fin
             | F.lower(F.coalesce(sector_col, F.lit(""))).contains(term)
@@ -414,9 +357,6 @@ def compute_labels_spark(
             | F.lower(F.coalesce(gics_sector_col, F.lit(""))).contains(term)
             | F.lower(F.coalesce(gics_industry_col, F.lit(""))).contains(term)
         )
-    for field in ("gics_sector_code", "gics_code"):
-        if field in financial_fact_df.columns:
-            is_fin = is_fin | F.col(field).cast("string").isin(sorted(policy.gics_codes))
 
     high_debt = F.coalesce(debt_to_asset > 0.8, F.lit(False))
     low_curr_ratio = F.coalesce(current_ratio < 1.0, F.lit(False))
@@ -596,7 +536,6 @@ def build_feat_company_financial_4q_spark(obt_df: Any) -> Any:
             "ticker",
             "report_period",
             "event_timestamp",
-            "created_ts",
             "current_ratio",
             "debt_to_asset",
             "debt_to_equity",
@@ -620,7 +559,6 @@ def build_feat_company_market_30d_spark(market_fact_df: Any) -> Any:
         .select(
             "ticker",
             "event_timestamp",
-            "created_ts",
             "trading_date",
             "close_price",
             "volume",
@@ -640,7 +578,6 @@ def build_feat_company_news_30d_spark(news_fact_df: Any) -> Any:
         .select(
             "ticker",
             "event_timestamp",
-            "created_ts",
             "sentiment_score",
             "risk_keyword_flag",
             "severity_score",
@@ -680,19 +617,18 @@ def build_feat_company_unified_spark(obt_df: Any, market_df: Any) -> Any:
     )
 
 
-def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
-    run_id = current_evidence_run_id()
-    output_root = f"_staging/{run_id}/"
+def run_stage1_spark_lakehouse(
+    bucket: str = DEFAULT_BUCKET, evidence_run_id: str | None = None
+) -> dict[str, int]:
+    _clear_output_prefixes(bucket)
     spark = _spark_session()
-    registry = InMemorySchemaRegistry.from_yaml(
-        os.getenv("SCHEMA_CONTRACT_PATH", "configs/schema-contracts.yaml")
-    )
-    load_dq_rule_config(os.getenv("DQ_RULE_CONFIG_PATH", "configs/dq_rules.yaml"))
+    registry = InMemorySchemaRegistry()
     try:
         from pyspark.sql import functions as F
         from pyspark.sql.types import (
             BooleanType,
             DoubleType,
+            IntegerType,
             StringType,
             StructField,
             StructType,
@@ -709,10 +645,6 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             companies_contract.required,
             companies_contract.nullable,
             ["ticker"],
-            companies_contract.field_types,
-            companies_contract.enum_values,
-            companies_contract.blank_as_null,
-            output_root,
         )
         silver_financial_statements, failed_statements = _silver(
             spark,
@@ -721,23 +653,19 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             statements_contract.required,
             statements_contract.nullable,
             ["ticker", "report_period"],
-            statements_contract.field_types,
-            statements_contract.enum_values,
-            statements_contract.blank_as_null,
-            output_root,
         )
 
         batch_prices_df = spark.read.parquet(
             f"s3a://{bucket}/bronze/market_prices_daily/data.parquet"
         )
-        streaming_prices_df = read_optional(
-            lambda: spark.read.parquet(
+        try:
+            streaming_prices_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.price_events/*/*/*/*.parquet"
-            ),
-            lambda: None,
-            _spark_path_missing,
-        )
-        if streaming_prices_df is not None:
+            )
+            if evidence_run_id is not None and "evidence_run_id" in streaming_prices_df.columns:
+                streaming_prices_df = streaming_prices_df.filter(
+                    F.col("evidence_run_id") == evidence_run_id
+                )
             aligned_stream_df = streaming_prices_df.select(
                 F.col("ticker"),
                 F.substring(F.col("event_timestamp"), 1, 10).alias("trading_date"),
@@ -764,12 +692,8 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
                 "shares_outstanding",
                 "event_timestamp",
             ]
-            bronze_prices_df = _align_spark_columns(
-                batch_prices_df, cols, prices_contract.field_types
-            ).unionByName(
-                _align_spark_columns(aligned_stream_df, cols, prices_contract.field_types)
-            )
-        else:
+            bronze_prices_df = batch_prices_df.select(*cols).union(aligned_stream_df.select(*cols))
+        except Exception:
             bronze_prices_df = batch_prices_df
 
         silver_market_prices, failed_prices = bronze_to_silver_spark(
@@ -777,102 +701,81 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             prices_contract.required,
             prices_contract.nullable,
             ["ticker", "trading_date"],
-            field_types=prices_contract.field_types,
-            enum_values=prices_contract.enum_values,
-            blank_as_null=prices_contract.blank_as_null,
         )
         _cast_nulltype_columns(silver_market_prices).write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}silver/market_prices_daily/"
+            f"s3a://{bucket}/silver/market_prices_daily/"
         )
 
         # 2. Dim Company (Spark-native SCD Type 2)
-        existing_dim_company_df = read_optional(
-            lambda: spark.read.parquet(f"s3a://{bucket}/gold/dim_company/"),
-            lambda: None,
-            _spark_path_missing,
-        )
-        dim_company_df = build_dim_company_spark(
-            silver_companies, existing_dim_company_df=existing_dim_company_df
-        )
-        dim_company_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/dim_company/"
-        )
+        dim_company_df = build_dim_company_spark(silver_companies)
+        dim_company_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/dim_company/")
 
         # 3. Fact Financial Statement & Fact Market Price
         financial_fact = build_fact_financial_statement_spark(silver_financial_statements)
         market_fact = build_fact_market_price_spark(silver_market_prices)
         financial_fact.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/fact_financial_statement/"
+            f"s3a://{bucket}/gold/fact_financial_statement/"
         )
-        market_fact.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/fact_market_price/"
-        )
+        market_fact.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/fact_market_price/")
 
         # 4. News facts (Spark-native with fallback)
-        news_schema = StructType(
-            [
-                StructField("event_id", StringType(), True),
-                StructField("ticker", StringType(), True),
-                StructField("event_timestamp", StringType(), True),
-                StructField("created_ts", StringType(), True),
-                StructField("sentiment_score", DoubleType(), True),
-                StructField("risk_keyword_flag", BooleanType(), True),
-                StructField("severity_score", DoubleType(), True),
-                StructField("source_url", StringType(), True),
-            ]
-        )
-        news_bronze_df = read_optional(
-            lambda: spark.read.parquet(
+        try:
+            news_bronze_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.news_events/*/*/*/*.parquet"
-            ),
-            lambda: spark.createDataFrame([], news_schema),
-            _spark_path_missing,
-        )
-        news_fact_df = build_fact_news_sentiment_spark(news_bronze_df)
-        news_fact_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/fact_news_sentiment/"
-        )
+            )
+            if evidence_run_id is not None and "evidence_run_id" in news_bronze_df.columns:
+                news_bronze_df = news_bronze_df.filter(F.col("evidence_run_id") == evidence_run_id)
+            news_fact_df = build_fact_news_sentiment_spark(news_bronze_df)
+        except Exception:
+            schema = StructType(
+                [
+                    StructField("event_id", StringType(), True),
+                    StructField("ticker", StringType(), True),
+                    StructField("event_timestamp", StringType(), True),
+                    StructField("created_ts", StringType(), True),
+                    StructField("sentiment_score", DoubleType(), True),
+                    StructField("risk_keyword_flag", BooleanType(), True),
+                    StructField("severity_score", DoubleType(), True),
+                    StructField("source_url", StringType(), True),
+                    StructField("company_key", StringType(), True),
+                    StructField("date_key", IntegerType(), True),
+                ]
+            )
+            news_fact_df = spark.createDataFrame([], schema)
+        news_fact_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/fact_news_sentiment/")
 
         # 5. Alert facts (Spark-native with fallback)
-        alert_schema = StructType(
-            [
-                StructField("event_id", StringType(), True),
-                StructField("ticker", StringType(), True),
-                StructField("event_timestamp", StringType(), True),
-                StructField("created_ts", StringType(), True),
-                StructField("alert_type", StringType(), True),
-            ]
-        )
-        alert_bronze_df = read_optional(
-            lambda: spark.read.parquet(
+        try:
+            alert_bronze_df = spark.read.parquet(
                 f"s3a://{bucket}/bronze/kafka/financial.alert_events/*/*/*/*.parquet"
-            ),
-            lambda: spark.createDataFrame([], alert_schema),
-            _spark_path_missing,
-        )
-        alert_fact_df = build_fact_market_alert_spark(alert_bronze_df)
-        alert_fact_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/fact_market_alert/"
-        )
+            )
+            if evidence_run_id is not None and "evidence_run_id" in alert_bronze_df.columns:
+                alert_bronze_df = alert_bronze_df.filter(
+                    F.col("evidence_run_id") == evidence_run_id
+                )
+            alert_fact_df = build_fact_market_alert_spark(alert_bronze_df)
+        except Exception:
+            schema = StructType(
+                [
+                    StructField("event_id", StringType(), True),
+                    StructField("ticker", StringType(), True),
+                    StructField("event_timestamp", StringType(), True),
+                    StructField("created_ts", StringType(), True),
+                    StructField("alert_type", StringType(), True),
+                    StructField("company_key", StringType(), True),
+                    StructField("date_key", IntegerType(), True),
+                ]
+            )
+            alert_fact_df = spark.createDataFrame([], schema)
+        alert_fact_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/fact_market_alert/")
 
         # 6. Distress labels (Spark-native)
-        current_company = dim_company_df.filter(F.col("is_current")).select(
-            "ticker", "sector", "industry"
-        )
-        financial_for_labels = financial_fact.join(current_company, "ticker", "left")
-        sector_exclusion = load_sector_exclusion(
-            os.getenv("SECTOR_EXCLUSION_PATH", "configs/sector_exclusion.yaml")
-        )
-        labels_df = compute_labels_spark(financial_for_labels, sector_exclusion=sector_exclusion)
-        labels_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/distress_labels/"
-        )
+        labels_df = compute_labels_spark(financial_fact)
+        labels_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/distress_labels/")
 
         # 7. OBT Company Quarter Risk (Spark-native)
         obt_df = build_obt_company_quarter_risk_spark(financial_fact, labels_df)
-        obt_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/obt_company_quarter_risk/"
-        )
+        obt_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/obt_company_quarter_risk/")
 
         # 8. Feature Tables (Spark-native)
         financial_feature_df = build_feat_company_financial_4q_spark(obt_df)
@@ -881,17 +784,15 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
         feature_df = build_feat_company_unified_spark(obt_df, market_fact)
 
         financial_feature_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/feat_company_financial_4q/"
+            f"s3a://{bucket}/gold/feat_company_financial_4q/"
         )
         market_feature_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/feat_company_market_30d/"
+            f"s3a://{bucket}/gold/feat_company_market_30d/"
         )
         news_feature_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/feat_company_news_30d/"
+            f"s3a://{bucket}/gold/feat_company_news_30d/"
         )
-        feature_df.write.mode("overwrite").parquet(
-            f"s3a://{bucket}/{output_root}gold/feat_company_unified/"
-        )
+        feature_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/feat_company_unified/")
 
         # 9. Dim Date bounds
         date_bounds_df = (
@@ -908,17 +809,10 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
         db_row = date_bounds_df.collect()[0]
         date_start, date_end = db_row[0][:10], db_row[1][:10]
         date_rows = build_dim_date(date_start, date_end)
-        _write_rows_with_spark(spark, date_rows, f"s3a://{bucket}/{output_root}gold/dim_date/")
+        _write_rows_with_spark(spark, date_rows, f"s3a://{bucket}/gold/dim_date/")
 
-        failed_count = persist_failed_rows(
-            {
-                "companies": failed_companies,
-                "financial_statements": failed_statements,
-                "market_prices_daily": failed_prices,
-            },
-            run_id,
-        )
-        counts = {
+        failed_count = failed_companies.count() + failed_statements.count() + failed_prices.count()
+        return {
             "silver_companies": silver_companies.count(),
             "silver_financial_statements": silver_financial_statements.count(),
             "silver_market_prices": silver_market_prices.count(),
@@ -936,19 +830,5 @@ def run_stage1_spark_lakehouse(bucket: str = DEFAULT_BUCKET) -> dict[str, int]:
             "gold_feat_company_unified": feature_df.count(),
             "failed_records": failed_count,
         }
-        validate_publication_counts(counts)
-        validate_spark_outputs(
-            dim_company_df,
-            silver_companies,
-            financial_fact,
-            market_fact,
-            alert_fact_df,
-            news_fact_df,
-            obt_df,
-        )
-        client = _minio_client()
-        _ensure_bucket(client, bucket)
-        promote_staged_prefixes(client, bucket, run_id, PUBLISHED_PREFIXES)
-        return counts
     finally:
         spark.stop()

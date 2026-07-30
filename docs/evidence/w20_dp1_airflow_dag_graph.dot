@@ -1,0 +1,14 @@
+digraph dp1_bronze_ingest {
+    rankdir=LR;
+    fontname="Helvetica";
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11, margin="0.15,0.08"];
+    edge [fontname="Helvetica", fontsize=10];
+
+    A [label=<<B>ingest_bronze</B><BR/><FONT POINT-SIZE="9"><I>collect_companies</I><BR/><I>collect_financial_statements</I><BR/><I>collect_market_prices</I><BR/><BR/>write_minio_dataset<BR/>to bronze slash {companies,financial_statements,market_prices_daily}<BR/><BR/>Variable.get: financial_distress_bucket</FONT>>, fillcolor="#ddf4ff", color="#0969da", fontcolor="#0969da"];
+    B [label=<<B>validate_bronze</B><BR/><FONT POINT-SIZE="9"><I>build_evidence_payload</I><BR/>assert non-empty row counts<BR/><BR/>sidecar: dp1_bronze_validation.json<BR/><BR/>BaseHook: project_metadata</FONT>>, fillcolor="#dafbe1", color="#1a7f37", fontcolor="#1a7f37"];
+
+    A -> B [label="set_upstream"];
+
+    labelloc="t";
+    label=<<B>Airflow DAG: dp1_bronze_ingest</B><BR/><FONT POINT-SIZE="10" COLOR="#57606a">Ingest stage - 3 batch collectors - to Validate stage    Rubric row: DP1 Pipeline - Ingest 2pts and Validate 2pts</FONT>>;
+}

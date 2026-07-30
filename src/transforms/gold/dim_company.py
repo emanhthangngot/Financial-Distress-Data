@@ -1,3 +1,10 @@
+"""
+Gold-zone dimension builders (dim_company, dim_date).
+
+Builds the company and date dimensions from the Silver zone, normalized for surrogate keys.
+Re-exported by ``src.transforms.silver_to_gold``.
+"""
+
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta

@@ -1,3 +1,11 @@
+"""
+Catalog of data quality checks for the financial-distress pipeline.
+
+Each check is a small function that inspects a DataFrame and returns a ``DqResult`` with status
+(PASS / WARN / FAIL) and a reason. Checks are registered by the runner, never called directly from
+jobs.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

@@ -1,6 +1,7 @@
 import json
+from pathlib import Path
 
-from dags._stage1_dag_utils import metadata_writer_from_env
+from dags.utils.stage1_dag_utils import metadata_writer_from_env
 from src.metadata.metadata_writer import PostgresMetadataWriter
 from src.streaming.events import StreamEvent
 from src.streaming.kafka_to_bronze_consumer import (
@@ -203,3 +204,53 @@ def test_metadata_writer_from_env_uses_postgres_when_dsn_is_configured(monkeypat
     writer = metadata_writer_from_env()
 
     assert isinstance(writer, PostgresMetadataWriter)
+
+
+def test_postgres_writer_flush_pipeline_run_logs_uses_single_commit_batched_execute():
+    connection = FakeConnection()
+    writer = PostgresMetadataWriter(lambda: connection)
+
+    rows = [
+        {
+            "run_id": f"run-{i}",
+            "dag_id": "stage1_pipeline",
+            "task_id": "ingest",
+            "dataset_name": f"dataset-{i}",
+            "status": "success",
+            "started_at": "2026-01-01T00:00:00+00:00",
+            "ended_at": "2026-01-01T00:01:00+00:00",
+            "input_rows": 10,
+            "output_rows": 10,
+            "error_message": None,
+        }
+        for i in range(5)
+    ]
+
+    writer.flush_pipeline_run_logs(rows)
+
+    # Exactly 1 commit for 5 rows (vs 5 commits in single-row path).
+    assert connection.commits == 1
+    # One execute call carrying all rows in a single multi-VALUES INSERT.
+    assert len(connection.cursor_instance.executed) == 1
+    sql, params = connection.cursor_instance.executed[0]
+    assert "project_metadata.pipeline_run_log" in sql
+    assert "INSERT INTO" in sql.upper()
+    # 5 row tuples passed in the single batched INSERT.
+    assert len(params) == 5
+
+
+def test_init_project_metadata_sql_creates_w10_indexes():
+    sql = Path("sql/init_project_metadata.sql").read_text(encoding="utf-8")
+
+    expected_indexes = [
+        "idx_pipeline_run_log_dag_status_created",
+        "idx_pipeline_run_log_dataset_created",
+        "idx_data_quality_result_dataset_checked",
+        "idx_data_quality_result_run_id",
+        "idx_failed_records_dataset_created",
+        "idx_failed_records_run_id",
+    ]
+    for index_name in expected_indexes:
+        assert f"CREATE INDEX IF NOT EXISTS {index_name}" in sql, (
+            f"missing index {index_name} in init_project_metadata.sql"
+        )

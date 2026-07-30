@@ -1,3 +1,11 @@
+"""
+Collector for OHLCV market price history.
+
+Fetches daily market prices for each ticker in the company master and writes them to
+``bronze/market_price/`` partitioned by exchange and trade_date. The streaming variant emits price
+ticks into Kafka.
+"""
+
 from __future__ import annotations
 
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter

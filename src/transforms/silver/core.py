@@ -1,3 +1,10 @@
+"""
+Pure-Python Bronze-to-Silver primitives.
+
+Column normalization, schema alignment, and ``deduplicate_latest`` over ``created_ts`` for each
+business key. Used by the PySpark implementation and by unit tests that want a no-Spark path.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable

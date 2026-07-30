@@ -9,12 +9,6 @@ services:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - ./sql/init_project_metadata.sql:/docker-entrypoint-initdb.d/01_init_project_metadata.sql:ro
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-airflow} -d ${POSTGRES_DB:-financial_distress}"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
 
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
@@ -25,19 +19,11 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    volumes:
-      - minio-data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
 
   minio-init:
     image: minio/mc:RELEASE.2025-04-16T18-13-26Z
     depends_on:
-      minio:
-        condition: service_healthy
+      - minio
     entrypoint: >
       /bin/sh -c "
       until mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}; do sleep 2; done;
@@ -52,7 +38,6 @@ services:
       - "9094:9094"
     volumes:
       - ./init:/opt/financial-distress-init:ro
-      - kafka-data:/var/lib/kafka/data
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -65,63 +50,14 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    healthcheck:
-      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
-      interval: 5s
-      timeout: 10s
-      retries: 18
 
   kafka-init:
     image: apache/kafka:3.9.0
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
     volumes:
       - ./init:/opt/financial-distress-init:ro
     command: bash /opt/financial-distress-init/kafka_init_topics.sh
-
-  flink-jobmanager:
-    profiles: [flink]
-    build:
-      context: .
-      dockerfile: infra/flink/Dockerfile
-    image: financial-distress-flink:1.20.3
-    working_dir: /tmp
-    command: jobmanager
-    depends_on:
-      kafka-init:
-        condition: service_completed_successfully
-    ports:
-      - "8081:8081"
-    environment:
-      FLINK_PROPERTIES: |
-        jobmanager.rpc.address: flink-jobmanager
-        rest.address: flink-jobmanager
-        parallelism.default: 1
-        state.checkpoints.dir: file:///opt/flink/checkpoints
-        execution.checkpointing.externalized-checkpoint-retention: RETAIN_ON_CANCELLATION
-    volumes:
-      - ./:/opt/flink/project:ro
-      - flink-output:/opt/flink/output
-      - flink-checkpoints:/opt/flink/checkpoints
-
-  flink-taskmanager:
-    profiles: [flink]
-    image: financial-distress-flink:1.20.3
-    working_dir: /tmp
-    depends_on:
-      - flink-jobmanager
-    command: taskmanager
-    environment:
-      FLINK_PROPERTIES: |
-        jobmanager.rpc.address: flink-jobmanager
-        taskmanager.numberOfTaskSlots: 4
-        parallelism.default: 1
-        state.checkpoints.dir: file:///opt/flink/checkpoints
-    volumes:
-      - ./:/opt/flink/project:ro
-      - flink-output:/opt/flink/output
-      - flink-checkpoints:/opt/flink/checkpoints
 
   airflow-webserver:
     build:
@@ -142,15 +78,17 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       PYTHONPATH: /opt/airflow
       PROJECT_METADATA_DSN: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
-      AIRFLOW_CONN_PROJECT_METADATA: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
-      AIRFLOW_VAR_FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
-      AIRFLOW_VAR_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      ENABLE_FLINK: ${ENABLE_FLINK:-0}
+      FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
+      FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -166,8 +104,7 @@ services:
       dockerfile: infra/airflow/Dockerfile
     image: financial-distress-airflow:stage1
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     command: >
       bash -c "
       until airflow db migrate; do sleep 2; done;
@@ -179,15 +116,17 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       PYTHONPATH: /opt/airflow
       PROJECT_METADATA_DSN: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
-      AIRFLOW_CONN_PROJECT_METADATA: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
-      AIRFLOW_VAR_FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
-      AIRFLOW_VAR_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      ENABLE_FLINK: ${ENABLE_FLINK:-0}
+      FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
+      FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -209,15 +148,17 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       PYTHONPATH: /opt/airflow
       PROJECT_METADATA_DSN: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
-      AIRFLOW_CONN_PROJECT_METADATA: postgresql://${POSTGRES_USER:-airflow}:${POSTGRES_PASSWORD:-airflow}@postgres:5432/${POSTGRES_DB:-financial_distress}
-      AIRFLOW_VAR_FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
-      AIRFLOW_VAR_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FINANCIAL_DISTRESS_BUCKET: ${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake}
       MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
       STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      ENABLE_FLINK: ${ENABLE_FLINK:-0}
+      FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
+      FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -225,9 +166,43 @@ services:
       - ./sql:/opt/airflow/sql
       - ./docs:/opt/airflow/docs
 
+  flink-jobmanager:
+    image: apache/flink:1.19-java17
+    profiles: ["flink"]
+    hostname: flink-jobmanager
+    ports:
+      - "8081:8081"
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 1
+        parallelism.default: 1
+        state.backend: filesystem
+        state.checkpoints.dir: file:///tmp/flink-checkpoints
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/overview || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    volumes:
+      - ./src/streaming/flink/jobs:/opt/flink/jobs:ro
+      - flink-checkpoints:/tmp/flink-checkpoints
+
+  flink-taskmanager:
+    image: apache/flink:1.19-java17
+    profiles: ["flink"]
+    depends_on:
+      flink-jobmanager:
+        condition: service_healthy
+    hostname: flink-taskmanager
+    environment:
+      FLINK_PROPERTIES: |
+        jobmanager.rpc.address: flink-jobmanager
+        taskmanager.numberOfTaskSlots: 1
+        taskmanager.registration.timeout: 120s
+    volumes:
+      - flink-checkpoints:/tmp/flink-checkpoints
+
 volumes:
-  postgres-data:
-  minio-data:
-  kafka-data:
-  flink-output:
   flink-checkpoints:

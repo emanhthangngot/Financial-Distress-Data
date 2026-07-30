@@ -1,3 +1,11 @@
+"""
+Stage 1 evidence audit.
+
+Compares the local Stage 1 evidence bundle against the rubric checklist. Used
+by the rubric row 4 evidence-acceptance flow to confirm that every required
+artefact is present and well-formed before submission.
+"""
+
 # ruff: noqa: E402
 
 from __future__ import annotations

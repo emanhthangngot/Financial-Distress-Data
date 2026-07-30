@@ -1,0 +1,8 @@
+{
+  "contract_check": true,
+  "dataset": "dim_company",
+  "dp": "DP1",
+  "dq_passed": true,
+  "row_count": 30,
+  "schema_match": true
+}

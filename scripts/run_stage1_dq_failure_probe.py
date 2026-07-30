@@ -1,3 +1,11 @@
+"""
+Stage 1 DQ failure probe.
+
+Runs the Bronze-to-Silver transform against a deliberately-bad fixture to
+prove that the DQ framework routes critical failures to
+``project_metadata.failed_records`` and halts downstream tasks as expected.
+"""
+
 # ruff: noqa: E402
 
 from __future__ import annotations

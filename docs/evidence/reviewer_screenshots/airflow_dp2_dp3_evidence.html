@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Airflow DP2/DP3 Evidence</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; color: #18202a; background: #f6f7fb; }
+    .page { width: 1280px; min-height: 900px; padding: 34px 42px; box-sizing: border-box; }
+    h1 { margin: 0 0 8px; font-size: 34px; letter-spacing: 0; }
+    .subtitle { color: #5a6472; font-size: 16px; margin-bottom: 24px; }
+    .badge { display: inline-block; padding: 6px 10px; border-radius: 4px; background: #e7f5ef; color: #116149; font-weight: 700; font-size: 12px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .panel { background: #fff; border: 1px solid #d7dce5; border-radius: 8px; padding: 18px; }
+    .panel h2 { margin: 0 0 14px; font-size: 22px; }
+    .flow { display: grid; gap: 10px; }
+    .task { border-left: 5px solid #2d6cdf; background: #f9fbff; padding: 12px 14px; border-radius: 6px; }
+    .task strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .task span { color: #536071; font-size: 13px; }
+    .validate { border-left-color: #0f9d58; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .metric { background: #f2f5f8; border-radius: 6px; padding: 12px; }
+    .metric b { display: block; font-size: 24px; }
+    .metric span { color: #5a6472; font-size: 12px; }
+    .footer { margin-top: 18px; padding: 14px; background: #fff8e6; border: 1px solid #ead28a; border-radius: 6px; font-size: 13px; }
+    code { background: #eef1f6; padding: 2px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>Airflow DP2 / DP3 Evidence</h1>
+    <div class="subtitle">Generated from checked-in Stage 1 evidence. Local reviewer view for rubric pipeline screenshots.</div>
+    <span class="badge">Evidence status: pass</span>
+
+    <section class="grid" style="margin-top: 22px;">
+      <div class="panel">
+        <h2>DP2: Bronze to Silver and Gold</h2>
+        <div class="flow">
+          <div class="task"><strong>1. Ingest Bronze</strong><span><code>dags/05_transform_bronze_to_silver.py</code> reads Bronze financial, company, market, and Kafka partitions.</span></div>
+          <div class="task"><strong>2. Normalize and Deduplicate</strong><span>Business keys keep latest <code>created_ts</code>; invalid rows route to failed-record metadata.</span></div>
+          <div class="task"><strong>3. Build Gold Tables</strong><span><code>dags/06_pyspark_silver_to_gold.py</code> builds dimensions, facts, labels, OBT, and feature tables.</span></div>
+          <div class="task validate"><strong>4. Validate Stage</strong><span><code>dags/07_run_data_quality_checks.py</code> persists DQ rows and halts on critical failures.</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>DP3: Offline Feature Tables</h2>
+        <div class="flow">
+          <div class="task"><strong>1. Financial 4Q Features</strong><span><code>gold/feat_company_financial_4q</code> uses report-period-safe financial aggregates.</span></div>
+          <div class="task"><strong>2. Market 30D Features</strong><span><code>gold/feat_company_market_30d</code> aggregates market events before the reference timestamp.</span></div>
+          <div class="task"><strong>3. News 30D Features</strong><span><code>gold/feat_company_news_30d</code> materializes sentiment risk signals.</span></div>
+          <div class="task validate"><strong>4. PIT Leakage Validation</strong><span>DuckDB validation reports <code>future_feature_leakage_rows = 0</code>.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top: 18px;">
+      <h2>Runtime Metrics Used by Reviewer</h2>
+      <div class="metrics">
+        <div class="metric"><b>16</b><span>financial statement rows</span></div>
+        <div class="metric"><b>12</b><span>market feature rows</span></div>
+        <div class="metric"><b>2</b><span>news feature rows</span></div>
+        <div class="metric"><b>0</b><span>future feature leakage rows</span></div>
+        <div class="metric"><b>436</b><span>MinIO evidence objects</span></div>
+        <div class="metric"><b>pass</b><span>stage1 evidence audit</span></div>
+      </div>
+    </section>
+
+    <div class="footer">
+      Source artifacts: <code>docs/evidence/stage1_real_duckdb_validation.json</code>,
+      <code>docs/evidence/stage1_real_minio_objects.json</code>,
+      <code>docs/evidence/stage1_runtime_audit_summary.json</code>.
+    </div>
+  </main>
+</body>
+</html>

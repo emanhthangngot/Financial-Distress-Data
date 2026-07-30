@@ -1,3 +1,12 @@
+"""
+Stage 1 real end-to-end runner.
+
+Drives the real end-to-end Stage 1 run on the developer cluster: starts the
+local stack, triggers the real-e2e DAG, and collects evidence. Used by rubric
+rows 3 and 4 to prove the pipeline works against a live MinIO/PostgreSQL/Kafka
+setup.
+"""
+
 # ruff: noqa: E402
 
 from __future__ import annotations
@@ -19,6 +28,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.evidence.run_manifest import build_run_manifest
 from src.jobs.stage1_evidence_job import metadata_dsn, minio_host_endpoint, read_env_file
+from src.security.secrets import require
 
 
 def run(command: list[str], timeout: int = 120) -> str:
@@ -57,10 +67,16 @@ def _minio_client_config(env_path: str | Path = ".env") -> dict[str, Any]:
     env_file_values = read_env_file(env_path)
     return {
         "endpoint": minio_host_endpoint(env_path),
-        "access_key": os.getenv("MINIO_ROOT_USER")
-        or env_file_values.get("MINIO_ROOT_USER", "minioadmin"),
-        "secret_key": os.getenv("MINIO_ROOT_PASSWORD")
-        or env_file_values.get("MINIO_ROOT_PASSWORD", "minioadmin"),
+        "access_key": (
+            os.getenv("MINIO_ROOT_USER")
+            or env_file_values.get("MINIO_ROOT_USER")
+            or require("MINIO_ROOT_USER")
+        ),
+        "secret_key": (
+            os.getenv("MINIO_ROOT_PASSWORD")
+            or env_file_values.get("MINIO_ROOT_PASSWORD")
+            or require("MINIO_ROOT_PASSWORD")
+        ),
         "secure": False,
     }
 

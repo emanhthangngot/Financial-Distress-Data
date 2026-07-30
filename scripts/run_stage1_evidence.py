@@ -1,3 +1,11 @@
+"""
+Stage 1 evidence orchestrator.
+
+End-to-end runner that drives the Stage 1 evidence pipeline from the command
+line: starts services if needed, triggers the local-evidence DAG, and writes
+the result bundle to ``docs/evidence/``. Used by rubric row 4.
+"""
+
 # ruff: noqa: E402
 
 from __future__ import annotations
