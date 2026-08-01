@@ -1,0 +1,34 @@
+{
+  "input_digest": "bf26312958c541083f52b57d0398b68ed7061bdcb38478a1a4a0cf6e33517779",
+  "output_digest": "404f6e52d8b959a4164974a6836d0c73837012e53fd014b2f85fcabc727b7b64",
+  "output_rows": 5,
+  "plan_signals": {
+    "baseline": {
+      "broadcast_count": 0,
+      "exchange_count": 6,
+      "sort_count": 7,
+      "window_count": 6
+    },
+    "optimized": {
+      "broadcast_count": 4,
+      "exchange_count": 7,
+      "sort_count": 9,
+      "window_count": 0
+    }
+  },
+  "run_id": "generator-evidence-v1",
+  "runtime": {
+    "baseline_median_seconds": 1.251296,
+    "baseline_over_optimized_ratio": 1.5595,
+    "optimized_median_seconds": 0.802365
+  },
+  "status": "pass",
+  "storage": {
+    "baseline_file_count": 24,
+    "baseline_read_seconds": 0.438756,
+    "file_count_reduction": 22,
+    "optimized_file_count": 2,
+    "optimized_read_seconds": 0.181349,
+    "read_speed_ratio": 2.4194
+  }
+}

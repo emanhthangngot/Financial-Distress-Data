@@ -91,9 +91,9 @@ def test_architecture_directory_contains_only_known_files() -> None:
 def test_dot_source_uses_tb_layout() -> None:
     """The W22 plan locks TB layout so all edge labels render (LR + ortho drops them)."""
     text = DOT_PATH.read_text(encoding="utf-8")
-    assert re.search(
-        r"rankdir\s*=\s*TB", text
-    ), f"{DOT_PATH} does not declare rankdir=TB; LR layout drops edge labels"
-    assert re.search(
-        r"splines\s*=\s*true", text
-    ), f"{DOT_PATH} does not declare splines=true; required for curved edges with labels"
+    assert re.search(r"rankdir\s*=\s*TB", text), (
+        f"{DOT_PATH} does not declare rankdir=TB; LR layout drops edge labels"
+    )
+    assert re.search(r"splines\s*=\s*true", text), (
+        f"{DOT_PATH} does not declare splines=true; required for curved edges with labels"
+    )

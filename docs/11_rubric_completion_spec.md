@@ -304,13 +304,13 @@ Acceptance:
 Reviewer -> opens collector_config.yaml -> sees stream_flush_record_count and stream_flush_interval_seconds controlling streaming evidence.
 ```
 
-## Processing Jobs - 22 Points in Repo Audit, 20 Points in CSV
+## Processing Jobs - 29 Points
 
-The CSV assigns 12 points to Spark and 8 points to Flink. The repo keeps an
-extra Flink baseline row in the audit catalogue for transparency, but the
-submitted grading target remains 20 processing points from the CSV.
+The current CSV assigns 16 points to Spark and 13 points to Flink. The package
+auditor reads those weights from `configs/rubric-requirements.yaml`; the old
+20-point split is not valid for submission.
 
-### Spark Baseline and Optimization - 12 Points
+### Spark Baseline and Optimization - 16 Points
 
 Work completed:
 
@@ -333,7 +333,7 @@ Acceptance:
 Reviewer -> opens Spark evidence screenshot -> sees baseline, optimization actions, and Airflow integration proof.
 ```
 
-### Flink Streaming Processing - 8 Points
+### Flink Streaming Processing - 13 Points
 
 Work completed:
 
@@ -480,7 +480,7 @@ Acceptance:
 Reviewer -> opens governance evidence screenshot -> sees DP1, DP2, and DP3 lineage plus contract validation.
 ```
 
-## Documentation - 8 Points
+## Documentation - 10 Points
 
 Work completed:
 
@@ -501,7 +501,7 @@ Acceptance:
 Reviewer -> opens schema design doc -> sees SCD2 fields, feature timestamp fields, relationships, and naming conventions.
 ```
 
-## README + Deployment Diagram - 10 Points
+## README + Deployment Diagram - Mandatory, Unscored
 
 Work completed:
 
@@ -570,8 +570,6 @@ The screenshot pack lives under:
 docs/evidence/reviewer_screenshots/
 ```
 
-Files:
-
 - `airflow_dp2_dp3_evidence.html`
 - `airflow_dp2_dp3_evidence.png`
 - `spark_optimization_evidence.html`
@@ -590,6 +588,14 @@ Generated from checked-in Stage 1 evidence
 That wording is deliberate. These are reproducible reviewer evidence screens
 rendered from repository artifacts. They are not a false claim that live Spark
 UI, Flink UI, or DataHub was running during grading.
+
+For the strongest submission, replace these with **genuine UI screenshots**
+captured from the running local stack. `docs/ui-screenshot-runbook.md` and
+`scripts/capture_ui_screenshots.py` automate that capture:
+
+```text
+Reviewer -> runs scripts/capture_ui_screenshots.py against the running stack -> gets real Airflow/DataHub/Flink UI captures in docs/evidence/screenshots/.
+```
 
 ## Final Verification Matrix
 

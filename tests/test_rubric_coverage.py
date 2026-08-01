@@ -72,9 +72,9 @@ def test_docker_compose_present() -> None:
 
 def test_dockerfile_optimize_evidence() -> None:
     # W23 produced docker_size.json showing measurable size reduction
-    assert (EVIDENCE / "docker_size.json").exists() or _exists(
-        "docs/08_docker_optimization.md"
-    ), "Docker image size optimization evidence missing"
+    assert (EVIDENCE / "docker_size.json").exists() or _exists("docs/08_docker_optimization.md"), (
+        "Docker image size optimization evidence missing"
+    )
 
 
 # -- 2. Implement Data Generator (16 pts) ------------------------------
@@ -111,9 +111,9 @@ def test_generator_duplicate_rate_evidence() -> None:
 
 def test_generator_uses_config() -> None:
     # Generator must be driven by a config file
-    assert _exists("src/generators/config_loader.py") or _exists(
-        "src/generator/config.yaml"
-    ), "Generator config not found"
+    assert _exists("src/generators/config_loader.py") or _exists("src/generator/config.yaml"), (
+        "Generator config not found"
+    )
 
 
 def test_generator_lands_in_bronze() -> None:
@@ -230,9 +230,9 @@ def test_dp_lineage_evidence(dp: str) -> None:
     p = EVIDENCE / "governance" / f"{dp}_lineage.json"
     assert p.exists(), f"{dp}_lineage.json missing"
     data = json.loads(p.read_text(encoding="utf-8"))
-    assert data.get("upstream") and data.get(
-        "downstream"
-    ), f"{dp} lineage missing upstream/downstream"
+    assert data.get("upstream") and data.get("downstream"), (
+        f"{dp} lineage missing upstream/downstream"
+    )
 
 
 @pytest.mark.parametrize("dp", ["dp1", "dp2", "dp3"])
@@ -259,9 +259,9 @@ def test_dim_scd2_documented() -> None:
 
 def test_feat_table_columns_documented() -> None:
     text = _read(DOCS / "02_schema_design.md").lower()
-    assert (
-        "event_timestamp" in text and "created" in text
-    ), "feat table event_timestamp/created not documented"
+    assert "event_timestamp" in text and "created" in text, (
+        "feat table event_timestamp/created not documented"
+    )
 
 
 def test_dim_fact_relationship_documented() -> None:
@@ -299,9 +299,9 @@ def test_readme_has_repo_structure() -> None:
 
 def test_deployment_diagram_png_exists() -> None:
     # W22 added images/architecture/system_deployment_diagram.png
-    assert (
-        IMAGES / "architecture" / "system_deployment_diagram.png"
-    ).exists(), "Deployment diagram missing"
+    assert (IMAGES / "architecture" / "system_deployment_diagram.png").exists(), (
+        "Deployment diagram missing"
+    )
 
 
 def test_deployment_diagram_dot_in_sync() -> None:

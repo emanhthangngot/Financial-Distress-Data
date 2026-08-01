@@ -111,6 +111,54 @@ Kafka port constraint are documented in `../data-governance.md`.
 - `novel/phase8-novel-ideas.json`: manifest tamper detection and injected PIT
   leakage negative controls.
 
+## Full-Volume Pipeline Evidence Run
+
+The checked-in Gold evidence uses the small fixture path (16 financial
+statement rows). To prove the pipeline also runs end to end on the full
+generator volume (80,000 financial statements, 50,000 stream events), run the
+generator first, then point the Spark benchmark and the E2E path at the full
+source manifest:
+
+```bash
+# 1. Generate the full volume locally (deterministic, no services needed).
+.venv/bin/python scripts/run_generator_and_profile.py \
+  --config configs/generator-config.yaml \
+  --profile evidence \
+  --output-root /tmp/full-volume-gen
+
+# 2. Publish the same run to MinIO and Kafka so the pipeline can ingest it.
+MINIO_ENDPOINT=http://localhost:9000 \
+MINIO_ACCESS_KEY=minioadmin MINIO_SECRET_KEY=minioadmin \
+.venv/bin/python scripts/run_generator_and_profile.py \
+  --config configs/generator-config.yaml \
+  --profile evidence \
+  --kafka-bootstrap-servers localhost:9094 \
+  --publish-minio --publish-kafka
+
+# 3. Run the Spark benchmark on the full source manifest (docker S3A runtime).
+.venv/bin/python scripts/run_spark_benchmark.py \
+  --variant baseline \
+  --source-manifest docs/evidence/generator/source-manifest.json \
+  --output /tmp/spark-baseline-full.json --include-storage
+.venv/bin/python scripts/run_spark_benchmark.py \
+  --variant optimized \
+  --source-manifest docs/evidence/generator/source-manifest.json \
+  --output /tmp/spark-optimized-full.json --include-storage
+.venv/bin/python scripts/audit_spark_benchmark.py \
+  --baseline /tmp/spark-baseline-full.json \
+  --optimized /tmp/spark-optimized-full.json
+
+# 4. Run the Airflow E2E path on the full-volume Bronze data.
+.venv/bin/python scripts/run_stage1_real_e2e.py \
+  --execution-date 2026-06-06T10:04:00+00:00 \
+  --export-evidence /tmp/stage1-e2e-full
+```
+
+Then copy the full-volume artifacts over the checked-in ones and re-run
+`scripts/audit_stage1_evidence.py docs/evidence --check`. The generator part of
+this run (step 1) is verified locally and produces deterministic hashes; steps
+2-4 need the Docker stack and a machine where MinIO/Kafka/Spark are reachable.
+
 ## Stage 1 Automated Evidence Run
 
 Install runtime dependencies before materializing MinIO/PostgreSQL evidence:
@@ -178,14 +226,14 @@ screenshots; Airflow should not rely on writing directly into this bind-mounted
 repository directory.
 
 The accepted immutable Phase 9 package is
-`docs/evidence/final/coursework-final-20260731T0030/`. Its outer run ID binds
-51 reviewed artifacts from the component executions into one SHA-256 manifest.
+`docs/evidence/final/coursework-final-20260802T0130/`. Its outer run ID binds
+53 reviewed artifacts from the component executions into one SHA-256 manifest.
 Component benchmark and Airflow execution IDs remain inside their native
 metrics instead of being rewritten. Validate it with:
 
 ```bash
 uv run python scripts/audit_mini_coursework_rubric.py \
-  --evidence-dir docs/evidence/final/coursework-final-20260731T0030 \
+  --evidence-dir docs/evidence/final/coursework-final-20260802T0130 \
   --require-score 100
 ```
 

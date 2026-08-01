@@ -18,7 +18,10 @@ manifest and carrying the same run ID.
 
 `scripts/export_novel_idea_evidence.py` verifies an untouched artifact, changes
 its row count, then verifies again. The clean control returns no errors; the
-mutated artifact returns `artifact hash mismatch`. Unit tests also cover unsafe
+mutated artifact returns `artifact hash mismatch`. The report labels this as
+`probe: intentional_mutation_demonstration` so reviewers can tell the committed
+artifacts are the clean run and the mismatch is the controlled proof that
+tampering is detected. Unit tests also cover unsafe
 paths and duplicate records.
 
 Runtime result: [`phase8-novel-ideas.json`](evidence/novel/phase8-novel-ideas.json).
