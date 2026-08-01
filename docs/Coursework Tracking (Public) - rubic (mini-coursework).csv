@@ -7,9 +7,9 @@ Mọi người lưu ý:
 + mũi tên nên đi theo đường truyền của dữ liệu, ví dụ nếu data truyền từ A đến B thì mũi tên đi từ A đến B, và dữ liệu thể hiện bên trên mũi tên. Còn nếu A chỉ gọi tới B, không truyển dữ liệu gì thì mũi tên từ A đến B.
 + các mũi tên nên có description và đánh số thứ tự, nếu có nhiều user flow, ví dụ end user và developer thì có thể thể hiện các màu mũi tên khác nhau và đánh số thứ tự riêng cho từng flow (ví dụ cả 2 ông đều đi từ 1->n)
 + hạn chế sử dụng mũi tên nét đứt, thường dùng cho các luồng k phải luồng chính (tức luồng liên quan trực tiếp tới các user)
-",,,,10
+",,,,
 Engineering Fundamentals,Docker & Docker Compose,Có sử dụng Docker & Docker Compose,Document Docker image đã reduce từ bao nhiêu tới bao nhiêu thông qua phương pháp optimize gì,1
-,,Optimize Dockerfile (ví dụ multistage build),,1
+,,Optimize Dockerfile (ví dụ multistage build),,2
 Implement Data Generator,Simulate offline data problems,Simulate skew,"Capture màn hình output để summarize chất lượng dữ liệu đã generate
 - Skew distribution (city/category %)
 - Cardinality: approx_count_distinct by ID
@@ -39,16 +39,16 @@ days_history: 180
 )",,2
 Processing Jobs,Spark job to handle offline data problems,Baseline (without optimization),"Document giải thích từng step optimize từ baseline như thế nào, dùng Spark UI như thế nào (với screenshots để thấy rõ vấn đề), và đã tích hợp vào Airflow pipeline ra sao",2
 ,,"Handle skew with explanation 
-(Ví dụ: Do data bị skew như thế này, tôi thấy từ Spark UI có vấn đề như này, tôi sẽ có các phương pháp thử nghiệm như thế này, và sau khi thử nghiệm thì nó tăng ntn so với baseline)",,2
-,,Handle high cardinality with explanation,,2
-,,Handle schema evolution with explanation,,2
-,,Handle other offline data problem with explanation,,2
+(Ví dụ: Do data bị skew như thế này, tôi thấy từ Spark UI có vấn đề như này, tôi sẽ có các phương pháp thử nghiệm như thế này, và sau khi thử nghiệm thì nó tăng ntn so với baseline)",,3
+,,Handle high cardinality with explanation,,3
+,,Handle schema evolution with explanation,,3
+,,Handle other offline data problem with explanation,,3
 ,,Spark job được tích hợp vào các data pipeline,,2
 ,"Flink job to handle streaming data problems
 (later in final coursework, we will merge this streaming pipeline into the feature store)",Baseline (without optimization),"Document giải thích từng step optimize từ baseline như thế nào, dùng Flink UI như thế nào (với screenshots để thấy rõ vấn đề)",2
-,,Handle burst with explanation,,2
-,,Handle late arrival with explanation,,2
-,,Handle other streaming problem with explanation,,2
+,,Handle burst with explanation,,3
+,,Handle late arrival with explanation,,3
+,,Handle other streaming problem with explanation,,3
 ,,Window processing,Capture đoạn code thể hiện khả năng xử lý Window trong Flink,2
 Data Storage,How to optimize your data storage ,"Lakehouse (ví dụ compaction để gom nhiều file nhỏ thành file lớn, z-order hoặc partitioning)",Capture đoạn code và phân tích đã optimize được những gì so với chưa optimize,2
 ,,Datawarehouse (ví dụ indexing),,2
@@ -71,8 +71,8 @@ Data Governance,DP1 linked with related tables,Lineage between the pipeline and 
 (tất cả documents để trong folder `docs/`, và ở README.md thì mọi người link tới mấy document này nhé. README.md chỉ summarize thôi, và nếu ai muốn đọc chi tiết các document optimize hoặc schema design thì đọc thêm ở trong docs/)
 (các capture màn hình cũng nên đính ở trong document để mô tả rõ mục đích từng cái muốn thể hiện điều gì, thay vì chỉ để một đống ảnh trong folder và để reviewer tự hiểu, tốt nhất nên có 1 file doc trong mỗi phần to trong folder docs/, ví dụ IaC.md thể hiện các output/document của step này, hoặc Security.md, etc.)",Schema design,Visualize tables on all zones,Capture màn hình trên DBeaver,2
 ,,"Dim table with SCD 2 
-(valid_from_ts, valid_to_ts, is_current)",,1
-,,Feature tables (feat_ tables) with 2 columns event_timestamp and created,,1
+(valid_from_ts, valid_to_ts, is_current)",,2
+,,Feature tables (feat_ tables) with 2 columns event_timestamp and created,,2
 ,,"Relationship between dim & fact tables
 (You can simply export via DBeaver or similar tools) ",,2
 ,,"Naming convention

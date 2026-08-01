@@ -1,0 +1,70 @@
+{
+  "contract_urns": {
+    "build_offline_features": "urn:li:dataContract:e57cf848-731a-401b-ad4d-2c1d894025f6",
+    "build_silver_gold": "urn:li:dataContract:945a6c55-7ec5-4e9c-81b0-163db9a50a87",
+    "ingest_source_to_bronze": "urn:li:dataContract:f3d00a9c-3677-43dc-b854-a1b1d05ac128"
+  },
+  "contracts": {
+    "build_offline_features": {
+      "dataset": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.feat_company_unified,PROD)",
+      "schema_assertion": "urn:li:assertion:5ad0e66d0a213f36ebc34af238a6fc4c",
+      "volume_assertion": "urn:li:assertion:11a165dbcdad2d964bf5f4ba61ae54da"
+    },
+    "build_silver_gold": {
+      "dataset": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.fact_financial_statement,PROD)",
+      "schema_assertion": "urn:li:assertion:2749b7c21fb20aea98d8ddd4d74ccfe5",
+      "volume_assertion": "urn:li:assertion:eb8ff55d7149cc5cd3f08ad98c6c584c"
+    },
+    "ingest_source_to_bronze": {
+      "dataset": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.bronze.companies,PROD)",
+      "schema_assertion": "urn:li:assertion:73bae5ac9d139a7815f4a1122004c871",
+      "volume_assertion": "urn:li:assertion:44990638856c9281ef8bd7c9eecc92a8"
+    }
+  },
+  "dataset_urns": {
+    "bronze.companies": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.bronze.companies,PROD)",
+    "bronze.financial_statements": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.bronze.financial_statements,PROD)",
+    "bronze.market_prices": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.bronze.market_prices,PROD)",
+    "gold.dim_company": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.dim_company,PROD)",
+    "gold.fact_financial_statement": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.fact_financial_statement,PROD)",
+    "gold.fact_market_price": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.fact_market_price,PROD)",
+    "gold.feat_company_financial_4q": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.feat_company_financial_4q,PROD)",
+    "gold.feat_company_market_30d": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.feat_company_market_30d,PROD)",
+    "gold.feat_company_news_30d": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.feat_company_news_30d,PROD)",
+    "gold.feat_company_unified": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.feat_company_unified,PROD)",
+    "silver.companies": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.silver.companies,PROD)",
+    "silver.financial_statements": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.silver.financial_statements,PROD)",
+    "silver.market_prices": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.silver.market_prices,PROD)",
+    "source.generator": "urn:li:dataset:(urn:li:dataPlatform:file,financial-distress-local.source.generator,PROD)",
+    "source.kafka_events": "urn:li:dataset:(urn:li:dataPlatform:kafka,financial-distress-local.source.kafka_events,PROD)"
+  },
+  "run_id": "coursework-20260730T120200-bf92b2cdf0",
+  "schema_version": 1,
+  "status": "pass",
+  "verification": {
+    "datasets": {
+      "build_offline_features": {
+        "assertion_count": 2,
+        "contract_urn": "urn:li:dataContract:e57cf848-731a-401b-ad4d-2c1d894025f6",
+        "field_count": 3,
+        "upstream_count": 1,
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.feat_company_unified,PROD)"
+      },
+      "build_silver_gold": {
+        "assertion_count": 2,
+        "contract_urn": "urn:li:dataContract:945a6c55-7ec5-4e9c-81b0-163db9a50a87",
+        "field_count": 3,
+        "upstream_count": 1,
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.gold.fact_financial_statement,PROD)"
+      },
+      "ingest_source_to_bronze": {
+        "assertion_count": 2,
+        "contract_urn": "urn:li:dataContract:f3d00a9c-3677-43dc-b854-a1b1d05ac128",
+        "field_count": 3,
+        "upstream_count": 1,
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:s3,financial-distress-local.bronze.companies,PROD)"
+      }
+    },
+    "status": "pass"
+  }
+}

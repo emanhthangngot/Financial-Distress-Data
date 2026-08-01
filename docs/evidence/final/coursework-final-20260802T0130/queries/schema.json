@@ -1,0 +1,51 @@
+{
+  "database": "warehouse.db",
+  "feature_timestamp_contract": {
+    "missing_tables": [],
+    "required": [
+      "created_ts",
+      "event_timestamp"
+    ]
+  },
+  "foreign_key_count": 6,
+  "foreign_keys": [
+    "fact_financial_statement:fact_financial_statement_company_version_key_company_version_key_fkey",
+    "fact_financial_statement:fact_financial_statement_date_key_date_key_fkey",
+    "fact_market_price:fact_market_price_company_version_key_company_version_key_fkey",
+    "fact_market_price:fact_market_price_date_key_date_key_fkey",
+    "obt_company_quarter_risk:obt_company_quarter_risk_company_version_key_company_version_key_fkey",
+    "obt_company_quarter_risk:obt_company_quarter_risk_date_key_date_key_fkey"
+  ],
+  "scd2_history": [
+    {
+      "current_versions": 1,
+      "ticker": "AAA",
+      "versions": 2
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass",
+  "table_count": 15,
+  "tables": [
+    "bronze.companies",
+    "bronze.financial_statements",
+    "bronze.market_prices_daily",
+    "gold.dim_company",
+    "gold.dim_date",
+    "gold.fact_financial_statement",
+    "gold.fact_market_price",
+    "gold.feat_company_financial_4q",
+    "gold.feat_company_market_30d",
+    "gold.feat_company_news_30d",
+    "gold.feat_company_unified",
+    "gold.obt_company_quarter_risk",
+    "silver.companies",
+    "silver.financial_statements",
+    "silver.market_prices_daily"
+  ],
+  "zones": [
+    "bronze",
+    "gold",
+    "silver"
+  ]
+}

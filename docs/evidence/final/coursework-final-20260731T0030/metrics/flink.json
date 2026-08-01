@@ -15,6 +15,18 @@
     "baseline_parallelism": 1,
     "baseline_source_backpressure_ms": 34971,
     "completed_checkpoints": 5,
+    "fair_axis_backpressure_per_record_ms": {
+      "baseline": 0.696467,
+      "optimized_per_subtask": 1.771987
+    },
+    "fair_axis_burst_absorption_wallclock_ms": {
+      "baseline_single_subtask": 34971,
+      "optimized_parallel_subtasks": 22243.75
+    },
+    "fair_axis_throughput_events_per_second": {
+      "baseline": 117965.5,
+      "optimized": 116843.08
+    },
     "optimized_duration_ms": 46932,
     "optimized_parallelism": 4,
     "optimized_source_backpressure_ms_per_subtask": 22243.75,

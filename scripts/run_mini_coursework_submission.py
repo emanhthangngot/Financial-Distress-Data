@@ -51,6 +51,11 @@ PROOFS = (
     Proof("code/run-manifest.py", "code_reference", "src/evidence/run_manifest.py"),
     Proof("code/pit.py", "code_reference", "src/transforms/features/pit.py"),
     Proof("config/generator.yaml", "config", "configs/generator-config.yaml"),
+    Proof(
+        "config/rubric-requirements.yaml",
+        "config",
+        "configs/rubric-requirements.yaml",
+    ),
     Proof("config/compose.yaml", "config", "docker-compose.yml"),
     Proof("config/governance.yaml", "config", "configs/datahub/governance.yaml"),
     Proof("metrics/generator.json", "metrics", "docs/evidence/generator/runtime-validation.json"),
@@ -73,7 +78,7 @@ PROOFS = (
     Proof(
         "screenshots/architecture.png",
         "screenshot",
-        "images/architecture/deployment-architecture.png",
+        "images/architecture/system_deployment_diagram.png",
     ),
     Proof("screenshots/schema.png", "screenshot", "images/schema/schema_evidence_erd.png"),
     Proof(
@@ -100,24 +105,24 @@ PROOFS = (
         "docs/evidence/screenshots/flink-optimized.png",
     ),
     Proof(
-        "screenshots/flink-restart.png",
+        "screenshots/flink-dedup.png",
         "screenshot",
-        "docs/evidence/screenshots/flink-restart-checkpoints.png",
+        "docs/evidence/screenshots/flink-ui-overview.png",
     ),
     Proof(
         "screenshots/airflow-dp1.png",
         "screenshot",
-        "docs/evidence/screenshots/airflow-ingest_source_to_bronze.png",
+        "docs/evidence/screenshots/airflow-dp1.png",
     ),
     Proof(
         "screenshots/airflow-dp2.png",
         "screenshot",
-        "docs/evidence/screenshots/airflow-build_silver_gold.png",
+        "docs/evidence/screenshots/airflow-dp2.png",
     ),
     Proof(
         "screenshots/airflow-dp3.png",
         "screenshot",
-        "docs/evidence/screenshots/airflow-build_offline_features.png",
+        "docs/evidence/screenshots/airflow-dp3.png",
     ),
     Proof(
         "screenshots/datahub-dp1-lineage.png",
@@ -210,7 +215,7 @@ CRITERIA = {
         P["code/flink-job.py"], P["metrics/flink.json"], P["screenshots/flink-optimized.png"]
     ),
     "R23": _artifacts(
-        P["code/flink-job.py"], P["metrics/flink.json"], P["screenshots/flink-restart.png"]
+        P["code/flink-job.py"], P["metrics/flink.json"], P["screenshots/flink-dedup.png"]
     ),
     "R24": _artifacts(
         P["code/flink-job.py"], P["queries/flink.json"], P["screenshots/flink-optimized.png"]
@@ -294,6 +299,8 @@ def build_package(run_id: str, output_root: Path) -> Path:
             width, height = _png_dimensions(source)
             if width < 800 or height < 300:
                 raise ValueError(f"screenshot lacks reviewer context ({width}x{height}): {source}")
+            if source.stat().st_size <= 20_000:
+                raise ValueError(f"screenshot is blank or too small to review: {source}")
 
     gate_log = "\n".join(
         (
@@ -319,21 +326,22 @@ def build_package(run_id: str, output_root: Path) -> Path:
     git_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     artifact_specs = [(proof.target, proof.proof_type) for proof in PROOFS]
     artifact_specs.append(("logs/quality-gates.txt", "log"))
+    artifact_specs.append(("rubric-evidence.yaml", "document"))
     manifest = build_run_manifest(
         evidence_dir=package,
         run_id=run_id,
         git_sha=git_sha,
         config_paths=[
-            ROOT / "configs/rubric-requirements.yaml",
-            ROOT / "configs/generator-config.yaml",
-            ROOT / "docker-compose.yml",
+            package / "config/rubric-requirements.yaml",
+            package / "config/generator.yaml",
+            package / "config/compose.yaml",
         ],
         artifacts=artifact_specs,
         started_at=started_at,
         completed_at=datetime.now(UTC).isoformat(),
     )
     manifest.write(package / "run-manifest.json")
-    report = audit_rubric(ROOT / "configs/rubric-requirements.yaml", package)
+    report = audit_rubric(package / "config/rubric-requirements.yaml", package)
     if report.status != "pass" or report.earned_points != 100:
         raise RuntimeError(json.dumps(report.to_dict(), indent=2))
     (package / "audit-report.json").write_text(

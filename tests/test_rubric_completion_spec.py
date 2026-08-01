@@ -7,7 +7,10 @@ runtime evidence. They intentionally fail until the spec and screenshots exist.
 
 from __future__ import annotations
 
+import csv
 from pathlib import Path
+
+from src.evidence.rubric_audit import load_requirements
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS = REPO_ROOT / "docs"
@@ -48,6 +51,24 @@ def test_streaming_generator_configuration_is_explicit_in_spec() -> None:
     assert "stream_flush_interval_seconds" in spec_text
 
 
+def test_scored_requirements_match_the_current_rubric_csv() -> None:
+    """Keep package scoring synchronized with the authoritative rubric CSV."""
+    rubric_path = DOCS / "Coursework Tracking (Public) - rubic (mini-coursework).csv"
+    with rubric_path.open(encoding="utf-8-sig", newline="") as stream:
+        rubric_points = [
+            int(row[4])
+            for row in csv.reader(stream)
+            if len(row) >= 5 and row[4].isdigit() and row[3].strip() != "Sum"
+        ]
+
+    requirements = load_requirements(REPO_ROOT / "configs" / "rubric-requirements.yaml")
+    requirement_points = [item.points for item in requirements.criteria]
+
+    assert requirement_points[0] == 0, "README/deployment evidence is mandatory but unscored"
+    assert requirement_points[1:] == rubric_points
+    assert sum(requirement_points) == 100
+
+
 def test_reviewer_screenshot_html_sources_exist() -> None:
     for name in (
         "airflow_dp2_dp3_evidence.html",
@@ -71,3 +92,25 @@ def test_reviewer_screenshot_pngs_exist_and_are_nontrivial() -> None:
         path = SCREENSHOTS / name
         assert path.exists(), f"Missing reviewer screenshot: {path}"
         assert path.stat().st_size > 20_000, f"Screenshot is too small: {path}"
+
+
+def test_submission_package_screenshots_are_nontrivial() -> None:
+    """Reject blank or nearly blank screenshots before sealing a submission package."""
+    from scripts.run_mini_coursework_submission import PROOFS
+
+    screenshots = [proof for proof in PROOFS if proof.proof_type == "screenshot"]
+    assert screenshots
+    for proof in screenshots:
+        source = REPO_ROOT / proof.source
+        assert source.is_file(), f"Missing submission screenshot source: {source}"
+        assert source.stat().st_size > 20_000, f"Screenshot is too small: {source}"
+
+
+def test_submission_builder_seals_the_scoring_contract() -> None:
+    """The package must contain the rubric config and use criterion-specific proof names."""
+    from scripts.run_mini_coursework_submission import PROOFS
+
+    targets = {proof.target for proof in PROOFS}
+    assert "config/rubric-requirements.yaml" in targets
+    assert "screenshots/flink-dedup.png" in targets
+    assert "screenshots/flink-restart.png" not in targets

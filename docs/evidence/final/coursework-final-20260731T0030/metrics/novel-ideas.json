@@ -1,6 +1,8 @@
 {
   "evidence_manifest": {
     "clean_verification_errors": [],
+    "note": "tamper_detected=true proves the manifest catches a controlled mutation; the checked-in artifacts are the clean run.",
+    "probe": "intentional_mutation_demonstration",
     "tamper_detected": true,
     "tamper_verification_errors": [
       "artifact hash mismatch: metric.json"

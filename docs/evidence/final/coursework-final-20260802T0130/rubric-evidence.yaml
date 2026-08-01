@@ -1,0 +1,250 @@
+schema_version: 1
+run_id: coursework-final-20260802T0130
+criteria:
+  R01:
+    status: accepted
+    artifacts:
+    - documents/readme.md
+    - code/documentation-check.py
+    - screenshots/architecture.png
+  R02:
+    status: accepted
+    artifacts:
+    - config/compose.yaml
+    - logs/quality-gates.txt
+  R03:
+    status: accepted
+    artifacts:
+    - documents/docker.md
+    - metrics/docker.json
+  R04:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - metrics/generator.json
+    - screenshots/generator.png
+  R05:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - metrics/generator.json
+    - queries/generator.json
+  R06:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - metrics/generator.json
+    - screenshots/generator.png
+  R07:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - metrics/generator.json
+    - documents/generator.md
+  R08:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - logs/generator.json
+  R09:
+    status: accepted
+    artifacts:
+    - metrics/generator.json
+    - screenshots/generator.png
+  R10:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - metrics/generator.json
+    - screenshots/generator.png
+  R11:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - metrics/generator.json
+    - screenshots/generator.png
+  R12:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - metrics/generator.json
+    - documents/generator.md
+  R13:
+    status: accepted
+    artifacts:
+    - config/generator.yaml
+    - logs/generator.json
+  R14:
+    status: accepted
+    artifacts:
+    - metrics/spark.json
+    - screenshots/spark-baseline.png
+  R15:
+    status: accepted
+    artifacts:
+    - documents/spark.md
+    - metrics/spark.json
+    - screenshots/spark-optimized.png
+  R16:
+    status: accepted
+    artifacts:
+    - documents/spark.md
+    - metrics/spark.json
+    - screenshots/spark-optimized.png
+  R17:
+    status: accepted
+    artifacts:
+    - code/spark-optimized.py
+    - metrics/spark.json
+    - screenshots/spark-optimized.png
+  R18:
+    status: accepted
+    artifacts:
+    - code/spark-optimized.py
+    - metrics/spark.json
+    - screenshots/spark-optimized.png
+  R19:
+    status: accepted
+    artifacts:
+    - logs/airflow.json
+    - screenshots/airflow-dp2.png
+  R20:
+    status: accepted
+    artifacts:
+    - metrics/flink.json
+    - screenshots/flink-baseline.png
+  R21:
+    status: accepted
+    artifacts:
+    - metrics/flink.json
+    - screenshots/flink-optimized.png
+  R22:
+    status: accepted
+    artifacts:
+    - code/flink-job.py
+    - metrics/flink.json
+    - screenshots/flink-optimized.png
+  R23:
+    status: accepted
+    artifacts:
+    - code/flink-job.py
+    - metrics/flink.json
+    - screenshots/flink-dedup.png
+  R24:
+    status: accepted
+    artifacts:
+    - code/flink-job.py
+    - queries/flink.json
+    - screenshots/flink-optimized.png
+  R25:
+    status: accepted
+    artifacts:
+    - documents/spark.md
+    - metrics/spark.json
+    - queries/postgres-index.txt
+  R26:
+    status: accepted
+    artifacts:
+    - documents/spark.md
+    - metrics/spark.json
+    - queries/postgres-index.txt
+  R27:
+    status: accepted
+    artifacts:
+    - logs/airflow.json
+    - screenshots/airflow-dp1.png
+  R28:
+    status: accepted
+    artifacts:
+    - logs/airflow.json
+    - queries/airflow.json
+    - screenshots/airflow-dp1.png
+  R29:
+    status: accepted
+    artifacts:
+    - logs/airflow.json
+    - screenshots/airflow-dp2.png
+  R30:
+    status: accepted
+    artifacts:
+    - logs/airflow.json
+    - queries/airflow.json
+    - screenshots/airflow-dp2.png
+  R31:
+    status: accepted
+    artifacts:
+    - logs/airflow.json
+    - screenshots/airflow-dp3.png
+  R32:
+    status: accepted
+    artifacts:
+    - logs/airflow.json
+    - queries/airflow.json
+    - screenshots/airflow-dp3.png
+  R33:
+    status: accepted
+    artifacts:
+    - ui/datahub.json
+    - screenshots/datahub-dp1-lineage.png
+  R34:
+    status: accepted
+    artifacts:
+    - ui/datahub.json
+    - screenshots/datahub-dp1-quality.png
+  R35:
+    status: accepted
+    artifacts:
+    - ui/datahub.json
+    - screenshots/datahub-dp2-lineage.png
+  R36:
+    status: accepted
+    artifacts:
+    - ui/datahub.json
+    - screenshots/datahub-dp2-quality.png
+  R37:
+    status: accepted
+    artifacts:
+    - ui/datahub.json
+    - screenshots/datahub-dp3-lineage.png
+  R38:
+    status: accepted
+    artifacts:
+    - ui/datahub.json
+    - screenshots/datahub-dp3-quality.png
+  R39:
+    status: accepted
+    artifacts:
+    - queries/schema.json
+    - screenshots/schema.png
+  R40:
+    status: accepted
+    artifacts:
+    - queries/schema.json
+    - screenshots/schema.png
+  R41:
+    status: accepted
+    artifacts:
+    - code/schema.sql
+    - screenshots/schema.png
+  R42:
+    status: accepted
+    artifacts:
+    - queries/schema.json
+    - screenshots/schema.png
+  R43:
+    status: accepted
+    artifacts:
+    - documents/schema.md
+    - screenshots/schema.png
+  R44:
+    status: accepted
+    artifacts:
+    - documents/evidence-manifest.md
+    - code/run-manifest.py
+    - metrics/novel-ideas.json
+  R45:
+    status: accepted
+    artifacts:
+    - documents/pit-leakage.md
+    - code/pit.py
+    - metrics/novel-ideas.json

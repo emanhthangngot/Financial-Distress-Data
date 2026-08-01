@@ -19,7 +19,7 @@ from src.evidence.rubric_audit import audit_rubric, render_evidence_index
 def main() -> int:
     """Run the audit, optionally persist JSON and Markdown, and return gate status."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--requirements", default="configs/rubric-requirements.yaml")
+    parser.add_argument("--requirements")
     parser.add_argument("--evidence-dir", default="docs/evidence")
     parser.add_argument("--output")
     parser.add_argument("--write-index")
@@ -28,7 +28,12 @@ def main() -> int:
     parser.add_argument("--allow-incomplete", action="store_true")
     args = parser.parse_args()
 
-    report = audit_rubric(Path(args.requirements), Path(args.evidence_dir))
+    evidence_dir = Path(args.evidence_dir)
+    packaged_requirements = evidence_dir / "config" / "rubric-requirements.yaml"
+    requirements = Path(args.requirements) if args.requirements else packaged_requirements
+    if not requirements.is_file() and args.requirements is None:
+        requirements = Path("configs/rubric-requirements.yaml")
+    report = audit_rubric(requirements, evidence_dir)
     rendered = json.dumps(report.to_dict(), indent=2)
     print(rendered)
     if args.output:
@@ -37,7 +42,7 @@ def main() -> int:
         Path(args.write_index).write_text(
             render_evidence_index(
                 report,
-                evidence_dir_name=args.index_prefix or Path(args.evidence_dir).name,
+                evidence_dir_name=args.index_prefix or evidence_dir.name,
             ),
             encoding="utf-8",
         )

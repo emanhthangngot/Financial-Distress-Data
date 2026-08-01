@@ -77,7 +77,7 @@ class RubricItem:
 # Total: 100 pts. Indexes are 1-based, matching CSV row order.
 
 ITEMS: tuple[RubricItem, ...] = (
-    # 1. Engineering Fundamentals (2 pts)
+    # 1. Engineering Fundamentals (3 pts)
     RubricItem(
         idx=1,
         category="Engineering Fundamentals",
@@ -89,7 +89,7 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=2,
         category="Engineering Fundamentals",
         claim="Optimize Dockerfile (e.g. multistage build) with size evidence",
-        points=1,
+        points=2,
         evidence_check=lambda: _exists_any(
             "docs/evidence/docker_size.json", "docs/08_docker_optimization.md"
         ),
@@ -167,7 +167,7 @@ ITEMS: tuple[RubricItem, ...] = (
         points=2,
         evidence_check=lambda: _exists("configs/collector_config.yaml"),
     ),
-    # 3. Processing Jobs (Spark + Flink) (20 pts)
+    # 3. Processing Jobs (Spark + Flink) (29 pts)
     RubricItem(
         idx=12,
         category="Processing Jobs (Spark)",
@@ -184,7 +184,7 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=13,
         category="Processing Jobs (Spark)",
         claim="Handle skew with explanation (Spark UI evidence)",
-        points=2,
+        points=3,
         evidence_check=lambda: _exists_any(
             "dags/05_transform_bronze_to_silver.py",
             "dags/06_pyspark_silver_to_gold.py",
@@ -196,7 +196,7 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=14,
         category="Processing Jobs (Spark)",
         claim="Handle high cardinality with explanation",
-        points=2,
+        points=3,
         evidence_check=lambda: _exists_any(
             "dags/05_transform_bronze_to_silver.py",
             "dags/06_pyspark_silver_to_gold.py",
@@ -208,7 +208,7 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=15,
         category="Processing Jobs (Spark)",
         claim="Handle schema evolution with explanation",
-        points=2,
+        points=3,
         evidence_check=lambda: _exists_any(
             "dags/05_transform_bronze_to_silver.py",
             "dags/06_pyspark_silver_to_gold.py",
@@ -220,7 +220,7 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=16,
         category="Processing Jobs (Spark)",
         claim="Handle other offline data problem with explanation",
-        points=2,
+        points=3,
         evidence_check=lambda: _exists_any(
             "dags/05_transform_bronze_to_silver.py",
             "dags/06_pyspark_silver_to_gold.py",
@@ -249,21 +249,21 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=19,
         category="Processing Jobs (Flink)",
         claim="Handle streaming burst with explanation",
-        points=2,
+        points=3,
         evidence_check=lambda: _exists("src/streaming/flink/jobs/README.md"),
     ),
     RubricItem(
         idx=20,
         category="Processing Jobs (Flink)",
         claim="Handle streaming late arrival with explanation",
-        points=2,
+        points=3,
         evidence_check=lambda: _exists("src/streaming/flink/jobs/README.md"),
     ),
     RubricItem(
         idx=21,
         category="Processing Jobs (Flink)",
         claim="Handle other streaming problem with explanation",
-        points=2,
+        points=3,
         evidence_check=lambda: _exists("src/streaming/flink/jobs/README.md"),
     ),
     RubricItem(
@@ -380,7 +380,7 @@ ITEMS: tuple[RubricItem, ...] = (
         points=2,
         evidence_check=lambda: _evidence_json("governance/dp3_validation.json", "contract_check"),
     ),
-    # 7. Documentation (8 pts)
+    # 7. Documentation (10 pts)
     RubricItem(
         idx=37,
         category="Documentation",
@@ -392,14 +392,14 @@ ITEMS: tuple[RubricItem, ...] = (
         idx=38,
         category="Documentation",
         claim="Dim table with SCD2 (valid_from_ts, valid_to_ts, is_current)",
-        points=1,
+        points=2,
         evidence_check=lambda: _exists("docs/02_schema_design.md"),
     ),
     RubricItem(
         idx=39,
         category="Documentation",
         claim="Feature tables (feat_*) with event_timestamp and created columns",
-        points=1,
+        points=2,
         evidence_check=lambda: _exists("docs/02_schema_design.md"),
     ),
     RubricItem(
@@ -418,40 +418,40 @@ ITEMS: tuple[RubricItem, ...] = (
         points=2,
         evidence_check=lambda: _exists("README.md"),
     ),
-    # 8. README + Deployment Diagram (10 pts)
+    # 8. README + Deployment Diagram (mandatory, unscored in the current CSV)
     RubricItem(
         idx=42,
         category="README + Deployment Diagram",
         claim="README: business domain introduction",
-        points=2,
+        points=0,
         evidence_check=lambda: _exists("README.md"),
     ),
     RubricItem(
         idx=43,
         category="README + Deployment Diagram",
         claim="README: Repo Structure section",
-        points=2,
+        points=0,
         evidence_check=lambda: _exists("README.md"),
     ),
     RubricItem(
         idx=44,
         category="README + Deployment Diagram",
         claim="README: Table of Contents",
-        points=2,
+        points=0,
         evidence_check=lambda: _exists("README.md"),
     ),
     RubricItem(
         idx=45,
         category="README + Deployment Diagram",
         claim="Module/function docstrings on source files",
-        points=2,
+        points=0,
         evidence_check=lambda: _exists("src/transforms"),
     ),
     RubricItem(
         idx=46,
         category="README + Deployment Diagram",
         claim="System deployment diagram with deployable units, labelled arrows, numbered sequence",
-        points=2,
+        points=0,
         evidence_check=lambda: _exists("images/architecture/system_deployment_diagram.png"),
     ),
     # 9. Novel Ideas (10 pts)

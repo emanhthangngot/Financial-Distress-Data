@@ -80,8 +80,8 @@ def load_requirements(path: Path) -> RubricRequirements:
         required = tuple(raw.get("required_proof_types", ()))
         if criterion_id in seen:
             raise ValueError(f"duplicate criterion id: {criterion_id}")
-        if raw["points"] <= 0:
-            raise ValueError(f"criterion points must be positive: {criterion_id}")
+        if raw["points"] < 0:
+            raise ValueError(f"criterion points must be non-negative: {criterion_id}")
         unknown = set(required) - set(allowed)
         if unknown:
             raise ValueError(f"unknown proof types for {criterion_id}: {sorted(unknown)}")
