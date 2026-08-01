@@ -1,0 +1,74 @@
+schema_version: 1
+datahub_version: 1.6.0
+environment: PROD
+platform_instance: financial-distress-local
+owner: data-platform
+datasets:
+  source.generator:
+    platform: file
+    fields: [[run_id, string], [event_timestamp, time]]
+  source.kafka_events:
+    platform: kafka
+    fields: [[event_id, string], [ticker, string], [event_timestamp, time]]
+  bronze.companies:
+    platform: s3
+    fields: [[ticker, string], [company_name, string], [created_ts, time]]
+  bronze.financial_statements:
+    platform: s3
+    fields: [[ticker, string], [report_period, string], [created_ts, time]]
+  bronze.market_prices:
+    platform: s3
+    fields: [[ticker, string], [trading_date, date], [created_ts, time]]
+  silver.companies:
+    platform: s3
+    fields: [[ticker, string], [company_name, string], [created_ts, time]]
+  silver.financial_statements:
+    platform: s3
+    fields: [[ticker, string], [report_period, string], [event_timestamp, time]]
+  silver.market_prices:
+    platform: s3
+    fields: [[ticker, string], [trading_date, date], [event_timestamp, time]]
+  gold.dim_company:
+    platform: s3
+    fields: [[company_key, string], [ticker, string], [is_current, boolean]]
+  gold.fact_financial_statement:
+    platform: s3
+    fields: [[company_key, string], [report_period, string], [event_timestamp, time]]
+  gold.fact_market_price:
+    platform: s3
+    fields: [[company_key, string], [trading_date, date], [event_timestamp, time]]
+  gold.feat_company_financial_4q:
+    platform: s3
+    fields: [[ticker, string], [event_timestamp, time], [created_ts, time]]
+  gold.feat_company_market_30d:
+    platform: s3
+    fields: [[ticker, string], [event_timestamp, time], [created_ts, time]]
+  gold.feat_company_news_30d:
+    platform: s3
+    fields: [[ticker, string], [event_timestamp, time], [created_ts, time]]
+  gold.feat_company_unified:
+    platform: s3
+    fields: [[ticker, string], [event_timestamp, time], [created_ts, time]]
+pipelines:
+  ingest_source_to_bronze:
+    inputs: [source.generator, source.kafka_events]
+    outputs: [bronze.companies, bronze.financial_statements, bronze.market_prices]
+    contract_dataset: bronze.companies
+  build_silver_gold:
+    inputs: [bronze.companies, bronze.financial_statements, bronze.market_prices]
+    outputs:
+      - silver.companies
+      - silver.financial_statements
+      - silver.market_prices
+      - gold.dim_company
+      - gold.fact_financial_statement
+      - gold.fact_market_price
+    contract_dataset: gold.fact_financial_statement
+  build_offline_features:
+    inputs: [gold.dim_company, gold.fact_financial_statement, gold.fact_market_price]
+    outputs:
+      - gold.feat_company_financial_4q
+      - gold.feat_company_market_30d
+      - gold.feat_company_news_30d
+      - gold.feat_company_unified
+    contract_dataset: gold.feat_company_unified

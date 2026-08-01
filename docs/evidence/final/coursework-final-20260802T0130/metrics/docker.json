@@ -1,0 +1,10 @@
+{
+  "baseline_bytes": 1654286301,
+  "baseline_image": "financial-distress-airflow:baseline",
+  "optimized_bytes": 928642637,
+  "optimized_image": "financial-distress-airflow:stage1",
+  "reduction_percent": 43.86,
+  "saved_bytes": 725643664,
+  "schema_version": 1,
+  "status": "pass"
+}

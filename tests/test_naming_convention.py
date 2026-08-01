@@ -138,6 +138,18 @@ def test_schema_design_doc_documents_naming_convention() -> None:
         ), f"docs/02_schema_design.md does not mention required Gold token {token!r}"
 
 
+def test_schema_design_doc_documents_bronze_silver_naming() -> None:
+    """The schema design doc must document the raw_/stg_ equivalence for Bronze and Silver."""
+    text = _read(SCHEMA_DOC)
+    assert re.search(
+        r"(?i)bronze and silver naming", text
+    ), "docs/02_schema_design.md is missing a 'Bronze And Silver Naming' section"
+    for token in ("bronze.companies", "silver.companies", "raw_", "stg_"):
+        assert (
+            token in text
+        ), f"docs/02_schema_design.md does not mention required Bronze/Silver token {token!r}"
+
+
 def test_readme_documents_deployment_diagram() -> None:
     """The README must reference the deployment diagram image by relative path."""
     text = _read(README_FILE)

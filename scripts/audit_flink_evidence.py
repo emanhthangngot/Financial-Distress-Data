@@ -66,6 +66,14 @@ def audit(evidence_dir: Path) -> dict:
             and restart_after["state"] == "CANCELED"
         ),
     }
+    baseline_source_backpressure_ms = baseline_source["metrics"]["accumulated-backpressured-time"]
+    optimized_source_backpressure_ms = optimized_source["metrics"]["accumulated-backpressured-time"]
+    baseline_parallelism = baseline_source["parallelism"]
+    optimized_parallelism = optimized_source["parallelism"]
+    optimized_backpressure_per_subtask = round(
+        optimized_source_backpressure_ms / optimized_parallelism, 2
+    )
+    records = optimized_source["metrics"]["write-records"]
     return {
         "schema_version": 1,
         "status": "pass" if all(checks.values()) else "fail",
@@ -74,16 +82,25 @@ def audit(evidence_dir: Path) -> dict:
         "metrics": {
             "baseline_duration_ms": baseline_runtime["duration"],
             "optimized_duration_ms": optimized_runtime["duration"],
-            "baseline_parallelism": baseline_source["parallelism"],
-            "optimized_parallelism": optimized_source["parallelism"],
-            "baseline_source_backpressure_ms": baseline_source["metrics"][
-                "accumulated-backpressured-time"
-            ],
-            "optimized_source_backpressure_ms_per_subtask": round(
-                optimized_source["metrics"]["accumulated-backpressured-time"]
-                / optimized_source["parallelism"],
-                2,
-            ),
+            "baseline_parallelism": baseline_parallelism,
+            "optimized_parallelism": optimized_parallelism,
+            "baseline_source_backpressure_ms": baseline_source_backpressure_ms,
+            "optimized_source_backpressure_ms_per_subtask": optimized_backpressure_per_subtask,
+            "optimized_source_backpressure_ms": optimized_source_backpressure_ms,
+            "fair_axis_throughput_events_per_second": {
+                "baseline": round(baseline_contract["duration"]["events_per_second"], 2),
+                "optimized": round(optimized_contract["duration"]["events_per_second"], 2),
+            },
+            "fair_axis_backpressure_per_record_ms": {
+                "baseline": round(baseline_source_backpressure_ms / records, 6),
+                "optimized_per_subtask": round(
+                    optimized_backpressure_per_subtask / (records / optimized_parallelism), 6
+                ),
+            },
+            "fair_axis_burst_absorption_wallclock_ms": {
+                "baseline_single_subtask": baseline_source_backpressure_ms,
+                "optimized_parallel_subtasks": optimized_backpressure_per_subtask,
+            },
             "runtime_duplicates_removed": (
                 optimized_source["metrics"]["write-records"]
                 - optimized_dedup["metrics"]["write-records"]

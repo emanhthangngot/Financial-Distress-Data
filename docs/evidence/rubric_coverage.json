@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-24T09:40:08.006753+00:00",
+  "generated_at": "2026-08-01T18:28:54.021973+00:00",
   "rubric_total": 100,
   "covered_points": 100,
   "partial_points": 0,
@@ -20,7 +20,7 @@
       "idx": 2,
       "category": "Engineering Fundamentals",
       "claim": "Optimize Dockerfile (e.g. multistage build) with size evidence",
-      "points": 1,
+      "points": 2,
       "status": "covered",
       "evidence": [
         "docs/08_docker_optimization.md"
@@ -143,7 +143,7 @@
       "idx": 13,
       "category": "Processing Jobs (Spark)",
       "claim": "Handle skew with explanation (Spark UI evidence)",
-      "points": 2,
+      "points": 3,
       "status": "covered",
       "evidence": [
         "dags/05_transform_bronze_to_silver.py",
@@ -156,7 +156,7 @@
       "idx": 14,
       "category": "Processing Jobs (Spark)",
       "claim": "Handle high cardinality with explanation",
-      "points": 2,
+      "points": 3,
       "status": "covered",
       "evidence": [
         "dags/05_transform_bronze_to_silver.py",
@@ -169,7 +169,7 @@
       "idx": 15,
       "category": "Processing Jobs (Spark)",
       "claim": "Handle schema evolution with explanation",
-      "points": 2,
+      "points": 3,
       "status": "covered",
       "evidence": [
         "dags/05_transform_bronze_to_silver.py",
@@ -182,7 +182,7 @@
       "idx": 16,
       "category": "Processing Jobs (Spark)",
       "claim": "Handle other offline data problem with explanation",
-      "points": 2,
+      "points": 3,
       "status": "covered",
       "evidence": [
         "dags/05_transform_bronze_to_silver.py",
@@ -216,7 +216,7 @@
       "idx": 19,
       "category": "Processing Jobs (Flink)",
       "claim": "Handle streaming burst with explanation",
-      "points": 2,
+      "points": 3,
       "status": "covered",
       "evidence": [
         "src/streaming/flink/jobs/README.md"
@@ -226,7 +226,7 @@
       "idx": 20,
       "category": "Processing Jobs (Flink)",
       "claim": "Handle streaming late arrival with explanation",
-      "points": 2,
+      "points": 3,
       "status": "covered",
       "evidence": [
         "src/streaming/flink/jobs/README.md"
@@ -236,7 +236,7 @@
       "idx": 21,
       "category": "Processing Jobs (Flink)",
       "claim": "Handle other streaming problem with explanation",
-      "points": 2,
+      "points": 3,
       "status": "covered",
       "evidence": [
         "src/streaming/flink/jobs/README.md"
@@ -406,7 +406,7 @@
       "idx": 38,
       "category": "Documentation",
       "claim": "Dim table with SCD2 (valid_from_ts, valid_to_ts, is_current)",
-      "points": 1,
+      "points": 2,
       "status": "covered",
       "evidence": [
         "docs/02_schema_design.md"
@@ -416,7 +416,7 @@
       "idx": 39,
       "category": "Documentation",
       "claim": "Feature tables (feat_*) with event_timestamp and created columns",
-      "points": 1,
+      "points": 2,
       "status": "covered",
       "evidence": [
         "docs/02_schema_design.md"
@@ -446,7 +446,7 @@
       "idx": 42,
       "category": "README + Deployment Diagram",
       "claim": "README: business domain introduction",
-      "points": 2,
+      "points": 0,
       "status": "covered",
       "evidence": [
         "README.md"
@@ -456,7 +456,7 @@
       "idx": 43,
       "category": "README + Deployment Diagram",
       "claim": "README: Repo Structure section",
-      "points": 2,
+      "points": 0,
       "status": "covered",
       "evidence": [
         "README.md"
@@ -466,7 +466,7 @@
       "idx": 44,
       "category": "README + Deployment Diagram",
       "claim": "README: Table of Contents",
-      "points": 2,
+      "points": 0,
       "status": "covered",
       "evidence": [
         "README.md"
@@ -476,7 +476,7 @@
       "idx": 45,
       "category": "README + Deployment Diagram",
       "claim": "Module/function docstrings on source files",
-      "points": 2,
+      "points": 0,
       "status": "covered",
       "evidence": [
         "src/transforms"
@@ -486,7 +486,7 @@
       "idx": 46,
       "category": "README + Deployment Diagram",
       "claim": "System deployment diagram with deployable units, labelled arrows, numbered sequence",
-      "points": 2,
+      "points": 0,
       "status": "covered",
       "evidence": [
         "images/architecture/system_deployment_diagram.png"

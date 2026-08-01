@@ -67,6 +67,11 @@ def run_probes(run_id: str) -> dict[str, object]:
         "status": "pass" if manifest_pass and pit_pass else "fail",
         "run_id": run_id,
         "evidence_manifest": {
+            "probe": "intentional_mutation_demonstration",
+            "note": (
+                "tamper_detected=true proves the manifest catches a controlled mutation; "
+                "the checked-in artifacts are the clean run."
+            ),
             "clean_verification_errors": clean_errors,
             "tamper_verification_errors": tamper_errors,
             "tamper_detected": manifest_pass,

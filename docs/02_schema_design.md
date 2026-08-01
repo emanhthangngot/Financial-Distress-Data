@@ -106,7 +106,23 @@ s3a://financial-distress-lake/gold/distress_labels/
 that the Phase 2 ML training reads; it is intentionally a single
 top-level folder so the labels are easy to discover and audit.
 
-### Bronze And Silver Paths
+### Bronze And Silver Naming
+
+The rubric convention for Bronze and Silver is the `raw_` / `stg_`
+prefix (or equivalent). This project satisfies it with a
+**schema-qualified layer prefix** instead of a per-table prefix: the
+layer is the leading name segment, so `raw_<noun>` maps to
+`bronze.<noun>` and `stg_<noun>` maps to `silver.<noun>`. The mapping
+is enforced by `tests/test_naming_convention.py`.
+
+| Rubric equivalent | This project | Physical object |
+| --- | --- | --- |
+| `raw_companies` | `bronze.companies` | `s3a://financial-distress-lake/bronze/companies/data.parquet` |
+| `raw_financial_statements` | `bronze.financial_statements` | `s3a://financial-distress-lake/bronze/financial_statements/data.parquet` |
+| `raw_market_prices_daily` | `bronze.market_prices_daily` | `s3a://financial-distress-lake/bronze/market_prices_daily/data.parquet` |
+| `stg_companies` | `silver.companies` | `s3a://financial-distress-lake/silver/companies/` |
+| `stg_financial_statements` | `silver.financial_statements` | `s3a://financial-distress-lake/silver/financial_statements/` |
+| `stg_market_prices_daily` | `silver.market_prices_daily` | `s3a://financial-distress-lake/silver/market_prices_daily/` |
 
 Bronze and Silver storage paths do not enforce a per-table prefix
 inside the layer folder — the dataset name is the only segment:
@@ -118,7 +134,10 @@ s3a://financial-distress-lake/silver/{dataset}/
 
 This keeps the raw ingest and dedup layers flexible enough to absorb
 new source adapters without forcing a schema rename on every
-addition.
+addition. Gold uses the explicit `dim_`/`fact_`/`obt_`/`feat_`
+prefixes documented above, so the three zones are unambiguous:
+`raw_`-equivalent (Bronze), `stg_`-equivalent (Silver), and the four
+Gold families.
 
 ## Schema Registry
 
