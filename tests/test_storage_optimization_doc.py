@@ -42,12 +42,12 @@ def test_doc_references_evidence_files() -> None:
 
 def test_doc_states_target_size_and_indexed_columns() -> None:
     text = DOC_PATH.read_text()
-    assert "128" in text and ("MB" in text or "MiB" in text), (
-        "doc must state the 128 MB target size for compacted files"
-    )
-    assert "ticker" in text and "report_period" in text, (
-        "doc must state which columns are indexed in DuckDB (ticker, report_period)"
-    )
+    assert "128" in text and (
+        "MB" in text or "MiB" in text
+    ), "doc must state the 128 MB target size for compacted files"
+    assert (
+        "ticker" in text and "report_period" in text
+    ), "doc must state which columns are indexed in DuckDB (ticker, report_period)"
 
 
 def test_evidence_files_after_run() -> None:

@@ -32,9 +32,9 @@ def test_introduction_section_present() -> None:
 def test_business_domain_subsection_present() -> None:
     # Rubric row 1: a business-domain intro paragraph.
     body = README.lower()
-    assert "## business domain" in body or "### business domain" in body, (
-        "README must have a Business Domain section under Introduction"
-    )
+    assert (
+        "## business domain" in body or "### business domain" in body
+    ), "README must have a Business Domain section under Introduction"
 
 
 def test_business_domain_names_platform_users_and_problem() -> None:
@@ -49,16 +49,16 @@ def test_business_domain_names_platform_users_and_problem() -> None:
     block = match.group(1).lower().replace("-", " ")
     assert "financial distress" in block, "Business Domain must mention the problem"
     assert "vietnam" in block, "Business Domain must mention Vietnamese market scope"
-    assert any(role in block for role in ("analyst", "ml engineer", "data engineer")), (
-        "Business Domain must name at least one user role"
-    )
+    assert any(
+        role in block for role in ("analyst", "ml engineer", "data engineer")
+    ), "Business Domain must name at least one user role"
 
 
 def test_table_of_contents_section_present() -> None:
     # Rubric row 3: ToC.
-    assert re.search(r"^#\s+Table of Contents", README, flags=re.MULTILINE), (
-        "README must have a top-level 'Table of Contents' heading"
-    )
+    assert re.search(
+        r"^#\s+Table of Contents", README, flags=re.MULTILINE
+    ), "README must have a top-level 'Table of Contents' heading"
 
 
 def test_toc_anchors_all_resolve() -> None:
@@ -82,9 +82,9 @@ def test_toc_anchors_all_resolve() -> None:
         return s
 
     for a in anchors:
-        assert a in headings or a in {slugify(t) for t in headings}, (
-            f"ToC anchor #{a} does not match any heading slug"
-        )
+        assert a in headings or a in {
+            slugify(t) for t in headings
+        }, f"ToC anchor #{a} does not match any heading slug"
 
 
 def test_project_structure_section_annotated() -> None:
@@ -130,13 +130,13 @@ def test_architecture_section_calls_out_deployable_units() -> None:
     )
     assert match, "Overall System Architecture section not found"
     block = match.group(1).lower()
-    assert "deployable unit" in block, (
-        "Architecture section must state each component is a deployable unit"
-    )
+    assert (
+        "deployable unit" in block
+    ), "Architecture section must state each component is a deployable unit"
     for component in ("airflow", "kafka", "spark", "minio", "postgresql", "flink"):
-        assert component in block, (
-            f"Architecture section must mention {component} as a deployable unit"
-        )
+        assert (
+            component in block
+        ), f"Architecture section must mention {component} as a deployable unit"
 
 
 def test_no_broken_internal_markdown_image_link() -> None:
@@ -156,9 +156,9 @@ def test_documentation_section_position_invariant() -> None:
         for title, line_no in _sections()
         if title in {"Project Structure", "Documentation"}
     ]
-    assert len(section_lines) == 2, (
-        f"Expected exactly Project Structure and Documentation sections, got {section_lines}"
-    )
+    assert (
+        len(section_lines) == 2
+    ), f"Expected exactly Project Structure and Documentation sections, got {section_lines}"
     ps_line, doc_line = section_lines[0][1], section_lines[1][1]
     assert ps_line < doc_line, "Documentation must come after Project Structure"
     local_line = next(

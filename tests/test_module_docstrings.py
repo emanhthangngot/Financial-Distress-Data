@@ -63,17 +63,17 @@ def test_src_module_docstring_coverage_ge_95() -> None:
 def test_dags_module_docstring_coverage_ge_90() -> None:
     """DAGs under dags/ must have module docstring coverage >= 90%."""
     ratio, covered, total = _coverage_ratio(REPO_ROOT / "dags")
-    assert ratio >= 0.90, (
-        f"dags/ module docstring coverage {ratio:.1%} ({covered}/{total}) below 90%."
-    )
+    assert (
+        ratio >= 0.90
+    ), f"dags/ module docstring coverage {ratio:.1%} ({covered}/{total}) below 90%."
 
 
 def test_scripts_module_docstring_coverage_ge_90() -> None:
     """Helper scripts under scripts/ must have module docstring coverage >= 90%."""
     ratio, covered, total = _coverage_ratio(REPO_ROOT / "scripts")
-    assert ratio >= 0.90, (
-        f"scripts/ module docstring coverage {ratio:.1%} ({covered}/{total}) below 90%."
-    )
+    assert (
+        ratio >= 0.90
+    ), f"scripts/ module docstring coverage {ratio:.1%} ({covered}/{total}) below 90%."
 
 
 def test_init_files_have_docstring() -> None:
