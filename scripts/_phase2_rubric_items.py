@@ -23,6 +23,7 @@ Owner taxonomy (role-based):
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import re
 from dataclasses import dataclass
@@ -157,49 +158,619 @@ _DATA_HEAD = [
 ]
 
 
-# ── Artifact mapping (P1-1) ────────────────────────────────────────────────
-# Every scored row must name the *exact implementation artifact* so a reviewer
-# can find it in docs/phase2/rubric-matrix.{md,csv} without inference
-# (docs/phase2/requirements.md, section 4 "Rubric Contract"). Artifacts live
-# under the Phase 2 implementation roots declared in requirements.md section 2:
-#   src/ml/, src/drift/, src/llm/, src/agents/, apps/
-ARTIFACT_ROOTS = ("src/ml/", "src/drift/", "src/llm/", "src/agents/", "apps/")
+# Every scored row names a repository and a concrete planned file. Source code
+# stays in the single application monorepo; infrastructure desired state stays
+# in the separate GitOps control repository.
+SOURCE_ARTIFACT_ROOTS = (
+    "src/ml/",
+    "src/drift/",
+    "src/llm/",
+    "src/agents/",
+    "apps/",
+    "dags/phase2/",
+    ".github/workflows/",
+    "notebooks/",
+    "tests/phase2/requirements/",
+    "docs/phase2/",
+)
+GITOPS_ARTIFACT_ROOTS = (
+    ".github/workflows/",
+    "terraform/",
+    "ansible/",
+    "charts/",
+    "platform/",
+    "argocd/",
+)
 
 # Drift phrases are deliberately specific ("data drift", "real-time drift",
 # "drift detection", "simulate data drift") so a row that merely *mentions*
 # drift — e.g. an A/B monitoring dashboard — is not mis-routed.
-_ARTIFACT_AGENT = _AGENT_CONTENT
-_ARTIFACT_DRIFT = ["real-time drift", "data drift", "simulate data drift", "drift detection"]
+
+# Explicit implementation ownership for every scored row.  This reviewed map
+# is deliberately keyed by the stable rubric ID: no keyword fallback can make
+# two unrelated rows point to the same implementation by accident.
+EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
+    "ML-web-api-k-o-d-li-u-c-s-d-ng-fastapi-data-validati": (
+        "data_engineer",
+        "source",
+        "apps/feature-api/app/main.py",
+    ),
+    "ML-web-api-k-o-d-li-u-s-d-ng-async": (
+        "data_engineer",
+        "source",
+        "apps/feature-api/app/main.py",
+    ),
+    "ML-web-api-k-o-d-li-u-to-k8s-with-helm-rollingupdate": (
+        "platform_operator",
+        "gitops",
+        "charts/feature-api/Chart.yaml",
+    ),
+    "ML-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati": (
+        "data_engineer",
+        "source",
+        "apps/drift-api/app/main.py",
+    ),
+    "ML-web-api-cho-real-time-dri-s-d-ng-async": (
+        "data_engineer",
+        "source",
+        "apps/drift-api/app/main.py",
+    ),
+    "ML-web-api-cho-real-time-dri-to-k8s-with-helm-rollingupdate": (
+        "platform_operator",
+        "gitops",
+        "charts/drift-api/Chart.yaml",
+    ),
+    "ML-autoscale-autoscale-web-api-k-o-d-li-u-v": (
+        "platform_operator",
+        "gitops",
+        "charts/feature-api/templates/scaledobject.yaml",
+    ),
+    "ML-autoscale-web-api-cho-drift-detection": (
+        "platform_operator",
+        "gitops",
+        "charts/drift-api/templates/scaledobject.yaml",
+    ),
+    "ML-validation-verification-validation-verification": (
+        "ml_engineer",
+        "source",
+        "tests/phase2/requirements/test_ml_ac_04_validation.py",
+    ),
+    "ML-validation-verification-c-s-d-ng-k-thu-t-equivalence-p": (
+        "ml_engineer",
+        "source",
+        "tests/phase2/requirements/test_ml_ac_04_validation.py",
+    ),
+    "ML-validation-verification-c-s-d-ng-mutation-testing-nh-g": (
+        "ml_engineer",
+        "source",
+        "tests/phase2/requirements/test_ml_ac_04_validation.py",
+    ),
+    "ML-validation-verification-idempotency-testing-s-d-ng-pro": (
+        "ml_engineer",
+        "source",
+        "tests/phase2/requirements/test_ml_ac_04_validation.py",
+    ),
+    "ML-validation-verification-load-test-the-web-api": (
+        "data_engineer",
+        "source",
+        "tests/phase2/requirements/test_ml_ac_04_validation.py",
+    ),
+    "ML-improve-the-data-generato-simulate-data-drift": (
+        "data_engineer",
+        "source",
+        "src/drift/generator.py",
+    ),
+    "ML-improve-the-data-generato-using-generator-configuration": (
+        "data_engineer",
+        "source",
+        "src/drift/generator_config.py",
+    ),
+    "ML-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la": (
+        "data_engineer",
+        "source",
+        "src/ml/label_pipeline.py",
+    ),
+    "ML-feature-store-materialize-pipeline-jobs-for-": (
+        "data_engineer",
+        "source",
+        "src/ml/feast/materialization.py",
+    ),
+    "ML-feature-store-job-ch-u-tr-ch-nhi-m-push-stre": (
+        "data_engineer",
+        "source",
+        "src/ml/feast/offline_job.py",
+    ),
+    "ML-feature-store-job-ch-u-tr-ch-nhi-m-push-stre-1": (
+        "data_engineer",
+        "source",
+        "src/ml/feast/online_job.py",
+    ),
+    "ML-feature-store-define-ttl-cho-t-ng-b-ng-featu": (
+        "ml_engineer",
+        "source",
+        "src/ml/feast/feature_definitions.py",
+    ),
+    "ML-ml-jupyter-notebook-to-demonstrat": (
+        "ml_engineer",
+        "source",
+        "notebooks/ml-training.ipynb",
+    ),
+    "ML-ml-pipelines-training-pipeline": (
+        "ml_engineer",
+        "source",
+        "src/ml/pipelines/training_pipeline.py",
+    ),
+    "ML-ml-pipelines-trong-training-pipeline": (
+        "ml_engineer",
+        "source",
+        "src/ml/pipelines/distributed_training.py",
+    ),
+    "ML-versioning-model-versioning": ("ml_engineer", "source", "src/ml/mlflow_registry.py"),
+    "ML-versioning-m-i-l-n-k-o-d-li-u-t-feast-v-t": (
+        "data_engineer",
+        "source",
+        "src/ml/data_versioning.py",
+    ),
+    "ML-ci-cd-ci-cd-cho-pipelines": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-ci-cd-training-pipeline": ("ml_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-ci-cd-dp-1": ("platform_operator", "source", ".github/workflows/ci.yml"),
+    "ML-ci-cd-dp-2": ("platform_operator", "source", ".github/workflows/ci.yml"),
+    "ML-ci-cd-dp-3": ("platform_operator", "source", ".github/workflows/ci.yml"),
+    "ML-ci-cd-web-api": ("platform_operator", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-ci-cd-inference-engine": (
+        "platform_operator",
+        "source",
+        ".github/workflows/phase2-ci.yaml",
+    ),
+    "ML-ci-cd-cho-real-time-drift-detection-": (
+        "platform_operator",
+        "source",
+        ".github/workflows/phase2-ci.yaml",
+    ),
+    "ML-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "ML-routing-gateway-service-coi-log": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "ML-routing-gateway-service-coi-trace": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "ML-routing-gateway-web-api-k-o-d-li-u": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "ML-routing-gateway-authentication-rate-limit-cho-": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "ML-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "ML-iac-d-ng-terraform-setup-gke-ho-c-": (
+        "platform_operator",
+        "gitops",
+        "terraform/envs/evidence/main.tf",
+    ),
+    "ML-iac-d-ng-ansible-configure-v-deplo": (
+        "platform_operator",
+        "gitops",
+        "ansible/playbooks/vast-evidence-worker.yml",
+    ),
+    "ML-observability-web-api-metrics": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/prometheus-values.yaml",
+    ),
+    "ML-observability-collect-v-visualize-metrics-v-": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/prometheus-values.yaml",
+    ),
+    "ML-observability-t-ng-t-cho-logs": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/eck-otel-values.yaml",
+    ),
+    "ML-observability-t-ng-t-cho-traces": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/eck-otel-values.yaml",
+    ),
+    "ML-observability-airflow-data-drift-pipeline-to": (
+        "data_engineer",
+        "source",
+        "dags/phase2/phase2_drift_monitoring.py",
+    ),
+    "ML-observability-trigger-retrain-by-calling-kub": (
+        "ml_engineer",
+        "source",
+        "dags/phase2/phase2_drift_monitoring.py",
+    ),
+    "ML-a-b-testing-when-you-deploy-a-new-model": ("ml_engineer", "source", "src/ml/ab_router.py"),
+    "ML-a-b-testing-monitoring-dashboard-to-monito": (
+        "ml_engineer",
+        "gitops",
+        "platform/ml/ab-testing.yaml",
+    ),
+    "ML-security-centralize-secret-management": (
+        "platform_operator",
+        "gitops",
+        "platform/security/vault-external-secrets.yaml",
+    ),
+    "ML-security-using-service-mesh-to-authoriz": (
+        "platform_operator",
+        "gitops",
+        "platform/security/authorization-policies.yaml",
+    ),
+    "ML-repository-design-clean-code-clean-repo-demonstr": (
+        "platform_operator",
+        "source",
+        "src/ml/contracts.py",
+    ),
+    "ML-documentation-low-level-ml-design": (
+        "ml_engineer",
+        "source",
+        "docs/phase2/low-level-design.md",
+    ),
+    "ML-novel-ideas-idea-1": ("ml_engineer", "source", "src/ml/leakage_guard.py"),
+    "ML-novel-ideas-idea-2": ("ml_engineer", "source", "src/ml/reproducibility_manifest.py"),
+    "LLM-a-llm-inference-platform--llm-inference-platform-setup-c": (
+        "llm_engineer",
+        "gitops",
+        "platform/inference/llminferenceservice.yaml",
+    ),
+    "LLM-a-llm-inference-platform--a-custom-model": (
+        "llm_engineer",
+        "source",
+        "src/llm/model_server.py",
+    ),
+    "LLM-a-llm-inference-platform--benchmark-model-server-and-opt": (
+        "llm_engineer",
+        "source",
+        "src/llm/benchmark.py",
+    ),
+    "LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen": (
+        "platform_operator",
+        "gitops",
+        "platform/agents/global-model-config.yaml",
+    ),
+    "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori": (
+        "platform_operator",
+        "gitops",
+        "platform/agents/agentregistry.yaml",
+    ),
+    "LLM-rag-rag-data-pipeline": ("data_engineer", "source", "src/llm/rag_pipeline.py"),
+    "LLM-rag-m-b-o-data-governance-cho-pipe": (
+        "data_engineer",
+        "source",
+        "src/llm/data_governance.py",
+    ),
+    "LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati": (
+        "data_engineer",
+        "source",
+        "apps/feature-mcp/app/main.py",
+    ),
+    "LLM-web-api-k-o-d-li-u-user-s-d-ng-async": (
+        "data_engineer",
+        "source",
+        "apps/feature-mcp/app/main.py",
+    ),
+    "LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s": (
+        "platform_operator",
+        "gitops",
+        "charts/feature-mcp/Chart.yaml",
+    ),
+    "LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v": (
+        "llm_engineer",
+        "source",
+        "src/agents/feature_agent.py",
+    ),
+    "LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o": (
+        "llm_engineer",
+        "gitops",
+        "platform/agents/agent-sandbox.yaml",
+    ),
+    "LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr": (
+        "llm_engineer",
+        "gitops",
+        "platform/agents/agentregistry.yaml",
+    ),
+    "LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati": (
+        "data_engineer",
+        "source",
+        "apps/drift-mcp/app/main.py",
+    ),
+    "LLM-web-api-cho-real-time-dri-s-d-ng-async": (
+        "data_engineer",
+        "source",
+        "apps/drift-mcp/app/main.py",
+    ),
+    "LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s": (
+        "platform_operator",
+        "gitops",
+        "charts/drift-mcp/Chart.yaml",
+    ),
+    "LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v": (
+        "llm_engineer",
+        "source",
+        "src/agents/drift_agent.py",
+    ),
+    "LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o": (
+        "llm_engineer",
+        "gitops",
+        "platform/agents/agent-sandbox.yaml",
+    ),
+    "LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr": (
+        "llm_engineer",
+        "gitops",
+        "platform/agents/agentregistry.yaml",
+    ),
+    "LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra": (
+        "llm_engineer",
+        "source",
+        "notebooks/agent-mcp-demo.ipynb",
+    ),
+    "LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a": (
+        "llm_engineer",
+        "source",
+        "notebooks/agent-mcp-demo.ipynb",
+    ),
+    "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": (
+        "llm_engineer",
+        "source",
+        "src/agents/coordinator.py",
+    ),
+    "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": (
+        "llm_engineer",
+        "gitops",
+        "platform/agents/agentregistry.yaml",
+    ),
+    "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a": (
+        "llm_engineer",
+        "gitops",
+        "platform/agents/warm-pool.yaml",
+    ),
+    "LLM-validation-verification-validation-verification": (
+        "llm_engineer",
+        "source",
+        "tests/phase2/requirements/test_llm_ac_10_validation.py",
+    ),
+    "LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p": (
+        "llm_engineer",
+        "source",
+        "tests/phase2/requirements/test_llm_ac_10_validation.py",
+    ),
+    "LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g": (
+        "llm_engineer",
+        "source",
+        "tests/phase2/requirements/test_llm_ac_10_validation.py",
+    ),
+    "LLM-validation-verification-idempotency-testing-s-d-ng-pro": (
+        "llm_engineer",
+        "source",
+        "tests/phase2/requirements/test_llm_ac_10_validation.py",
+    ),
+    "LLM-validation-verification-load-test-the-web-api": (
+        "data_engineer",
+        "source",
+        "tests/phase2/requirements/test_llm_ac_10_validation.py",
+    ),
+    "LLM-improve-the-data-generato-simulate-data-drift": (
+        "data_engineer",
+        "source",
+        "src/drift/generator.py",
+    ),
+    "LLM-improve-the-data-generato-using-generator-configuration": (
+        "data_engineer",
+        "source",
+        "src/drift/generator_config.py",
+    ),
+    "LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la": (
+        "data_engineer",
+        "source",
+        "src/ml/label_pipeline.py",
+    ),
+    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
+        "data_engineer",
+        "source",
+        ".github/workflows/phase2-ci.yaml",
+    ),
+    "LLM-ci-cd-agent-k-o-d-li-u": ("llm_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "LLM-ci-cd-agent-drift-detection": (
+        "llm_engineer",
+        "source",
+        ".github/workflows/phase2-ci.yaml",
+    ),
+    "LLM-ci-cd-agent-l-m-coordinator": (
+        "llm_engineer",
+        "source",
+        ".github/workflows/phase2-ci.yaml",
+    ),
+    "LLM-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "LLM-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "LLM-routing-gateway-service-coi-log": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "LLM-routing-gateway-service-coi-trace": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "LLM-routing-gateway-ui-test-agent": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "LLM-routing-gateway-ui-cho-agent-registry": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "LLM-routing-gateway-authentication-cho-ui-test-age": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-": (
+        "platform_operator",
+        "gitops",
+        "platform/ingress/f5-nginx-values.yaml",
+    ),
+    "LLM-iac-d-ng-terraform-setup-gke-ho-c-": (
+        "platform_operator",
+        "gitops",
+        "terraform/envs/evidence/main.tf",
+    ),
+    "LLM-iac-d-ng-ansible-configure-v-deplo": (
+        "platform_operator",
+        "gitops",
+        "ansible/playbooks/vast-evidence-worker.yml",
+    ),
+    "LLM-observability-web-api-metrics": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/prometheus-values.yaml",
+    ),
+    "LLM-observability-collect-v-visualize-metrics-v-": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/prometheus-values.yaml",
+    ),
+    "LLM-observability-t-ng-t-cho-logs": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/eck-otel-values.yaml",
+    ),
+    "LLM-observability-t-ng-t-cho-traces": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/eck-otel-values.yaml",
+    ),
+    "LLM-observability-m-b-o-t-nh-t-c-c-metrics": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/prometheus-values.yaml",
+    ),
+    "LLM-observability-m-b-o-t-nh-t-c-c-metrics-1": (
+        "platform_operator",
+        "gitops",
+        "platform/observability/prometheus-values.yaml",
+    ),
+    "LLM-a-b-testing-when-you-deploy-a-new-model": (
+        "llm_engineer",
+        "gitops",
+        "platform/llm/ab-testing.yaml",
+    ),
+    "LLM-a-b-testing-perform-a-b-test-for-different": (
+        "llm_engineer",
+        "gitops",
+        "platform/llm/ab-testing.yaml",
+    ),
+    "LLM-security-centralize-secret-management": (
+        "platform_operator",
+        "gitops",
+        "platform/security/vault-external-secrets.yaml",
+    ),
+    "LLM-repository-design-clean-code-clean-repo-demonstr": (
+        "platform_operator",
+        "source",
+        "src/llm/contracts.py",
+    ),
+    "LLM-documentation-low-level-ml-design": (
+        "llm_engineer",
+        "source",
+        "docs/phase2/low-level-design.md",
+    ),
+    "LLM-novel-ideas-idea-1": ("llm_engineer", "source", "src/llm/embedding_registry.py"),
+    "LLM-novel-ideas-idea-2": ("llm_engineer", "source", "src/llm/citation_guard.py"),
+}
 
 
-def _artifact_root(
-    track: str, owner: str, section: str, requirement: str, deliverables: str
-) -> str:
-    """Map a rubric row to its Phase 2 implementation root directory.
+ACCEPTANCE_BY_SECTION = {
+    "ML": {
+        "Web API kéo dữ liệu": "ML-AC-01-WEB-API",
+        "Web API cho Real-time Drift Detection": "ML-AC-02-DRIFT-API",
+        "Autoscale": "ML-AC-03-AUTOSCALE",
+        "Validation & Verification": "ML-AC-04-VALIDATION",
+        "Improve the Data Generator": "ML-AC-05-DATA-GENERATOR",
+        "Feature Store": "ML-AC-06-FEAST",
+        "ML": "ML-AC-07-ML-UNDERSTANDING",
+        "ML Pipelines": "ML-AC-08-PIPELINES",
+        "Versioning": "ML-AC-09-VERSIONING",
+        "CI/CD": "ML-AC-10-CICD",
+        "Routing & Gateway (NGINX Ingress Controller)": "ML-AC-11-ROUTING",
+        "IaC": "ML-AC-12-IAC",
+        "Observability": "ML-AC-13-OBSERVABILITY",
+        "A/B Testing": "ML-AC-14-AB",
+        "Security": "ML-AC-15-SECURITY",
+        "Repository Design": "ML-AC-16-REPOSITORY",
+        "Documentation": "ML-AC-17-DOCUMENTATION",
+        "Novel ideas": "ML-AC-18-NOVEL",
+    },
+    "LLM": {
+        (
+            "Deploy a LLM inference platform theo hướng dẫn này và set up gateway "
+            "cho agent theo hướng dẫn này"
+        ): "LLM-AC-01-INFERENCE",
+        (
+            "Deploy 1 global model config để các Agent có thể dùng follow tutorial này, "
+            "config này sẽ link tới inference platform ở trên thông qua cái agent "
+            "gateway đề cập ở trên nốt"
+        ): "LLM-AC-02-MODEL-CONFIG",
+        "Deploy registry for agent theo tutorial này": "LLM-AC-03-REGISTRY",
+        "RAG": "LLM-AC-04-RAG",
+        (
+            "Web API kéo dữ liệu user (đã lưu thông qua feature pipeline) và chunk "
+            "(đã được lưu thông qua RAG pipeline)"
+        ): "LLM-AC-05-FEATURE-RAG-API",
+        (
+            "Web API cho Real-time Drift Detection (để làm MCP tool, tương tự như trên)"
+        ): "LLM-AC-06-DRIFT-MCP",
+        "Demonstrate basic understanding of Agents": "LLM-AC-07-AGENT-UNDERSTANDING",
+        "Deploy 1 Coordinator Agent": "LLM-AC-08-COORDINATOR",
+        (
+            "Cài đặt hệ thống ở chế độ Warm Up cho agent theo hướng dẫn sau để tối ưu "
+            "chi phí, đồng thời giảm thiểu thời gian startup"
+        ): "LLM-AC-09-WARMUP",
+        "Validation & Verification": "LLM-AC-10-VALIDATION",
+        "Improve the Data Generator": "LLM-AC-11-DATA-GENERATOR",
+        "CI/CD": "LLM-AC-12-CICD",
+        "Routing & Gateway (NGINX Ingress Controller)": "LLM-AC-13-ROUTING",
+        "IaC": "LLM-AC-14-IAC",
+        "Observability": "LLM-AC-15-OBSERVABILITY",
+        "A/B Testing": "LLM-AC-16-AB",
+        "Security": "LLM-AC-17-SECURITY",
+        "Repository Design": "LLM-AC-18-REPOSITORY",
+        "Documentation": "LLM-AC-19-DOCUMENTATION",
+        "Novel ideas": "LLM-AC-20-NOVEL",
+    },
+}
 
-    Rules (first match wins), mirroring the domain taxonomy used by
-    ``_assign_owner``:
 
-      1. Agent work (MCP tools, coordinator/publisher agents, sandboxed agents,
-         agent demo notebooks) -> ``src/agents/``
-      2. Drift-detection work (real-time drift APIs, data-drift pipelines,
-         simulated drift) -> ``src/drift/``
-      3. Platform operator deployables (gateways, CI/CD, IaC, observability,
-         security, k8s/helm manifests) -> ``apps/``
-      4. Data engineer work feeds the track's data pipelines ->
-         ``src/ml/`` (ML) or ``src/llm/`` (LLM/RAG)
-      5. Track default -> ``src/ml/`` (ML) or ``src/llm/`` (LLM)
-    """
-    blob = " ".join([section, requirement, deliverables]).lower()
-    if any(k in blob for k in _ARTIFACT_AGENT):
-        return "src/agents/"
-    if any(k in blob for k in _ARTIFACT_DRIFT):
-        return "src/drift/"
-    if owner == "platform_operator":
-        return "apps/"
-    if owner == "data_engineer":
-        return "src/ml/" if track == "ML" else "src/llm/"
-    return "src/ml/" if track == "ML" else "src/llm/"
+def _source_digest(cells: list[str]) -> str:
+    """Hash normalized canonical source cells without relying on totals."""
+    normalized = [" ".join(cell.split()) for cell in cells[:5]]
+    return hashlib.sha256("\x1f".join(normalized).encode("utf-8")).hexdigest()
 
 
 def _assign_owner(track: str, section: str, requirement: str, deliverables: str) -> str:
@@ -267,7 +838,7 @@ def _parse_csv(csv_path: Path, track: str) -> list[dict[str, object]]:
     current_proof: str = ""
     out: list[dict[str, object]] = []
 
-    for _physical_idx, raw_row in enumerate(all_rows[1:], start=1):  # skip header
+    for source_row_index, raw_row in enumerate(all_rows[1:], start=1):  # skip header
         if not raw_row or all(v.strip() == "" for v in raw_row):
             continue
 
@@ -341,17 +912,18 @@ def _parse_csv(csv_path: Path, track: str) -> list[dict[str, object]]:
         # Taxonomy — role-based owner from the locked ruleset
         owner = _assign_owner(track, current_section, req, deliverables)
 
-        # Validation command (reviewer reproduces proof). `pytest` targets the
-        # phase-2 test module; the matching test file is seeded per rubric row.
+        # Contract test proves the mapping exists. The behavior-validation
+        # command is a distinct future gate that must execute before Phase 8.
         test = "pytest tests/phase2 -k '" + rid + "'"
 
         etype: str = "design_only"
 
-        # Exact implementation artifact: a concrete path under one of the Phase 2
-        # roots so a reviewer can find the implementation without inference.
-        root = _artifact_root(track, owner, current_section, req, deliverables)
-        artifact_path = f"{root}{rid}"
-
+        section_key = current_section.strip().split("\n")[0].strip()
+        acceptance_id = ACCEPTANCE_BY_SECTION.get(track, {}).get(section_key, "")
+        validation_slug = acceptance_id.lower().replace("-", "_")
+        validation_command = (
+            f"pytest tests/phase2/requirements/test_{validation_slug}.py -k '{rid}'"
+        )
         out.append(
             {
                 "rubric_id": rid,
@@ -363,10 +935,15 @@ def _parse_csv(csv_path: Path, track: str) -> list[dict[str, object]]:
                 "deliverables": deliverables,
                 "owner": owner,
                 "test": test,
+                "validation_command": validation_command,
                 "evidence_path": f"docs/phase2/evidence/{track.lower()}/{rid}.md",
                 "evidence_type": etype,
-                "acceptance_criterion": "",
-                "artifact_path": artifact_path,
+                "acceptance_id": acceptance_id,
+                "source_file": csv_path.relative_to(REPO_ROOT).as_posix(),
+                "source_row_index": source_row_index,
+                "source_digest": _source_digest(cells),
+                "artifact_repo": "",
+                "artifact_path": "",
             }
         )
 
@@ -406,19 +983,25 @@ for row in _RAW_ML + _RAW_LLM:
     row["rubric_id"] = rid
     row["test"] = "pytest tests/phase2 -k '" + rid + "'"
     row["evidence_path"] = f"docs/phase2/evidence/{track.lower()}/{rid}.md"
-    # Regenerate the artifact path against the final (deduplicated) id so the
-    # matrix stays the exact, non-inferred implementation reference.
-    row["artifact_path"] = (
-        _artifact_root(
-            track,
-            str(row["owner"]),
-            str(row["section"]),
-            str(row["requirement"]),
-            str(row["deliverables"]),
-        )
-        + rid
+    acceptance_id = str(row["acceptance_id"])
+    validation_slug = acceptance_id.lower().replace("-", "_")
+    row["validation_command"] = (
+        f"pytest tests/phase2/requirements/test_{validation_slug}.py -k '{rid}'"
     )
+    try:
+        mapped_owner, artifact_repo, artifact_path = EXPLICIT_IMPLEMENTATION[rid]
+    except KeyError as exc:
+        raise ValueError(f"Missing explicit implementation mapping for {rid}") from exc
+    if mapped_owner != row["owner"]:
+        raise ValueError(f"Owner mismatch for {rid}: rubric={row['owner']!r}, map={mapped_owner!r}")
+    row["artifact_repo"] = artifact_repo
+    row["artifact_path"] = artifact_path
     _deduped.append(row)
+
+if set(EXPLICIT_IMPLEMENTATION) != _seen:
+    missing = sorted(_seen - set(EXPLICIT_IMPLEMENTATION))
+    extra = sorted(set(EXPLICIT_IMPLEMENTATION) - _seen)
+    raise ValueError(f"Explicit implementation map mismatch: missing={missing}, extra={extra}")
 
 
 @dataclass(frozen=True)
@@ -432,9 +1015,14 @@ class Phase2RubricItem:
     deliverables: str
     owner: str
     test: str = ""
+    validation_command: str = ""
     evidence_path: str = ""
     evidence_type: str = "executed"
-    acceptance_criterion: str = ""
+    acceptance_id: str = ""
+    source_file: str = ""
+    source_row_index: int = 0
+    source_digest: str = ""
+    artifact_repo: str = ""
     artifact_path: str = ""
 
     @classmethod
@@ -449,9 +1037,14 @@ class Phase2RubricItem:
             deliverables=str(d.get("deliverables", "")),
             owner=str(d.get("owner", "")),
             test=str(d.get("test", "")),
+            validation_command=str(d.get("validation_command", "")),
             evidence_path=str(d.get("evidence_path", "")),
             evidence_type=str(d.get("evidence_type", "executed")),
-            acceptance_criterion=str(d.get("acceptance_criterion", "")),
+            acceptance_id=str(d.get("acceptance_id", "")),
+            source_file=str(d.get("source_file", "")),
+            source_row_index=int(d.get("source_row_index", 0)),  # type: ignore[arg-type]
+            source_digest=str(d.get("source_digest", "")),
+            artifact_repo=str(d.get("artifact_repo", "")),
             artifact_path=str(d.get("artifact_path", "")),
         )
 
@@ -512,20 +1105,49 @@ def validate_matrix() -> tuple[list[str], bool]:
             errors.append(f"{item.rubric_id}: owner '{item.owner}' not a recognized role")
         owners_seen.add(item.owner)
         if not item.test:
-            errors.append(f"{item.rubric_id}: missing validation command (test)")
+            errors.append(f"{item.rubric_id}: missing contract test")
+        if not item.validation_command:
+            errors.append(f"{item.rubric_id}: missing behavior validation command")
         if not item.evidence_path:
             errors.append(f"{item.rubric_id}: missing evidence_path")
+        if not item.acceptance_id:
+            errors.append(f"{item.rubric_id}: missing acceptance_id")
+        if not item.source_file:
+            errors.append(f"{item.rubric_id}: missing source_file")
+        if item.source_row_index <= 0:
+            errors.append(f"{item.rubric_id}: invalid source_row_index")
+        if not re.fullmatch(r"[0-9a-f]{64}", item.source_digest):
+            errors.append(f"{item.rubric_id}: invalid source_digest")
+        expected_validation = (
+            "pytest tests/phase2/requirements/test_"
+            f"{item.acceptance_id.lower().replace('-', '_')}.py -k '{item.rubric_id}'"
+        )
+        if item.validation_command != expected_validation:
+            errors.append(
+                f"{item.rubric_id}: validation command is not bound to its acceptance row"
+            )
+        if item.rubric_id not in EXPLICIT_IMPLEMENTATION:
+            errors.append(f"{item.rubric_id}: missing explicit implementation map entry")
+        if item.artifact_repo not in {"source", "gitops"}:
+            errors.append(f"{item.rubric_id}: invalid artifact_repo '{item.artifact_repo}'")
         if not item.artifact_path:
             errors.append(f"{item.rubric_id}: missing artifact_path (exact implementation)")
-        elif not item.artifact_path.startswith(ARTIFACT_ROOTS):
+        elif item.artifact_repo == "source" and not item.artifact_path.startswith(
+            SOURCE_ARTIFACT_ROOTS
+        ):
             errors.append(
                 f"{item.rubric_id}: artifact_path '{item.artifact_path}' not under "
-                f"an allowed Phase 2 root {ARTIFACT_ROOTS}"
+                f"an allowed source root {SOURCE_ARTIFACT_ROOTS}"
+            )
+        elif item.artifact_repo == "gitops" and not item.artifact_path.startswith(
+            GITOPS_ARTIFACT_ROOTS
+        ):
+            errors.append(
+                f"{item.rubric_id}: artifact_path '{item.artifact_path}' not under "
+                f"an allowed GitOps root {GITOPS_ARTIFACT_ROOTS}"
             )
         if item.evidence_type not in ("executed", "design_only", "stretch"):
             errors.append(f"{item.rubric_id}: bad evidence_type '{item.evidence_type}'")
-        # Acceptance criterion is optional at this stage
-        # Phase-01 per-deliverable ACs are in docs, not per-row
 
     # Every role must own at least one scored row (locked taxonomy)
     for role in VALID_OWNERS:
@@ -539,7 +1161,8 @@ def export_matrix_csv() -> str:
     """Export all items as a single-line-per-row CSV string."""
     header = (
         "rubric_id,track,section,points,requirement,proof,deliverables,"
-        "owner,test,evidence_path,evidence_type,acceptance_criterion,artifact_path\n"
+        "owner,test,validation_command,evidence_path,evidence_type,acceptance_id,"
+        "source_file,source_row_index,source_digest,artifact_repo,artifact_path\n"
     )
     lines = []
 
@@ -551,12 +1174,15 @@ def export_matrix_csv() -> str:
         req = _clean(item.requirement)
         proof = _clean(item.proof)
         deliverables = _clean(item.deliverables)
-        ac = _clean(item.acceptance_criterion)
+        acceptance_id = _clean(item.acceptance_id)
         test = _clean(item.test)
+        validation_command = _clean(item.validation_command)
         lines.append(
             f'{item.rubric_id},{item.track},"{section}",{item.points},'
             f'"{req}","{proof}","{deliverables}",'
-            f'{item.owner},"{test}",{item.evidence_path},'
-            f'{item.evidence_type},"{ac}",{item.artifact_path}'
+            f'{item.owner},"{test}","{validation_command}",{item.evidence_path},'
+            f'{item.evidence_type},"{acceptance_id}",{item.source_file},'
+            f"{item.source_row_index},{item.source_digest},{item.artifact_repo},"
+            f"{item.artifact_path}"
         )
     return header + "\n".join(lines)

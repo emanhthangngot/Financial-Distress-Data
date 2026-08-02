@@ -4,7 +4,7 @@ description: "Rubric-complete Phase 2 plan combining ML and LLM tracks on an eph
 status: pending
 priority: P1
 effort: "55-79 focused workdays (11-16 weeks)"
-branch: main
+branch: dev
 tags: [coursework, ml, llm, kubernetes, gitops, aws]
 blockedBy: []
 blocks: []
@@ -15,7 +15,7 @@ created: 2026-08-02
 
 ## Overview
 
-Active phase: **explicit Phase 2 final coursework**. Preserve the verified local Phase 1 lakehouse, add isolated `src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, and a Next.js product shell, then deploy rubric evidence through a separate GitOps repository. The system targets all 100 ML points and all 100 LLM points without keeping EKS running continuously.
+Active phase: **explicit Phase 2 final coursework**. Preserve the verified local Phase 1 lakehouse, keep application work in one source monorepo (`src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, and thin `dags/phase2/` wrappers), then deploy rubric evidence through a separate least-privilege GitOps control repository. The system targets all 57 ML rows/100 points and all 60 LLM rows/100 points without keeping EKS running continuously.
 
 Read before planning: `AGENTS.md`, `docs/spec.md`, `docs/mini_coursework.md`, `docs/coursework.md`, both final-coursework rubric CSVs, the supplied feedback, and the two supplied system-design books. The project-local `financial-distress-sdd` skill is absent; `ak:plan` and `ak:devops` provide the available workflow.
 
@@ -47,23 +47,27 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 
 - Product plane: Vercel Hobby + Supabase Free; coursework scale is 50 accounts, 10 concurrent web users, and 2 concurrent AI streams.
 - Evidence plane: EKS in `ap-southeast-1`, 6-hour default/8-hour hard TTL, at most 3 sessions/month, target <= USD 25/session and <= USD 10/month persistent resources; provisioning blocks if projected spend exceeds USD 85 while reserving USD 15 contingency.
-- Public edge is NGINX; Istio is east-west service mesh; agentgateway owns MCP/A2A/agent model routing; Envoy AI Gateway owns KServe `LLMInferenceService` traffic. They are complementary, not merged.
+- Public edge is active F5 NGINX Ingress Controller OSS (`nginx/kubernetes-ingress`), never retired community ingress-nginx. Istio is east-west service mesh. The LLM chain is kagent `Agent` -> kagent `ModelConfig` -> agentgateway AI backend -> Envoy AI Gateway -> KServe `LLMInferenceService`/llm-d; MCP and A2A also use agentgateway routes.
 - KServe `LLMInferenceService` remains pinned to the verified 0.18 integration until a compatibility spike proves a later release. Helm owns apps and MLflow; Kustomize owns only selected pinned upstream bases/overlays. One resource has exactly one owner.
-- Source repo owns code, tests, schemas, Dockerfiles, and evidence docs. `emanhthangngot/financial-distress-gitops` owns Terraform, Ansible, Helm, Kustomize, Argo CD applications, policies, and environment values.
+- The single source monorepo owns code, tests, schemas, Dockerfiles, Airflow Phase 2 wrappers, and evidence docs. `emanhthangngot/financial-distress-gitops` is a separate control repo owning Terraform, Ansible, Helm, Kustomize, Argo CD applications, policies, and environment values; this is not a microservice-per-repo design.
+- The scheduled drift contract is Airflow -> Feast offline store -> reference/proxy comparison -> Evidently -> Pushgateway/Grafana -> threshold -> actual Kubeflow Pipelines API run, with both skip and trigger evidence.
+- Ansible evidence is mandatory: a role-based playbook deploys a healthy/idempotent Vast.ai CPU OpenAI-compatible load client against the llm-d endpoint under a USD 10 aggregate hard cap; it never joins the AWS GPU inference pool.
 
 ## Timebox and Cut Policy
 
 - Never cut: rubric gates, >90% test coverage, >80% changed-code mutation score, Locust HTML, autoscaling proof, TLS/domain, KFP + distributed training, MLflow model/data versioning, Feast offline/online jobs, KServe + Knative drift, agents/MCP/registry/sandbox/warm-up, observability, A/B tests, Terraform/Ansible, low-level classes, two novel ideas per track, or evidence mapping.
 - Cut first: cosmetic motion, multi-region/HA beyond rubric proof, persistent EKS, Milvus, extra model families, hierarchical agents, and a second cloud copy of Airflow/Kafka/DataHub.
-- Cut second: non-rubric product polish and optional Vast.ai benchmark if no bounded offer is available. AWS Spot remains primary; Vast.ai CPU has an aggregate hard cap of USD 10.
+- Cut second: non-rubric product polish and extra Vast.ai workloads beyond the one mandatory Ansible evidence worker. AWS Spot remains primary for inference; Vast.ai CPU has an aggregate hard cap of USD 10.
 
 ## Success Criteria
 
-- [ ] Reviewer -> opens the rubric matrix -> finds one requirement, implementation owner, automated check, and executed artifact for every scored ML and LLM row.
+- [ ] Reviewer -> opens the rubric matrix -> finds canonical source digest, acceptance ID, owner, implementation repo/file, contract test, behavior-validation command, and executed artifact for each of 117 scored rows.
 - [ ] Analyst -> uses the product when EKS is off -> sees persisted reports plus an honest evidence-plane state instead of a broken workflow.
 - [ ] Platform operator -> provisions or destroys evidence infrastructure -> receives idempotent state transitions, cost preview, audit log, fencing, and guaranteed scheduled teardown.
 - [ ] Source CI -> publishes a signed immutable image digest -> opens a checked GitOps PR; only the merged Git change is reconciled by Argo CD.
 - [ ] Phase 1 maintainer -> runs existing quality gates -> observes no change to collectors, Gold contracts, DQ semantics, or local evidence behavior.
+- [ ] ML operator -> executes both drift branches -> observes Pushgateway/Grafana metrics, a persisted skip below threshold, and a real KFP API run ID above threshold.
+- [ ] Platform operator -> runs the Vast.ai Ansible playbook twice -> observes a healthy useful service and an idempotent second run within the USD 10 cap.
 
 ## Validation Log
 
@@ -134,6 +138,13 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 
 ### Whole-Plan Consistency Sweep
 
-Re-read all plan files after validation. No unresolved contradictions: the four-track gateway boundary, two-repo ownership, cost envelope, and class names are consistent across `plan.md`, phase-01 through phase-08, and the architecture feedback report. The only note: `docs/coursework.md` rewrite is now explicitly a full replacement (decision 6); phase-01 requirement text "linking to, not duplicating, Phase 1 contracts" remains unchanged.
+The 2026-08-02 AK re-audit supersedes the earlier clean-sweep claim. It found
+and closed these design-level gaps: mandatory role-based Ansible execution,
+actual KFP API retraining after Airflow drift detection, correct kagent
+`ModelConfig` ownership, active F5 NGINX OSS instead of retired ingress-nginx,
+source-row/digest completeness, resolvable acceptance IDs, real repo/file
+artifact ownership, exact 40-hex evidence SHAs, Phase 2 DAG isolation, and a
+credential-free S3 evidence return path. Phase 8 still requires real runtime
+evidence before any 100/100 claim is valid.
 
 <!-- slug: unified-phase2-ml-llm-gitops -->

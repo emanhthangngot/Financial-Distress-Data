@@ -30,7 +30,6 @@ PHASE1_PROTECTED = [
     "src/metadata/",
     "src/streaming/",
     "src/generator/",
-    "dags/",
     "sql/",
     "docs/01_data_generator.md",
     "docs/02_schema_design.md",
@@ -63,6 +62,7 @@ class TestPhase1ContractNoMutation:
                     f"Matrix references Phase 1 protected path '{path}' — "
                     "Phase 2 must not mutate Phase 1."
                 )
+        assert "dags/phase2/" in text, "Phase 2 Airflow wrappers must be mapped explicitly"
 
     def test_phase1_mutation_from_changed_paths(self) -> None:
         """A git diff that touches a Phase 1 path must be flagged."""
@@ -81,9 +81,15 @@ class TestPhase1ContractNoMutation:
 
         # A diff touching only Phase 2 files must pass
         ok = mod._phase1_mutation_from_changed(
-            ["docs/phase2/architecture.md", "scripts/audit_phase2_evidence.py"]
+            [
+                "docs/phase2/architecture.md",
+                "scripts/audit_phase2_evidence.py",
+                "dags/phase2/phase2_drift_monitoring.py",
+            ]
         )
         assert ok == [], f"expected no Phase 1 mutation, got {ok}"
+        dag_errors = mod._phase1_mutation_from_changed(["dags/01_collect_company_master_data.py"])
+        assert dag_errors, "an existing Phase 1 DAG change must fail"
 
 
 class TestRubricMatrix:
@@ -94,6 +100,15 @@ class TestRubricMatrix:
         assert (
             MATRIX_CSV.exists()
         ), f"{MATRIX_CSV} not found — create it via scripts/_phase2_rubric_items.py"
+
+    def test_matrix_csv_matches_generator_exactly(self) -> None:
+        """The committed export must not drift from canonical generation."""
+        import sys
+
+        sys.path.insert(0, str(REPO_ROOT))
+        from scripts._phase2_rubric_items import export_matrix_csv
+
+        assert MATRIX_CSV.read_text(encoding="utf-8") == export_matrix_csv()
 
     def test_ml_100_points(self) -> None:
         """ML track must total exactly 100 points."""
@@ -131,8 +146,8 @@ class TestRubricMatrix:
 
     def test_every_scored_row_has_all_required_fields(self) -> None:
         """Every scored row must have rubric_id, requirement, proof,
-        deliverables, owner, test (validation command), evidence_path,
-        evidence_type."""
+        deliverables, owner, mapping test, behavior validation, source
+        provenance, acceptance ID, evidence and exact artifact reference."""
         import csv
         import io
 
@@ -147,8 +162,14 @@ class TestRubricMatrix:
             "deliverables",
             "owner",
             "test",
+            "validation_command",
             "evidence_path",
             "evidence_type",
+            "acceptance_id",
+            "source_file",
+            "source_row_index",
+            "source_digest",
+            "artifact_repo",
             "artifact_path",
         ]
         reader = csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8")))
@@ -160,8 +181,8 @@ class TestRubricMatrix:
                     missing.append(f"{rid}: missing '{field}'")
         assert not missing, "\n".join(missing)
 
-    def test_every_validation_command_is_reproducible(self) -> None:
-        """Every row's test field must be a runnable pytest invocation."""
+    def test_contract_and_behavior_commands_are_distinct(self) -> None:
+        """Every row separates mapping checks from feature behavior proof."""
         import csv
         import io
 
@@ -173,6 +194,14 @@ class TestRubricMatrix:
             test = row.get("test", "")
             if not test.startswith("pytest tests/phase2"):
                 bad.append(f"{row.get('rubric_id','?')}: test='{test}' not reproducible")
+            validation = row.get("validation_command", "")
+            if not re.fullmatch(
+                r"pytest tests/phase2/requirements/test_[a-z0-9_]+\.py -k '[A-Za-z0-9-]+'",
+                validation,
+            ):
+                bad.append(f"{row.get('rubric_id','?')}: validation_command='{validation}' invalid")
+            if validation == test:
+                bad.append(f"{row.get('rubric_id','?')}: behavior gate equals metadata test")
         assert not bad, "\n".join(bad)
 
     def test_every_role_owns_scored_rows(self) -> None:
@@ -256,49 +285,114 @@ class TestRubricMatrix:
                     "not under docs/phase2/evidence/"
                 )
 
-    def test_artifact_paths_under_allowed_roots(self) -> None:
-        """Every row's artifact_path must name an exact implementation path.
-
-        P1-1: per-row validation must not be a metadata-only false positive.
-        Each rubric row must map to a concrete Phase 2 implementation artifact
-        (requirements.md section 2: src/ml/, src/drift/, src/llm/, src/agents/,
-        apps/), and the path must end in the rubric_id so a reviewer finds it
-        without inference.
-        """
+    def test_artifact_paths_are_concrete_and_repo_qualified(self) -> None:
+        """Every row must name a concrete file in source or GitOps."""
         import csv
         import io
 
         if not MATRIX_CSV.exists():
             pytest.xfail("Matrix CSV not yet created")
-        roots = ("src/ml/", "src/drift/", "src/llm/", "src/agents/", "apps/")
+        roots = {
+            "source": (
+                "src/ml/",
+                "src/drift/",
+                "src/llm/",
+                "src/agents/",
+                "apps/",
+                "dags/phase2/",
+                ".github/workflows/",
+                "notebooks/",
+                "tests/phase2/requirements/",
+                "docs/phase2/",
+            ),
+            "gitops": (
+                ".github/workflows/",
+                "terraform/",
+                "ansible/",
+                "charts/",
+                "platform/",
+                "argocd/",
+            ),
+        }
         reader = csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8")))
-        used: set[str] = set()
+        used_repos: set[str] = set()
         for row in reader:
             rid = row.get("rubric_id", "?")
+            repo = row.get("artifact_repo", "")
             apath = row.get("artifact_path", "")
+            assert repo in roots, f"{rid}: artifact_repo={repo!r} invalid"
             assert apath, f"{rid}: missing artifact_path (exact implementation)"
             assert apath.startswith(
-                roots
-            ), f"{rid}: artifact_path='{apath}' not under an allowed Phase 2 root"
-            assert apath.endswith(rid), f"{rid}: artifact_path must end with the rubric_id"
-            used.add(next(r for r in roots if apath.startswith(r)))
-        # At least one row must map to each implementation root (P1-1 domain map).
-        assert len(used) == 5, f"artifact_paths must cover all 5 roots: {sorted(used)}"
+                roots[repo]
+            ), f"{rid}: artifact_path='{apath}' not valid for repo '{repo}'"
+            assert not apath.endswith("/"), f"{rid}: artifact_path must name a file"
+            assert Path(apath).suffix, f"{rid}: artifact_path lacks a file suffix"
+            used_repos.add(repo)
+        assert used_repos == {"source", "gitops"}
+
+    def test_canonical_source_coverage_rejects_point_transfer(self) -> None:
+        """Deleting a row and moving its points cannot preserve a passing audit."""
+        import csv
+        import importlib.util
+        import io
+
+        spec = importlib.util.spec_from_file_location("audit_phase2", AUDIT_SCRIPT)
+        assert spec and spec.loader
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        rows = list(csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8"))))
+        removed = rows.pop(0)
+        replacement = next(row for row in rows if row["track"] == removed["track"])
+        replacement["points"] = str(int(replacement["points"]) + int(removed["points"]))
+        errors = mod._audit_canonical_coverage(rows)
+        assert errors and "canonical source coverage" in errors[0]
+
+    def test_canonical_source_coverage_rejects_digest_tamper(self) -> None:
+        import csv
+        import importlib.util
+        import io
+
+        spec = importlib.util.spec_from_file_location("audit_phase2_digest", AUDIT_SCRIPT)
+        assert spec and spec.loader
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        rows = list(csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8"))))
+        rows[0]["source_digest"] = "0" * 64
+        assert mod._audit_canonical_coverage(rows)
+
+    def test_promotion_rejects_explicit_artifact_map_tamper(self) -> None:
+        """A valid-looking path cannot replace the reviewed row mapping."""
+        import csv
+        import importlib.util
+        import io
+
+        spec = importlib.util.spec_from_file_location("audit_phase2_map", AUDIT_SCRIPT)
+        assert spec and spec.loader
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        rows = list(csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8"))))
+        rows[0]["artifact_path"] = "docs/phase2/requirements.md"
+        errors = mod._audit_matrix(
+            rows,
+            {"ML": 100, "LLM": 100},
+            enforce_explicit_implementation=True,
+        )
+        assert any("implementation mapping diverges" in error for error in errors)
 
 
 class TestAcceptanceCriteria:
     """AC must be in WHO -> ACTION -> RESULT format."""
 
     def test_acceptance_criteria_doc_exists(self) -> None:
-        """docs/phase2/requirements.md must have per-deliverable ACs."""
-        reqs_md = REPO_ROOT / "docs" / "phase2" / "requirements.md"
+        """The resolvable acceptance catalog must exist."""
+        reqs_md = REPO_ROOT / "docs" / "phase2" / "acceptance-criteria.md"
         assert reqs_md.exists(), (
             f"{reqs_md} not found — write per-deliverable AA in" " WHO -> ACTION -> RESULT form"
         )
 
     def test_acceptance_criteria_in_who_action_result(self) -> None:
         """At least one acceptance criterion follows WHO -> ACTION -> RESULT pattern."""
-        reqs_md = REPO_ROOT / "docs" / "phase2" / "requirements.md"
+        reqs_md = REPO_ROOT / "docs" / "phase2" / "acceptance-criteria.md"
         if not reqs_md.exists():
             pytest.xfail("requirements.md not yet created")
         text = reqs_md.read_text(encoding="utf-8")
@@ -306,8 +400,18 @@ class TestAcceptanceCriteria:
         found = re.search(r"\s*->\s*.+->\s*.+", text)
         assert found, (
             "No WHO -> ACTION -> RESULT acceptance criterion found in "
-            "docs/phase2/requirements.md"
+            "docs/phase2/acceptance-criteria.md"
         )
+
+    def test_every_matrix_acceptance_id_resolves(self) -> None:
+        import csv
+        import io
+
+        catalog = (REPO_ROOT / "docs/phase2/acceptance-criteria.md").read_text(encoding="utf-8")
+        declared = set(re.findall(r"`((?:ML|LLM)-AC-[A-Z0-9-]+)`", catalog))
+        rows = csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8")))
+        unresolved = [row["rubric_id"] for row in rows if row["acceptance_id"] not in declared]
+        assert not unresolved, f"unresolved acceptance IDs for {unresolved}"
 
 
 class TestClassContracts:
@@ -466,12 +570,12 @@ class TestArchitectureDocs:
         path = REPO_ROOT / "docs" / "phase2" / "architecture.md"
         assert path.exists(), f"{path} not found"
 
-    def test_eight_adrs_exist(self) -> None:
+    def test_nine_adrs_exist(self) -> None:
         adr_dir = REPO_ROOT / "docs" / "phase2" / "adr"
         if not adr_dir.exists():
             pytest.fail(f"ADR dir {adr_dir} not found")
         adrs = list(adr_dir.glob("adr-*.md"))
-        assert len(adrs) >= 8, f"Expected ≥ 8 ADRs, found {len(adrs)}"
+        assert len(adrs) >= 9, f"Expected ≥ 9 ADRs, found {len(adrs)}"
 
     def test_coursework_doc_rewritten(self) -> None:
         """docs/coursework.md must reference Phase 2 plan, no longer say K8s
@@ -504,6 +608,21 @@ class TestLinterSmoke:
             f"canonical matrix must pass --matrix-only --strict, got {result.returncode}: "
             f"{result.stdout[-400:]}{result.stderr[-200:]}"
         )
+
+    def test_behavior_validation_mode_requires_executed_gate(self) -> None:
+        """Feature commands cannot be run outside the Phase 8 evidence gate."""
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, str(AUDIT_SCRIPT), "--run-validations"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 1
+        assert "requires --require-executed" in result.stdout
 
     def test_missing_git_base_fails_closed(self) -> None:
         """An unresolvable `--git-base` must fail the gate, not skip it.

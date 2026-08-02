@@ -13,7 +13,7 @@ Create the separate `emanhthangngot/financial-distress-gitops` control repositor
 ## Platform Scope
 
 - AWS: EKS in `ap-southeast-1`, managed node groups/Spot where compatible, S3, ECR, RDS PostgreSQL with PGVector, ElastiCache Valkey, Route 53, ACM or cert-manager-compatible DNS, budget alarms, EventBridge Scheduler and CodeBuild teardown.
-- Kubernetes: Argo CD, NGINX Ingress, cert-manager, Istio, KServe 0.18, Knative Serving/Eventing, standalone Kubeflow Pipelines, Kubeflow Trainer, MLflow, Feast services/jobs, Prometheus/Grafana, ECK/Kibana, OpenTelemetry/Jaeger, Vault-compatible secret management, agentgateway, Envoy Gateway + Envoy AI Gateway, kagent/kmcp/agentregistry/Agent Sandbox.
+- Kubernetes: Argo CD, active F5 NGINX Ingress Controller OSS, cert-manager, Istio, KServe 0.18, Knative Serving/Eventing, standalone Kubeflow Pipelines, Kubeflow Trainer, MLflow, Feast services/jobs, Prometheus/Grafana/Pushgateway, ECK/Kibana, OpenTelemetry/Jaeger, Vault-compatible secret management, agentgateway, Envoy Gateway + Envoy AI Gateway, kagent/kmcp/agentregistry/Agent Sandbox.
 - Excluded: duplicate cloud Airflow/Kafka/DataHub, multi-region, always-on EKS, and Milvus unless PGVector exceeds the documented scale/latency trigger.
 
 ## Repository Ownership
@@ -24,27 +24,29 @@ Create the separate `emanhthangngot/financial-distress-gitops` control repositor
 | `charts/**` | Helm | first-party apps, MLflow, and charts we own |
 | `platform/base/**`, `platform/overlays/**` | Kustomize | selected pinned upstream resources and environment patches |
 | `argocd/**` | Argo CD | projects, ApplicationSets, sync waves/policies |
-| `ansible/roles/**` | Ansible | Vast.ai/VM host configuration only |
+| `ansible/roles/vast-evidence-worker/**` | Ansible | mandatory Vast.ai CPU Locust/benchmark/evidence service; health + idempotency proof |
 
 Maintain `resource-ownership.yaml`; CI rejects any Kubernetes identity rendered by two owners. Do not render KServe/Envoy dependencies from both OCI Helm charts and Kustomize.
 
 ## Implementation Steps
 
-1. Seed policy tests for budget, expiry tags, public endpoints, encrypted storage, least privilege, unique resource ownership, and automated teardown.
+1. Seed policy tests for budget, expiry tags, public endpoints, encrypted storage, least privilege, unique resource ownership, automated teardown, retired ingress-nginx rejection, and version/digest pins.
 2. Build Terraform modules with remote state locking, environment boundaries, `evidence_session_id`, `expires_at`, owner and cost tags. Plan must fail if projected monthly use exceeds USD 85 minus USD 15 reserve.
 3. Provision through a session worker; immediately create an independent EventBridge Scheduler -> CodeBuild destroy job. Default TTL is 6 hours; hard TTL is 8 hours; at most 3 sessions/month.
-4. Bootstrap Argo CD once, then reconcile platform layers through sync waves:
+4. Run a compatibility spike and freeze an exact matrix for EKS/Kubernetes, F5 NGINX OSS (starting candidate controller 5.5.4/chart 2.6.4), cert-manager, Istio, Knative, KServe 0.18, Envoy Gateway/AI Gateway, llm-d/GIE, KFP/Trainer, Argo CD, kagent, kmcp, agentgateway, agentregistry, Agent Sandbox, Feast, and MLflow; require render/install/smoke/upgrade/rollback proof.
+5. Bootstrap Argo CD once, then reconcile platform layers through sync waves:
    - `-30`: namespaces, CRDs, external secrets/Vault integration.
    - `-20`: NGINX, cert-manager, Istio, Knative, gateways.
    - `-10`: KServe, KFP/Trainer, observability operators.
    - `0`: MLflow/Feast/platform services.
    - `10`: model, MCP, agent and application workloads.
    - `20`: smoke/evidence jobs.
-5. Deploy MLflow by owned Helm chart in `ml-platform`; use RDS backend and S3 artifacts. Promotion resolves the MLflow production alias to an immutable S3 artifact URI and updates KServe GitOps desired state. KServe never reads the registry directly.
-6. Use NGINX as TLS-terminating public edge, cert-manager for certificates, Istio authorization/mTLS east-west, agentgateway for MCP/A2A/global model config, and Envoy AI Gateway for `LLMInferenceService` routing.
-7. Configure each dev/evidence ApplicationSet with automated sync enabled, prune, self-heal, retry refresh, and `allowEmpty: false`; add GitHub webhook with normal polling fallback.
-8. Add `terraform validate/plan`, `helm lint/template`, `kustomize build`, `kubeconform`, `conftest`, `ansible-lint`, and duplicate-owner checks.
-9. Prove teardown from ready, partially created, failed and expired states; retain only bounded S3/RDS evidence resources.
+6. Deploy MLflow by owned Helm chart in `ml-platform`; use RDS backend and S3 artifacts. Promotion resolves the MLflow production alias to an immutable S3 artifact URI and updates KServe GitOps desired state. KServe never reads the registry directly.
+7. Use F5 NGINX OSS as TLS-terminating public edge, cert-manager for certificates, Istio authorization/mTLS east-west, agentgateway for MCP/A2A/AI-backend routes, and Envoy AI Gateway for `LLMInferenceService` routing.
+8. Provision one vetted Vast.ai CPU host under the aggregate USD 10 cap; apply `vast-evidence-worker` roles to deploy an OpenAI-compatible Locust/benchmark client targeting the llm-d endpoint, verify health, then prove the second Ansible run reports zero changes. Destroy immediately after export; never join it to the GPU model pool.
+9. Configure each dev/evidence ApplicationSet with automated sync enabled, prune, self-heal, retry refresh, and `allowEmpty: false`; add GitHub webhook with normal polling fallback.
+10. Add `terraform validate/plan`, `helm lint/template`, `kustomize build`, `kubeconform`, `conftest`, `ansible-lint`, Ansible Molecule/idempotency, and duplicate-owner checks.
+11. Prove teardown from ready, partially created, failed and expired states; retain only bounded S3/RDS evidence resources.
 
 ## CI-to-Argo Contract
 
@@ -64,7 +66,8 @@ Maintain `resource-ownership.yaml`; CI rejects any Kubernetes identity rendered 
 
 - [ ] Source CI -> pushes a new image without a GitOps PR -> causes no Argo deployment.
 - [ ] Approved GitOps PR -> merges an immutable digest -> Argo auto-syncs, self-heals drift and records the revision.
-- [ ] Reviewer -> opens `platform.<domain>` -> reaches only NGINX TLS endpoints with a valid certificate; internal services remain private and mesh-authorized.
+- [ ] Reviewer -> opens approved routes -> reaches only F5 NGINX OSS TLS endpoints with a valid certificate; internal services remain private and mesh-authorized.
+- [ ] Platform operator -> applies the Vast.ai role twice -> receives a healthy service, zero changes on the second run, redacted logs and a cost receipt under USD 10.
 - [ ] Session worker -> stops after partial provisioning -> independent scheduled teardown destroys the tagged session by hard TTL.
 - [ ] Platform admin -> reverts a bad release in Git -> Argo returns to the previous immutable digest without mutable tags.
 

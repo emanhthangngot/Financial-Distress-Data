@@ -97,7 +97,9 @@ rolled back). The pattern is enforced by the `src/ml/contracts.py` and
 ## Contract Enforcement
 
 - Signature stubs live in `src/ml/contracts.py` and `src/llm/contracts.py`.
-- `tests/phase2/test_rubric_matrix.py::TestClassContracts` asserts the files
-  exist; later phases will add import-and-signature tests.
-- Each class maps to rubric-matrix rows through its evidence path, so the
-  reviewer can trace a design decision to a proof artifact.
+- `tests/phase2/test_rubric_matrix.py::TestClassContracts` already imports both
+  modules and verifies the ten abstract-class names, exact abstract methods,
+  parameter names, and docstrings.
+- Each class maps to rubric-matrix rows through a resolvable acceptance ID,
+  concrete implementation file, behavior-validation command, and evidence
+  path, so the reviewer can trace design to executed proof.

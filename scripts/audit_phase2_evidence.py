@@ -4,7 +4,9 @@
 Usage:
   python scripts/audit_phase2_evidence.py --matrix-only --strict
   python scripts/audit_phase2_evidence.py --matrix-only --matrix PATH
-  python scripts/audit_phase2_evidence.py --require-executed --ml 100 --llm 100
+  python scripts/audit_phase2_evidence.py --require-executed --run-validations \
+    --phase1-base "$PHASE1_BASE_SHA" --gitops-root ../financial-distress-gitops \
+    --ml 100 --llm 100
 
 Modes:
   --matrix-only     Validate the rubric-matrix.csv completeness and integrity
@@ -21,10 +23,13 @@ Modes:
                       evidence contract (rubric_id, execution_timestamp,
                       source_sha, gitops_sha, versions, command,
                       expected/actual result and redaction_status). Values must
-                      be non-empty and format-valid (ISO-8601 timestamps, git
-                      SHAs/refs). Rows still marked design_only/stretch, and
+                      be non-empty and format-valid (ISO-8601 timestamps, full
+                      40-hex SHAs). Rows still marked design_only/stretch, and
                       executed rows whose implementation artifact
                       (artifact_path) is absent, fail the gate.
+  --run-validations   Execute every feature-specific validation command after
+                      evidence/artifact checks; canonical matrix only, without
+                      invoking a shell.
 
 Exit codes:
   0  all checks passed
@@ -36,8 +41,10 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import io
 import re
+import shlex
 import sys
 from pathlib import Path
 
@@ -51,7 +58,6 @@ PHASE1_PROTECTED = [
     "src/metadata/",
     "src/streaming/",
     "src/generator/",
-    "dags/",
     "sql/",
     "docs/evidence/",
     "docs/mini_coursework.md",
@@ -61,6 +67,7 @@ PHASE1_PROTECTED = [
 
 REQUIRED_DOCS = [
     "docs/phase2/requirements.md",
+    "docs/phase2/acceptance-criteria.md",
     "docs/phase2/architecture.md",
     "docs/phase2/evidence-contract.md",
     "docs/phase2/low-level-design.md",
@@ -70,10 +77,33 @@ REQUIRED_DOCS = [
 VALID_EVIDENCE_TYPES = {"executed", "design_only", "stretch"}
 VALID_OWNERS = {"ml_engineer", "llm_engineer", "data_engineer", "platform_operator"}
 
-# Phase 2 implementation roots declared in docs/phase2/requirements.md section 2.
-# Every rubric row's artifact_path must live under exactly one of these roots so
-# the "exact implementation" a reviewer needs is findable without inference.
-ARTIFACT_ROOTS = ("src/ml/", "src/drift/", "src/llm/", "src/agents/", "apps/")
+SOURCE_ARTIFACT_ROOTS = (
+    "src/ml/",
+    "src/drift/",
+    "src/llm/",
+    "src/agents/",
+    "apps/",
+    "dags/phase2/",
+    ".github/workflows/",
+    "notebooks/",
+    "tests/phase2/requirements/",
+    "docs/phase2/",
+)
+GITOPS_ARTIFACT_ROOTS = (
+    ".github/workflows/",
+    "terraform/",
+    "ansible/",
+    "charts/",
+    "platform/",
+    "argocd/",
+)
+
+CANONICAL_RUBRICS = {
+    "ML": REPO_ROOT / "docs/Coursework Tracking (Public) - rubic final-coursework (final - ml).csv",
+    "LLM": REPO_ROOT
+    / "docs/Coursework Tracking (Public) - rubic final-coursework (final - llm).csv",
+}
+EXPECTED_ROW_COUNTS = {"ML": 57, "LLM": 60}
 
 # Per-artifact metadata required by docs/phase2/evidence-contract.md. A file
 # that exists but lacks any of these cannot prove a rubric point.
@@ -103,10 +133,83 @@ def _read_matrix(matrix_path: Path | None = None) -> list[dict[str, str]] | None
         return None
 
 
+def _acceptance_ids() -> set[str]:
+    """Return all declared acceptance IDs from the normative catalog."""
+    path = REPO_ROOT / "docs/phase2/acceptance-criteria.md"
+    if not path.exists():
+        return set()
+    return set(re.findall(r"`((?:ML|LLM)-AC-[A-Z0-9-]+)`", path.read_text(encoding="utf-8")))
+
+
+def _normalized_source_digest(cells: list[str]) -> str:
+    normalized = [" ".join(cell.split()) for cell in cells[:5]]
+    return hashlib.sha256("\x1f".join(normalized).encode("utf-8")).hexdigest()
+
+
+def _canonical_source_contracts() -> list[tuple[str, str, int, str, int]]:
+    """Parse canonical CSVs independently of the matrix generator."""
+    contracts: list[tuple[str, str, int, str, int]] = []
+    for track, path in CANONICAL_RUBRICS.items():
+        rows = csv.reader(io.StringIO(path.read_text(encoding="utf-8", errors="replace")))
+        next(rows, None)
+        for source_row_index, raw in enumerate(rows, start=1):
+            cells = list(raw)
+            while len(cells) < 5:
+                cells.append("")
+            try:
+                points = int(cells[4].strip())
+            except (ValueError, TypeError):
+                continue
+            if cells[3].strip().lower() == "sum" and not any(cell.strip() for cell in cells[:3]):
+                continue
+            if points <= 0:
+                continue
+            contracts.append(
+                (
+                    track,
+                    path.relative_to(REPO_ROOT).as_posix(),
+                    source_row_index,
+                    _normalized_source_digest(cells),
+                    points,
+                )
+            )
+    return contracts
+
+
+def _audit_canonical_coverage(matrix: list[dict[str, str]]) -> list[str]:
+    """Reject omitted/substituted source rows even when totals still equal 100."""
+    errors: list[str] = []
+    canonical = _canonical_source_contracts()
+    actual: list[tuple[str, str, int, str, int]] = []
+    for row in matrix:
+        try:
+            actual.append(
+                (
+                    row.get("track", ""),
+                    row.get("source_file", ""),
+                    int(row.get("source_row_index", "0") or 0),
+                    row.get("source_digest", ""),
+                    int(row.get("points", "0") or 0),
+                )
+            )
+        except ValueError:
+            continue
+    missing = sorted(set(canonical) - set(actual))
+    extra = sorted(set(actual) - set(canonical))
+    if missing:
+        errors.append(f"canonical source coverage missing {len(missing)} row(s): {missing[:3]}")
+    if extra:
+        errors.append(
+            f"canonical source coverage has {len(extra)} altered/extra row(s): {extra[:3]}"
+        )
+    return errors
+
+
 def _audit_matrix(
     matrix: list[dict[str, str]],
     expected: dict[str, int],
     enforce_evidence_prefix: bool = True,
+    enforce_explicit_implementation: bool = False,
 ) -> list[str]:
     errors: list[str] = []
 
@@ -120,13 +223,32 @@ def _audit_matrix(
         "deliverables",
         "owner",
         "test",
+        "validation_command",
         "evidence_path",
         "evidence_type",
+        "acceptance_id",
+        "source_file",
+        "source_row_index",
+        "source_digest",
+        "artifact_repo",
         "artifact_path",
     ]
     totals: dict[str, int] = {"ML": 0, "LLM": 0}
     seen: set[str] = set()
     owners_seen: set[str] = set()
+    row_counts: dict[str, int] = {"ML": 0, "LLM": 0}
+    declared_acceptance = _acceptance_ids()
+    explicit_map: dict[str, tuple[str, str, str]] = {}
+    if enforce_explicit_implementation:
+        try:
+            try:
+                from scripts._phase2_rubric_items import EXPLICIT_IMPLEMENTATION
+            except ImportError:
+                from _phase2_rubric_items import EXPLICIT_IMPLEMENTATION
+
+            explicit_map = EXPLICIT_IMPLEMENTATION
+        except (ImportError, AttributeError) as exc:
+            errors.append(f"explicit implementation map is unavailable: {exc}")
     for row in matrix:
         rid = row.get("rubric_id", "?")
         track = row.get("track", "")
@@ -158,20 +280,52 @@ def _audit_matrix(
         if epath and enforce_evidence_prefix and not epath.startswith("docs/phase2/evidence/"):
             errors.append(f"{rid}: evidence_path '{epath}' not under docs/phase2/evidence/")
 
-        apath = row.get("artifact_path", "")
-        if apath and not apath.startswith(ARTIFACT_ROOTS):
-            errors.append(
-                f"{rid}: artifact_path '{apath}' not under an allowed Phase 2 root "
-                f"{ARTIFACT_ROOTS}"
-            )
-        elif apath and not apath.endswith(rid):
-            errors.append(f"{rid}: artifact_path '{apath}' must end with the rubric_id")
-
         if re.search(r"row[-_]?\d+$", rid):
             errors.append(f"{rid}: ID looks like a spreadsheet line number, use semantic slug")
 
         if track in totals:
             totals[track] += points
+            row_counts[track] += 1
+
+        acceptance_id = row.get("acceptance_id", "")
+        if acceptance_id and acceptance_id not in declared_acceptance:
+            errors.append(f"{rid}: acceptance_id '{acceptance_id}' does not resolve")
+
+        source_digest = row.get("source_digest", "")
+        if source_digest and not re.fullmatch(r"[0-9a-f]{64}", source_digest):
+            errors.append(f"{rid}: source_digest must be 64 lowercase hex characters")
+
+        source_row_index = row.get("source_row_index", "")
+        if source_row_index and not re.fullmatch(r"[1-9][0-9]*", source_row_index):
+            errors.append(f"{rid}: source_row_index '{source_row_index}' invalid")
+
+        validation = row.get("validation_command", "")
+        acceptance_id = row.get("acceptance_id", "")
+        expected_validation = (
+            "pytest tests/phase2/requirements/test_"
+            f"{acceptance_id.lower().replace('-', '_')}.py -k '{rid}'"
+        )
+        if validation != expected_validation:
+            errors.append(f"{rid}: validation_command must be the exact acceptance-row target")
+
+        artifact_repo = row.get("artifact_repo", "")
+        if artifact_repo not in {"source", "gitops"}:
+            errors.append(f"{rid}: artifact_repo '{artifact_repo}' invalid")
+        apath = row.get("artifact_path", "")
+        if artifact_repo == "source" and apath and not apath.startswith(SOURCE_ARTIFACT_ROOTS):
+            errors.append(f"{rid}: source artifact_path '{apath}' outside source roots")
+        if artifact_repo == "gitops" and apath and not apath.startswith(GITOPS_ARTIFACT_ROOTS):
+            errors.append(f"{rid}: GitOps artifact_path '{apath}' outside GitOps roots")
+        if apath and apath.endswith("/"):
+            errors.append(f"{rid}: artifact_path must name a concrete file, not a directory")
+
+        if enforce_explicit_implementation and rid in explicit_map:
+            expected_owner, expected_repo, expected_path = explicit_map[rid]
+            actual = (owner, artifact_repo, apath)
+            if actual != (expected_owner, expected_repo, expected_path):
+                errors.append(f"{rid}: implementation mapping diverges from reviewed explicit map")
+        elif enforce_explicit_implementation and rid not in explicit_map:
+            errors.append(f"{rid}: missing explicit implementation map entry")
 
     # Every role must own at least one scored row (locked taxonomy)
     for role in VALID_OWNERS:
@@ -182,6 +336,22 @@ def _audit_matrix(
     for track, exp in expected.items():
         if totals.get(track, 0) != exp:
             errors.append(f"{track}: total points = {totals.get(track, 0)}, expected {exp}")
+        expected_rows = EXPECTED_ROW_COUNTS.get(track)
+        if expected_rows is not None and row_counts.get(track, 0) != expected_rows:
+            errors.append(
+                f"{track}: scored row count = {row_counts.get(track, 0)}, expected {expected_rows}"
+            )
+
+    if enforce_explicit_implementation and explicit_map:
+        matrix_ids = {row.get("rubric_id", "") for row in matrix}
+        missing = sorted(set(explicit_map) - matrix_ids)
+        extra = sorted(matrix_ids - set(explicit_map))
+        if missing:
+            errors.append(f"explicit implementation map rows missing from matrix: {missing[:3]}")
+        if extra:
+            errors.append(
+                f"matrix contains rows absent from explicit implementation map: {extra[:3]}"
+            )
 
     return errors
 
@@ -192,6 +362,12 @@ def _audit_phase1_no_mutation(matrix: list[dict[str, str]]) -> list[str]:
     for path in PHASE1_PROTECTED:
         if path.lower() in blob:
             errors.append(f"Matrix references Phase 1 protected path '{path}'")
+    for row in matrix:
+        for value in row.values():
+            lowered = value.lower()
+            if "dags/" in lowered and "dags/phase2/" not in lowered:
+                errors.append(f"{row.get('rubric_id', '?')}: matrix references a Phase 1 DAG path")
+                break
     return errors
 
 
@@ -206,6 +382,8 @@ def _phase1_mutation_from_changed(changed: list[str]) -> list[str]:
     for path in PHASE1_PROTECTED:
         if any(entry == path or entry.startswith(path) for entry in changed):
             errors.append(f"Git diff modifies Phase 1 protected path '{path}'")
+    if any(entry.startswith("dags/") and not entry.startswith("dags/phase2/") for entry in changed):
+        errors.append("Git diff modifies Phase 1 protected DAG path 'dags/'")
     return errors
 
 
@@ -224,6 +402,24 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
 
     changed: list[str] = []
     try:
+        resolved = subprocess.run(
+            ["git", "rev-parse", "--verify", f"{base}^{{commit}}"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if resolved.returncode != 0:
+            return [f"git check failed: baseline '{base}' is not a commit"]
+        ancestry = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", resolved.stdout.strip(), "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if ancestry.returncode != 0:
+            return [f"git check failed: baseline '{base}' is not an ancestor of source HEAD"]
         diff = subprocess.run(
             ["git", "diff", "--name-only", base],
             cwd=REPO_ROOT,
@@ -302,27 +498,122 @@ def _is_iso_timestamp(value: str) -> bool:
     return True
 
 
-def _is_git_sha_or_ref(value: str) -> bool:
-    """True for a full 40-hex SHA, a short (>=7 hex) SHA, or a plausible ref."""
-    v = value.strip()
-    if re.fullmatch(r"[0-9a-f]{40}", v):
-        return True
-    if re.fullmatch(r"[0-9a-f]{7,40}", v):
-        return True
-    # Ref-like: HEAD, main, refs/heads/main, v1.2.3, origin/dev.
-    return bool(re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9._/-]*", v))
+def _is_full_git_sha(value: str) -> bool:
+    """True only for a frozen 40-hex commit SHA."""
+    return bool(re.fullmatch(r"[0-9a-f]{40}", value.strip()))
+
+
+def _git_head(root: Path) -> str | None:
+    """Return the exact checkout HEAD, or ``None`` when it is unverifiable."""
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    value = result.stdout.strip()
+    return value if _is_full_git_sha(value) else None
+
+
+def _git_worktree_clean(root: Path) -> bool:
+    """Return true only when tracked and untracked checkout state is clean."""
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.returncode == 0 and not result.stdout.strip()
+
+
+def _audit_frozen_revisions(matrix: list[dict[str, str]], gitops_root: Path | None) -> list[str]:
+    """Ensure evidence SHAs are real commits and match both checkout HEADs.
+
+    A syntactically valid SHA is not sufficient: promotion must be reproducible
+    from the exact source and GitOps revisions that were actually checked out.
+    """
+    import subprocess
+
+    errors: list[str] = []
+    source_head = _git_head(REPO_ROOT)
+    if source_head is None:
+        return ["source checkout HEAD is unavailable; cannot verify frozen source_sha"]
+    if gitops_root is None:
+        return ["--gitops-root is required to verify frozen gitops_sha"]
+    gitops_head = _git_head(gitops_root)
+    if gitops_head is None:
+        return ["GitOps checkout HEAD is unavailable; cannot verify frozen gitops_sha"]
+    if not _git_worktree_clean(REPO_ROOT):
+        errors.append(
+            "source checkout is not clean; commit evidence and implementation "
+            "files before promotion"
+        )
+    if not _git_worktree_clean(gitops_root):
+        errors.append(
+            "GitOps checkout is not clean; commit all declared manifests before promotion"
+        )
+
+    checked: set[tuple[str, str]] = set()
+    for row in matrix:
+        rid = row.get("rubric_id", "?")
+        epath = row.get("evidence_path", "")
+        full = REPO_ROOT / epath
+        if not full.is_file():
+            continue
+        fields = _parse_evidence_fields(full.read_text(encoding="utf-8", errors="replace"))
+        source_sha = fields.get("source_sha", "")
+        gitops_sha = fields.get("gitops_sha", "")
+        for label, sha, root, expected in (
+            ("source_sha", source_sha, REPO_ROOT, source_head),
+            ("gitops_sha", gitops_sha, gitops_root, gitops_head),
+        ):
+            if not _is_full_git_sha(sha):
+                continue
+            key = (str(root), sha)
+            if key not in checked:
+                checked.add(key)
+                try:
+                    result = subprocess.run(
+                        ["git", "cat-file", "-e", f"{sha}^{{commit}}"],
+                        cwd=root,
+                        capture_output=True,
+                        text=True,
+                        timeout=30,
+                    )
+                except (OSError, subprocess.SubprocessError) as exc:
+                    errors.append(f"{rid}: cannot verify {label} commit {sha}: {exc}")
+                    continue
+                if result.returncode != 0:
+                    errors.append(f"{rid}: {label} does not resolve to a commit: {sha}")
+            if sha != expected:
+                errors.append(f"{rid}: {label}={sha} does not match checkout HEAD {expected}")
+    return errors
 
 
 # Format validators per evidence-contract field. Keys not listed only need a
 # non-empty value (they are free-form text).
 EVIDENCE_FORMAT_VALIDATORS: dict[str, callable] = {
     "execution_timestamp": _is_iso_timestamp,
-    "source_sha": _is_git_sha_or_ref,
-    "gitops_sha": _is_git_sha_or_ref,
+    "source_sha": _is_full_git_sha,
+    "gitops_sha": _is_full_git_sha,
 }
 
 
-def _audit_executed(matrix: list[dict[str, str]]) -> list[str]:
+def _audit_executed(matrix: list[dict[str, str]], gitops_root: Path | None) -> list[str]:
     """Phase-08: every row must carry executed evidence satisfying the contract.
 
     `--require-executed` is the phase-08 promotion gate: a row recorded as
@@ -383,14 +674,53 @@ def _audit_executed(matrix: list[dict[str, str]]) -> list[str]:
         if declared_rid and declared_rid != rid:
             errors.append(f"{rid}: evidence rubric_id '{declared_rid}' does not match the row")
 
-        # P1-1: an executed row must prove a real implementation artifact.
+        # An executed row must prove a real implementation file in the repo it
+        # declares. GitOps paths are resolved only from an explicit checkout.
         apath = row.get("artifact_path", "")
+        artifact_repo = row.get("artifact_repo", "")
         if not apath:
             errors.append(f"{rid}: executed row has no artifact_path")
         else:
-            artifact = REPO_ROOT / apath
-            if not artifact.exists():
+            if artifact_repo == "gitops" and gitops_root is None:
+                errors.append(f"{rid}: --gitops-root is required for GitOps artifact validation")
+                continue
+            root = gitops_root if artifact_repo == "gitops" else REPO_ROOT
+            assert root is not None
+            artifact = root / apath
+            if not artifact.is_file():
                 errors.append(f"{rid}: implementation artifact not found: {apath}")
+    return errors
+
+
+def _audit_behavior_validations(matrix: list[dict[str, str]]) -> list[str]:
+    """Execute feature-specific validation commands without invoking a shell."""
+    import subprocess
+
+    errors: list[str] = []
+    allowed = re.compile(r"pytest tests/phase2/requirements/test_[a-z0-9_]+\.py -k '[A-Za-z0-9-]+'")
+    for row in matrix:
+        rid = row.get("rubric_id", "?")
+        command = row.get("validation_command", "")
+        if not allowed.fullmatch(command):
+            errors.append(f"{rid}: behavior validation command is missing or unsafe")
+            continue
+        try:
+            result = subprocess.run(
+                shlex.split(command),
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            errors.append(f"{rid}: behavior validation could not run ({exc})")
+            continue
+        if result.returncode != 0:
+            detail = (result.stdout + result.stderr).strip().splitlines()
+            errors.append(
+                f"{rid}: behavior validation failed with exit {result.returncode}"
+                + (f" — {detail[-1]}" if detail else "")
+            )
     return errors
 
 
@@ -416,13 +746,29 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Require evidence files to exist on disk (phase-08)",
     )
+    parser.add_argument(
+        "--gitops-root",
+        type=Path,
+        default=None,
+        help="Checked-out GitOps repository root used to validate GitOps artifact files",
+    )
+    parser.add_argument(
+        "--run-validations",
+        action="store_true",
+        help="Execute every row's feature-specific validation command (Phase 8)",
+    )
     parser.add_argument("--ml", type=int, default=100, help="Expected ML total points")
     parser.add_argument("--llm", type=int, default=100, help="Expected LLM total points")
     parser.add_argument(
         "--git-base",
         default="origin/dev",
-        help="Base ref for the Phase 1 no-mutation git-diff check "
+        help="Base ref for the matrix-only Phase 1 no-mutation check "
         "(default: origin/dev; an unresolvable baseline fails the gate)",
+    )
+    parser.add_argument(
+        "--phase1-base",
+        default=None,
+        help="Frozen 40-hex Phase 1 baseline commit required by the promotion gate",
     )
     args = parser.parse_args(argv)
 
@@ -433,13 +779,39 @@ def main(argv: list[str] | None = None) -> int:
     if matrix is None:
         errors.append("💀 docs/phase2/rubric-matrix.csv not found or unreadable")
     else:
-        errors.extend(_audit_matrix(matrix, expected, enforce_evidence_prefix=args.matrix is None))
+        errors.extend(
+            _audit_matrix(
+                matrix,
+                expected,
+                enforce_evidence_prefix=args.matrix is None,
+                enforce_explicit_implementation=args.matrix is None,
+            )
+        )
         errors.extend(_audit_phase1_no_mutation(matrix))
+        if args.matrix is None:
+            errors.extend(_audit_canonical_coverage(matrix))
 
     if args.require_executed:
         if matrix is not None:
-            errors.extend(_audit_executed(matrix))
+            errors.extend(_audit_executed(matrix, args.gitops_root))
+            if args.matrix is None:
+                if not args.phase1_base or not _is_full_git_sha(args.phase1_base):
+                    errors.append(
+                        "--require-executed canonical mode requires --phase1-base "
+                        "as a frozen 40-hex SHA"
+                    )
+                else:
+                    errors.extend(_audit_phase1_git_diff(args.phase1_base))
+                errors.extend(_audit_frozen_revisions(matrix, args.gitops_root))
         errors.extend(_audit_required_docs())
+
+    if args.run_validations:
+        if not args.require_executed:
+            errors.append("--run-validations requires --require-executed")
+        elif args.matrix is not None:
+            errors.append("--run-validations is allowed only for the canonical matrix")
+        elif matrix is not None:
+            errors.extend(_audit_behavior_validations(matrix))
 
     if args.matrix_only:
         errors.extend(_audit_required_docs())
@@ -450,7 +822,7 @@ def main(argv: list[str] | None = None) -> int:
     if errors:
         for e in errors:
             print(e)
-        fail = args.strict or args.require_executed
+        fail = args.strict or args.require_executed or args.run_validations
         print(f"\n{len(errors)} finding(s) — {'FAIL' if fail else 'exit 0 (non-strict)'}")
         return 1 if fail else 0
 

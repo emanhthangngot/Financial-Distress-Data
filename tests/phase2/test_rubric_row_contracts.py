@@ -24,13 +24,33 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from _phase2_rubric_items import ITEMS  # noqa: E402
+from _phase2_rubric_items import EXPLICIT_IMPLEMENTATION, ITEMS  # noqa: E402
 
 VALID_OWNERS = {"ml_engineer", "llm_engineer", "data_engineer", "platform_operator"}
 VALID_EVIDENCE_TYPES = {"executed", "design_only", "stretch"}
 
-# Phase 2 implementation roots declared in docs/phase2/requirements.md section 2.
-ARTIFACT_ROOTS = ("src/ml/", "src/drift/", "src/llm/", "src/agents/", "apps/")
+ARTIFACT_ROOTS = {
+    "source": (
+        "src/ml/",
+        "src/drift/",
+        "src/llm/",
+        "src/agents/",
+        "apps/",
+        "dags/phase2/",
+        ".github/workflows/",
+        "notebooks/",
+        "tests/phase2/requirements/",
+        "docs/phase2/",
+    ),
+    "gitops": (
+        ".github/workflows/",
+        "terraform/",
+        "ansible/",
+        "charts/",
+        "platform/",
+        "argocd/",
+    ),
+}
 
 ITEMS_BY_ID = {item.rubric_id: item for item in ITEMS}
 RUBRIC_IDS = list(ITEMS_BY_ID)
@@ -62,19 +82,32 @@ def test_rubric_row_contract(rid: str) -> None:
     assert item.evidence_path.startswith(
         "docs/phase2/evidence/"
     ), f"{rid}: evidence_path {item.evidence_path!r} not under docs/phase2/evidence/"
-    # Exact implementation artifact (P1-1): every row must name a concrete
-    # path under an allowed Phase 2 root, ending in the rubric_id, so a
-    # reviewer finds the implementation without inference.
+    assert item.acceptance_id, f"{rid}: missing acceptance_id"
+    assert item.source_file.startswith("docs/Coursework Tracking"), f"{rid}: source_file invalid"
+    assert item.source_row_index > 0, f"{rid}: source_row_index invalid"
+    assert re.fullmatch(r"[0-9a-f]{64}", item.source_digest), f"{rid}: source_digest invalid"
+    expected_validation = (
+        "pytest tests/phase2/requirements/test_"
+        f"{item.acceptance_id.lower().replace('-', '_')}.py -k '{rid}'"
+    )
+    assert (
+        item.validation_command == expected_validation
+    ), f"{rid}: validation_command={item.validation_command!r} != {expected_validation!r}"
     assert item.artifact_path, f"{rid}: missing artifact_path"
+    assert item.artifact_repo in ARTIFACT_ROOTS, f"{rid}: artifact_repo invalid"
     assert item.artifact_path.startswith(
-        ARTIFACT_ROOTS
-    ), f"{rid}: artifact_path {item.artifact_path!r} not under {ARTIFACT_ROOTS}"
-    assert item.artifact_path.endswith(
-        rid
-    ), f"{rid}: artifact_path {item.artifact_path!r} must end with the rubric_id"
+        ARTIFACT_ROOTS[item.artifact_repo]
+    ), f"{rid}: artifact_path {item.artifact_path!r} invalid for {item.artifact_repo}"
+    assert not item.artifact_path.endswith("/"), f"{rid}: artifact_path must be a file"
     expected_test = f"pytest tests/phase2 -k '{rid}'"
     assert item.test == expected_test, f"{rid}: test={item.test!r} != {expected_test!r}"
     assert not re.search(r"row[-_]?\d+$", rid), f"{rid}: ID looks like a spreadsheet line number"
+    mapped_owner, mapped_repo, mapped_path = EXPLICIT_IMPLEMENTATION[rid]
+    assert (item.owner, item.artifact_repo, item.artifact_path) == (
+        mapped_owner,
+        mapped_repo,
+        mapped_path,
+    ), f"{rid}: generated row diverges from reviewed explicit implementation map"
 
 
 def test_executed_rows_prove_a_real_artifact() -> None:
@@ -88,7 +121,9 @@ def test_executed_rows_prove_a_real_artifact() -> None:
     missing = [
         item.rubric_id
         for item in ITEMS
-        if item.evidence_type == "executed" and not (REPO_ROOT / item.artifact_path).exists()
+        if item.evidence_type == "executed"
+        and item.artifact_repo == "source"
+        and not (REPO_ROOT / item.artifact_path).is_file()
     ]
     assert not missing, (
         "Executed rows must have their implementation artifact on disk, " f"missing for: {missing}"
@@ -116,23 +151,20 @@ def test_artifact_path_domain_consistency() -> None:
     }
     platform_domains = {
         "LLM-routing-gateway-ui-test-agent",
-        "ML-ci-cd-dp-1",
         "ML-security-centralize-secret-management",
         "LLM-iac-d-ng-terraform-setup-gke-ho-c-",
     }
     for rid, item in ITEMS_BY_ID.items():
         if rid in agent_domains:
             assert item.artifact_path.startswith(
-                "src/agents/"
+                ("src/agents/", "notebooks/", ".github/workflows/")
             ), f"{rid}: agent row must map to src/agents/, got {item.artifact_path!r}"
         if rid in drift_domains:
             assert item.artifact_path.startswith(
-                "src/drift/"
-            ), f"{rid}: drift row must map to src/drift/, got {item.artifact_path!r}"
+                ("src/drift/", "dags/phase2/", "apps/drift-api/", "apps/drift-mcp/")
+            ), f"{rid}: drift row must map to drift code/DAG, got {item.artifact_path!r}"
         if rid in platform_domains:
-            assert item.artifact_path.startswith(
-                "apps/"
-            ), f"{rid}: platform row must map to apps/, got {item.artifact_path!r}"
+            assert item.artifact_repo == "gitops", f"{rid}: platform row must map to GitOps"
 
 
 def test_every_validation_command_collects_at_least_one_test() -> None:

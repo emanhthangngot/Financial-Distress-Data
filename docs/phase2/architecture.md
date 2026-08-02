@@ -11,9 +11,11 @@ Phase 2 uses two planes:
   6-hour default / 8-hour hard TTL, ≤ 3 sessions/month, ≤ USD 25/session,
   ≤ USD 10/month persistent. Provisioned and destroyed through GitOps.
 
-Four traffic layers are normative: **NGINX** (public TLS edge), **Istio**
-(east-west mTLS/authorization), **agentgateway** (MCP/A2A/agent model routing),
-and **Envoy Gateway + Envoy AI Gateway** (KServe `LLMInferenceService`).
+Four traffic layers are normative: **F5 NGINX Ingress Controller OSS**
+(`nginx/kubernetes-ingress`, public TLS edge), **Istio** (east-west
+mTLS/authorization), **agentgateway** (MCP/A2A/AI-backend routing), and
+**Envoy Gateway + Envoy AI Gateway** (KServe `LLMInferenceService`). The
+retired community `kubernetes/ingress-nginx` project is forbidden.
 
 Two repositories: source (`Financial-Distress-Data`) owns code/tests/schemas/
 Dockerfiles/evidence; GitOps (`financial-distress-gitops`) owns Terraform/
@@ -33,7 +35,7 @@ Ansible/Helm/Kustomize/Argo CD/policies.
 | Evidence | EKS cluster + node groups (Spot) | gitops |
 | Evidence | Terraform modules (S3, ECR, RDS+PGVector, Valkey, Route 53, ACM) | gitops |
 | Evidence | Argo CD (projects, ApplicationSets, sync waves) | gitops |
-| Evidence | NGINX Ingress, cert-manager | gitops |
+| Evidence | F5 NGINX Ingress Controller OSS, cert-manager | gitops |
 | Evidence | Istio service mesh | gitops |
 | Evidence | Knative Serving/Eventing | gitops |
 | Evidence | KServe 0.18 (`InferenceService` + `LLMInferenceService`) | gitops |
@@ -45,6 +47,8 @@ Ansible/Helm/Kustomize/Argo CD/policies.
 | Evidence | Agents (feature analyst, drift analyst, coordinator) | source → gitops image |
 | Evidence | Prometheus/Grafana, ECK/Kibana, OpenTelemetry/Jaeger | gitops |
 | Evidence | Vault (or equivalent secret manager) | gitops |
+| Local control | Airflow `dags/phase2/phase2_drift_monitoring.py` thin wrapper | source |
+| External bounded | Vast.ai CPU OpenAI/llm-d Locust benchmark client | source image → GitOps Ansible role |
 
 ## Numbered Data Flows
 
@@ -95,22 +99,24 @@ not separate flow nodes.
 ### Flow 4 — Agent + RAG (LLM)
 
 ```
-Analyst --(1) prompt--> agent chat UI --(2) route--> agentgateway
-agentgateway --(3) route + global model config--> coordinator agent
-coordinator agent --(4) delegate--> specialist agents (feature analyst, drift analyst)
-specialist agents --(5) MCP tool call--> MCP Feast/RAG tool --(6) retrieval--> Feast (RAG vectors)
-specialist agents --(7) MCP tool call--> MCP drift tool --(8) drift query--> drift-api
-coordinator agent --(9) generation request--> Envoy AI Gateway --(10) request--> KServe LLMInferenceService (custom Qwen3-4B)
-KServe LLMInferenceService --(11) generated answer--> coordinator agent
-coordinator agent --(12) cited answer--> agent chat UI --(13) answer--> Analyst
+Analyst --(1) prompt--> agent chat UI --(2) authenticated route--> agentgateway
+agentgateway --(3) A2A route--> kagent coordinator Agent
+kagent coordinator Agent --(4) delegate through agentgateway A2A route--> kagent specialist Agents
+kagent specialist Agents --(5) MCP route through agentgateway--> MCP Feast/RAG tool --(6) retrieval--> Feast (RAG vectors)
+kagent specialist Agents --(7) MCP route through agentgateway--> MCP drift tool --(8) query--> drift-api
+kagent coordinator Agent --(9) resolve--> kagent ModelConfig --(10) upstream/base URL--> agentgateway AI backend
+agentgateway AI backend --(11) forward--> Envoy AI Gateway --(12) route--> KServe LLMInferenceService/llm-d
+KServe LLMInferenceService/llm-d --(13) generated answer--> kagent coordinator Agent
+kagent coordinator Agent --(14) cited answer--> agent chat UI --(15) answer--> Analyst
 ```
 
 The coordinator agent orchestrates the specialist agents (feature analyst,
 drift analyst): it delegates sub-tasks and, once the specialists have gathered
-evidence through the MCP tools, drives model generation through Envoy AI
-Gateway. Specialist agents call the MCP tools, and the MCP tools read Feast
-and drift-api — never the reverse: a tool never invokes an agent, and the
-model never calls the coordinator.
+evidence through the MCP tools, resolves the kagent-owned global `ModelConfig`
+and drives generation through its agentgateway AI backend. Neither coordinator
+nor specialist calls Envoy/KServe directly. Specialist A2A and MCP calls also
+traverse declared agentgateway routes; tools read Feast/drift-api, never the
+reverse.
 
 ### Flow 5 — Platform operator
 
@@ -130,8 +136,13 @@ Source CI --(1) test/build/scan/sign--> immutable image digest
 Source CI --(2) push image--> ECR (immutable digest stored)
 promotion bot --(3) open GitOps PR (bump image digest)--> GitOps repo
 GitOps repo --(4) merge PR--> Argo CD --(5) reconcile + rollout--> evidence plane
-Argo CD --(6) verification evidence--> source repo (docs/phase2/evidence)
+Argo CD --(6) launch verification job--> evidence exporter
+evidence exporter --(7) immutable bundle--> S3 evidence bucket
+source evidence CI/bot --(8) fetch + verify bundle--> source evidence PR
 ```
+
+No in-cluster principal receives source-repository write credentials. Evidence
+returns through an immutable S3 bundle and a source-side bot/CI PR.
 
 ### Flow 7 — Observability
 
@@ -140,7 +151,16 @@ Service --(1) emit--> OpenTelemetry collector --(2) traces--> Jaeger
 OpenTelemetry collector --(3) metrics--> Prometheus --(4) visualize--> Grafana
 OpenTelemetry collector --(5) logs--> ECK/Kibana
 Grafana --(6) dashboards--> feature/drift/LLM/agent A/B views
+Airflow phase2 drift DAG --(7) pull--> Feast offline store
+Airflow phase2 drift DAG --(8) join reference/proxy + compute--> Evidently report
+Airflow phase2 drift DAG --(9) publish--> Prometheus Pushgateway --(10) scrape--> Prometheus/Grafana
+Airflow phase2 drift DAG --(11a below threshold) persist skip--> ml_metadata
+Airflow phase2 drift DAG --(11b above threshold) create run--> Kubeflow Pipelines API
+Kubeflow Pipelines API --(12) run ID/status--> ml_metadata
 ```
+
+The evidence run executes both branch 11a and 11b. A recommendation without an
+actual Kubeflow API run ID does not satisfy the retraining requirement.
 
 ### Flow 8 — Teardown
 
@@ -155,7 +175,20 @@ CodeBuild --(4) inventory + cost report--> evidence-session worker --(5) state O
 - Provisioning blocked when projected spend > USD 85 minus USD 15 reserve.
 - Default TTL 6 hours; hard TTL 8 hours; ≤ 3 sessions/month.
 - Target ≤ USD 25/session and ≤ USD 10/month persistent resources.
-- Vast.ai CPU optional, aggregate hard cap USD 10; AWS Spot primary.
+- Vast.ai CPU worker is mandatory for Ansible evidence, aggregate hard cap USD
+  10. It runs bounded OpenAI-compatible load/TTFT benchmarks against the llm-d
+  public test route and never joins the
+  AWS GPU KServe/llm-d inference pool; AWS Spot remains primary for inference.
+
+## Version Compatibility Gate
+
+Before Phase 3 installation, record exact chart versions and image digests for
+EKS/Kubernetes, F5 NGINX OSS, cert-manager, Istio, Knative, KServe 0.18,
+Envoy Gateway/AI Gateway, llm-d/GIE, KFP/Trainer, Argo CD, kagent, kmcp,
+agentgateway, agentregistry, Agent Sandbox, Feast, and MLflow. The starting
+F5 NGINX OSS candidate is controller 5.5.4 / chart 2.6.4; it becomes normative
+only after the compatibility spike passes render, install, smoke, upgrade, and
+rollback checks.
 
 ## Phase 1 Non-Mutation
 

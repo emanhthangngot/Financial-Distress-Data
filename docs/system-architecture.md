@@ -31,12 +31,15 @@ Phase 2 adds two planes and an 8-flow design on top of the Phase 1 lakehouse:
   ≤ USD 25/session, ≤ USD 10/month), provisioned and destroyed through a
   separate GitOps repository (Terraform + Helm/Kustomize + Argo CD).
 
-The four traffic layers are NGINX (public TLS edge), Istio (east-west
-mTLS/authorization), agentgateway (MCP/A2A routing), and Envoy Gateway +
-Envoy AI Gateway (KServe `LLMInferenceService`). The eight numbered data
+The four traffic layers are the active F5 NGINX Ingress Controller OSS
+(`nginx/kubernetes-ingress`, public TLS edge), Istio (east-west
+mTLS/authorization), agentgateway (MCP/A2A/model-backend routing), and Envoy
+Gateway + Envoy AI Gateway (KServe `LLMInferenceService`). The agent chain is
+kagent `Agent` -> kagent `ModelConfig` -> agentgateway AI backend -> Envoy AI
+Gateway -> KServe/llm-d. The eight numbered data
 flows (analyst, training, inference, agent+RAG, operator, CI/GitOps,
 observability, teardown) are documented in `docs/phase2/architecture.md`.
-Cost envelope, ADRs 001..008, and the 200-point evidence contract live under
+Cost envelope, ADRs 001..009, and the 200-point evidence contract live under
 `docs/phase2/` and are enforced by `scripts/audit_phase2_evidence.py`.
 
 Phase 2 never mutates Phase 1 pipeline semantics; Phase 1 continues to run

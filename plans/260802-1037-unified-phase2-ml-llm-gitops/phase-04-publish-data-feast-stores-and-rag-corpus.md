@@ -23,11 +23,12 @@ Extend the verified Phase 1 outputs without changing them. Publish immutable sna
 1. Seed failing schema, PIT leakage, incremental-version, idempotency, TTL, governance and drift tests.
 2. Implement cloud publication as additive adapters under `src/ml/` and `src/drift/`; never alter Phase 1 Gold writers or MinIO semantics.
 3. Version data incrementally with content-addressed base/delta manifests. Every training/RAG run records snapshot ID, parent ID, changed partitions/hashes and Feast registry revision.
-4. Build Airflow-compatible Phase 2 DAGs that can run locally and launch Kubernetes jobs when the evidence plane is ready:
+4. Build thin Airflow wrappers under `dags/phase2/` that run locally and launch Kubernetes jobs when the evidence plane is ready; all business logic remains under `src/ml/`, `src/drift/`, and `src/llm/`:
    - materialize latest structured features offline -> online;
    - push stream features to offline;
    - push stream features to online;
    - create label/drift tables;
+   - schedule `phase2_drift_monitoring`: Feast offline pull -> proxy/ground-truth reference join -> Evidently report -> Pushgateway publish -> threshold branch -> Kubeflow Pipelines API create-run, persisting run ID/status;
    - RAG fetch -> parse -> chunk -> embed -> Feast/PGVector.
 5. Retain Phase 1 DataHub evidence and emit Phase 2 lineage for every input, step, feature view, vector set, model/agent consumer and output.
 6. Define TTL from business freshness: market/stream features short, quarterly financial features long, document embeddings tied to document version; capture reasoning in docs and registry definitions.
@@ -40,6 +41,7 @@ Extend the verified Phase 1 outputs without changing them. Publish immutable sna
 - Feast plan/apply/materialize smoke tests against disposable stores.
 - Re-run each DAG/job twice and prove stable counts/hashes and no duplicate online keys/chunks.
 - Compare generated drift against configured direction and threshold.
+- Test both drift-monitor branches: below threshold persists `skipped`; above threshold creates exactly one idempotent KFP run and records its ID/status.
 - DataHub lineage and evidence manifest audit.
 
 ## Success Criteria
@@ -49,6 +51,7 @@ Extend the verified Phase 1 outputs without changing them. Publish immutable sna
 - [ ] Stream publisher -> receives new records -> pushes the required job output to both offline and online stores with captured success evidence.
 - [ ] RAG pipeline -> reprocesses an unchanged document -> reuses its chunk/content hashes instead of creating duplicate vectors.
 - [ ] Reviewer -> inspects Airflow and DataHub -> sees ordered successful steps, two feature push jobs, RAG lineage, TTL rationale, data versions and governed sources.
+- [ ] ML operator -> runs scheduled drift monitoring twice -> sees a below-threshold skip and an above-threshold Kubeflow API run with Pushgateway/Grafana metrics in both cases.
 - [ ] Phase 1 maintainer -> runs Stage 1 quality gates -> receives the same outputs and contracts as before Phase 2 adapters were added.
 
 ## Risks and Rollback

@@ -19,13 +19,14 @@ all 100 ML rubric points and all 100 LLM rubric points.
 | `docs/mini_coursework.md` | Phase 1 technical spec and source of truth (unchanged) |
 | `docs/01_data_generator.md` | Phase 1 data generator contract |
 | `docs/02_schema_design.md` | Phase 1 schema design contract |
-| `docs/phase2/requirements.md` | Phase 2 per-deliverable acceptance criteria |
+| `docs/phase2/requirements.md` | Phase 2 top-level requirements |
+| `docs/phase2/acceptance-criteria.md` | Resolvable WHO -> ACTION -> RESULT acceptance catalog |
 | `docs/phase2/rubric-matrix.csv` | Machine-readable 200-point evidence contract |
 | `docs/phase2/rubric-matrix.md` | Human-readable rubric matrix |
 | `docs/phase2/architecture.md` | Phase 2 two-plane architecture |
 | `docs/phase2/low-level-design.md` | Phase 2 class contracts |
 | `docs/phase2/evidence-contract.md` | Evidence format and linter contract |
-| `docs/phase2/adr/adr-001..008-*.md` | Phase 2 architecture decision records |
+| `docs/phase2/adr/adr-001..009-*.md` | Phase 2 architecture decision records |
 | `plans/260802-1037-unified-phase2-ml-llm-gitops/` | Phase 2 execution plan (phase-01..08) |
 
 ## 3. One-Sentence Summary
@@ -51,9 +52,11 @@ proves all 100 ML + 100 LLM rubric points within a strict cost envelope.
   Envoy AI Gateway + agentgateway (ADR-001), MCP tools (Feast feature +
   RAG retrieval), agent orchestration, citation/PII guard with trace-linked
   decisions.
-- **Platform:** ephemeral EKS (ADR-003), KServe 0.18 pin (ADR-004), two
-  repositories (ADR-002), Helm/Kustomize ownership (ADR-007), Feast structured
-  + RAG stores (ADR-005), observability (Prometheus/ECK/OpenTelemetry/Jaeger).
+- **Platform:** ephemeral EKS (ADR-003), KServe 0.18 pin (ADR-004), one source
+  monorepo plus a separate GitOps control repo (ADR-002), Helm/Kustomize
+  ownership (ADR-007), active F5 NGINX Ingress Controller OSS rather than the
+  retired community ingress-nginx project (ADR-009), Feast structured + RAG
+  stores (ADR-005), observability (Prometheus/ECK/OpenTelemetry/Jaeger).
 - **Novel ideas:** four recorded before implementation, two per track, each
   with a proof path (see `docs/phase2/novel-ideas.md`).
 
@@ -81,7 +84,24 @@ proves all 100 ML + 100 LLM rubric points within a strict cost envelope.
 - Phase 2 reads Gold tables/features and writes Phase 2 evidence under
   `docs/phase2/evidence/{ml,llm}/`, never mutating `docs/evidence/`.
 - Phase 2 code lives under `src/ml/`, `src/drift/`, `src/llm/`,
-  `src/agents/`, and `apps/`.
+  `src/agents/`, and `apps/`; thin Phase 2 orchestration wrappers may live in
+  `dags/phase2/` and import all business logic from those roots.
+
+## 7.1 Mandatory 100/100 Closure Paths
+
+- ML drift monitoring is an executed Airflow chain: Feast offline pull ->
+  reference/proxy comparison -> Evidently metrics -> Prometheus Pushgateway ->
+  Grafana -> threshold gate -> Kubeflow Pipelines API run. Both below-threshold
+  skip and above-threshold retrain cases are evidenced with the KFP run ID.
+- Agents reference a kagent `ModelConfig`; its upstream/base URL points to an
+  agentgateway AI backend, which routes model traffic to Envoy AI Gateway and
+  finally KServe `LLMInferenceService`/llm-d. MCP and A2A calls also traverse
+  declared agentgateway routes.
+- Ansible is mandatory, not a stretch item: a role-based playbook configures a
+  bounded Vast.ai CPU evidence worker, deploys an OpenAI-compatible Locust/
+  benchmark client against the llm-d endpoint, proves health and an idempotent
+  second run, and stays under an aggregate USD 10 hard cap. It is isolated from
+  the AWS GPU inference pool.
 
 ## 7. Implementation Model
 
@@ -100,7 +120,9 @@ Every rubric point must be proven by evidence under
 `docs/phase2/evidence/{ml,llm}/` recording rubric_id, timestamps, source SHA,
 GitOps SHA, versions, reproduction steps, and redaction status
 (`docs/phase2/evidence-contract.md`). The linter
-(`scripts/audit_phase2_evidence.py`) enforces this and gates phase-08.
+(`scripts/audit_phase2_evidence.py`) enforces canonical 57+60 source coverage
+at specification time and, with `--require-executed --run-validations
+--gitops-root ...`, gates both repositories at phase-08.
 
 ## 9. Exit Criteria
 

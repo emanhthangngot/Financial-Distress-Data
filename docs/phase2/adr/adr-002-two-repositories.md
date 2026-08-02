@@ -7,14 +7,17 @@
 
 ## Context
 
-The source repo owns the data/AI codebase; infrastructure desired state and
-cluster policies must be auditable and Git-versioned separately.
+The requested "one repo" means one source monorepo for product, ML, LLM,
+agents, APIs, tests, and evidence—not one repository per deployable. Cluster
+desired state and policies still need a separate, least-privilege GitOps
+control repository.
 
 ## Decision
 
 - **Source repo** (`emanhthangngot/Financial-Distress-Data`): code, tests,
   schemas, Dockerfiles, evidence docs. Phase 2 code lives under `src/ml/`,
-  `src/drift/`, `src/llm/`, `src/agents/`, `apps/`.
+  `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, with thin orchestration
+  wrappers under `dags/phase2/`.
 - **GitOps repo** (`emanhthangngot/financial-distress-gitops`): Terraform,
   Ansible, Helm, Kustomize, Argo CD applications, policies, environment values.
 - Source CI never writes to the cluster. It pushes an immutable image digest,
@@ -29,5 +32,7 @@ cluster policies must be auditable and Git-versioned separately.
 
 ## Alternatives Considered
 
-- Single monorepo for code + infra (rejected: conflates CI principals with
-  cluster write authority).
+- A microservice-per-repository estate (rejected: unnecessary operational and
+  review overhead for coursework).
+- One repository for source and cluster desired state (rejected: conflates CI
+  principals with cluster write authority).

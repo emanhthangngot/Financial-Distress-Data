@@ -37,9 +37,10 @@ Deliver the full 100-point ML track: a Feast-backed training notebook and Kubefl
 6. Package prediction server for KServe. Source CI updates GitOps only with model artifact URI/version and immutable image digest.
 7. Build `feature-api` and `drift-api`; add `helm upgrade --install --atomic`, rolling update, probes, PodDisruptionBudget and rollback test.
 8. Autoscale each API separately; trigger load and capture replicas, request rate, latency and cooldown. Prefer KEDA HTTP/Prometheus scaler with HPA fallback documented.
-9. Route drift events through Knative Broker/Trigger to the drift service and KServe prediction path; persist drift result and retraining recommendation.
+9. Route real-time drift events through Knative Broker/Trigger to the drift service and KServe prediction path. Separately execute the scheduled Airflow drift DAG: pull Feast offline data, join proxy/ground-truth reference, compute Evidently metrics, push them through Pushgateway to Grafana, then call the Kubeflow Pipelines API when threshold is exceeded. Persist idempotency key, decision, KFP run ID/status; a recommendation alone is not sufficient.
 10. Add A/B split for two inference revisions and dashboards for traffic, latency, errors, prediction distribution and proxy outcome metrics.
 11. Generate Locust HTML for the feature API with accepted SLA: p95 latency, throughput, error rate and concurrency; include test parameters.
+12. Implement the feature-specific gates in `tests/phase2/requirements/test_ml_ac_01_web_api.py` through `test_ml_ac_18_novel.py`; every scored row's exact `validation_command` must select an assertion for that row, not only the metadata contract test.
 
 ## Test Gates
 
@@ -47,14 +48,15 @@ Deliver the full 100-point ML track: a Feast-backed training notebook and Kubefl
 - Parametrized equivalence and boundary tests for input schema, missing/unknown ticker, timestamp edges, risk thresholds and API limits.
 - Hypothesis idempotency for repeated predictions/materialization and PIT invariants.
 - Locust HTML and screenshot for feature API; separate autoscale experiments for feature and drift APIs.
-- KFP/Kubeflow Trainer execution, MLflow registry/version, KServe health, Knative event and A/B evidence.
+- KFP/Kubeflow Trainer execution, MLflow registry/version, KServe health, Knative event, A/B evidence, and scheduled drift skip/trigger evidence with actual KFP API run ID.
+- `python scripts/audit_phase2_evidence.py --require-executed --run-validations ...` must execute all ML acceptance files successfully before any row is marked `executed`.
 
 ## Success Criteria
 
 - [ ] ML engineer -> runs the KFP pipeline -> receives a distributed training run whose model and incremental data version are registered in MLflow.
 - [ ] Promotion controller -> evaluates an accepted candidate -> opens a GitOps PR containing immutable model and image references; it does not call KServe imperatively.
 - [ ] Load tester -> stresses the feature API -> receives Locust HTML meeting the recorded SLA and observes KEDA/HPA scale-out and scale-in.
-- [ ] Drift producer -> publishes a real-time event -> sees Knative delivery, drift calculation, persisted telemetry and retrain trigger decision.
+- [ ] Drift producer -> publishes a real-time event -> sees Knative delivery, drift calculation and persisted telemetry; scheduled ML operator -> crosses the threshold -> sees an actual idempotent KFP run ID/status rather than only a recommendation.
 - [ ] Reviewer -> inspects two KServe revisions -> sees controlled A/B traffic, comparative dashboard and a Git-based rollback path.
 - [ ] Test runner -> executes changed-code gates -> reports >90% coverage and >80% mutation score without excluding relevant code.
 

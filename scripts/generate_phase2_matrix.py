@@ -39,19 +39,19 @@ def main() -> int:
     lines.append("")
     cols = (
         "rubric_id | Track | Section | Pts | Requirement | Owner "
-        "| Validation command | Evidence path | Artifact path"
+        "| Acceptance | Behavior validation | Evidence path | Artifact"
     )
     header = f"| {cols} |"
     lines.append(header)
-    lines.append("|---|---|---|---|---|---|---|---|---|")
+    lines.append("|---|---|---|---|---|---|---|---|---|---|")
     for item in sorted(ITEMS, key=lambda i: (i.track, i.rubric_id)):
         req = item.requirement.replace("\n", " ")[:80].replace("|", "/")
         section = item.section.replace("\n", " ")[:40].replace("|", "/")
-        test = item.test.replace("|", "/")
+        validation = item.validation_command.replace("|", "/")
         lines.append(
             f"| {item.rubric_id} | {item.track} | {section} | {item.points} | "
-            f"{req} | {item.owner} | `{test}` | {item.evidence_path} | "
-            f"{item.artifact_path} |"
+            f"{req} | {item.owner} | {item.acceptance_id} | `{validation}` | "
+            f"{item.evidence_path} | {item.artifact_repo}:{item.artifact_path} |"
         )
     (DOCS / "rubric-matrix.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 

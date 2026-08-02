@@ -12,9 +12,11 @@ routing. A single gateway cannot own both control surfaces cleanly.
 
 ## Decision
 
-- **agentgateway** owns MCP/A2A protocol routing, agent identity, and global
-  model configuration. It is the only path agents use to reach the inference
-  platform.
+- **kagent** owns the `Agent` and `ModelConfig` custom resources. Each Agent
+  references one global `ModelConfig`; that config points its upstream/base URL
+  to an **agentgateway AI backend**. agentgateway owns MCP/A2A protocol routes,
+  agent identity, and forwarding into the inference chain. It is the only path
+  agents use to reach models or tools.
 - **Envoy Gateway + Envoy AI Gateway** own `LLMInferenceService` traffic and
   the llm-d/KServe integration. They are prerequisites managed by GitOps, not
   auto-created by an `LLMInferenceService` object.
@@ -28,6 +30,9 @@ routing. A single gateway cannot own both control surfaces cleanly.
   them first.
 - Cleaner separation of routing concerns, at the cost of one extra control
   plane to operate.
+- The normative chain is `kagent Agent -> kagent ModelConfig -> agentgateway
+  AI backend -> Envoy AI Gateway -> KServe LLMInferenceService/llm-d`; no
+  coordinator or specialist may bypass it.
 
 ## Alternatives Considered
 

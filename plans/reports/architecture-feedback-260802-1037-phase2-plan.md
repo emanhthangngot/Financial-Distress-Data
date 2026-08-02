@@ -27,7 +27,7 @@ Validation used the two original rubric CSVs, current repository contracts, the 
 | Add Kustomize validation if mixed deployment is used | Accepted | Added bounded Helm/Kustomize ownership, duplicate-resource rejection, `kustomize build`, `kubeconform`, and `conftest`. |
 | Make Locust HTML explicit | Accepted | Required for the rubric Web APIs with recorded SLA and parameters. |
 | Make autoscaling proof explicit for feature and drift APIs | Accepted | Independent KEDA/HPA experiments and artifacts are mandatory. |
-| Make TLS/domain explicit | Accepted | NGINX public edge, cert-manager certificate, domain, TLS proof and private internal services. |
+| Make TLS/domain explicit | Accepted | Active F5 NGINX Ingress Controller OSS public edge, cert-manager certificate, domain, TLS proof and private internal services. |
 | Document design patterns and five classes | Accepted | Added five ML and five LLM class contracts plus executable design-pattern proof. |
 | Name two novel ideas per track | Accepted | Added PIT leakage guard, reproducibility manifest, embedding hot swap, and citation/PII guard. |
 | Add LLM warm-up/HA proof | Accepted | Added cold/warm benchmark, TTFT/cost and multi-replica worker-pool proof. |
@@ -69,7 +69,9 @@ With automated sync enabled, rollback is a Git revert or a new Git commit refere
 
 The previous outline contained eight phases numbered 0-7, not seven. The saved execution plan now uses eight conventional phases numbered 1-8 so AK tooling, humans and evidence paths agree.
 
-The current `docs/coursework.md` still says AWS/Kubernetes/LLM are optional or excluded. Because the user explicitly activated Phase 2, Phase 1 of the plan requires rewriting that document before code. The immutable Phase 1 boundaries remain in `docs/mini_coursework.md` and `AGENTS.md`.
+The original `docs/coursework.md` said AWS/Kubernetes/LLM were optional or
+excluded. It has now been rewritten for explicit Phase 2 while immutable Phase
+1 boundaries remain in `docs/mini_coursework.md` and `AGENTS.md`.
 
 The repo-mandated project skill `financial-distress-sdd` could not be found under `.codex/skills/` or the available skill catalog. No replacement skill was fabricated; the plan used the available `ak:plan` and `ak:devops` workflows. This is a tooling/configuration gap, not an architecture blocker.
 
@@ -79,3 +81,43 @@ The repo-mandated project skill `financial-distress-sdd` could not be found unde
 - Accepted with correction: 4 technical claims.
 - Rejected: lowering rubric quality gates, tag-only deployment, and imperative rollback under automated sync.
 - Blocking questions: none.
+
+## 2026-08-02 AK re-audit addendum
+
+The later two-rubric audit found additional legitimate gaps and updated the
+whole execution contract:
+
+- Ansible is mandatory for both tracks (3 points combined): a role-based
+  Vast.ai CPU evidence worker must prove health, useful service deployment,
+  idempotent second run, spend, and teardown under USD 10.
+- ML observability must call the Kubeflow Pipelines API after the scheduled
+  Airflow/Feast/Evidently/Pushgateway threshold gate and retain the KFP run ID;
+  a retraining recommendation alone is insufficient.
+- The global model configuration is a kagent `ModelConfig` referenced by an
+  `Agent`, not an object owned by agentgateway. Its upstream points to an
+  agentgateway AI backend, then Envoy AI Gateway and KServe/llm-d.
+- New installs use active F5 NGINX Ingress Controller OSS
+  (`nginx/kubernetes-ingress`), not the retired community
+  `kubernetes/ingress-nginx` repository.
+- The matrix now proves exact canonical coverage (57 ML + 60 LLM rows) by
+  source row index and SHA-256 digest, resolves every acceptance ID, separates
+  metadata contract tests from future behavior tests, and identifies a
+  concrete source/GitOps file for every row.
+- Evidence export no longer gives the cluster repository write credentials;
+  verification jobs write immutable S3 bundles and a source-side bot opens the
+  evidence PR.
+
+The plan is design-complete for 100/100 targets. Runtime scores remain
+unclaimed until Phase 8 produces executed, version-matched evidence for all
+117 rows and the strict two-repository audit passes.
+
+### Implementation-audit closure
+
+The follow-up audit also required the promotion gate to enforce the reviewed
+implementation map rather than relying only on the generated CSV. The auditor
+now compares every canonical row with `EXPLICIT_IMPLEMENTATION`, maps Vault
+secret management to `platform/security/vault-external-secrets.yaml`, rejects
+dirty source or GitOps worktrees, and verifies that the frozen Phase 1 baseline
+is a real commit ancestor. Phases 5 and 6 explicitly create the per-acceptance
+test files used by each row's behavior command; metadata-only contract tests
+cannot satisfy the runtime gate.

@@ -1,10 +1,10 @@
 # NEXLAB Spec-Driven Development (SDD) Guide & Spec Setup
 
 Tài liệu này hướng dẫn áp dụng phương pháp **Spec-Driven Development (SDD)** của Nexlab vào dự án **Financial Distress Data + AI Engineering System**. Tài liệu được biên soạn dựa trên *Nexlab SDD Playbook for Intern Candidates (v1.1, Q2 2026)* và tham khảo tiêu chuẩn *GitHub Spec-Kit*, nhằm kết nối bốn tài liệu hiện tại:
-* [idea.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/idea.md) (PH-0: Problem Discovery)
-* [coursework_proposal.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/coursework_proposal.md) (PRD Constraints & Phase Gates)
-* [mini_coursework.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/mini_coursework.md) (Phase 1: Data Pipeline Foundation Spec)
-* [coursework.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/coursework.md) (Phase 2: Drift & AI/ML Expansion Spec)
+* [idea.md](./idea.md) (PH-0: Problem Discovery)
+* [coursework_proposal.md](./coursework_proposal.md) (PRD Constraints & Phase Gates)
+* [mini_coursework.md](./mini_coursework.md) (Phase 1: Data Pipeline Foundation Spec)
+* [coursework.md](./coursework.md) (Phase 2: ML + LLM + GitOps Spec)
 
 ---
 
@@ -27,8 +27,8 @@ flowchart TD
 ```
 
 ### Các Gate chuyển phase cụ thể của Dự án:
-1. **PH-0 ➔ PH-1 Gate**: Đạt được sau khi khảo sát [idea.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/idea.md) và xác nhận vấn đề "Dự báo sớm khủng hoảng tài chính dựa trên dữ liệu phi cấu trúc và chỉ số kế toán" là một vấn đề thực tế, tốn kém tài nguyên nếu xử lý thủ công.
-2. **PH-1 ➔ PH-2 Gate**: Chuyển đổi các ràng buộc trong [coursework_proposal.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/coursework_proposal.md) thành bộ tính năng cụ thể.
+1. **PH-0 ➔ PH-1 Gate**: Đạt được sau khi khảo sát [idea.md](./idea.md) và xác nhận vấn đề "Dự báo sớm khủng hoảng tài chính dựa trên dữ liệu phi cấu trúc và chỉ số kế toán" là một vấn đề thực tế, tốn kém tài nguyên nếu xử lý thủ công.
+2. **PH-1 ➔ PH-2 Gate**: Chuyển đổi các ràng buộc trong [coursework_proposal.md](./coursework_proposal.md) thành bộ tính năng cụ thể.
 3. **PH-4 ➔ PH-5 Gate**: Viết các kiểm thử đơn vị (**Unit Test Seeds**) dựa trên tiêu chí nghiệm thu (Acceptance Criteria) của `mini_coursework.md` và chạy thử để đảm bảo các kiểm thử này **FAIL có ý nghĩa** trước khi Coding Agent bắt đầu tự động hóa viết code.
 
 ---
@@ -46,7 +46,10 @@ Cấu trúc thư mục được thiết kế theo dạng Module độc lập, ph
 * `src/transforms/`:
   * `silver_to_gold.py` (Phase 1) ➔ Chỉ tính toán chỉ số tài chính cơ bản.
   * `gold_to_features.py` (Phase 2) ➔ Chịu trách nhiệm tính toán các cột đặc trưng (features) và nhãn (labels) phục vụ ML mà không can thiệp vào logic làm sạch ở Silver.
-* `src/ml/` (Phase 2): Chứa toàn bộ logic huấn luyện, lưu trữ mô hình và batch scoring, tách biệt hoàn toàn khỏi pipeline dữ liệu lõi.
+* `src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/` (Phase 2):
+  chứa logic ML, drift, LLM/agent và các deployable API/UI; tách biệt khỏi
+  pipeline dữ liệu lõi. Airflow chỉ có thin wrappers tại `dags/phase2/`, còn
+  business logic luôn nằm trong các Phase 2 roots trên.
 
 ### B. Tách biệt Schema Cơ sở dữ liệu (Database Isolation)
 Trong PostgreSQL cục bộ, chúng ta phân chia dữ liệu thành hai Schema độc lập:
@@ -77,6 +80,10 @@ Giúp việc chạy lại hoặc bổ sung thêm dữ liệu huấn luyện lị
 ---
 
 ## 4. Nexlab AGENTS.md (Hiến pháp dự án - Constitution File)
+
+Khối bên dưới là ví dụ lịch sử dành cho Phase 1 local-first, không phải bản
+constitution hiện hành. Tệp [`../AGENTS.md`](../AGENTS.md) ở repository root là
+nguồn có thẩm quyền và đã mở rộng rõ ràng cho explicit Phase 2.
 
 Dưới đây là nội dung tệp `AGENTS.md` (hoặc `CLAUDE.md` / `.cursorrules` tương đương) được tối ưu hóa dưới 150 dòng. Hãy commit file này vào thư mục gốc của repository để Coding Agent đọc ở mỗi đầu session:
 
@@ -125,9 +132,9 @@ Strictly adhere to the Spec-Driven Development (SDD) principles defined herein.
 
 | Spec-Kit Step | Ý nghĩa / Phạm vi | Tài liệu dự án tương ứng | Phase Nexlab tương ứng |
 |---|---|---|---|
-| **1. Constitution** | Quy định bất di bất dịch, coding rules, stack | [AGENTS.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/AGENTS.md) / `CLAUDE.md` | **PH-4: SDD Setup** |
-| **2. Spec** | Đặc tả mức cao: Cái gì (What) & Tại sao (Why) | [idea.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/idea.md) & [coursework_proposal.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/coursework_proposal.md) | **PH-0: Discovery** & **PH-1: PRD** |
-| **3. Plan** | Thiết kế kỹ thuật chi tiết: Như thế nào (How) | [mini_coursework.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/mini_coursework.md) & [coursework.md](file:///home/pearspringmind/Studying/FSDS/AIDE1/coursework/docs/coursework.md) | **PH-2: Tech Architecture** & **PH-3: Design** |
+| **1. Constitution** | Quy định bất di bất dịch, coding rules, stack | [AGENTS.md](../AGENTS.md) / `CLAUDE.md` | **PH-4: SDD Setup** |
+| **2. Spec** | Đặc tả mức cao: Cái gì (What) & Tại sao (Why) | [idea.md](./idea.md) & [coursework_proposal.md](./coursework_proposal.md) | **PH-0: Discovery** & **PH-1: PRD** |
+| **3. Plan** | Thiết kế kỹ thuật chi tiết: Như thế nào (How) | [mini_coursework.md](./mini_coursework.md) & [coursework.md](./coursework.md) | **PH-2: Tech Architecture** & **PH-3: Design** |
 | **4. Tasks** | Danh sách tác vụ nhỏ, testable checklist | Mục *Suggested order* (Checklist triển khai) trong các spec | **PH-4 ➔ PH-5 Transition** |
 | **5. Code** | Code thực tế chạy được và vượt qua test | Script trong `src/`, `dags/`, `sql/` | **PH-5: Sprint** & **PH-6: Deploy** |
 
@@ -146,4 +153,4 @@ Khi bạn hoặc Agent bắt tay vào thực hiện code:
 2. **Bước 2**: Khi ra lệnh cho Agent viết code cho bất cứ DAG hay Script nào thuộc Phase 1, hãy gõ câu lệnh:
    > *"Đọc file `AGENTS.md` và `docs/mini_coursework.md`. Tiến hành viết kiểm thử tự động (test seed) trong `tests/` cho tính năng [Tên tính năng], đảm bảo test chạy FAIL. Sau đó viết code xử lý để pass test."*
 3. **Bước 3 (Khi chuyển sang Phase 2)**: Bạn chỉ cần gõ câu lệnh:
-   > *"Dự án bắt đầu chuyển sang Phase 2. Đọc tệp `docs/coursework.md` để lấy yêu cầu đặc tả về Drift và ML. Toàn bộ code mới chỉ được viết trong `src/ml/`, `src/drift/` và schema `ml_metadata` để đảm bảo tính mở rộng và không phá vỡ nền tảng Phase 1."*
+   > *"Dự án bắt đầu chuyển sang Phase 2. Đọc `AGENTS.md`, `docs/coursework.md`, hai rubric CSV và rubric matrix. Code mới chỉ được viết trong `src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, thin wrappers `dags/phase2/`, và schema `ml_metadata`; không sửa hành vi Phase 1."*
