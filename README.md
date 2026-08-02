@@ -26,6 +26,14 @@ This project is a local-first data engineering foundation for Financial Distress
 
 The current Stage 1 pipeline uses deterministic fixture-backed collectors, then materializes Bronze, Silver, Gold, Data Quality, Metadata, and Evidence outputs locally.
 
+Phase 2 (accepted, explicit) builds a two-plane AI system on top of this
+foundation: a persistent **product plane** (Next.js + Supabase) and a
+disposable, cost-bounded **evidence plane** (ephemeral EKS with KServe 0.18,
+Kubeflow, Feast, MLflow, and agents), orchestrated through a separate GitOps
+repository. It targets all 100 ML + 100 LLM rubric points without keeping EKS
+running continuously. See [docs/phase2/architecture.md](docs/phase2/architecture.md)
+and [docs/coursework.md](docs/coursework.md).
+
 ## Business Domain
 
 The platform is a **local-first financial-distress data lakehouse** for Vietnamese listed companies. It collects quarterly financial statements, daily market prices, and supporting reference data, then produces curated Bronze/Silver/Gold tables, distress labels (Altman Z-Score inspired), and audit-ready evidence that downstream analysts and ML engineers can trust.
@@ -142,7 +150,11 @@ submission scope.
 │   ├── metadata/          - PostgreSQL metadata writers and schema registry
 │   ├── catalog/           - DuckDB catalog and validation helpers
 │   ├── io/                - MinIO and local IO helpers
-│   └── jobs/              - Runtime evidence job wrappers
+│   ├── jobs/              - Runtime evidence job wrappers
+│   ├── ml/                - Phase 2 ML class contracts and adapters (isolated)
+│   ├── drift/             - Phase 2 drift/quality adapters (planned, Phase 2)
+│   ├── llm/               - Phase 2 LLM class contracts and adapters (isolated)
+│   └── agents/            - Phase 2 agent orchestration (planned, Phase 2)
 ├── configs/               - Collector, Spark, source, and DQ config files
 ├── sql/                   - PostgreSQL metadata DDL and DuckDB SQL views
 ├── tests/                 - PyTest unit, contract, and runtime smoke tests
@@ -154,6 +166,9 @@ submission scope.
 ├── pyproject.toml         - Python package and tooling config
 └── README.md              - This README file
 ```
+
+Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is
+isolated and never mutates Phase 1 pipeline behavior.
 
 ## Documentation
 
@@ -171,6 +186,14 @@ The README only summarizes the project. Detailed design notes, contracts, and ru
 - [Data governance evidence](docs/data-governance.md) — DataHub lineage, assertions, and data contracts.
 - [Docker optimization evidence](docs/docker-optimization.md) — baseline vs optimized Airflow image sizes.
 - [System architecture (numbered deployment flows)](docs/system-architecture.md) — deployable units and data flow.
+- [Phase 2 coursework (accepted source of truth)](docs/coursework.md) — explicit Phase 2 scope, two-plane design, and evidence contract.
+- [Phase 2 requirements](docs/phase2/requirements.md) — per-deliverable acceptance criteria in WHO -> ACTION -> RESULT form.
+- [Phase 2 architecture](docs/phase2/architecture.md) — two-plane design, 8 numbered data flows, cost envelope.
+- [Phase 2 low-level design](docs/phase2/low-level-design.md) — ML and LLM class contracts.
+- [Phase 2 rubric matrix](docs/phase2/rubric-matrix.csv) — machine-readable 200-point evidence contract (ML 100 + LLM 100).
+- [Phase 2 evidence contract](docs/phase2/evidence-contract.md) — evidence format and linter rules.
+- [Phase 2 ADRs](docs/phase2/adr/) — architecture decision records 001..008.
+- [Phase 2 novel ideas](docs/phase2/novel-ideas.md) — two per track with proof paths.
 - [Novel idea 1: dbt-style SQL contracts](docs/09_novel_idea_1.md) — DuckDB macro + Python mirror for naming contracts.
 - [Novel idea 2: Airbyte-style ingestion manifest](docs/10_novel_idea_2.md) — declarative source manifest + dispatcher.
 - [Novel idea evidence manifests](docs/novel-idea-evidence-manifest.md) and [PIT leakage guard](docs/novel-idea-pit-leakage-guard.md) — evidence integrity and point-in-time correctness proofs.

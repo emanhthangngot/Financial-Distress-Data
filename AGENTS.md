@@ -40,7 +40,11 @@ If docs conflict, preserve Phase 1 local-first decisions from `AGENTS.md` and `d
 
 - Spec first: before writing code, read `docs/spec.md` and then `docs/mini_coursework.md` for Phase 1 work or `docs/coursework.md` for explicit Phase 2 work.
 - Phase 1 scope is limited to `01_data_generator.md` and `02_schema_design.md`: data generation, schema design, Bronze/Silver/Gold pipelines, metadata, DQ, and evidence.
-- Phase 2 ML or drift code must be isolated under `src/ml/` and `src/drift/` and must not modify Phase 1 pipeline behavior unless explicitly requested.
+- Phase 2 implementation must remain additive under `src/ml/`, `src/drift/`,
+  `src/llm/`, `src/agents/`, and `apps/`. Thin Phase 2 Airflow wrappers may live
+  under `dags/phase2/` when their business logic stays in those Phase 2 roots.
+  Phase 2 must not modify any Phase 1 DAG or pipeline behavior unless explicitly
+  requested.
 - Acceptance criteria must be written as `WHO -> ACTION -> RESULT`.
 - Write PyTest test seeds before implementing core logic. The first run should fail for a meaningful reason.
 - If a test fails, compare the test and code against the spec. Do not change expected values just to make tests pass.
@@ -59,6 +63,8 @@ Before editing code or pipeline configs, the agent must state:
 ## 3. Directory Structure
 
 - `dags/`: Airflow DAG definitions.
+  - `dags/phase2/`: additive Phase 2 scheduling wrappers only; never import-time
+    side effects and never changes to existing Phase 1 DAG IDs or tasks.
 - `src/collectors/`: online API/WebSocket collectors and source adapters.
 - `src/generator/`: test fixtures and fallback synthetic generators only.
 - `src/streaming/`: Kafka producer and consumer logic.
@@ -69,6 +75,9 @@ Before editing code or pipeline configs, the agent must state:
 - `src/metadata/`: PostgreSQL metadata clients and writers.
 - `src/ml/`: Phase 2 only.
 - `src/drift/`: Phase 2 only.
+- `src/llm/`: Phase 2 only.
+- `src/agents/`: Phase 2 only.
+- `apps/`: Phase 2 product/API deployables only.
 - `sql/`: PostgreSQL schema and DuckDB view SQL.
 - `tests/`: PyTest unit and integration tests.
 - `docs/`: coursework specs, design docs, and evidence.
