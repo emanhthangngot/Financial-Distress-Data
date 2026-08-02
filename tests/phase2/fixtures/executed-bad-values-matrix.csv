@@ -1,0 +1,2 @@
+rubric_id,track,section,points,requirement,proof,deliverables,owner,test,evidence_path,evidence_type,acceptance_criterion,artifact_path
+ML-evidence-bad-values,ML,Feature Store,1,"Row claims executed proof with malformed timestamp and SHAs",proof,deliverable,ml_engineer,pytest tests/phase2,tests/phase2/fixtures/ML-evidence-bad-values.md,executed,,src/ml/ML-evidence-bad-values

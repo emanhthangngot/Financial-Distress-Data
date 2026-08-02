@@ -1,0 +1,2 @@
+rubric_id,track,section,points,requirement,proof,deliverables,owner,test,evidence_path,evidence_type,acceptance_criterion,artifact_path
+ML-design-only-row,ML,Feature Store,1,"Row still recorded as design_only — must fail --require-executed",proof,deliverable,ml_engineer,pytest tests/phase2,docs/phase2/evidence/ml/design-only.md,design_only,,src/ml/ML-design-only-row

@@ -1,6 +1,6 @@
 ---
 title: "Phase 1: Lock specification and rubric contract"
-status: todo
+status: in_review
 estimate: "3-4 days"
 ---
 
@@ -19,11 +19,11 @@ Start checklist:
 
 ## Requirements
 
-- [ ] Convert every ML and LLM CSV row into a stable rubric ID with points, requirement, Proof text, Deliverables text, implementation owner, test, and evidence path.
-- [ ] Write acceptance criteria only as `WHO -> ACTION -> RESULT`.
-- [ ] Separate executed proof, design-only claims, and optional stretch work.
-- [ ] Make the two-plane architecture, two-repository boundary, four traffic layers, and cost envelope normative.
-- [ ] Record the two custom ideas and five low-level classes for each track before code begins.
+- [x] Convert every ML and LLM CSV row into a stable rubric ID with points, requirement, Proof text, Deliverables text, implementation owner, test, and evidence path.
+- [x] Write acceptance criteria only as `WHO -> ACTION -> RESULT`.
+- [x] Separate executed proof, design-only claims, and optional stretch work.
+- [x] Make the two-plane architecture, two-repository boundary, four traffic layers, and cost envelope normative.
+- [x] Record the two custom ideas and five low-level classes for each track before code begins.
 
 ## Files
 
@@ -54,11 +54,90 @@ Start checklist:
 
 ## Success Criteria
 
-- [ ] Coursework reviewer -> selects any scored row in either CSV -> finds an exact implementation, validation command, and planned artifact without inference.
-- [ ] Phase 1 maintainer -> compares the accepted Phase 2 spec to `docs/mini_coursework.md` -> finds additive boundaries and no silent change to Phase 1 semantics.
-- [ ] Developer -> runs the rubric linter on a deliberately incomplete fixture -> receives a failing result naming the missing contract field.
+- [x] Coursework reviewer -> selects any scored row in either CSV -> finds an exact implementation, validation command, and planned artifact without inference.
+- [x] Phase 1 maintainer -> compares the accepted Phase 2 spec to `docs/mini_coursework.md` -> finds additive boundaries and no silent change to Phase 1 semantics.
+- [x] Developer -> runs the rubric linter on a deliberately incomplete fixture -> receives a failing result naming the missing contract field.
 
 ## Risks and Rollback
 
 - Risk: chasing all 200 points expands scope. Mitigation: use the cut policy in `plan.md`; never cut a scored item.
 - Rollback: revert only Phase 2 documentation/linter commits; Phase 1 runtime stays untouched.
+
+## Validation Decisions (Session 1)
+
+<!-- Updated: Validation Session 1 - semantic slug IDs, role-based owner, stub contracts, per-deliverable AC, feature branch + PR, full coursework.md replacement, planned evidence paths -->
+
+Locked by `/ak:plan validate` 2026-08-02 before implementation:
+
+- Semantic IDs are slugs derived from requirement text (never spreadsheet line numbers).
+- Class contracts ship as Python signature stubs in `src/ml/contracts.py` and `src/llm/contracts.py` plus `docs/phase2/low-level-design.md`.
+- `owner` is role-based: `ml_engineer`, `llm_engineer`, `data_engineer`, `platform_operator`.
+- Acceptance criteria are written per deliverable and per class (~20-30 total), not one per scored row.
+- Work happens on branch `codex/phase2-spec-lock` off `dev`, merged via PR.
+- `docs/coursework.md` is replaced wholesale; no archive copy kept.
+- The linter's `--matrix-only --strict` validates a planned `docs/phase2/evidence/...` path per row (file need not exist); `--require-executed` is deferred to phase-08.
+
+## Review Findings & Resolutions (Session 1 — 2026-08-02)
+
+Spec-compliance review flagged 8 findings (3 P1, 3 P2, 2 P3). Resolutions:
+
+- [P1] Validation command: every row's `test` field now holds a reproducible
+  `pytest tests/phase2 -k '<rubric_id>'` command; generator + linter enforce it.
+- [P1] Incomplete-fixture AC: `test_incomplete_fixture_fails_with_named_field`
+  runs a real fixture CSV through the CLI with `--matrix` and asserts exit 1 +
+  `missing 'owner'`; `test_audit_script_executable` now requires `--strict`.
+- [P1] `--require-executed` enforces the full evidence contract (rubric_id,
+  execution_timestamp, source_sha, gitops_sha, versions, command,
+  expected/actual result, redaction_status); a near-empty executed file fails.
+- [P2] Ownership mapping: `_assign_owner` keyword classifier assigns all four
+  roles (data_engineer 29, platform_operator 46, ml_engineer 16, llm_engineer
+  26 rows); intent rules (ML/agent/custom-model/A-B) precede data-content rules
+  so ML/LLM demonstration rows that read from Feast's offline store stay with
+  their ML/LLM owner (4 rows corrected); linter fails if any role owns no
+  scored row.
+- [P2] Phase 1 no-mutation: linter now also runs `git diff --name-only` against
+  the base ref (`--git-base`, default `origin/dev` since Session 2) and flags
+  protected-path changes.
+- [P2] Architecture flows: rewritten with deployable-unit nodes only, every
+  edge numbered, coordinator agent orchestrates specialist agents + MCP tools
+  + model (not the reverse).
+- [P3] Plan status aligned: phase table shows "In Review" until PR opens;
+  phase file status `in_review`; PR action item remains unchecked.
+- [P3] README marks `src/drift/` and `src/agents/` as planned Phase 2 dirs,
+  not yet existing.
+
+## Review Findings & Resolutions (Session 2 — 2026-08-02, re-review)
+
+Re-review still blocked merge with 4 P1 + 4 P2. Resolutions:
+
+- [P1] Validation commands now run real tests: `tests/phase2/test_rubric_row_
+  contracts.py` generates one parametrized contract test per rubric row keyed
+  by rubric_id, so `pytest tests/phase2 -k '<rubric_id>'` collects ≥1 test
+  (previously exit 5, "no tests ran"). A collection pass asserts every id is
+  matched and the first row's command runs end-to-end. This also surfaced a
+  generator bug: the dedup suffix (`-1`) left `test`/`evidence_path` pointing
+  at the pre-dedup id — now regenerated after dedup.
+- [P1] `--require-executed` now rejects rows still recorded as design_only or
+  stretch (every row must carry executed evidence), instead of only checking
+  metadata on executed rows; verified with the `design-only-matrix.csv` fixture.
+- [P1] No-mutation gate is fail-closed: default `--git-base` is `origin/dev`;
+  an unresolvable baseline now exits 1 (was "skipped", exit 0); untracked new
+  files are included via `git ls-files --others` so a brand-new protected-path
+  file is caught too.
+- [P1] Architecture contradictions fixed: NGINX terminates public TLS (was
+  "TLS passthrough"); Flow 4 routes the prompt to the coordinator agent first,
+  specialist agents appear and call MCP tools, and the coordinator drives model
+  generation through Envoy AI Gateway (not prompt-straight-to-LLM); Flow 6 CI
+  pushes the image to ECR and the promotion bot opens the GitOps PR directly
+  (no source-repo merge); the flow intro now allows actor/artifact/process
+  nodes (digest, PR, outbox) alongside deployable units, and missing units
+  (admin UI, promotion bot, EventBridge Scheduler, CodeBuild) were added to
+  the table.
+- [P2] Linter smoke test now requires exit 0 (was accepting exit 2/crash).
+- [P2] `tests/phase2/test_rubric_matrix.py` reformatted with black.
+- [P2] The placeholder evidence file moved out of `docs/phase2/evidence/` into
+  `tests/phase2/fixtures/ML-evidence-empty.md` (fixture mode skips the
+  evidence-path prefix rule).
+- [P2] Class-contract tests now import `src/ml/contracts.py` and
+  `src/llm/contracts.py` and verify all five classes per track, their exact
+  abstract methods, parameter names, and docstrings — not just file existence.
