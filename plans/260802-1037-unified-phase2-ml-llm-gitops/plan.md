@@ -34,7 +34,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 
 | # | Phase | Estimate | Status |
 |---|-------|----------|--------|
-| 1 | [Lock specification and rubric contract](./phase-01-start.md) | 3-4 days | Pending |
+| 1 | [Lock specification and rubric contract](./phase-01-start.md) | 3-4 days | In Review |
 | 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 6-8 days | Pending |
 | 3 | [Bootstrap GitOps and AWS evidence platform](./phase-03-bootstrap-gitops-and-aws-evidence-platform.md) | 8-12 days | Pending |
 | 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 7-10 days | Pending |
@@ -64,5 +64,76 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 - [ ] Platform operator -> provisions or destroys evidence infrastructure -> receives idempotent state transitions, cost preview, audit log, fencing, and guaranteed scheduled teardown.
 - [ ] Source CI -> publishes a signed immutable image digest -> opens a checked GitOps PR; only the merged Git change is reconciled by Argo CD.
 - [ ] Phase 1 maintainer -> runs existing quality gates -> observes no change to collectors, Gold contracts, DQ semantics, or local evidence behavior.
+
+## Validation Log
+
+### Session 1 — 2026-08-02
+
+**Trigger:** `/ak:plan validate` on `phase-01-start.md` before implementation.
+
+**Questions asked:** 7
+
+#### Questions & Answers
+
+1. **[Architecture]** Semantic ID scheme cho ~200 scored row (ML + LLM)?
+   - Options: Slug từ requirement | Số theo track | Hybrid số + slug
+   - **Answer:** Slug từ requirement
+   - **Rationale:** Bền vững với thay đổi CSV, đọc được ngay mà không cần bảng tra cứu số dòng.
+
+2. **[Architecture]** 10 class contracts (5 ML + 5 LLM) hiện diện như thế nào trong phase-01?
+   - Options: Python stub + doc | Chỉ documentation
+   - **Answer:** Python stub + doc
+   - **Rationale:** Test seed cần đối tượng assert; stub chỉ chứa signature + docstring nên không vi phạm ranh giới "chưa implement".
+
+3. **[Assumptions]** Trường `owner` trong rubric matrix dùng loại gì?
+   - Options: Role-based | Person-based | Role + người phụ trách
+   - **Answer:** Role-based
+   - **Rationale:** Repo cá nhân, role (`ml_engineer`, `llm_engineer`, `data_engineer`, `platform_operator`) không lệ thuộc thành viên.
+
+4. **[Scope]** Phạm vi acceptance criteria WHO -> ACTION -> RESULT trong phase-01?
+   - Options: Per deliverable + class | Per scored row (200 AC) | Chỉ success criteria
+   - **Answer:** Per deliverable + class
+   - **Rationale:** ~20-30 AC đủ để linter và reviewer dùng, tránh boilerplate 200 dòng vô nghĩa.
+
+5. **[Assumptions]** Chiến lược branch khi triển khai phase-01?
+   - Options: Feature branch + PR | Commit trực tiếp lên dev
+   - **Answer:** Feature branch + PR
+   - **Rationale:** Khớp convention repo (`codex/*`, `feature/*`).
+
+6. **[Scope]** Nội dung `docs/coursework.md` cũ xử lý thế nào khi rewrite?
+   - Options: Thay thế hoàn toàn | Lưu archive riêng
+   - **Answer:** Thay thế hoàn toàn
+   - **Rationale:** Git history vẫn giữ bản cũ; không cần archive bản stale trong repo.
+
+7. **[Assumptions]** `--matrix-only --strict` yêu cầu cột evidence_path thế nào để phase-01 PASS?
+   - Options: Path đã hoạch định | Cho phép trống
+   - **Answer:** Path đã hoạch định
+   - **Rationale:** Mỗi row khai evidence_path là đường dẫn sẽ tạo (`docs/phase2/evidence/...`); linter verify parent dir thuộc `docs/phase2/evidence/` chứ không yêu cầu file tồn tại. Check `--require-executed` chỉ bật ở phase-08.
+
+#### Confirmed Decisions
+- Semantic ID: slug từ requirement text.
+- Class contracts: Python stub (`src/ml/contracts.py`, `src/llm/contracts.py`) + `docs/phase2/low-level-design.md`.
+- Owner: role-based.
+- AC scope: per deliverable + per class (~20-30 AC).
+- Branch: feature branch `codex/phase2-spec-lock` + PR.
+- Old `docs/coursework.md`: replace hoàn toàn.
+- Evidence path: planned path under `docs/phase2/evidence/`; strict `--require-executed` deferred to phase-08.
+
+#### Action Items
+- [x] Phase-01: semantic slug ID cho mọi scored row.
+- [x] Phase-01: stub `src/ml/contracts.py`, `src/llm/contracts.py` + low-level design doc.
+- [x] Phase-01: role-based owner trong rubric matrix.
+- [x] Phase-01: AC per deliverable + per class.
+- [ ] Phase-01: branch `codex/phase2-spec-lock`, mở PR sau khi PASS.
+- [x] Phase-01: `docs/coursework.md` thay thế hoàn toàn.
+- [x] Phase-01: linter `--matrix-only --strict` verify planned evidence path; `--require-executed` để dành phase-08.
+
+#### Impact on Phases
+- Phase 1 (phase-01): toàn bộ action items trên.
+- Phase 8 (phase-08): `--require-executed` chỉ kích hoạt khi evidence đã chạy; không đổi contract matrix.
+
+### Whole-Plan Consistency Sweep
+
+Re-read all plan files after validation. No unresolved contradictions: the four-track gateway boundary, two-repo ownership, cost envelope, and class names are consistent across `plan.md`, phase-01 through phase-08, and the architecture feedback report. The only note: `docs/coursework.md` rewrite is now explicitly a full replacement (decision 6); phase-01 requirement text "linking to, not duplicating, Phase 1 contracts" remains unchanged.
 
 <!-- slug: unified-phase2-ml-llm-gitops -->
