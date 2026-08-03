@@ -175,7 +175,6 @@ isolated and never mutates Phase 1 pipeline behavior.
 The README only summarizes the project. Detailed design notes, contracts, and runtime evidence live under `docs/`:
 
 - [Business problem and dataset scope](docs/idea.md) — Phase 0 problem discovery.
-- [Nexlab SDD operating model](docs/spec.md) — spec-driven development workflow and phase gates.
 - [Data generator contract (W17 knobs, evidence)](docs/01_data_generator.md) — how the fixture-backed adapter shapes the offline and streaming inputs.
 - [Schema design (Medallion, SCD2, feature tables)](docs/02_schema_design.md) — Bronze / Silver / Gold layout, naming convention, and the `obt_company_quarter_risk` contract.
 - [Schema design evidence and ERD](docs/schema-design.md) — DBeaver/DuckDB visualization of all zones.
