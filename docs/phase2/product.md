@@ -1,4 +1,10 @@
-# DistressLens Product and UI Contract
+# DistressLens Frontend Product and UI Specification
+
+**Status:** final reference baseline for Phase 2 implementation
+
+**Scope:** product-plane frontend only; runtime proof remains in Phase 8
+**Source of truth:** this document and the three image-backed manifests in
+`docs/phase2/evidence/product/design/`
 
 This is the product-plane contract for Phase 2. It turns the three approved
 visual references into testable routes and states; it does not replace the
@@ -9,25 +15,75 @@ runtime evidence captured in Phase 8.
 At source `0e9aac4` (2026-08-03), the product foundation (contracts, Supabase
 schema/RLS tests and state-machine types) exists, but the web app still has the
 default create-next-app `apps/web/src/app/page.tsx` and none of the approved
-routes is implemented. This is why the approved UI is not visible in the
-checkout: the plan had previously named a generic shell without a concrete
-route/state contract. Phase 2 remains `todo` until the routes and evidence
-fixtures below are implemented; this document is not a claim that the UI has
-already shipped.
+routes is implemented. The three approved reference images are now stored in
+this repository; they describe the initial visual direction, not shipped
+runtime behavior. Phase 2 remains `todo` until the routes and evidence
+fixtures below are implemented.
 
 ## Approved visual references
 
 The approved images are identified as `UI-APPROVED-01` through
-`UI-APPROVED-03`. Their original binaries must be copied without modification
-to `docs/phase2/evidence/product/design/` before visual sign-off. They are not
-currently present in this checkout, so no generated mock is accepted as a
-substitute.
+`UI-APPROVED-03`. The binaries below are the user-supplied originals copied
+without modification to `docs/phase2/evidence/product/design/`. They are the
+initial frontend reference; implementation may improve spacing, typography,
+responsive behavior and visual polish as long as the information hierarchy,
+semantics and product boundaries remain intact. The sample names, numbers and
+timestamps in the images are reference fixtures, not production data.
 
 | ID | Route(s) | Required content | Evidence |
 |---|---|---|---|
-| `UI-APPROVED-01` | `/companies`, `/companies/[ticker]`, `/compare`, `/reports/[id]` | company search, risk snapshot, model explanation, cited RAG answer, comparison, saved report, freshness and cached/live label | Playwright screenshot at 1440/1024/390 px + route/state manifest |
-| `UI-APPROVED-02` | `/agents/chat` | agent selection, streaming answer, citations, MCP/tool trace, model/agent version, timeout, policy block and EKS-OFF state | Playwright screenshot + redacted trace/output |
-| `UI-APPROVED-03` | `/agents/registry`, `/ops/evidence` | agent governance, versions, replicas, sandbox policy, lifecycle timeline, cost, GitOps revision, evidence export, promotion, rollback and teardown | two linked route screenshots + RBAC/action matrix |
+| `UI-APPROVED-01` | `/`, `/companies` | analyst overview: portfolio risk cards, attention table, alert rail, sector-risk chart, model-method summary, global search and persistent navigation | `UI-APPROVED-01.png` + Playwright states at 1440/1024/390 px |
+| `UI-APPROVED-02` | `/companies/[ticker]`, `/agents/chat` | company risk detail: KPI strip, trend chart, financial indicators, SHAP explanation, news/source citations, AI analysis panel, MCP/tool trace, model version and disclaimer | `UI-APPROVED-02.png` + redacted trace/output and route/state manifest |
+| `UI-APPROVED-03` | `/ops/evidence`, `/agents/registry` | admin GitOps operations: plane health, AWS/Vast cost, session creation, Argo desired/live revision, pipeline status, promotion queue, A/B summary, audit history and links to observability/registry | `UI-APPROVED-03.png` + RBAC/action matrix and lifecycle evidence |
+
+### Reference 01 — Analyst overview
+
+![UI-APPROVED-01 analyst overview](evidence/product/design/UI-APPROVED-01.png)
+
+The frontend should preserve the left navigation (Overview, Companies,
+Watchlist, AI Analysis, Reports, Settings), a global ticker/company search,
+plane/user status in the header, three risk-summary cards, an attention table,
+an alert timeline, sector comparison and a short model-method explanation.
+On smaller screens these become stacked cards and collapsible rails rather than
+disappearing content.
+
+### Reference 02 — Company detail and AI analysis
+
+![UI-APPROVED-02 company detail and AI analysis](evidence/product/design/UI-APPROVED-02.png)
+
+The company page is the main analyst decision-support surface: breadcrumb and
+identity header, watchlist action, risk/confidence/model KPI strip, tabbed
+financial views, probability/Z-score trend, key indicators, SHAP drivers,
+recent sources, and a right-side AI analysis panel. The panel must expose
+citation IDs and a safe tool trace, but must not expose prompts, credentials or
+raw secrets. A separate `/agents/chat` route may reuse the panel components but
+retains its own route and authorization boundary.
+
+### Reference 03 — Admin GitOps operations
+
+![UI-APPROVED-03 admin GitOps operations](evidence/product/design/UI-APPROVED-03.png)
+
+The admin shell is intentionally separate from the analyst shell. It needs an
+environment selector, online/offline plane status, AWS and Vast cost gauges,
+evidence-session action, Argo desired/live revision and sync health, pipeline
+and promotion tables, A/B summary, audit timeline, and deep links to Grafana,
+Kibana, Jaeger and Agent Registry. Viewer roles can inspect this surface;
+operator/admin actions remain server-authorized and fencing-protected.
+
+### Visual evolution rule
+
+These references establish the initial composition and interaction intent. The
+implementation may use a stronger design system, improved contrast, better
+responsive layouts, accessible charts, clearer empty/error states and refined
+micro-interactions. It must not remove provenance, disclaimer, RBAC state,
+cached/live labeling, cost controls or the analyst/agent/admin separation just
+to match pixels.
+
+| Reference | SHA-256 |
+|---|---|
+| `UI-APPROVED-01.png` | `c18987145fac9abc43fdc632446d0b8779d00d6f8dc0fba6d40df89fed269318` |
+| `UI-APPROVED-02.png` | `5d21bf24f74499f7487f762ff5194f1055fbbad274ad2ad03b2613897186f4f7` |
+| `UI-APPROVED-03.png` | `066f456d8762912bb07a096da5d909bb5a625347bc4d7e9bb77d2ac7d2f3c8a4` |
 
 ## Information architecture
 
@@ -39,6 +95,60 @@ substitute.
 - **Persistent shell:** header carries product identity, plane status,
   authenticated role and disclaimer; navigation remains usable when EKS is
   offline.
+
+## Shared shell and component contract
+
+### Analyst shell
+
+- Left navigation: Overview, Companies, Watchlist, AI Analysis, Reports,
+  Settings and Sign out; the active item is visibly selected and keyboard
+  reachable.
+- Header: DistressLens identity, global company/ticker search, last-data or
+  freshness timestamp, plane status, notifications and authenticated user menu.
+- Content: one clear page title, one primary action, cards/tables/charts with
+  explicit units, source/freshness labels and a persistent educational
+  non-investment disclaimer.
+- Analyst surfaces use neutral white/gray canvas, dark navy primary controls,
+  red/amber/green risk semantics and non-color labels/icons so color is never
+  the only signal.
+
+### Company and AI analysis components
+
+- Company header: breadcrumb, ticker/name/market metadata and watchlist action.
+- Risk summary: distress probability, change versus prior run, model
+  confidence and model/data version.
+- Analysis body: probability/Z-score trend, financial-indicator table, SHAP
+  drivers, recent news/source list and tabs for Overview, Finance, Market,
+  News & Sources and Model Explanation.
+- AI panel: user question, streaming/complete/error states, citation IDs,
+  expandable MCP/tool trace, agent/model version and safe next action. The
+  panel is reusable in `/agents/chat`, but chat authorization and navigation
+  remain independent from company data access.
+
+### Admin shell
+
+- Separate `DistressLens Admin` identity and navigation: Operations, Data,
+  Models & Agents, A/B Testing, Users, Cost & Audit and Settings.
+- Environment selector (for example, AWS Evidence), online/offline selector,
+  desired Git commit, help/notifications and admin identity are always visible.
+- Operations dashboard: Web/Supabase/EKS health, AWS/Vast cost gauges,
+  evidence-session creation, Argo desired/live revision, sync health,
+  pipeline status, promotion queue, A/B summary, audit history and links to
+  Grafana/Kibana/Jaeger/Agent Registry.
+- Viewer mode is read-only. Operator/admin controls show disabled reasons and
+  are rechecked server-side with AAL2, idempotency and fencing.
+
+### Product flow
+
+```text
+Overview -> Companies -> Company detail -> AI analysis/RAG -> Compare -> Save/export report
+                                   \-> Agents chat (bounded, separately authorized)
+Admin shell -> Evidence session -> GitOps sync -> Pipelines -> Promotion/A-B -> Audit/export
+```
+
+The arrows describe navigation and evidence relationships, not synchronous
+dependencies. The analyst product remains usable when the evidence plane is
+OFF or expired.
 
 ## State and data contract
 
@@ -57,6 +167,24 @@ READY/any active state --expiry-------------------------------> EXPIRED -> OFF
 
 The UI reads typed contracts from `packages/contracts/`; it never infers
 authorization or lifecycle state from client-only flags.
+
+### Required state copy
+
+Every non-success state answers three questions: what is unavailable, what is
+cached or last known, and what the user can safely do next. Examples:
+
+| State | Required truthfulness |
+|---|---|
+| `EKS_OFF_CACHED` | show `CACHED_RESULT`, `cached_at`, source/model/data version and `LIVE_UNAVAILABLE` |
+| `PROVISIONING`/`SYNCING` | show lifecycle progress and polling/subscription status; do not show “live” inference |
+| `FAILED` | show failure category, correlation/run ID and retry/teardown action allowed by role |
+| `FORBIDDEN` | explain missing permission without revealing protected row/content |
+| `POLICY_BLOCKED` | state that the request was blocked and provide a safe alternative; do not echo hidden prompt text |
+| `STALE_FENCING` | reject the mutation, preserve the current owner/session and provide refresh/retry guidance |
+
+Sample values visible in the approved images may be used as deterministic
+fixture data only when marked `REFERENCE_FIXTURE`; they must never be mistaken
+for live financial data or executed evidence.
 
 ## Visual and accessibility rules
 

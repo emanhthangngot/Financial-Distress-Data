@@ -11,26 +11,28 @@ estimate: "8-12 days"
 Build DistressLens as a persistent Next.js 16 product on Vercel with Supabase Auth/Postgres. The EKS plane may be absent; the UI must remain useful, show previously generated reports, and represent evidence infrastructure as an explicit state machine.
 
 The three user-approved visual references are now a normative UI contract, not
-an informal design note. The original image binaries are not present in this
-checkout, so the plan records stable reference IDs and the exact screen/state
-requirements below. Before implementation, copy the approved images to
-`docs/phase2/evidence/product/design/` using these IDs; do not replace them
-with an invented mock.
+an informal design note. The original binaries are stored at
+`docs/phase2/evidence/product/design/UI-APPROVED-0{1,2,3}.png`. They are the
+initial frontend direction; implementation may improve visual polish and
+responsive behavior without removing the approved information hierarchy or
+security/product boundaries.
 
 ## Approved UI Baseline
 
 | Reference | Product surface | Required route | What the approved frame must prove |
 |---|---|---|---|
-| `UI-APPROVED-01` | Analyst risk workspace | `/companies/[ticker]` | company search, financial-distress risk snapshot, model explanation, data freshness, cited RAG answer, save/export report, and comparison entry point |
-| `UI-APPROVED-02` | Agent chat workbench | `/agents/chat` | agent selector, streaming response, citations, MCP/tool trace, model/agent version, loading/error/blocked states, and fixed non-investment disclaimer |
-| `UI-APPROVED-03` | Agent registry + evidence operations | `/agents/registry` and `/ops/evidence` | governed agent registry, version/status/replicas/sandbox policy, evidence-plane lifecycle, cost preview, GitOps revision, promotion/rollback/teardown controls, and RBAC-disabled actions |
+| `UI-APPROVED-01` | Analyst overview | `/` and `/companies` | portfolio risk cards, attention table, alert rail, sector-risk chart, model-method summary, global search and persistent navigation |
+| `UI-APPROVED-02` | Company detail + AI analysis | `/companies/[ticker]` and `/agents/chat` | KPI strip, risk/trend chart, financial indicators, SHAP explanation, cited sources, AI panel, MCP/tool trace, model version, loading/error/blocked states and disclaimer |
+| `UI-APPROVED-03` | Admin GitOps operations | `/ops/evidence` and `/agents/registry` | plane health, AWS/Vast cost, evidence session, Argo desired/live revision, pipelines, promotion/A-B summary, audit history, observability links and RBAC-disabled actions |
 
 The three references share one design system: a calm analyst workspace, clear
 primary action hierarchy, dense but readable evidence metadata, no decorative
 motion required for the rubric, responsive layouts at 1440/1024/390 px, and
 keyboard-visible focus. UI-APPROVED-03 may use two linked panels in one
 responsive shell, but registry and operations remain separate routes and
-authorization boundaries.
+authorization boundaries. The images are reference fixtures; pixel-perfect
+copy is not required if the improved implementation is more accessible and
+clearer while preserving the same content hierarchy.
 
 ### Route and state inventory
 
@@ -77,7 +79,9 @@ All privileged roles require Supabase AAL2. Server actions verify signed claims,
 - Create: `apps/web/`, `packages/contracts/`, Supabase migrations, RLS tests, UI component tests, Playwright tests.
 - Create: `apps/web/src/app/companies/`, `apps/web/src/app/compare/`, `apps/web/src/app/reports/`, `apps/web/src/app/agents/chat/`, `apps/web/src/app/agents/registry/`, `apps/web/src/app/ops/evidence/`.
 - Create: `apps/web/src/components/`, `apps/web/src/lib/server/`, `apps/web/e2e/`, `packages/contracts/` UI/API schemas, Supabase migrations, RLS tests, UI component tests, and Playwright tests.
-- Create: `docs/phase2/product.md`, `docs/phase2/security/rbac.md`, `docs/phase2/evidence/product/`, and `docs/phase2/evidence/product/design/UI-APPROVED-0{1,2,3}.md`.
+- Create: `docs/phase2/product.md`, `docs/phase2/security/rbac.md`,
+  `docs/phase2/evidence/product/`, and the image-backed reference manifests
+  `docs/phase2/evidence/product/design/UI-APPROVED-0{1,2,3}.md`.
 - Keep infrastructure implementation in the GitOps repo; the source repo stores typed API contracts only.
 
 ## Implementation Steps
@@ -116,6 +120,6 @@ All privileged roles require Supabase AAL2. Server actions verify signed claims,
 ## Risks and Rollback
 
 - Risk: Vercel serverless requests cannot babysit long AWS operations. Mitigation: durable outbox + external worker + polling/subscription.
-- Risk: approved images are not available as repository assets. Mitigation: preserve the three reference IDs and block visual sign-off until the original images are copied without alteration.
+- Risk: the approved images are treated as a pixel-perfect production spec. Mitigation: keep the originals and hashes immutable as baseline evidence, while allowing an accessible, responsive visual refinement during implementation.
 - Risk: a polished screenshot hides missing runtime states. Mitigation: every screenshot fixture carries route, state, viewport, source SHA, GitOps SHA and data provenance; Playwright covers success and failure states.
 - Rollback: Supabase migrations require tested down/forward-fix scripts; web releases use Vercel deployment rollback without altering EKS state.

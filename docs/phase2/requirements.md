@@ -68,10 +68,10 @@ DQ rules, Gold output semantics, or evidence outputs defined in
 ## 4.1 Product UI and approved visual baseline
 
 - **Product reviewer** -> opens `docs/phase2/product.md` -> finds the three
-  approved reference IDs (`UI-APPROVED-01` analyst workspace,
-  `UI-APPROVED-02` agent chat, `UI-APPROVED-03` registry/evidence operations),
-  their routes, required content and evidence fields without relying on an
-  unavailable image attachment.
+  approved reference IDs (`UI-APPROVED-01` analyst overview,
+  `UI-APPROVED-02` company detail + AI analysis, `UI-APPROVED-03` admin
+  GitOps/evidence operations), their routes, required content and evidence
+  fields without relying on an unavailable image attachment.
 - **Web developer** -> implements the approved route/state inventory -> every
   route has deterministic loading, empty, stale, degraded, forbidden, timeout
   and error fixtures, and the create-next-app placeholder is removed.
