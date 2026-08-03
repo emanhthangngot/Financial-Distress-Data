@@ -1,0 +1,12 @@
+{
+  "name": "financial-distress-data",
+  "private": true,
+  "packageManager": "pnpm@11.3.0",
+  "scripts": {
+    "dev": "pnpm --filter @distresslens/web dev",
+    "build": "pnpm --filter @distresslens/web build",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm --filter @distresslens/web lint",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

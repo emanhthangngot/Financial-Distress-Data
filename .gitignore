@@ -15,3 +15,7 @@ outputs/**/*.csv
 outputs/**/*.json
 warehouse.db
 docs/_plans/
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
