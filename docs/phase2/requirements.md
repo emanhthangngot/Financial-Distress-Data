@@ -65,6 +65,38 @@ DQ rules, Gold output semantics, or evidence outputs defined in
   tests/test_stage1_quality_gates.py` -> both suites pass and Phase 1 quality
   gates are unchanged.
 
+## 4.1 Product UI and approved visual baseline
+
+- **Product reviewer** -> opens `docs/phase2/product.md` -> finds the three
+  approved reference IDs (`UI-APPROVED-01` analyst workspace,
+  `UI-APPROVED-02` agent chat, `UI-APPROVED-03` registry/evidence operations),
+  their routes, required content and evidence fields without relying on an
+  unavailable image attachment.
+- **Web developer** -> implements the approved route/state inventory -> every
+  route has deterministic loading, empty, stale, degraded, forbidden, timeout
+  and error fixtures, and the create-next-app placeholder is removed.
+- **Analyst** -> opens the company/report surfaces while EKS is off -> sees a
+  timestamped cached result with `CACHED_RESULT`/`LIVE_UNAVAILABLE`, provenance
+  and the educational/non-investment disclaimer rather than a false live
+  inference claim.
+- **LLM reviewer** -> opens `/agents/chat` -> sees citations, MCP/tool trace,
+  agent/model version, bounded streaming and policy/error states without
+  prompts, tokens, credentials or PII.
+- **Platform reviewer** -> opens `/agents/registry` and `/ops/evidence` -> sees
+  registry governance, lifecycle/cost/GitOps state and role-appropriate
+  controls; unauthorized mutations fail server-side with no outbox effect.
+- **Accessibility reviewer** -> runs the UI suite at 1440/1024/390 px -> finds
+  keyboard-visible focus, semantic labels/headings, contrast, non-color status
+  cues and reduced-motion compliance.
+- **Evidence owner** -> records each UI screenshot/trace -> includes reference
+  ID, route, state, viewport, source SHA, GitOps SHA, data/model/agent version,
+  expected/actual result and redaction status; missing fields fail the Phase 8
+  auditor.
+- **ML/LLM operator** -> opens `/ops/evidence` or `/reports/[id]` -> sees a
+  freshness/run/version link to the canonical Grafana observability and A/B
+  artifacts, while the product screenshot remains supplemental rather than a
+  substitute for executed dashboard evidence.
+
 ## 5. 100/100 Operational Closures
 
 - **ML operator** -> runs the scheduled Phase 2 drift DAG -> Airflow pulls
