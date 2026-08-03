@@ -1,118 +1,78 @@
-# Financial Distress Data + AI System Constitution
+# Financial Distress Data — Agent Rules
 
-Read this at the start of every Codex session in this repository.
+Process memory only. WHY/architecture live in `docs/`; this file is HOW-TO-BEHAVE.
 
-## 1. Core Technology Stack
+## Read Order (source of truth)
 
-- Orchestrator: Apache Airflow running locally in Docker.
-- Streaming: Apache Kafka single-node KRaft running locally in Docker.
-- Optional streaming runtime: Apache Flink 1.19 (jobmanager + taskmanager) gated by the `flink` Docker Compose profile and the `ENABLE_FLINK=1` env var. Used by DAG 04 and the W17/W20 streaming evidence; not started by `docker compose up`.
-- Batch processing: PySpark local mode with the S3A connector.
-- Operational metadata: PostgreSQL running locally in Docker, schema `project_metadata`.
-- Object storage: MinIO local S3-compatible storage, endpoint `http://minio:9000`.
-- Local query engine: DuckDB using `httpfs`, usually inspected through DBeaver.
+1. `AGENTS.md` (this file) — non-negotiable.
+2. `docs/mini_coursework.md` — Phase 1 spec (active scope, see below).
+3. `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` — Phase 2 ground truth, read only when a task explicitly targets Phase 2. It links onward to `docs/coursework.md`, `docs/phase2/*` (rubric matrix, ADRs, low-level design), and phase files `phase-01..08`.
 
-## 2. Spec-Driven Development Rules
+Conflict between docs: Phase 1 local-first decisions in this file and `docs/mini_coursework.md` win.
 
-`docs/spec.md` defines the Nexlab SDD operating model for this repository. Treat it as mandatory agent law, not background reading.
+## Phase Scope
 
-### Source of Truth Order
+- Phase 1 = `docs/01_data_generator.md` + `docs/02_schema_design.md`. Default active phase unless the task says Phase 2.
+- Phase 2 code is additive-only under `src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, and thin wrappers in `dags/phase2/`.
+- `dags/phase2/` wrappers must have zero import-time side effects and must not rename/remove any existing Phase 1 DAG ID or task.
+- Never edit a Phase 1 DAG (`dags/*.py` outside `dags/phase2/`) or Phase 1 pipeline behavior for a Phase 2 task unless the task explicitly asks for it.
 
-1. `AGENTS.md`: non-negotiable constitution and coding boundaries.
-2. `docs/spec.md`: Nexlab SDD workflow, phase gates, and agent rules.
-3. `docs/mini_coursework.md`: Phase 1 technical spec and implementation source of truth.
-4. `docs/coursework.md`: Phase 2/full-coursework vision, used only when explicitly requested.
-5. `docs/idea.md` and `docs/coursework_proposal.md`: discovery and PRD background.
+## Don't Touch
 
-If docs conflict, preserve Phase 1 local-first decisions from `AGENTS.md` and `docs/mini_coursework.md`.
+- Phase 1 (this repo, `src/collectors`/`generator`/`streaming`/`transforms`/`quality`/`catalog`/`metadata`, `dags/*.py` outside `phase2/`): no AWS RDS/S3/Glue/Athena/EMR/MSK/Redshift/SageMaker, no Kubernetes, no `boto3` for Athena/Glue — local-first stack only (MinIO + DuckDB `httpfs`, not cloud equivalents).
+- Phase 2's AWS/EKS/GitOps platform (EKS, S3, ECR, RDS, ElastiCache, Argo CD, etc. — see `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-03-bootstrap-gitops-and-aws-evidence-platform.md`) lives in a **separate** `financial-distress-gitops` control repo, not in this repo. If a Phase 2 task needs that infra and the gitops repo isn't checked out locally, say so instead of adding AWS/K8s code here.
+- Don't change an existing test's expected value to make it pass. If a test fails, re-check the test and code against the spec (`docs/mini_coursework.md` for Phase 1, `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` for Phase 2); if the spec is right, fix the code.
+- Don't hand-edit `warehouse.db`, `outputs/**`, or anything under `docs/evidence/` — these are generated artifacts, regenerate via the producing script instead.
+- Don't run Flink locally by default — it's opt-in via the `flink` Docker Compose profile and `ENABLE_FLINK=1`; not started by plain `docker compose up`.
 
-### Nexlab SDD Phase Gates
+## Data Contract Rules (non-obvious, wrong-by-default otherwise)
 
-- PH-0 Problem Discovery: understand `docs/idea.md`.
-- PH-1 Product Spec: map constraints from `docs/coursework_proposal.md`.
-- PH-2 Tech Architecture: use `docs/mini_coursework.md` for Phase 1 and `docs/coursework.md` for Phase 2.
-- PH-3 Design: define CLI, database, DBeaver, DuckDB, and evidence-facing contracts.
-- PH-4 SDD Setup: maintain `AGENTS.md`, Codex skills, specs, test strategy, and acceptance criteria.
-- PH-5 Sprint Implementation: code only after meaningful PyTest test seeds exist and fail first.
-- PH-6 Deploy and Go-live: local Docker cluster, Airflow, MinIO, PostgreSQL, DuckDB, and DBeaver evidence must prove the result.
+- Bronze: append-only.
+- Silver/Gold: idempotent writes, `overwrite` mode on affected partitions only (not full-table overwrite).
+- Dedupe by business key + latest `created_ts`.
+- DQ results go to `project_metadata.data_quality_result`; critical failures halt downstream tasks; warning-level failures route rows to `project_metadata.failed_records` and may continue.
+- PostgreSQL schema split: `project_metadata` (Phase 1) vs `ml_metadata` (Phase 2) — don't cross-write.
 
-### Implementation Rules
+## Verify Commands
 
-- Spec first: before writing code, read `docs/spec.md` and then `docs/mini_coursework.md` for Phase 1 work or `docs/coursework.md` for explicit Phase 2 work.
-- Phase 1 scope is limited to `01_data_generator.md` and `02_schema_design.md`: data generation, schema design, Bronze/Silver/Gold pipelines, metadata, DQ, and evidence.
-- Phase 2 implementation must remain additive under `src/ml/`, `src/drift/`,
-  `src/llm/`, `src/agents/`, and `apps/`. Thin Phase 2 Airflow wrappers may live
-  under `dags/phase2/` when their business logic stays in those Phase 2 roots.
-  Phase 2 must not modify any Phase 1 DAG or pipeline behavior unless explicitly
-  requested.
-- Acceptance criteria must be written as `WHO -> ACTION -> RESULT`.
-- Write PyTest test seeds before implementing core logic. The first run should fail for a meaningful reason.
-- If a test fails, compare the test and code against the spec. Do not change expected values just to make tests pass.
-- Do not proceed from plan to implementation if acceptance criteria are vague, untestable, or outside the active phase.
+```bash
+.venv/bin/python -m pytest tests            # full suite
+.venv/bin/python -m pytest tests -k <name>  # single test, use while iterating
+.venv/bin/ruff check src dags tests scripts
+.venv/bin/black --check src dags tests scripts
+docker compose config                        # validates compose file without starting anything
+.venv/bin/python scripts/run_stage1_quality_gates.py   # one-shot: runs all four above
+```
 
-### Required Task Start Checklist
+Definition of done for any code change: the one-shot gate above passes. CI (`.github/workflows/ci.yml`) runs the same gate on push/PR to `main`/`dev`.
 
-Before editing code or pipeline configs, the agent must state:
+## Git Conventions
 
-- Active phase: Phase 1 mini-coursework or explicit Phase 2.
-- Spec files read.
+- Commit subject: Conventional Commits, `type(scope): summary` (e.g. `feat(phase2): lock spec`, `fix: stabilize stage 1 e2e runtime`, `docs(agents): trim rules`). Types in use: `feat`, `fix`, `docs`, `chore`, `test`, `style`, `ci`.
+- Never add a co-author trailer (no `Co-Authored-By`) or any AI-attribution line to commit messages.
+- Branch name: `type/kebab-slug` matching the commit type (e.g. `feat/w25-rubric-coverage-audit`, `fix/review-highlights-stage1`, `docs/stage-1-contracts`, `chore/stage-1-local-infra`).
+- Merge to `main`/`dev` through a PR; don't push directly to `main`.
+
+## Time-Costly — avoid unless the task needs it
+
+- `scripts/run_stage1_quality_gates.py --include-services` and `scripts/stage1_readiness_report.py --include-services` need the Docker stack (`docker compose up`) already running — don't start the stack just to run these.
+- `tests/test_real_e2e_contracts.py`, `scripts/run_stage1_real_e2e.py` hit live Kafka/MinIO/Postgres/Airflow containers — full stack boot, not a quick check.
+- Flink-gated tests (`tests/test_flink_integration.py`, `scripts/run_flink_benchmark.py`) require `ENABLE_FLINK=1` and the `flink` compose profile — skip unless the task is Flink/W17/W20 streaming evidence.
+- Don't run the full `pytest tests` suite for a one-file change — target it with `-k` first, run the full suite before declaring done.
+
+## Acceptance Criteria Format
+
+Write every acceptance criterion as `WHO -> ACTION -> RESULT` (e.g. "PySpark `silver_to_gold` job -> computes `debt_to_asset` -> `total_liabilities / total_assets`, float, 4dp"). Reject vague AC ("system should calculate correctly") before implementing against it — go back to the spec instead.
+
+## Task Start Checklist
+
+State before editing code or pipeline configs:
+
+- Active phase (Phase 1 default, or explicit Phase 2).
+- Spec file(s) read for this task.
 - Acceptance criteria in `WHO -> ACTION -> RESULT` form.
-- Skill(s) being used from `.codex/skills/`.
-- Verification command or evidence target.
+- Verify command(s) you'll run before calling it done.
 
-## 3. Directory Structure
+## Codex-Specific Tooling
 
-- `dags/`: Airflow DAG definitions.
-  - `dags/phase2/`: additive Phase 2 scheduling wrappers only; never import-time
-    side effects and never changes to existing Phase 1 DAG IDs or tasks.
-- `src/collectors/`: online API/WebSocket collectors and source adapters.
-- `src/generator/`: test fixtures and fallback synthetic generators only.
-- `src/streaming/`: Kafka producer and consumer logic.
-  - `src/streaming/flink/`: opt-in Flink REST client and job artifacts dir (W26).
-- `src/transforms/`: Bronze-to-Silver and Silver-to-Gold PySpark transforms.
-- `src/quality/`: data quality checks with hard-fail and soft-fail policy.
-- `src/catalog/`: MinIO bucket structure and DuckDB view registration.
-- `src/metadata/`: PostgreSQL metadata clients and writers.
-- `src/ml/`: Phase 2 only.
-- `src/drift/`: Phase 2 only.
-- `src/llm/`: Phase 2 only.
-- `src/agents/`: Phase 2 only.
-- `apps/`: Phase 2 product/API deployables only.
-- `sql/`: PostgreSQL schema and DuckDB view SQL.
-- `tests/`: PyTest unit and integration tests.
-- `docs/`: coursework specs, design docs, and evidence.
-- `.codex/skills/`: project-local Codex skills copied from `agent-skills` plus project-specific skills.
-
-## 4. Local-First Boundaries
-
-- Do not add AWS RDS, AWS S3, AWS Glue, AWS Athena, EMR, MSK, Redshift, SageMaker, or Kubernetes code for Phase 1.
-- Do not import cloud-only packages such as `boto3` for Athena/Glue workflows.
-- Use MinIO paths through `s3a://financial-distress-lake/...` in PySpark.
-- Use DuckDB `httpfs` for Athena-style local SQL over MinIO Parquet.
-- Use local PostgreSQL schemas: `project_metadata` for Phase 1 and `ml_metadata` for Phase 2.
-
-## 5. Idempotency and Quality
-
-- Bronze may be append-only.
-- Silver and Gold writes must be idempotent and use overwrite on affected partitions.
-- Deduplicate by business keys and latest `created_ts`.
-- Data quality results must be logged to `project_metadata.data_quality_result`.
-- Critical DQ failures halt downstream tasks. Warning-level issues route records to `project_metadata.failed_records` and may allow downstream processing.
-
-## 6. Codex Skill Usage
-
-Use `.codex/skills/using-agent-skills/SKILL.md` for general skill selection.
-
-Always consider these project-specific skills first:
-
-- `financial-distress-sdd`: use before any coursework planning or implementation.
-- `local-lakehouse-data-engineering`: use for Airflow, Kafka, PySpark, MinIO, DuckDB, PostgreSQL, DQ, and pipeline evidence work.
-
-For code changes, combine project-specific skills with:
-
-- `spec-driven-development`
-- `planning-and-task-breakdown`
-- `test-driven-development`
-- `incremental-implementation`
-- `code-review-and-quality`
-- `security-and-hardening`
+Codex sessions and Claude Code sessions use the installed `ak:*` skill catalog instead — see `CLAUDE.md`.

@@ -31,7 +31,6 @@ Out of scope:
 ## Source Specs
 
 - `AGENTS.md`
-- `docs/spec.md`
 - `docs/mini_coursework.md`
 - `docs/01_data_generator.md`
 - `docs/02_schema_design.md`

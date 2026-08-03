@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(warehouse.db)",
+      "Write(warehouse.db)",
+      "Edit(docs/evidence/**)",
+      "Write(docs/evidence/**)",
+      "Edit(outputs/**)",
+      "Write(outputs/**)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)"
+    ]
+  }
+}
