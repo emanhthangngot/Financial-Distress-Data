@@ -1,36 +1,60 @@
 import type { Provenance, Role } from "@distresslens/contracts";
 import type { ReactNode } from "react";
+import { AnalysisAssistant } from "@/components/assistant/analysis-assistant";
+import type { AssistantContext } from "@/lib/assistant/assistant-context";
 import { BrandLockup, BrandMark } from "./brand-mark";
-import { EvidenceRibbon } from "./evidence-ribbon";
 import { HeaderSearch } from "./header-search";
 import {
-  AgentIcon,
   CompaniesIcon,
+  CompareIcon,
   MenuIcon,
+  OperationsIcon,
   OverviewIcon,
   ReportIcon,
   SettingsIcon,
   SignOutIcon,
   WatchlistIcon,
 } from "./icons";
-import { NavRail, type NavItem } from "./nav-rail";
+import { NavRail, type NavGroup, type NavItem } from "./nav-rail";
+import { SystemStatus } from "./system-status";
 import { UserMenu } from "./user-menu";
 
 /**
  * The analyst workspace shell: persistent navy rail, light working canvas.
  *
- * Watchlist and Settings appear in the rail because the approved reference and
- * the product contract both name them, but they are marked unavailable rather
- * than linked: the phase-02 route inventory does not include them, and a nav
- * item that 404s is worse than one that admits it has not shipped.
+ * Navigation is grouped by what the analyst is doing — reading the portfolio,
+ * managing their own working set, or crossing into platform surfaces — rather
+ * than listed flat. Items the product names but has not shipped stay visible
+ * with a "Sắp có" badge instead of linking to a 404.
+ *
+ * There is no AI entry in the rail. The assistant is a floating support panel
+ * available on every surface with that surface's context, so promoting it to a
+ * destination would make it a place the analyst has to go instead of a tool
+ * they have to hand.
  */
 
-const ANALYST_NAV: readonly NavItem[] = [
-  { label: "Tổng quan", href: "/", icon: <OverviewIcon /> },
-  { label: "Doanh nghiệp", href: "/companies", icon: <CompaniesIcon /> },
-  { label: "Danh sách theo dõi", href: null, icon: <WatchlistIcon />, unavailableNote: "Sắp có" },
-  { label: "AI Phân tích", href: "/agents/chat", icon: <AgentIcon /> },
-  { label: "Báo cáo", href: "/reports", icon: <ReportIcon /> },
+const ANALYST_NAV: readonly NavGroup[] = [
+  {
+    label: "Phân tích",
+    items: [
+      { label: "Tổng quan", href: "/", icon: <OverviewIcon /> },
+      { label: "Doanh nghiệp", href: "/companies", icon: <CompaniesIcon /> },
+      { label: "So sánh mô hình", href: "/compare", icon: <CompareIcon /> },
+    ],
+  },
+  {
+    label: "Quản lý",
+    items: [
+      { label: "Báo cáo", href: "/reports", icon: <ReportIcon /> },
+      // "Theo dõi" rather than "Danh sách theo dõi": the longer label truncates
+      // in a 232px rail once the "Sắp có" badge takes its place on the row.
+      { label: "Theo dõi", href: null, icon: <WatchlistIcon />, unavailableNote: "Sắp có" },
+    ],
+  },
+  {
+    label: "Hệ thống",
+    items: [{ label: "Vận hành", href: "/ops/evidence", icon: <OperationsIcon /> }],
+  },
 ];
 
 const ANALYST_NAV_FOOTER: readonly NavItem[] = [
@@ -41,8 +65,10 @@ const ANALYST_NAV_FOOTER: readonly NavItem[] = [
 export interface AnalystShellProps {
   user: { displayName: string; role: Role };
   provenance: Provenance;
-  /** Header freshness line, e.g. "Đồng bộ lần cuối: 23/05/2025 08:46". */
-  freshnessLabel: string;
+  /** Sync time shown in the header status, e.g. "23/05/2025 08:46". */
+  syncedAtLabel: string;
+  /** What the assistant is allowed to know about this page. */
+  assistantContext: AssistantContext;
   searchDefaultValue?: string;
   notificationCount?: number;
   children: ReactNode;
@@ -51,7 +77,8 @@ export interface AnalystShellProps {
 export function AnalystShell({
   user,
   provenance,
-  freshnessLabel,
+  syncedAtLabel,
+  assistantContext,
   searchDefaultValue,
   notificationCount = 0,
   children,
@@ -63,17 +90,21 @@ export function AnalystShell({
       </a>
 
       {/* Desktop rail. Fixed width so dense tables get a predictable canvas. */}
-      <div className="hidden w-[248px] shrink-0 flex-col bg-ink-900 lg:flex">
+      <div data-print-hidden className="hidden w-[232px] shrink-0 flex-col bg-ink-900 lg:flex">
         <div className="px-4 py-4">
           <BrandLockup />
         </div>
         <div className="flex-1">
-          <NavRail items={ANALYST_NAV} footerItems={ANALYST_NAV_FOOTER} label="Điều hướng phân tích" />
+          <NavRail
+            groups={ANALYST_NAV}
+            footerItems={ANALYST_NAV_FOOTER}
+            label="Điều hướng phân tích"
+          />
         </div>
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="border-b border-line-hairline bg-paper-0">
+        <header data-print-hidden className="border-b border-line-hairline bg-paper-0">
           <div className="flex items-center gap-3 px-4 py-2.5 lg:px-6">
             {/* Mobile navigation. A <details> drawer keeps the rail reachable
                 without shipping a client bundle just to open a menu. */}
@@ -84,23 +115,26 @@ export function AnalystShell({
               </summary>
               <div className="absolute inset-x-0 top-[57px] z-(--z-drawer) bg-ink-900 shadow-(--shadow-overlay)">
                 <NavRail
-                  items={ANALYST_NAV}
+                  groups={ANALYST_NAV}
                   footerItems={ANALYST_NAV_FOOTER}
                   label="Điều hướng phân tích"
                 />
               </div>
             </details>
 
-            <span className="text-ink-900 lg:hidden">
+            {/* The wordmark yields before the account controls do: on a 390px
+                header the controls are what the analyst reaches for, and the
+                brand is already established by the page they are on. */}
+            <span className="min-w-0 shrink text-ink-900 lg:hidden">
               <BrandLockupCompact />
             </span>
 
-            <div className="hidden min-w-0 flex-1 justify-center lg:flex">
+            <div className="hidden min-w-0 flex-1 lg:flex">
               <HeaderSearch defaultValue={searchDefaultValue} />
             </div>
 
-            <div className="ml-auto flex items-center gap-3">
-              <span className="hidden text-[13px] text-text-muted xl:block">{freshnessLabel}</span>
+            <div className="ml-auto flex items-center gap-1">
+              <SystemStatus provenance={provenance} syncedAtLabel={syncedAtLabel} />
               <UserMenu
                 displayName={user.displayName}
                 role={user.role}
@@ -116,23 +150,23 @@ export function AnalystShell({
           </div>
         </header>
 
-        <EvidenceRibbon provenance={provenance} />
-
         <main id="main-content" className="min-w-0 flex-1 px-4 py-5 lg:px-6 lg:py-6">
           {children}
         </main>
       </div>
+
+      <AnalysisAssistant context={assistantContext} />
     </div>
   );
 }
 
 function BrandLockupCompact() {
   return (
-    <span className="flex items-center gap-2 font-semibold text-text-strong">
-      <span className="text-ink-900">
+    <span className="flex min-w-0 items-center gap-2 font-semibold text-text-strong">
+      <span className="shrink-0 text-ink-900">
         <BrandMark size={26} />
       </span>
-      <span className="text-[15px]">DistressLens</span>
+      <span className="truncate text-[15px]">DistressLens</span>
     </span>
   );
 }

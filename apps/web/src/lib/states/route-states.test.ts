@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { validateStateCopy } from "@distresslens/contracts";
-import { PRODUCT_ROUTES, ROUTE_STATE_COPY, type ProductRoute } from "./route-states";
+import {
+  ASSISTANT_STATE_COPY,
+  PRODUCT_ROUTES,
+  ROUTE_STATE_COPY,
+  type ProductRoute,
+} from "./route-states";
 
 /**
  * The route/state inventory from phase-02. Listed here independently of the
@@ -12,8 +17,8 @@ const REQUIRED_STATES: Record<ProductRoute, readonly string[]> = {
   "/companies": ["empty", "stale", "error"],
   "/companies/[ticker]": ["degraded", "empty", "forbidden", "error"],
   "/compare": ["empty", "error"],
+  "/reports": ["forbidden", "empty", "error"],
   "/reports/[id]": ["forbidden", "error"],
-  "/agents/chat": ["degraded", "timeout", "policy_blocked", "error"],
   "/agents/registry": ["forbidden", "degraded", "error"],
   "/ops/evidence": ["forbidden", "degraded", "error"],
 };
@@ -54,6 +59,16 @@ describe("route state catalog", () => {
   it("gives every route forbidden copy, because the server guard can deny on any of them", () => {
     for (const route of PRODUCT_ROUTES) {
       expect(ROUTE_STATE_COPY[route].forbidden, `${route} cannot render a denial`).toBeDefined();
+    }
+  });
+
+  it("keeps the assistant's own states, since it is a surface on every route", () => {
+    // The assistant is not a route, but it can still be denied, degraded,
+    // timed out or policy-blocked, and each of those owes the analyst copy.
+    for (const state of ["forbidden", "degraded", "timeout", "policy_blocked", "error"] as const) {
+      const copy = ASSISTANT_STATE_COPY[state];
+      expect(copy, `assistant is missing copy for ${state}`).toBeDefined();
+      expect(validateStateCopy(copy!), `assistant/${state}`).toEqual([]);
     }
   });
 

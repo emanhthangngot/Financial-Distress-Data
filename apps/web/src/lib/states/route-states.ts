@@ -12,8 +12,8 @@ export const PRODUCT_ROUTES = [
   "/companies",
   "/companies/[ticker]",
   "/compare",
+  "/reports",
   "/reports/[id]",
-  "/agents/chat",
   "/agents/registry",
   "/ops/evidence",
 ] as const;
@@ -105,6 +105,23 @@ export const ROUTE_STATE_COPY: RouteStateCatalog = {
       nextAction: "Tải lại trang. Trang chi tiết doanh nghiệp vẫn xem được.",
     },
   },
+  "/reports": {
+    forbidden: {
+      unavailable: "Tài khoản hiện tại không được phép xem báo cáo đã lưu.",
+      lastKnown: null,
+      nextAction: "Đăng nhập bằng tài khoản phân tích, hoặc yêu cầu cấp quyền analyst.",
+    },
+    empty: {
+      unavailable: "Bạn chưa lưu báo cáo nào.",
+      lastKnown: null,
+      nextAction: "Mở một doanh nghiệp và chọn “Lưu báo cáo” để tạo báo cáo đầu tiên.",
+    },
+    error: {
+      unavailable: "Không tải được danh sách báo cáo đã lưu.",
+      lastKnown: null,
+      nextAction: "Tải lại trang. Trang chi tiết doanh nghiệp vẫn xem được.",
+    },
+  },
   "/reports/[id]": {
     forbidden: {
       unavailable: "Báo cáo đã bị thu hồi hoặc không thuộc tài khoản này.",
@@ -115,33 +132,6 @@ export const ROUTE_STATE_COPY: RouteStateCatalog = {
       unavailable: "Không mở được báo cáo đã lưu.",
       lastKnown: null,
       nextAction: "Tải lại trang, hoặc tạo lại báo cáo từ trang doanh nghiệp.",
-    },
-  },
-  "/agents/chat": {
-    forbidden: {
-      unavailable: "Tài khoản hiện tại không được phép gửi yêu cầu tới agent.",
-      lastKnown: null,
-      nextAction: "Yêu cầu cấp quyền analyst, hoặc xem phân tích đã lưu trong Báo cáo.",
-    },
-    degraded: {
-      unavailable: "Agent không chạy được vì phiên evidence chưa ở trạng thái READY.",
-      lastKnown: "Đang hiển thị các câu trả lời đã lưu của phiên trước.",
-      nextAction: "Đọc lại phân tích đã lưu, hoặc đề nghị vận hành tạo phiên evidence.",
-    },
-    timeout: {
-      unavailable: "Agent không trả lời trong thời gian cho phép.",
-      lastKnown: "Phần trả lời đã nhận được vẫn giữ nguyên bên dưới.",
-      nextAction: "Hỏi lại với phạm vi hẹp hơn, hoặc thử lại sau ít phút.",
-    },
-    policy_blocked: {
-      unavailable: "Yêu cầu bị chính sách an toàn chặn.",
-      lastKnown: null,
-      nextAction: "Đặt lại câu hỏi ở phạm vi phân tích tài chính của doanh nghiệp.",
-    },
-    error: {
-      unavailable: "Không gửi được yêu cầu tới agent.",
-      lastKnown: null,
-      nextAction: "Thử lại. Nếu lặp lại, xem trạng thái hệ thống ở trang Vận hành.",
     },
   },
   "/agents/registry": {
@@ -177,5 +167,38 @@ export const ROUTE_STATE_COPY: RouteStateCatalog = {
       lastKnown: null,
       nextAction: "Tải lại trang. Thao tác hủy phiên vẫn khả dụng khi trang tải lại được.",
     },
+  },
+};
+
+/**
+ * The analysis assistant is a floating surface available on every route rather
+ * than a destination of its own, so its states live outside the route catalog.
+ * It still owes the reader the same three answers as any route state.
+ */
+export const ASSISTANT_STATE_COPY: Partial<Record<NonSuccessState, StateCopy>> = {
+  forbidden: {
+    unavailable: "Tài khoản hiện tại không được phép gửi yêu cầu tới trợ lý phân tích.",
+    lastKnown: null,
+    nextAction: "Yêu cầu cấp quyền analyst, hoặc xem phân tích đã lưu trong Báo cáo.",
+  },
+  degraded: {
+    unavailable: "Trợ lý không chạy được vì phiên evidence chưa ở trạng thái READY.",
+    lastKnown: "Đang hiển thị các câu trả lời đã lưu của phiên trước.",
+    nextAction: "Đọc lại phân tích đã lưu, hoặc đề nghị vận hành tạo phiên evidence.",
+  },
+  timeout: {
+    unavailable: "Trợ lý không trả lời trong thời gian cho phép.",
+    lastKnown: "Phần trả lời đã nhận được vẫn giữ nguyên bên dưới.",
+    nextAction: "Hỏi lại với phạm vi hẹp hơn, hoặc thử lại sau ít phút.",
+  },
+  policy_blocked: {
+    unavailable: "Yêu cầu bị chính sách an toàn chặn.",
+    lastKnown: null,
+    nextAction: "Đặt lại câu hỏi ở phạm vi phân tích tài chính của doanh nghiệp.",
+  },
+  error: {
+    unavailable: "Không gửi được yêu cầu tới trợ lý phân tích.",
+    lastKnown: null,
+    nextAction: "Thử lại. Nếu lặp lại, xem trạng thái hệ thống ở trang Vận hành.",
   },
 };
