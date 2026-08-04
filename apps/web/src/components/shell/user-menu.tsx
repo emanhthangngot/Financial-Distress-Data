@@ -36,7 +36,7 @@ export function UserMenu({
     : "text-text-body hover:bg-paper-2";
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex min-w-0 shrink items-center gap-1">
       <button
         type="button"
         className={`tap-target relative flex items-center justify-center rounded-md px-2 ${controlTone}`}
@@ -70,7 +70,9 @@ export function UserMenu({
           <span className="sr-only">Mở menu tài khoản</span>
         </summary>
 
-        <div className="absolute right-0 z-(--z-overlay) mt-1 w-60 rounded-md border border-line-hairline bg-paper-0 p-1.5 shadow-(--shadow-popover)">
+        {/* Capped to the viewport: a fixed 240px panel anchored to the right
+            edge of a 390px header pushes the document wider than the screen. */}
+        <div className="absolute right-0 z-(--z-overlay) mt-1 w-60 max-w-[calc(100vw-2rem)] rounded-md border border-line-hairline bg-paper-0 p-1.5 shadow-(--shadow-popover)">
           <p className="px-2.5 py-2">
             <span className="block text-[14px] font-semibold text-text-strong">{displayName}</span>
             <span className="block text-[13px] text-text-muted">{ROLE_LABELS[role]}</span>

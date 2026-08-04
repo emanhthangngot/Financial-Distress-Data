@@ -183,6 +183,88 @@ export function CostIcon(props: IconProps) {
   );
 }
 
+export function InfoIcon(props: IconProps) {
+  return (
+    <Icon {...props} width={16} height={16}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.5" />
+      <path d="M12 7.8h.01" />
+    </Icon>
+  );
+}
+
+export function CompareIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 6h6M5 6l2.5-2.5M5 6l2.5 2.5" />
+      <path d="M19 18h-6M19 18l-2.5-2.5M19 18l-2.5 2.5" />
+      <path d="M5 12h14" />
+    </Icon>
+  );
+}
+
+/**
+ * The assistant glyph: a lens over a spark. It is the only icon allowed to
+ * carry the AI accent colour, which is how the assistant stays recognisable
+ * without a badge on every surface it touches.
+ */
+export function AssistantIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="10.5" cy="10.5" r="6" />
+      <path d="m15 15 4.5 4.5" />
+      <path d="M10.5 7.5 11.4 9.6 13.5 10.5 11.4 11.4 10.5 13.5 9.6 11.4 7.5 10.5 9.6 9.6Z" />
+    </Icon>
+  );
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <Icon {...props} width={18} height={18}>
+      <path d="m6 6 12 12M18 6 6 18" />
+    </Icon>
+  );
+}
+
+export function MinimizeIcon(props: IconProps) {
+  return (
+    <Icon {...props} width={18} height={18}>
+      <path d="M6 14h12" />
+    </Icon>
+  );
+}
+
+export function ExpandIcon(props: IconProps) {
+  return (
+    <Icon {...props} width={18} height={18}>
+      <path d="M4 9V4h5" />
+      <path d="M20 15v5h-5" />
+      <path d="M4 4l6 6" />
+      <path d="M20 20l-6-6" />
+    </Icon>
+  );
+}
+
+export function CollapseIcon(props: IconProps) {
+  return (
+    <Icon {...props} width={18} height={18}>
+      <path d="M10 4v5H5" />
+      <path d="M14 20v-5h5" />
+      <path d="M4 3.5 9 9" />
+      <path d="M20 20.5 15 15" />
+    </Icon>
+  );
+}
+
+export function SendIcon(props: IconProps) {
+  return (
+    <Icon {...props} width={18} height={18}>
+      <path d="M5 12 20 5l-7 15-2.2-5.8Z" />
+      <path d="M10.8 14.2 20 5" />
+    </Icon>
+  );
+}
+
 export function LockIcon(props: IconProps) {
   return (
     <Icon {...props} width={14} height={14}>

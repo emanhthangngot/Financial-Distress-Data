@@ -1,71 +1,88 @@
 @import "tailwindcss";
 
 /*
- * DistressLens design tokens — "archival instrument panel".
+ * DistressLens design tokens — enterprise fintech, AI as a supporting assistant.
  *
- * Navy ink on cool paper, engraved hairlines instead of card shadows, and risk
- * colors that always travel with a non-color label. Every color, radius, shadow
- * and duration used by a component comes from this file: a raw hex or px value
- * in a component is a bug, because it is how a palette silently forks.
+ * Navy chrome, cool paper canvas, one primary blue for action and one indigo
+ * accent reserved exclusively for the analysis assistant. Every color, radius,
+ * shadow and duration a component uses comes from this file: a raw hex or px
+ * value in a component is a bug, because it is how a palette silently forks.
  */
 
 @theme {
-  /* Ink — text and primary controls. Never pure black: #0E2038 keeps the
-     instrument-panel warmth and still clears 4.5:1 on every paper tone. */
-  --color-ink-900: #0e2038;
-  --color-ink-800: #14365e;
-  --color-ink-700: #1c4a80;
-  --color-ink-600: #1f5896;
-  --color-ink-500: #2f6cb0;
+  /* Chrome — the navigation rail and admin header. Never pure black. */
+  --color-ink-900: #172a46;
+  --color-ink-800: #1f3b5c;
+  --color-ink-700: #2b4f75;
 
-  /* Paper — page and raised surfaces. Never pure white. */
-  --color-paper-0: #fbfcfd;
-  --color-paper-1: #f4f7fa;
-  --color-paper-2: #e9eef4;
-  --color-paper-3: #dde5ed;
+  /* Primary action blue. -700 is the pressed/hover tone, -300 is the only
+     blue with enough luminance to read as text on the navy rail. */
+  --color-primary-700: #1d4ed8;
+  --color-primary-600: #2563eb;
+  --color-primary-500: #3b82f6;
+  --color-primary-300: #93b4ff;
+  --color-primary-050: #eff4ff;
 
-  /* Text roles, contrast-checked against paper-0/paper-1. */
-  --color-text-strong: #0e2038;
-  --color-text-body: #23364d;
-  --color-text-muted: #526478;
-  --color-text-inverse: #f4f7fa;
+  /* AI accent. Used only by the analysis assistant, so its presence anywhere
+     on screen means "this came from the assistant" and nothing else. */
+  --color-ai-600: #4f46e5;
+  --color-ai-500: #6366f1;
+  --color-ai-300: #a5b4fc;
+  --color-ai-050: #eef1fe;
 
-  /* Engraved rules. The depth strategy is a hairline, not a shadow. */
-  --color-line-hairline: #d3dce6;
-  --color-line-strong: #b6c4d4;
+  /* Paper — page and raised surfaces. */
+  --color-paper-0: #ffffff;
+  --color-paper-1: #f6f8fb;
+  --color-paper-2: #f1f5f9;
+  --color-paper-3: #e2e8f0;
 
-  /* Risk semantics. The -ink variants are the text-safe tones; the -fill
-     variants are for bars and chips where contrast is carried by the label. */
-  --color-risk-high-ink: #a92218;
-  --color-risk-high-fill: #d64031;
-  --color-risk-watch-ink: #8a5300;
-  --color-risk-watch-fill: #e8a33d;
-  --color-risk-stable-ink: #14624a;
-  --color-risk-stable-fill: #2f9670;
+  /* Text roles, contrast-checked against paper-0 and paper-1. */
+  --color-text-strong: #172033;
+  --color-text-body: #334155;
+  --color-text-muted: #64748b;
+  --color-text-inverse: #f6f8fb;
 
-  /* Plane/lifecycle status, distinct from risk so a healthy plane reporting a
-     high-risk company cannot be misread as one signal.
-     The plain tokens are dots, glyphs and bars — graphical objects, held to
-     3:1. The -ink variants are the only ones allowed on text, because the
-     saturated greens and ambers measure ~3.5:1 on paper and fail 4.5:1. */
-  --color-status-live: #2f9670;
-  --color-status-pending: #b8791a;
-  --color-status-offline: #7a8899;
-  --color-status-fail: #a92218;
-  --color-status-live-ink: #0f5a42;
-  --color-status-pending-ink: #7d4b00;
-  --color-status-offline-ink: #64707f;
-  --color-status-fail-ink: #a92218;
+  --color-line-hairline: #e5eaf0;
+  --color-line-strong: #cbd5e1;
 
-  /* One radius system. */
-  --radius-sm: 3px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
+  /* Risk semantics. The -fill variants carry bars, dots and chips, where
+     contrast is carried by an adjacent label; the -ink variants are the only
+     ones allowed on text, because the fills measure below 4.5:1 on paper.
+     Risk is never communicated by color alone — a label always travels with it. */
+  --color-risk-high-ink: #b42318;
+  --color-risk-high-fill: #dc4545;
+  --color-risk-high-soft: #fdeceb;
+  --color-risk-watch-ink: #92400e;
+  --color-risk-watch-fill: #d97706;
+  --color-risk-watch-soft: #fef4e6;
+  --color-risk-stable-ink: #0e7a57;
+  --color-risk-stable-fill: #15966a;
+  --color-risk-stable-soft: #e7f6f0;
 
-  /* One depth strategy: elevation exists only for things that float above the
-     page. Cards use hairlines. */
-  --shadow-overlay: 0 8px 24px -8px rgb(14 32 56 / 0.24);
-  --shadow-popover: 0 2px 8px -2px rgb(14 32 56 / 0.18);
+  /* Plane/lifecycle status, kept distinct from risk so a healthy plane
+     reporting a high-risk company cannot be misread as one signal. */
+  --color-status-live: #15966a;
+  --color-status-pending: #d97706;
+  --color-status-offline: #94a3b8;
+  --color-status-fail: #dc4545;
+  --color-status-live-ink: #0e7a57;
+  --color-status-pending-ink: #92400e;
+  --color-status-offline-ink: #64748b;
+  --color-status-fail-ink: #b42318;
+
+  /* One radius system: chips, controls, cards. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* One depth strategy: shadows separate interface layers and nothing else.
+     Cards sit on a hairline plus the faintest lift; only floating things get
+     real elevation. */
+  --shadow-card: 0 1px 2px 0 rgb(23 32 51 / 0.04);
+  --shadow-popover: 0 4px 12px -2px rgb(23 32 51 / 0.12);
+  --shadow-overlay: 0 12px 32px -8px rgb(23 32 51 / 0.2);
+  --shadow-assistant: 0 10px 28px -6px rgb(23 32 51 / 0.24);
 
   /* Motion: 150-250ms state feedback only. No page-load choreography. */
   --ease-standard: cubic-bezier(0.2, 0, 0.1, 1);
@@ -88,11 +105,12 @@
 
 @theme {
   /* Explicit stacking order. Ad-hoc z-index is how a modal ends up behind a
-     sticky header. */
+     sticky header. The assistant sits above page chrome and below modals. */
   --z-base: 0;
   --z-nav: 10;
   --z-sticky: 20;
   --z-drawer: 40;
+  --z-assistant: 60;
   --z-overlay: 100;
   --z-toast: 200;
 }
@@ -128,15 +146,15 @@
   }
 
   /* Focus is an accessibility control, not a decoration: it is visible on every
-     surface including the navy sidebar, and is never removed. */
+     surface including the navy rail, and is never removed. */
   :focus-visible {
-    outline: 2px solid var(--color-ink-600);
+    outline: 2px solid var(--color-primary-600);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
 
   .on-ink :focus-visible {
-    outline-color: var(--color-paper-0);
+    outline-color: var(--color-primary-300);
   }
 
   /* Keyboard users get the same affordances as pointer users. */
@@ -145,8 +163,8 @@
   }
 
   ::selection {
-    background-color: var(--color-ink-700);
-    color: var(--color-text-inverse);
+    background-color: var(--color-primary-600);
+    color: var(--color-paper-0);
   }
 }
 
@@ -171,6 +189,31 @@
   .tap-target {
     min-block-size: 44px;
     min-inline-size: 44px;
+  }
+
+  /* Surfaces that must not be scrolled behind an open sheet. */
+  .scroll-locked {
+    overflow: hidden;
+  }
+}
+
+/*
+ * Print is the report export path. Navigation, the assistant and page controls
+ * are interface, not document: they are dropped so the exported PDF contains
+ * the report, its sources, its disclaimer and its provenance and nothing else.
+ */
+@media print {
+  [data-print-hidden] {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff;
+  }
+
+  /* Card hairlines survive; shadows do not print usefully. */
+  * {
+    box-shadow: none !important;
   }
 }
 
