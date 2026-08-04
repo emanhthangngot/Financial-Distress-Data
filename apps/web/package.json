@@ -8,10 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "e2e:roles": "playwright test --config playwright.roles.config.ts"
   },
   "dependencies": {
     "@distresslens/contracts": "workspace:*",
+    "@supabase/supabase-js": "^2.112.0",
     "next": "16.2.12",
     "react": "19.2.4",
     "react-dom": "19.2.4",
