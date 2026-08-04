@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/*
+ * DistressLens design tokens — "archival instrument panel".
+ *
+ * Navy ink on cool paper, engraved hairlines instead of card shadows, and risk
+ * colors that always travel with a non-color label. Every color, radius, shadow
+ * and duration used by a component comes from this file: a raw hex or px value
+ * in a component is a bug, because it is how a palette silently forks.
+ */
+
+@theme {
+  /* Ink — text and primary controls. Never pure black: #0E2038 keeps the
+     instrument-panel warmth and still clears 4.5:1 on every paper tone. */
+  --color-ink-900: #0e2038;
+  --color-ink-800: #14365e;
+  --color-ink-700: #1c4a80;
+  --color-ink-600: #1f5896;
+  --color-ink-500: #2f6cb0;
+
+  /* Paper — page and raised surfaces. Never pure white. */
+  --color-paper-0: #fbfcfd;
+  --color-paper-1: #f4f7fa;
+  --color-paper-2: #e9eef4;
+  --color-paper-3: #dde5ed;
+
+  /* Text roles, contrast-checked against paper-0/paper-1. */
+  --color-text-strong: #0e2038;
+  --color-text-body: #23364d;
+  --color-text-muted: #526478;
+  --color-text-inverse: #f4f7fa;
+
+  /* Engraved rules. The depth strategy is a hairline, not a shadow. */
+  --color-line-hairline: #d3dce6;
+  --color-line-strong: #b6c4d4;
+
+  /* Risk semantics. The -ink variants are the text-safe tones; the -fill
+     variants are for bars and chips where contrast is carried by the label. */
+  --color-risk-high-ink: #a92218;
+  --color-risk-high-fill: #d64031;
+  --color-risk-watch-ink: #8a5300;
+  --color-risk-watch-fill: #e8a33d;
+  --color-risk-stable-ink: #14624a;
+  --color-risk-stable-fill: #2f9670;
+
+  /* Plane/lifecycle status, distinct from risk so a healthy plane reporting a
+     high-risk company cannot be misread as one signal.
+     The plain tokens are dots, glyphs and bars — graphical objects, held to
+     3:1. The -ink variants are the only ones allowed on text, because the
+     saturated greens and ambers measure ~3.5:1 on paper and fail 4.5:1. */
+  --color-status-live: #2f9670;
+  --color-status-pending: #b8791a;
+  --color-status-offline: #7a8899;
+  --color-status-fail: #a92218;
+  --color-status-live-ink: #0f5a42;
+  --color-status-pending-ink: #7d4b00;
+  --color-status-offline-ink: #64707f;
+  --color-status-fail-ink: #a92218;
+
+  /* One radius system. */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* One depth strategy: elevation exists only for things that float above the
+     page. Cards use hairlines. */
+  --shadow-overlay: 0 8px 24px -8px rgb(14 32 56 / 0.24);
+  --shadow-popover: 0 2px 8px -2px rgb(14 32 56 / 0.18);
+
+  /* Motion: 150-250ms state feedback only. No page-load choreography. */
+  --ease-standard: cubic-bezier(0.2, 0, 0.1, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+
+  /* Typography. Be Vietnam Pro is drawn for Vietnamese diacritics so
+     "Nguy cơ cao" never triggers a fallback swap; IBM Plex Mono carries every
+     number, ticker, revision and SHA with tabular figures. */
+  --font-sans: var(--font-be-vietnam-pro), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  /* Breakpoints match the evidence viewports: 390 / 1024 / 1440. */
+  --breakpoint-sm: 390px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+}
+
+@theme {
+  /* Explicit stacking order. Ad-hoc z-index is how a modal ends up behind a
+     sticky header. */
+  --z-base: 0;
+  --z-nav: 10;
+  --z-sticky: 20;
+  --z-drawer: 40;
+  --z-overlay: 100;
+  --z-toast: 200;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper-1);
+    color: var(--color-text-body);
+    font-family: var(--font-sans);
+    /* Vietnamese stacks diacritics above capitals; the extra leading keeps
+       "Đồng bộ" from colliding with the line above in dense tables. */
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper-1);
+  }
+
+  /* Numbers are compared down columns, so they must not shift width. */
+  :where(table, [data-numeric]) {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-text-strong);
+    font-weight: 600;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  /* Focus is an accessibility control, not a decoration: it is visible on every
+     surface including the navy sidebar, and is never removed. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink-600);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .on-ink :focus-visible {
+    outline-color: var(--color-paper-0);
+  }
+
+  /* Keyboard users get the same affordances as pointer users. */
+  :where(a, button, [role="button"], summary) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background-color: var(--color-ink-700);
+    color: var(--color-text-inverse);
+  }
+}
+
+@layer utilities {
+  /* Skip link: present for keyboard users, out of the way for everyone else. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    z-index: var(--z-toast);
+  }
+
+  .skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--color-paper-0);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-md);
+  }
+
+  /* Minimum 44px touch target without forcing every control to look chunky. */
+  .tap-target {
+    min-block-size: 44px;
+    min-inline-size: 44px;
+  }
+}
+
+/*
+ * Reduced motion is honored globally rather than per-component, so a transition
+ * added later cannot quietly opt out of it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

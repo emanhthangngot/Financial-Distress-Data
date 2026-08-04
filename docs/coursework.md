@@ -26,6 +26,8 @@ all 100 ML rubric points and all 100 LLM rubric points.
 | `docs/phase2/architecture.md` | Phase 2 two-plane architecture |
 | `docs/phase2/low-level-design.md` | Phase 2 class contracts |
 | `docs/phase2/evidence-contract.md` | Evidence format and linter contract |
+| `docs/phase2/product.md` | Product UI contract and the three approved visual reference IDs |
+| `docs/phase2/security/rbac.md` | Product route/action RBAC and server/RLS security boundary |
 | `docs/phase2/adr/adr-001..009-*.md` | Phase 2 architecture decision records |
 | `plans/260802-1037-unified-phase2-ml-llm-gitops/` | Phase 2 execution plan (phase-01..08) |
 
@@ -42,7 +44,8 @@ proves all 100 ML + 100 LLM rubric points within a strict cost envelope.
 ### In scope (explicit)
 
 - **Product plane:** Next.js web app, Supabase Auth/Postgres RLS, evidence-
-  session worker, honest plane state machine (ADR-008).
+  session worker, honest plane state machine (ADR-008), and the approved
+  analyst/chat/registry UI surfaces (`UI-APPROVED-01..03`).
 - **ML track (100 pts):** feature store (Feast structured), point-in-time
   correctness, training pipelines (Kubeflow Pipelines/Trainer), MLflow
   experiment tracking and promotion contract (ADR-006), KServe inference,

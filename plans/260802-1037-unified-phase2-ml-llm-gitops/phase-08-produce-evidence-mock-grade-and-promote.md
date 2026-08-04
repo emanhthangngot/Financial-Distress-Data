@@ -14,6 +14,11 @@ Run the system, capture reviewer-readable proof for every scored row, audit clai
 
 - Every artifact records requirement ID, execution timestamp, exact 40-hex source SHA, exact 40-hex GitOps SHA, image/model/data/agent versions, mandatory reproduction command, expected result, actual result and redaction status.
 - Screenshots supplement machine-readable outputs; they never replace logs/reports/manifests when the latter are available.
+- Product UI evidence must include `UI-APPROVED-01` (analyst workspace),
+  `UI-APPROVED-02` (agent chat) and `UI-APPROVED-03` (agent registry/evidence
+  operations). Each capture records route, state, viewport, source SHA, GitOps
+  SHA, data/model/agent version, expected/actual result and redaction status;
+  the original approved binaries are retained unchanged when supplied.
 - Each major `docs/phase2/` section explains what an image proves. No orphan screenshot dump.
 - “Designed”, “configured”, “executed”, and “passed” remain distinct statuses.
 - Capture only the relevant window/region and redact account IDs, hosts where needed, tokens, emails and private data.
@@ -26,7 +31,7 @@ Run the system, capture reviewer-readable proof for every scored row, audit clai
 4. Capture Argo sync waves, GitOps commit/digest, rolling update/atomic fallback, autoscaling for feature and drift APIs, and Git-revert rollback.
 5. Capture Feast materialization/offline+online stream jobs, TTL rationale, Airflow ordering, DataHub lineage, drift config/label merge, versioned data, and both scheduled drift branches: skip below threshold plus actual KFP API run ID/status above threshold via Pushgateway/Grafana.
 6. Capture notebook, successful KFP distributed training, MLflow model/data versions, KServe, Knative drift, ML A/B and dashboards.
-7. Capture custom LLM deploy/benchmark/optimization, global config, gateways, registry, MCP tools, two specialists/coordinator, sandbox, replicas/autoscale, warm-up/HA, both UIs and LLM/agent A/B.
+7. Capture custom LLM deploy/benchmark/optimization, global config, gateways, registry, MCP tools, two specialists/coordinator, sandbox, replicas/autoscale, warm-up/HA, `UI-APPROVED-02` agent chat, `UI-APPROVED-03` registry/evidence operations, and LLM/agent A/B. Capture `UI-APPROVED-01` analyst surfaces with cached/EKS-off and provenance states as part of the product-plane run.
 8. Generate Locust HTML for required Web APIs and capture parameters/SLA summaries.
 9. Capture active F5 NGINX OSS version/digest, retired-controller rejection, hidden services, basic auth/rate limit, valid HTTPS/domain, Terraform, mandatory Vast.ai Ansible role health/idempotent second run/cost/teardown, Vault, Istio authorization, metrics/logs/traces and telemetry.
 10. Capture design-pattern code, five classes per track, and working proof for two novel ideas per track.
@@ -62,6 +67,7 @@ contain the implementation, manifests, and evidence that the auditor reads.
 - [ ] Reviewer -> inspects README and detailed docs -> understands deployable units, numbered data flows, classes, patterns, security and operating limits.
 - [ ] Cost owner -> closes the session -> sees EKS destroyed before hard TTL and retained resources within the declared monthly cap.
 - [ ] Maintainer -> checks final source and GitOps SHAs -> can reproduce the release and roll it back through Git alone.
+- [ ] UI reviewer -> checks the three approved UI IDs and every required viewport/state -> finds no orphan screenshot, stale SHA, missing provenance, inaccessible control or false live-inference label.
 
 ## Risks and Rollback
 

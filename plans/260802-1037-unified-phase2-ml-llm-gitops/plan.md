@@ -3,7 +3,7 @@ title: "Unified Phase 2 ML + LLM GitOps"
 description: "Rubric-complete Phase 2 plan combining ML and LLM tracks on an ephemeral AWS EKS evidence plane with a persistent low-cost product plane."
 status: pending
 priority: P1
-effort: "55-79 focused workdays (11-16 weeks)"
+effort: "57-83 focused workdays (12-17 weeks)"
 branch: dev
 tags: [coursework, ml, llm, kubernetes, gitops, aws]
 blockedBy: []
@@ -35,7 +35,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 | # | Phase | Estimate | Status |
 |---|-------|----------|--------|
 | 1 | [Lock specification and rubric contract](./phase-01-start.md) | 3-4 days | In Review |
-| 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 6-8 days | Pending |
+| 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 8-12 days | Pending |
 | 3 | [Bootstrap GitOps and AWS evidence platform](./phase-03-bootstrap-gitops-and-aws-evidence-platform.md) | 8-12 days | Pending |
 | 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 7-10 days | Pending |
 | 5 | [Deliver ML track](./phase-05-deliver-ml-track.md) | 8-12 days | Pending |
@@ -45,7 +45,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 
 ## Fixed Architecture Decisions
 
-- Product plane: Vercel Hobby + Supabase Free; coursework scale is 50 accounts, 10 concurrent web users, and 2 concurrent AI streams.
+- Product plane: Vercel Hobby + Supabase Free; coursework scale is 50 accounts, 10 concurrent web users, and 2 concurrent AI streams. The product UI is an explicit contract in `docs/phase2/product.md`, with approved references `UI-APPROVED-01..03`; it is not satisfied by a generic shell or a screenshot-only mock.
 - Evidence plane: EKS in `ap-southeast-1`, 6-hour default/8-hour hard TTL, at most 3 sessions/month, target <= USD 25/session and <= USD 10/month persistent resources; provisioning blocks if projected spend exceeds USD 85 while reserving USD 15 contingency.
 - Public edge is active F5 NGINX Ingress Controller OSS (`nginx/kubernetes-ingress`), never retired community ingress-nginx. Istio is east-west service mesh. The LLM chain is kagent `Agent` -> kagent `ModelConfig` -> agentgateway AI backend -> Envoy AI Gateway -> KServe `LLMInferenceService`/llm-d; MCP and A2A also use agentgateway routes.
 - KServe `LLMInferenceService` remains pinned to the verified 0.18 integration until a compatibility spike proves a later release. Helm owns apps and MLflow; Kustomize owns only selected pinned upstream bases/overlays. One resource has exactly one owner.
@@ -55,7 +55,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 
 ## Timebox and Cut Policy
 
-- Never cut: rubric gates, >90% test coverage, >80% changed-code mutation score, Locust HTML, autoscaling proof, TLS/domain, KFP + distributed training, MLflow model/data versioning, Feast offline/online jobs, KServe + Knative drift, agents/MCP/registry/sandbox/warm-up, observability, A/B tests, Terraform/Ansible, low-level classes, two novel ideas per track, or evidence mapping.
+- Never cut: rubric gates, >90% test coverage, >80% changed-code mutation score, Locust HTML, autoscaling proof, TLS/domain, KFP + distributed training, MLflow model/data versioning, Feast offline/online jobs, KServe + Knative drift, agents/MCP/registry/sandbox/warm-up, observability, A/B tests, Terraform/Ansible, low-level classes, two novel ideas per track, evidence mapping, the three approved UI references, deterministic route-state screenshots, accessibility checks, and truthful EKS-off/cached states.
 - Cut first: cosmetic motion, multi-region/HA beyond rubric proof, persistent EKS, Milvus, extra model families, hierarchical agents, and a second cloud copy of Airflow/Kafka/DataHub.
 - Cut second: non-rubric product polish and extra Vast.ai workloads beyond the one mandatory Ansible evidence worker. AWS Spot remains primary for inference; Vast.ai CPU has an aggregate hard cap of USD 10.
 
@@ -68,6 +68,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 - [ ] Phase 1 maintainer -> runs existing quality gates -> observes no change to collectors, Gold contracts, DQ semantics, or local evidence behavior.
 - [ ] ML operator -> executes both drift branches -> observes Pushgateway/Grafana metrics, a persisted skip below threshold, and a real KFP API run ID above threshold.
 - [ ] Platform operator -> runs the Vast.ai Ansible playbook twice -> observes a healthy useful service and an idempotent second run within the USD 10 cap.
+- [ ] Product reviewer -> opens `UI-APPROVED-01`, `UI-APPROVED-02` and `UI-APPROVED-03` -> matches the approved information hierarchy at desktop/tablet/mobile viewports and finds provenance, disclaimer, RBAC and degraded-state proof.
 
 ## Validation Log
 
