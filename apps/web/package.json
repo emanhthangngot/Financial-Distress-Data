@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
-    "e2e:roles": "playwright test --config playwright.roles.config.ts"
+    "e2e:roles": "playwright test --config playwright.roles.config.ts",
+    "e2e:live": "playwright test --config playwright.live.config.ts"
   },
   "dependencies": {
     "@distresslens/contracts": "workspace:*",
