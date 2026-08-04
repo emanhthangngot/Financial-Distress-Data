@@ -132,6 +132,35 @@ describe("saved reports", () => {
       missing.state !== "success" && missing.state !== "loading" && missing.copy,
     );
   });
+
+  it("lists only the caller's own reports", async () => {
+    const owner = await port.listSavedReports(analyst);
+    expect(owner.state).toBe("success");
+    if (owner.state === "success") {
+      expect(owner.data.reports.map((report) => report.id)).toEqual([FIXTURE_REPORT_ID]);
+    }
+
+    // Same signed-in role, different user: the list is empty rather than
+    // filtered in the browser.
+    const other = await port.listSavedReports({ ...analyst, userId: "someone-else" });
+    expect(other.state).toBe("empty");
+    if (other.state === "empty") {
+      expect(other.data?.reports).toEqual([]);
+    }
+  });
+
+  it("denies the report list to a signed-out caller and to a platform role", async () => {
+    expect((await port.listSavedReports(signedOut)).state).toBe("forbidden");
+    expect((await port.listSavedReports(viewer)).state).toBe("forbidden");
+  });
+
+  it("keeps report summaries free of the full company detail", async () => {
+    const result = await port.listSavedReports(analyst);
+    if (result.state !== "success") return;
+    // A summary that carried indicators and sources would put every company's
+    // detail into a list the analyst only skims.
+    expect(result.data.reports[0]).not.toHaveProperty("detail");
+  });
 });
 
 describe("operations surfaces", () => {

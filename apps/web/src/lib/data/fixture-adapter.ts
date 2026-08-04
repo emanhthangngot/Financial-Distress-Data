@@ -9,10 +9,16 @@ import {
   type ModelComparison,
   type OpsDashboard,
   type SavedReport,
+  type SavedReportList,
+  type SavedReportSummary,
   type SessionAction,
   type ViewState,
 } from "@distresslens/contracts";
-import { ROUTE_STATE_COPY, type ProductRoute } from "../states/route-states";
+import {
+  ASSISTANT_STATE_COPY,
+  ROUTE_STATE_COPY,
+  type ProductRoute,
+} from "../states/route-states";
 import type { CompanySearchParams, DistressLensDataPort, RequestContext } from "./port";
 import {
   FIXTURE_ALERTS,
@@ -64,6 +70,14 @@ function copyFor(route: ProductRoute, state: keyof (typeof ROUTE_STATE_COPY)[Pro
     // A route rendering a state it never wrote copy for is a contract bug, not
     // a runtime condition to paper over.
     throw new Error(`route ${route} has no copy for state ${String(state)}`);
+  }
+  return copy;
+}
+
+function assistantCopyFor(state: keyof typeof ASSISTANT_STATE_COPY) {
+  const copy = ASSISTANT_STATE_COPY[state];
+  if (copy === undefined) {
+    throw new Error(`assistant has no copy for state ${String(state)}`);
   }
   return copy;
 }
@@ -282,6 +296,43 @@ export class FixtureDataPort implements DistressLensDataPort {
     return { state: "success", data };
   }
 
+  async listSavedReports(context: RequestContext): Promise<ViewState<SavedReportList>> {
+    const route: ProductRoute = "/reports";
+    const rejection = guard<SavedReportList>(context, "analyst.query", route);
+    if (rejection !== null) {
+      return rejection;
+    }
+
+    const detail = FIXTURE_COMPANY_DETAILS.NVL;
+    const report = detail === undefined ? null : buildSavedReport(detail);
+
+    // Only the caller's own reports. Ownership is filtered here as well as in
+    // RLS so the fixture adapter cannot prove a state the database would deny.
+    const reports: readonly SavedReportSummary[] =
+      report === null || report.ownerId !== context.userId
+        ? []
+        : [
+            {
+              id: report.id,
+              company: report.company,
+              title: report.title,
+              createdAt: report.createdAt,
+              band: report.detail.band,
+              distressProbability: report.detail.distressProbability,
+              revokedAt: report.revokedAt,
+            },
+          ];
+
+    const data: SavedReportList = {
+      reports,
+      provenance: fixtureProvenance(context.planeReady),
+    };
+
+    return reports.length === 0
+      ? { state: "empty", copy: copyFor(route, "empty"), data }
+      : { state: "success", data };
+  }
+
   async getSavedReport(
     context: RequestContext,
     reportId: string,
@@ -313,10 +364,14 @@ export class FixtureDataPort implements DistressLensDataPort {
     context: RequestContext,
     conversationId: string,
   ): Promise<ViewState<AgentConversation>> {
-    const route: ProductRoute = "/agents/chat";
-    const rejection = guard<AgentConversation>(context, "analyst.run_ai_request", route);
-    if (rejection !== null) {
-      return rejection;
+    // The assistant is a floating surface, not a route, so its state copy comes
+    // from the assistant catalog rather than the route catalog.
+    if (!authorize({ role: context.role, aal: context.aal }, "analyst.run_ai_request").allowed) {
+      return {
+        state: "forbidden",
+        copy: assistantCopyFor("forbidden"),
+        data: null,
+      };
     }
 
     const data: AgentConversation = {
@@ -332,7 +387,7 @@ export class FixtureDataPort implements DistressLensDataPort {
       ? { state: "success", data }
       : {
           state: "degraded",
-          copy: copyFor(route, "degraded"),
+          copy: assistantCopyFor("degraded"),
           data: { ...data, provenance: CACHED_FIXTURE_PROVENANCE },
         };
   }

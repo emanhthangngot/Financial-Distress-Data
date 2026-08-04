@@ -8,6 +8,7 @@ import type {
   OpsDashboard,
   Role,
   SavedReport,
+  SavedReportList,
   ViewState,
 } from "@distresslens/contracts";
 
@@ -50,6 +51,8 @@ export interface DistressLensDataPort {
     context: RequestContext,
     ticker: string,
   ): Promise<ViewState<ModelComparison>>;
+
+  listSavedReports(context: RequestContext): Promise<ViewState<SavedReportList>>;
 
   getSavedReport(context: RequestContext, reportId: string): Promise<ViewState<SavedReport>>;
 

@@ -155,6 +155,28 @@ export interface ModelComparisonSide {
   topDrivers: readonly ShapDriver[];
 }
 
+/**
+ * Row in the saved-report list. Deliberately not the full `SavedReport`: the
+ * list must not carry every company's indicators and sources, and a summary
+ * that cannot be expanded into a detail is also a smaller blast radius if the
+ * list is ever cached.
+ */
+export interface SavedReportSummary {
+  id: string;
+  company: CompanyRef;
+  title: string;
+  createdAt: string;
+  band: RiskBand;
+  distressProbability: number;
+  /** Set when an admin revoked the report; the row renders as unavailable. */
+  revokedAt: string | null;
+}
+
+export interface SavedReportList {
+  reports: readonly SavedReportSummary[];
+  provenance: Provenance;
+}
+
 export interface SavedReport {
   id: string;
   ownerId: string;
