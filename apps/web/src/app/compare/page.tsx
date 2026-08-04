@@ -30,10 +30,10 @@ export default async function ComparePage({
 }: {
   searchParams: Promise<{ ticker?: string }>;
 }) {
-  const { user, context } = await resolveSession();
+  const { user, context, accessToken } = await resolveSession();
   const { ticker = DEFAULT_TICKER } = await searchParams;
 
-  const result = await getDataPort().getModelComparison(context, ticker);
+  const result = await getDataPort(accessToken).getModelComparison(context, ticker);
   const comparison: ModelComparison | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.compare);
   const provenance = comparison?.provenance ?? LIVE_FIXTURE_PROVENANCE;

@@ -36,10 +36,10 @@ export default async function SavedReportPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { user, context } = await resolveSession();
+  const { user, context, accessToken } = await resolveSession();
   const { id } = await params;
 
-  const result = await getDataPort().getSavedReport(context, id);
+  const result = await getDataPort(accessToken).getSavedReport(context, id);
   const report: SavedReport | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.report);
   const provenance = report?.detail.provenance ?? LIVE_FIXTURE_PROVENANCE;

@@ -39,10 +39,10 @@ export default async function CompanyDetailPage({
 }: {
   params: Promise<{ ticker: string }>;
 }) {
-  const { user, context } = await resolveSession();
+  const { user, context, accessToken } = await resolveSession();
   const { ticker } = await params;
 
-  const result = await getDataPort().getCompanyDetail(context, ticker);
+  const result = await getDataPort(accessToken).getCompanyDetail(context, ticker);
   const detail: CompanyDetail | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.companyDetail);
   const provenance = detail?.provenance ?? LIVE_FIXTURE_PROVENANCE;

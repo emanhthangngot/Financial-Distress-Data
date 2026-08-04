@@ -23,8 +23,8 @@ import { isFailureState, viewCopy, viewData } from "@/lib/states/view-state";
 export const dynamic = "force-dynamic";
 
 export default async function ReportsPage() {
-  const { user, context } = await resolveSession();
-  const result = await getDataPort().listSavedReports(context);
+  const { user, context, accessToken } = await resolveSession();
+  const result = await getDataPort(accessToken).listSavedReports(context);
   const data: SavedReportList | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.report);
   const provenance = data?.provenance ?? LIVE_FIXTURE_PROVENANCE;

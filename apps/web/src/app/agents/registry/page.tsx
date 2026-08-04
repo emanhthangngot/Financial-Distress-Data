@@ -22,8 +22,8 @@ import { isFailureState, viewCopy, viewData } from "@/lib/states/view-state";
 export const dynamic = "force-dynamic";
 
 export default async function AgentRegistryPage() {
-  const { user, context } = await resolveSession();
-  const result = await getDataPort().getAgentRegistry(context);
+  const { user, context, accessToken } = await resolveSession();
+  const result = await getDataPort(accessToken).getAgentRegistry(context);
   const data: AgentRegistryView | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.registry);
   const provenance = data?.provenance ?? LIVE_FIXTURE_PROVENANCE;

@@ -44,12 +44,12 @@ export default async function OverviewPage({
 }: {
   searchParams: Promise<{ period?: string }>;
 }) {
-  const { user, context } = await resolveSession();
+  const { user, context, accessToken } = await resolveSession();
   const { period } = await searchParams;
   const selectedPeriod =
     PERIOD_OPTIONS.find((option) => option.value === period) ?? PERIOD_OPTIONS[1];
 
-  const overview = await getDataPort().getAnalystOverview(context);
+  const overview = await getDataPort(accessToken).getAnalystOverview(context);
   const data: AnalystOverview | null =
     overview.state === "success" ? overview.data : (overview.state === "loading" ? null : overview.data);
   const provenance = data?.provenance ?? LIVE_FIXTURE_PROVENANCE;

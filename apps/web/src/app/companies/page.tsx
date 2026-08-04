@@ -29,11 +29,11 @@ export default async function CompaniesPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { user, context } = await resolveSession();
+  const { user, context, accessToken } = await resolveSession();
   const { q = "", page } = await searchParams;
   const pageNumber = Number.parseInt(page ?? "1", 10);
 
-  const result = await getDataPort().searchCompanies(context, {
+  const result = await getDataPort(accessToken).searchCompanies(context, {
     query: q,
     page: Number.isFinite(pageNumber) && pageNumber > 0 ? pageNumber : 1,
     pageSize: PAGE_SIZE,

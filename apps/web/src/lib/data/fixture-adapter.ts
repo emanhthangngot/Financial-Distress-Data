@@ -64,7 +64,8 @@ import { CACHED_FIXTURE_PROVENANCE, fixtureProvenance } from "./fixtures/provena
 export const FIXTURE_REPORT_ID = "rpt-20250522-nvl";
 export const FIXTURE_USER_ID = "fixture-analyst";
 
-function copyFor(route: ProductRoute, state: keyof (typeof ROUTE_STATE_COPY)[ProductRoute]) {
+/** Shared by both adapters so the authorization decision cannot drift. */
+export function copyFor(route: ProductRoute, state: keyof (typeof ROUTE_STATE_COPY)[ProductRoute]) {
   const copy = ROUTE_STATE_COPY[route][state];
   if (copy === undefined) {
     // A route rendering a state it never wrote copy for is a contract bug, not
@@ -74,7 +75,7 @@ function copyFor(route: ProductRoute, state: keyof (typeof ROUTE_STATE_COPY)[Pro
   return copy;
 }
 
-function assistantCopyFor(state: keyof typeof ASSISTANT_STATE_COPY) {
+export function assistantCopyFor(state: keyof typeof ASSISTANT_STATE_COPY) {
   const copy = ASSISTANT_STATE_COPY[state];
   if (copy === undefined) {
     throw new Error(`assistant has no copy for state ${String(state)}`);
@@ -82,11 +83,11 @@ function assistantCopyFor(state: keyof typeof ASSISTANT_STATE_COPY) {
   return copy;
 }
 
-function denied<T>(route: ProductRoute): ViewState<T> {
+export function denied<T>(route: ProductRoute): ViewState<T> {
   return { state: "forbidden", copy: copyFor(route, "forbidden"), data: null };
 }
 
-function guard<T>(
+export function guard<T>(
   context: RequestContext,
   action: SessionAction,
   route: ProductRoute,
