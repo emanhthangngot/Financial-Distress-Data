@@ -108,6 +108,7 @@ function fixtureSession(planeReady: boolean): EvidenceSessionView {
       costSnapshotUsd: null,
       gitSha: null,
       updatedAt: "2025-05-22T18:32:00+07:00",
+      fencingToken: null,
       history: [],
     };
   }
@@ -121,6 +122,7 @@ function fixtureSession(planeReady: boolean): EvidenceSessionView {
     costSnapshotUsd: 12.5,
     gitSha: "a1b2c3d",
     updatedAt: "2025-05-22T18:32:00+07:00",
+    fencingToken: "fence-20250522-1832",
     history: [
       {
         fromState: "SYNCING",

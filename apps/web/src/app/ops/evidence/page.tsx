@@ -1,4 +1,8 @@
 import type { CostProjection, OpsDashboard } from "@distresslens/contracts";
+import {
+  ALLOWED_TRANSITIONS,
+  type SessionState,
+} from "@distresslens/contracts";
 import { AbExperimentPanel } from "@/components/ops/ab-experiment-summary";
 import { AuditTimeline } from "@/components/ops/audit-timeline";
 import { CostGauge } from "@/components/ops/cost-gauge";
@@ -44,12 +48,41 @@ const SESSION_PROJECTION: CostProjection = {
 };
 
 export default async function OpsEvidencePage() {
-  const { user, context } = await resolveSession();
-  const result = await getDataPort().getOpsDashboard(context);
+  const { user, context, accessToken } = await resolveSession();
+  const result = await getDataPort(accessToken).getOpsDashboard(context);
   const data: OpsDashboard | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.ops);
   const provenance = data?.provenance ?? LIVE_FIXTURE_PROVENANCE;
   const eksPlane = data?.planes.find((plane) => plane.component === "EKS_AI");
+
+  // Which lifecycle targets the current session state permits, so a control
+  // that cannot legally fire explains why rather than submitting a doomed
+  // request. The database is still the authority: it re-checks the transition
+  // and the fencing token on the way in.
+  const session = data?.session ?? null;
+  const allowedNext: readonly SessionState[] =
+    session === null ? [] : (ALLOWED_TRANSITIONS[session.state] ?? []);
+  const sessionExists = session !== null && session.id !== null && session.fencingToken !== null;
+  const transitionFor = (target: SessionState) =>
+    sessionExists && allowedNext.includes(target)
+      ? { targetState: target, sessionId: session!.id!, fencingToken: session!.fencingToken! }
+      : null;
+
+  // Provision from a state with no session row (OFF, no id) needs
+  // `create_evidence_session`, a different RPC than `requestSessionTransition`
+  // — the control explains that rather than firing a doomed request.
+  const provisionBlocked =
+    sessionExists && !allowedNext.includes("REQUESTED")
+      ? "Trạng thái hiện tại không cho phép tạo phiên mới."
+      : session !== null && session.id === null
+        ? "Chưa có phiên để chuyển trạng thái — tạo phiên được hỗ trợ ở phiên bản tiếp theo."
+        : null;
+  const destroyBlocked =
+    sessionExists && !allowedNext.includes("DESTROYING")
+      ? "Trạng thái hiện tại không cho phép hủy phiên."
+      : session !== null && session.id === null
+        ? "Chưa có phiên để hủy."
+        : null;
 
   return (
     <AdminShell
@@ -157,6 +190,8 @@ export default async function OpsEvidencePage() {
                       aal={context.aal}
                       label="Tạo phiên evidence"
                       variant="primary"
+                      blockedReason={provisionBlocked}
+                      transition={transitionFor("REQUESTED")}
                     />
                     {/* Destroy is never gated on the cost cap: blocking teardown
                         at the cap strands the session that is spending. */}
@@ -165,6 +200,8 @@ export default async function OpsEvidencePage() {
                       role={context.role}
                       aal={context.aal}
                       label="Hủy phiên"
+                      blockedReason={destroyBlocked}
+                      transition={transitionFor("DESTROYING")}
                     />
                     <RoleActionButton
                       action="session.export_evidence"

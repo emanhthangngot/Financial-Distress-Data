@@ -35,7 +35,15 @@ export interface ActionResult {
   message: string;
 }
 
-export async function requestSessionTransition(formData: FormData): Promise<ActionResult> {
+/**
+ * `prevState` is unused by the RPC call; the action signature is shaped for
+ * `useActionState`, which passes the previous result back so the client can
+ * render the outflow while the form still posts as a server action.
+ */
+export async function requestSessionTransition(
+  _prevState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> {
   const targetState = formData.get("targetState");
   const sessionId = formData.get("sessionId");
   const idempotencyKey = formData.get("idempotencyKey");
@@ -80,10 +88,10 @@ export async function requestSessionTransition(formData: FormData): Promise<Acti
  * refusing teardown because the budget is exhausted would strand the session
  * that is spending the money.
  */
-export function checkProvisionCost(
+export async function checkProvisionCost(
   budget: CostBudget,
   projection: CostProjection,
-): ActionResult {
+): Promise<ActionResult> {
   const decision = evaluateCostGate(budget, projection);
   return decision.result === "ALLOW"
     ? { ok: true, message: `Còn lại ${decision.remainingUsd} USD trong hạn mức.` }
