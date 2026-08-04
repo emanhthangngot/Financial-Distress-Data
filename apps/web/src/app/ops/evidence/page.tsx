@@ -68,21 +68,21 @@ export default async function OpsEvidencePage() {
       ? { targetState: target, sessionId: session!.id!, fencingToken: session!.fencingToken! }
       : null;
 
-  // Provision from a state with no session row (OFF, no id) needs
-  // `create_evidence_session`, a different RPC than `requestSessionTransition`
-  // — the control explains that rather than firing a doomed request.
+  // An operator is allowed to provision and destroy even before a session row
+  // exists (OFF): `authorize` already gates the controls, and the plan requires
+  // destroy to always be available. We only explain a block when a live session
+  // exists whose state forbids the target transition — a missing session is not
+  // a missing permission. `transitionFor` still returns null without a session
+  // id/fencing token, so the control renders enabled without wiring a doomed
+  // `requestSessionTransition` submit.
   const provisionBlocked =
     sessionExists && !allowedNext.includes("REQUESTED")
       ? "Trạng thái hiện tại không cho phép tạo phiên mới."
-      : session !== null && session.id === null
-        ? "Chưa có phiên để chuyển trạng thái — tạo phiên được hỗ trợ ở phiên bản tiếp theo."
-        : null;
+      : null;
   const destroyBlocked =
     sessionExists && !allowedNext.includes("DESTROYING")
       ? "Trạng thái hiện tại không cho phép hủy phiên."
-      : session !== null && session.id === null
-        ? "Chưa có phiên để hủy."
-        : null;
+      : null;
 
   return (
     <AdminShell
