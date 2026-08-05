@@ -14,7 +14,6 @@ import time
 from typing import Any
 
 import psycopg
-import pytest
 from psycopg.rows import dict_row
 
 from .conftest import PLATFORM_OPERATOR_ID
@@ -46,11 +45,15 @@ def run_committed(
     return outcome
 
 
-def operator(conn: psycopg.Connection, query: str, params: tuple[Any, ...] | None = None) -> dict[str, Any]:
+def operator(
+    conn: psycopg.Connection, query: str, params: tuple[Any, ...] | None = None
+) -> dict[str, Any]:
     return run_committed(conn, PLATFORM_OPERATOR_ID, "aal2", query, params)
 
 
-def worker(conn: psycopg.Connection, query: str, params: tuple[Any, ...] | None = None) -> dict[str, Any]:
+def worker(
+    conn: psycopg.Connection, query: str, params: tuple[Any, ...] | None = None
+) -> dict[str, Any]:
     """The outbox worker holds the service-role key, not a user JWT — there is
     no analyst/operator identity or AAL behind a claim/complete/fail call."""
     return run_committed(conn, None, "aal1", query, params, pg_role="service_role")
@@ -80,7 +83,9 @@ def transition(
     )
 
 
-def claim(conn: psycopg.Connection, worker_id: str, limit: int = 5, lease_seconds: int = 120) -> list[dict[str, Any]]:
+def claim(
+    conn: psycopg.Connection, worker_id: str, limit: int = 5, lease_seconds: int = 120
+) -> list[dict[str, Any]]:
     result = worker(
         conn,
         "select * from claim_outbox_events(%s, %s, %s)",
@@ -90,7 +95,9 @@ def claim(conn: psycopg.Connection, worker_id: str, limit: int = 5, lease_second
     return result["rows"]
 
 
-def complete(conn: psycopg.Connection, event_id: str, worker_id: str, outcome: str) -> dict[str, Any]:
+def complete(
+    conn: psycopg.Connection, event_id: str, worker_id: str, outcome: str
+) -> dict[str, Any]:
     return worker(
         conn,
         "select * from complete_outbox_event(%s, %s, %s)",
@@ -98,7 +105,9 @@ def complete(conn: psycopg.Connection, event_id: str, worker_id: str, outcome: s
     )
 
 
-def fail(conn: psycopg.Connection, event_id: str, worker_id: str, error: str, max_attempts: int = 5) -> dict[str, Any]:
+def fail(
+    conn: psycopg.Connection, event_id: str, worker_id: str, error: str, max_attempts: int = 5
+) -> dict[str, Any]:
     return worker(
         conn,
         "select * from fail_outbox_event(%s, %s, %s, %s)",
@@ -111,7 +120,11 @@ def test_two_workers_claim_disjoint_event_sets(seeded_db):
     session_b = create_session(seeded_db, "outbox-disjoint-b")
     for session in (session_a, session_b):
         transition_result = transition(
-            seeded_db, session["id"], "REQUESTED", f"{session['idempotency_key']}-req", session["fencing_token"]
+            seeded_db,
+            session["id"],
+            "REQUESTED",
+            f"{session['idempotency_key']}-req",
+            session["fencing_token"],
         )
         assert transition_result["error"] is None, transition_result["error"]
 
@@ -130,7 +143,13 @@ def test_two_workers_claim_disjoint_event_sets(seeded_db):
 
 def test_expired_lease_returns_event_to_pool(seeded_db):
     session = create_session(seeded_db, "outbox-expired-lease")
-    transition(seeded_db, session["id"], "REQUESTED", f"{session['idempotency_key']}-req", session["fencing_token"])
+    transition(
+        seeded_db,
+        session["id"],
+        "REQUESTED",
+        f"{session['idempotency_key']}-req",
+        session["fencing_token"],
+    )
 
     first_claim = claim(seeded_db, "worker-stale", limit=1, lease_seconds=1)
     assert len(first_claim) == 1
@@ -149,7 +168,11 @@ def test_expired_lease_returns_event_to_pool(seeded_db):
 def test_completion_after_superseding_transition_is_stale_fencing(seeded_db):
     session = create_session(seeded_db, "outbox-stale-fencing")
     first = transition(
-        seeded_db, session["id"], "REQUESTED", f"{session['idempotency_key']}-req", session["fencing_token"]
+        seeded_db,
+        session["id"],
+        "REQUESTED",
+        f"{session['idempotency_key']}-req",
+        session["fencing_token"],
     )
     assert first["error"] is None, first["error"]
     updated_session = first["rows"][0]
@@ -180,13 +203,21 @@ def test_completion_after_superseding_transition_is_stale_fencing(seeded_db):
     row = operator(seeded_db, "select status from outbox_events where id = %s", (event["id"],))
     assert row["rows"][0]["status"] == "FAILED"
 
-    session_row = operator(seeded_db, "select state from evidence_session where id = %s", (session["id"],))
+    session_row = operator(
+        seeded_db, "select state from evidence_session where id = %s", (session["id"],)
+    )
     assert session_row["rows"][0]["state"] == "DESTROYING"
 
 
 def test_fail_below_max_attempts_returns_to_pending(seeded_db):
     session = create_session(seeded_db, "outbox-retry-below-cap")
-    transition(seeded_db, session["id"], "REQUESTED", f"{session['idempotency_key']}-req", session["fencing_token"])
+    transition(
+        seeded_db,
+        session["id"],
+        "REQUESTED",
+        f"{session['idempotency_key']}-req",
+        session["fencing_token"],
+    )
     claimed = claim(seeded_db, "worker-flaky", limit=5)
     event = next(row for row in claimed if row["session_id"] == session["id"])
 
@@ -197,7 +228,13 @@ def test_fail_below_max_attempts_returns_to_pending(seeded_db):
 
 def test_fail_beyond_max_attempts_stays_failed(seeded_db):
     session = create_session(seeded_db, "outbox-retry-cap")
-    transition(seeded_db, session["id"], "REQUESTED", f"{session['idempotency_key']}-req", session["fencing_token"])
+    transition(
+        seeded_db,
+        session["id"],
+        "REQUESTED",
+        f"{session['idempotency_key']}-req",
+        session["fencing_token"],
+    )
 
     event_id: str | None = None
     for attempt in range(1, 3):

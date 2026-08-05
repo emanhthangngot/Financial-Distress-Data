@@ -48,3 +48,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Upload coverage report
+        # pnpm test already fails the job below threshold; this just makes the
+        # per-file breakdown reviewable without re-running it locally.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            apps/web/coverage
+            packages/contracts/coverage
+          retention-days: 14

@@ -51,6 +51,16 @@ describe("validateProvenance", () => {
     expect(validateProvenance({ ...live, sourceSha: "HEAD" })).toHaveLength(1);
   });
 
+  it("rejects a non-hex GitOps sha", () => {
+    expect(validateProvenance({ ...live, gitopsSha: "not-a-sha" })).toContain(
+      "gitopsSha not-a-sha is not a hex commit sha",
+    );
+  });
+
+  it("allows a null GitOps sha — not every result crossed the GitOps boundary", () => {
+    expect(validateProvenance({ ...live, gitopsSha: null })).toEqual([]);
+  });
+
   it("requires a data version", () => {
     expect(validateProvenance({ ...live, dataVersion: "  " })).toContain("dataVersion is required");
   });

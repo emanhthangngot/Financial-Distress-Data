@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { UI_STATES, isNonSuccessState, validateStateCopy, type StateCopy } from "./ui-state";
+import { UI_STATES, isNonSuccessState, isUiState, validateStateCopy, type StateCopy } from "./ui-state";
 import { DISCLAIMER_SURFACES, DISCLAIMER_TEXT, requiresDisclaimer } from "./disclaimer";
 
 const goodCopy: StateCopy = {
@@ -69,5 +69,16 @@ describe("disclaimer", () => {
   it("does not require the disclaimer on operations surfaces", () => {
     expect(requiresDisclaimer("ops_evidence")).toBe(false);
     expect(requiresDisclaimer("company")).toBe(true);
+  });
+});
+
+describe("isUiState", () => {
+  it("accepts every known state", () => {
+    for (const state of UI_STATES) expect(isUiState(state)).toBe(true);
+  });
+
+  it("rejects a value outside the known union, including non-strings", () => {
+    expect(isUiState("mystery")).toBe(false);
+    expect(isUiState(42)).toBe(false);
   });
 });

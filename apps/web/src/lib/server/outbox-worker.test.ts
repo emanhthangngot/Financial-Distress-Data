@@ -72,6 +72,41 @@ describe("outbox worker", () => {
     expect(failure?.args.p_error).toContain("AWS API timed out");
   });
 
+  it("does not throw when fail_outbox_event itself reports a stale fencing token", async () => {
+    // A rare race: the session advances past this event between the handler
+    // throwing and the worker recording that failure. fail_outbox_event's own
+    // rejection for the same reason is not a worker bug either.
+    const { client } = stubClient([event], {
+      fail_outbox_event: { error: { message: "stale fencing token for outbox event evt-1" } },
+    });
+
+    const result = await drainOutbox(
+      client,
+      async () => {
+        throw new Error("transient");
+      },
+      { workerId: "w1" },
+    );
+
+    expect(result.failed).toBe(1);
+  });
+
+  it("throws when fail_outbox_event fails for a reason other than stale fencing", async () => {
+    const { client } = stubClient([event], {
+      fail_outbox_event: { error: { message: "connection refused" } },
+    });
+
+    await expect(
+      drainOutbox(
+        client,
+        async () => {
+          throw new Error("transient");
+        },
+        { workerId: "w1" },
+      ),
+    ).rejects.toThrow(/could not record outbox failure/);
+  });
+
   it("does not retry an event the session has advanced past", async () => {
     // The database already marked the event FAILED when it rejected the stale
     // token — as a returned row, not a thrown error, since an error would

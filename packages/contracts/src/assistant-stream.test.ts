@@ -106,6 +106,14 @@ describe("decodeSseChunk tolerance", () => {
     expect(rest).toBe("");
   });
 
+  it("ignores a data: line with an empty payload", () => {
+    const { frames, rest } = decodeSseChunk(
+      "data:\n\ndata: {\"type\":\"token\",\"text\":\"ok\"}\n\n",
+    );
+    expect(frames).toEqual([{ type: "token", text: "ok" }]);
+    expect(rest).toBe("");
+  });
+
   it("keeps a trailing line without a newline as rest", () => {
     const { frames, rest } = decodeSseChunk("data: {\"type\":\"tool\",");
     expect(frames).toEqual([]);

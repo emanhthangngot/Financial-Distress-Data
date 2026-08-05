@@ -248,6 +248,28 @@ rendered surface — upstream failures map to the closed error-code set above.
 - Audit events contain actor/action/result/version, never raw prompts, tokens or
   secrets.
 
+## Testing contract
+
+Three layers, each owning a different claim:
+
+- **Unit (`pnpm test`, Vitest, node environment):** `apps/web/src/lib` and
+  `packages/contracts/src`. Server boundaries, data adapters, the SQL-call
+  contracts and pure logic — gated at 90% lines/branches, enforced on every
+  `pnpm test` run (`coverage.enabled: true`), not only in CI.
+- **Component (`pnpm test`, Vitest, jsdom environment, `src/components/**/*.test.tsx`):**
+  the interactive surfaces whose state/role-gating logic is otherwise only
+  provable end-to-end — the assistant panel, the ops action button, the
+  disclaimer banner, the nav rail. Queries go through roles and accessible
+  names, so a component test doubles as an accessibility check and stays
+  stable across visual refinement. The other presentational components under
+  `src/components` are proved by Playwright instead; a render test for
+  already-covered markup would assert nothing a screenshot doesn't already
+  prove.
+- **Playwright (`pnpm --filter @distresslens/web e2e` / `e2e:roles` /
+  `e2e:assistant*`):** the real app in a real browser at 1440/1024/390 px —
+  route composition, focus order, no-horizontal-scroll, and the full
+  request/response path server unit tests mock out.
+
 ## Outbox worker
 
 A Vercel request writes a lifecycle intent and returns; it cannot babysit a
