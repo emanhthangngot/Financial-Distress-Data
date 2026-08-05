@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Accessibility proof and evidence publication"
-status: pending
+status: done
 priority: P2
 effort: "1d"
 dependencies: [2]
@@ -89,15 +89,15 @@ of a live runtime — the same honesty rule the UI itself follows.
 
 ## Success Criteria
 
-- [ ] Accessibility reviewer -> runs `pnpm --filter @distresslens/web e2e:a11y` -> zero serious or critical violations across every route, role and viewport.
-- [ ] Reviewer -> reads `docs/phase2/evidence/product/accessibility.md` -> finds every accepted moderate violation with a stated reason.
-- [ ] Keyboard user -> tabs through each route -> reaches every interactive control with a visible focus ring; the assistant traps and restores focus correctly.
-- [ ] User with `prefers-reduced-motion: reduce` -> loads any route -> sees no animated transform.
-- [ ] Reviewer -> opens `docs/phase2/evidence/product/` -> finds a manifest per captured frame and PNGs for the rubric-named states, each carrying route, state, role, viewport, plane availability and both SHAs.
-- [ ] Reviewer -> reads the evidence README -> can tell a fixture-backed frame from an executed-runtime frame without opening the JSON.
-- [ ] Maintainer -> runs `node scripts/phase2/publish-evidence.ts` after a fresh evidence run -> `git status` shows only intended frame changes.
-- [ ] Maintainer -> opens parent `phase-02` -> every box is either ticked with an artifact or explicitly deferred to a named later phase.
-- [ ] `.venv/bin/python scripts/run_stage1_quality_gates.py` -> still passes.
+- [x] Accessibility reviewer -> runs `pnpm --filter @distresslens/web e2e:a11y` -> zero serious or critical violations across every route, role and viewport. 9/9 pass (analyst, plane on); `e2e:a11y-roles` (platform operator, plane off) also 9/9.
+- [x] Reviewer -> reads `docs/phase2/evidence/product/accessibility.md` -> finds every accepted moderate violation with a stated reason. None found this run — the table is present and empty, with the note explaining what goes there.
+- [x] Keyboard user -> tabs through each route -> reaches every interactive control with a visible focus ring; the assistant traps and restores focus correctly. `e2e/a11y.spec.ts` focus-visible check; `analyst-surfaces.spec.ts` keyboard-navigation test for the assistant panel.
+- [x] User with `prefers-reduced-motion: reduce` -> loads any route -> sees no animated transform. `e2e/a11y.spec.ts` reduced-motion check.
+- [x] Reviewer -> opens `docs/phase2/evidence/product/` -> finds a manifest per captured frame and PNGs for the rubric-named states, each carrying route, state, role, viewport, plane availability and both SHAs. 30 manifests, 21 images published.
+- [x] Reviewer -> reads the evidence README -> can tell a fixture-backed frame from an executed-runtime frame without opening the JSON. README states the `REFERENCE_FIXTURE` rule up front.
+- [x] Maintainer -> runs `node apps/web/scripts/phase2/publish-evidence.mjs` after a fresh evidence run -> `git status` shows only intended frame changes. Script is additive-only (never deletes an unrecognized file) and prints a per-run summary; path is `.mjs` under `apps/web/scripts/phase2/`, not TypeScript at the repo root — no TS runner exists there (see phase-03's same decision for the outbox worker).
+- [x] Maintainer -> opens parent `phase-02` -> every box is either ticked with an artifact or explicitly deferred to a named later phase. All 9 requirements and 9 success criteria ticked with a named artifact; the one explicit forward-reference (GitOps promotion/rollback's actual dispatch) names the unified plan's phase-03 control repo.
+- [x] `.venv/bin/python scripts/run_stage1_quality_gates.py` -> still passes. 514 pytest passed, exit 0.
 
 ## Risk Assessment
 

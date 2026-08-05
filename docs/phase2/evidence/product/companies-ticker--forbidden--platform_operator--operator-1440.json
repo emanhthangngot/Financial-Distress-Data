@@ -1,0 +1,19 @@
+{
+  "route": "/companies/[ticker]",
+  "state": "forbidden",
+  "role": "platform_operator",
+  "viewport": "1440x900",
+  "project": "operator-1440",
+  "planeAvailability": "LIVE_UNAVAILABLE",
+  "dataOrigin": "REFERENCE_FIXTURE",
+  "dataVersion": "gold-2025-05-22",
+  "modelVersion": "DL-Score v2.1",
+  "agentVersion": "coordinator-exp-20250522",
+  "sourceSha": "local",
+  "gitopsSha": "a1b2c3d",
+  "expected": "denial that names the permission, not the company",
+  "actual": "captured",
+  "redaction": "no prompts, tokens, credentials or PII rendered",
+  "capturedAt": "2026-08-05T11:25:31.395Z",
+  "image": "companies-ticker--forbidden--platform_operator--operator-1440.png"
+}

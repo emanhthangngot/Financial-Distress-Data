@@ -6,7 +6,7 @@ priority: P1
 effort: "57-83 focused workdays (12-17 weeks)"
 branch: dev
 tags: [coursework, ml, llm, kubernetes, gitops, aws]
-blockedBy: [260805-0800-phase2-stage2-completion]
+blockedBy: []
 blocks: []
 created: 2026-08-02
 ---
@@ -35,7 +35,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 | # | Phase | Estimate | Status |
 |---|-------|----------|--------|
 | 1 | [Lock specification and rubric contract](./phase-01-start.md) | 3-4 days | In Review |
-| 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 8-12 days | Pending |
+| 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 8-12 days | Done |
 | 3 | [Bootstrap GitOps and AWS evidence platform](./phase-03-bootstrap-gitops-and-aws-evidence-platform.md) | 8-12 days | Pending |
 | 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 7-10 days | Pending |
 | 5 | [Deliver ML track](./phase-05-deliver-ml-track.md) | 8-12 days | Pending |

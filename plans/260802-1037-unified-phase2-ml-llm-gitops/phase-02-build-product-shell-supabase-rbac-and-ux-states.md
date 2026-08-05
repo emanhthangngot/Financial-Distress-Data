@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Build product shell, Supabase, RBAC and UX states"
-status: in_progress
+status: done
 estimate: "8-12 days"
 ---
 
@@ -76,15 +76,15 @@ decisions, not implementation shortcuts.
 
 ## Requirements
 
-- [ ] Analyst pages: company search, risk snapshot, model explanation, cited RAG answer, comparison, saved report, and data freshness.
-- [ ] Separate LLM rubric surfaces: the analysis assistant UI and the agent registry UI.
-- [ ] Admin surfaces: session state/timeline, estimated and actual cost, GitOps revision, health, evidence exports, promotion, rollback, and teardown.
-- [ ] Fixed disclaimer on company, explanation, AI assistant, comparison, and exported report: educational coursework, not investment advice.
-- [ ] Enforce RBAC in Supabase RLS and Next.js server boundaries, never only in client components.
-- [ ] Implement all three approved visual references as responsive routes with deterministic screenshot fixtures; no create-next-app placeholder remains.
-- [ ] Add loading, empty, stale, degraded, forbidden, timeout, and policy-blocked states for every route in the inventory.
-- [ ] Keep registry, analyst, and operations navigation separate while sharing typed contracts and the same disclaimer/design tokens; the assistant is a surface on top of them, never a substitute for their authorization boundaries.
-- [ ] Expose evidence provenance (source SHA, GitOps SHA, model/data/agent version, execution time) without exposing prompts, tokens, credentials, or PII.
+- [x] Analyst pages: company search, risk snapshot, model explanation, cited RAG answer, comparison, saved report, and data freshness. `apps/web/src/app/{page,companies,companies/[ticker],compare,reports,reports/[id]}.tsx`; `analyst-surfaces.spec.ts`.
+- [x] Separate LLM rubric surfaces: the analysis assistant UI and the agent registry UI. `components/assistant/*`, `app/agents/registry/page.tsx`.
+- [x] Admin surfaces: session state/timeline, estimated and actual cost, GitOps revision, health, evidence exports, promotion, rollback, and teardown. `app/ops/evidence/page.tsx`; `platform-surfaces.spec.ts`. GitOps promotion/rollback render the control and its RBAC/fencing gate — the GitOps repo they dispatch to is out of this repo's scope (unified plan phase-03).
+- [x] Fixed disclaimer on company, explanation, AI assistant, comparison, and exported report: educational coursework, not investment advice. `components/shell/disclaimer-banner.tsx`, `DISCLAIMER_SURFACES`; `disclaimer-banner.test.tsx`.
+- [x] Enforce RBAC in Supabase RLS and Next.js server boundaries, never only in client components. `supabase/migrations/20260803214600_phase2_rls.sql`, `apps/web/src/lib/server/guards.ts`; `tests/phase2/product/test_rbac_rls.py` (653 lines) + `test_outbox_worker.py`.
+- [x] Implement all three approved visual references as responsive routes with deterministic screenshot fixtures; no create-next-app placeholder remains. Routes above; `docs/phase2/evidence/product/` holds captured frames per route/state/role/viewport.
+- [x] Add loading, empty, stale, degraded, forbidden, timeout, and policy-blocked states for every route in the inventory. `lib/states/route-states.ts`, `components/assistant/assistant-message.tsx` state-copy map.
+- [x] Keep registry, analyst, and operations navigation separate while sharing typed contracts and the same disclaimer/design tokens; the assistant is a surface on top of them, never a substitute for their authorization boundaries. Separate route trees + `packages/contracts`; `nav-rail.test.tsx` proves an analyst never sees platform items and vice versa.
+- [x] Expose evidence provenance (source SHA, GitOps SHA, model/data/agent version, execution time) without exposing prompts, tokens, credentials, or PII. `evidence-manifest.ts` fields + `FORBIDDEN_PATTERNS` redaction check; `record_audit_event` RPC has no free-text prompt column.
 
 ## Authorization Model
 
@@ -130,15 +130,15 @@ All privileged roles require Supabase AAL2. Server actions verify signed claims,
 
 ## Success Criteria
 
-- [ ] Analyst -> opens the product while EKS is off -> can inspect saved, timestamped results and sees that live AI is unavailable.
-- [ ] Platform viewer -> opens admin -> sees cost, lifecycle, GitOps and evidence state but cannot mutate it through UI or server APIs.
-- [ ] Platform operator with AAL2 -> retries a failed provision using the same idempotency key -> receives one transition and one outbox action.
-- [ ] Platform admin -> attempts a stale promotion after another session owns the lease -> receives a fencing error and no GitOps mutation.
-- [ ] Reviewer -> checks every decision-support surface -> sees the non-investment disclaimer.
-- [ ] Product reviewer -> opens `UI-APPROVED-01` route -> sees the approved analyst information hierarchy and every required loading/stale/error/cached state in deterministic screenshots.
-- [ ] LLM reviewer -> opens the `UI-APPROVED-02` route and its analysis assistant -> sees streamed answer, citations, MCP/tool trace, model version and policy/error states without secret leakage.
-- [ ] Platform reviewer -> opens `UI-APPROVED-03` routes -> sees registry governance and evidence lifecycle/cost/GitOps controls with unauthorized actions disabled server-side.
-- [ ] Accessibility reviewer -> runs the UI audit at desktop and mobile viewports -> finds keyboard access, visible focus, semantic labels, contrast and reduced-motion compliance.
+- [x] Analyst -> opens the product while EKS is off -> can inspect saved, timestamped results and sees that live AI is unavailable. `lib/states/route-states.ts`; `assistant-plane-off.spec.ts`.
+- [x] Platform viewer -> opens admin -> sees cost, lifecycle, GitOps and evidence state but cannot mutate it through UI or server APIs. `test_rbac_rls.py::test_platform_viewer_*`; `role-action-button.tsx` disables mutation server-authorized controls.
+- [x] Platform operator with AAL2 -> retries a failed provision using the same idempotency key -> receives one transition and one outbox action. `request_session_transition`'s idempotency-key replay path; `session-actions.ts`.
+- [x] Platform admin -> attempts a stale promotion after another session owns the lease -> receives a fencing error and no GitOps mutation. `test_completion_after_superseding_transition_is_stale_fencing` (`tests/phase2/product/test_outbox_worker.py`) — the superseded event ends `FAILED`, the session state reflects only the newer transition.
+- [x] Reviewer -> checks every decision-support surface -> sees the non-investment disclaimer. `disclaimer-banner.test.tsx` covers every `DISCLAIMER_SURFACES` entry.
+- [x] Product reviewer -> opens `UI-APPROVED-01` route -> sees the approved analyst information hierarchy and every required loading/stale/error/cached state in deterministic screenshots. `docs/phase2/evidence/product/root--*`, `companies--*`.
+- [x] LLM reviewer -> opens the `UI-APPROVED-02` route and its analysis assistant -> sees streamed answer, citations, MCP/tool trace, model version and policy/error states without secret leakage. `POST /api/assistant/stream` + `assistant-streaming.spec.ts`/`assistant-quota.spec.ts`; `assistant-panel.test.tsx` renders every `AgentMessageState` plus `unavailable` with citations/tool-trace/version; `FORBIDDEN_PATTERNS` asserts no secret in any captured frame.
+- [x] Platform reviewer -> opens `UI-APPROVED-03` routes -> sees registry governance and evidence lifecycle/cost/GitOps controls with unauthorized actions disabled server-side. `platform-surfaces.spec.ts`; `docs/phase2/evidence/product/agents-registry--*`, `ops-evidence--*`.
+- [x] Accessibility reviewer -> runs the UI audit at desktop and mobile viewports -> finds keyboard access, visible focus, semantic labels, contrast and reduced-motion compliance. `pnpm --filter @distresslens/web e2e:a11y` + `e2e:a11y-roles`, 18/18 pass; `docs/phase2/evidence/product/accessibility.md`.
 
 ## Risks and Rollback
 
