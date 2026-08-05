@@ -15,7 +15,10 @@
     "e2e:assistant-quota": "playwright test --config playwright.assistant-quota.config.ts",
     "e2e:assistant-plane-off": "playwright test --config playwright.assistant-plane-off.config.ts",
     "e2e:live": "playwright test --config playwright.live.config.ts",
-    "outbox:worker": "tsx --conditions=react-server scripts/phase2/outbox-worker.ts"
+    "outbox:worker": "tsx --conditions=react-server scripts/phase2/outbox-worker.ts",
+    "e2e:a11y": "playwright test --config playwright.a11y.config.ts",
+    "e2e:a11y-roles": "playwright test --config playwright.a11y-roles.config.ts",
+    "publish:evidence": "node scripts/phase2/publish-evidence.mjs"
   },
   "dependencies": {
     "@distresslens/contracts": "workspace:*",
@@ -26,6 +29,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10",

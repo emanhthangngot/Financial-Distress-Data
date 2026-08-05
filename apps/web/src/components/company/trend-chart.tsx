@@ -59,11 +59,15 @@ export function TrendChart({ points }: { points: readonly TrendPoint[] }) {
         </span>
       </figcaption>
 
-      <div className="overflow-x-auto">
+      <div
+        className="overflow-x-auto"
+        tabIndex={0}
+        role="region"
+        aria-label={`Diễn biến từ ${first.period} đến ${last.period}: xác suất distress từ ${first.distressProbability.toFixed(1)}% lên ${last.distressProbability.toFixed(1)}%, Altman Z từ ${first.altmanZScore.toFixed(2)} xuống ${last.altmanZScore.toFixed(2)}.`}
+      >
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          role="img"
-          aria-label={`Diễn biến từ ${first.period} đến ${last.period}: xác suất distress từ ${first.distressProbability.toFixed(1)}% lên ${last.distressProbability.toFixed(1)}%, Altman Z từ ${first.altmanZScore.toFixed(2)} xuống ${last.altmanZScore.toFixed(2)}.`}
+          aria-hidden="true"
           className="h-[240px] w-full min-w-[560px]"
         >
           {/* Horizontal grid, four bands. Ticks carry the probability axis. */}

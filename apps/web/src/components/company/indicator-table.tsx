@@ -27,7 +27,12 @@ export function IndicatorTable({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div
+      className="overflow-x-auto"
+      tabIndex={0}
+      role="region"
+      aria-label="Chỉ tiêu tài chính theo kỳ báo cáo và xu hướng của từng chỉ tiêu"
+    >
       <table className="w-full min-w-[520px] border-collapse text-[14px]">
         <caption className="sr-only">
           Chỉ tiêu tài chính theo kỳ báo cáo và xu hướng của từng chỉ tiêu
