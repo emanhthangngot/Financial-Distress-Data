@@ -6,6 +6,7 @@ import type {
   CompanySearchResult,
   ModelComparison,
   OpsDashboard,
+  QuotaState,
   Role,
   SavedReport,
   SavedReportList,
@@ -64,4 +65,7 @@ export interface DistressLensDataPort {
   getAgentRegistry(context: RequestContext): Promise<ViewState<AgentRegistryView>>;
 
   getOpsDashboard(context: RequestContext): Promise<ViewState<OpsDashboard>>;
+
+  /** Remaining AI quota for the assistant's budget line, scoped by RLS. */
+  readAiBudget(context: RequestContext): Promise<ViewState<QuotaState>>;
 }

@@ -419,3 +419,235 @@ def test_analyst_cannot_delete_another_users_report(seeded_db):
         (report_id,),
     )
     assert result["rows"] == []
+
+
+# ---------------------------------------------------------------------------
+# AI budget persistence (ai_request_usage + consume_ai_quota + record_audit_event)
+# ---------------------------------------------------------------------------
+
+AI_QUOTA_SQL = """
+select * from consume_ai_quota(2, interval '24 hours', 5, interval '60 seconds')
+"""
+
+
+def _consume_as(conn, user_id, aal="aal1", quota_sql=AI_QUOTA_SQL):
+    """Run consume_ai_quota as `user_id` in a committed transaction and return
+    its rows, leaving the resulting usage rows persisted for later reads."""
+    claims = json.dumps({"sub": user_id, "aal": aal, "role": "authenticated"})
+    with conn.transaction():
+        conn.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
+        cur = conn.execute(quota_sql)
+        return cur.fetchall()
+
+
+def _audit_as(conn, user_id, args, metadata_sql, aal="aal1"):
+    """Run record_audit_event(...) as `user_id` in a committed transaction and
+    return its rows, leaving the audit row persisted for later reads."""
+    claims = json.dumps({"sub": user_id, "aal": aal, "role": "authenticated"})
+    with conn.transaction():
+        conn.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
+        cur = conn.execute(f"select record_audit_event({args}, {metadata_sql})")
+        return cur.fetchall()
+
+
+def test_analyst_can_read_own_usage_row(seeded_db):
+    # Seed one usage row owned by the analyst via the committed RPC.
+    _consume_as(seeded_db, ANALYST_ID)
+    result = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "select distinct user_id from ai_request_usage",
+    )
+    assert result["error"] is None
+    assert {str(r[0]) for r in result["rows"]} == {ANALYST_ID}
+
+
+def test_analyst_cannot_read_another_users_usage(seeded_db):
+    # Seed a row owned by another analyst (committed, so it persists).
+    _consume_as(seeded_db, OTHER_ANALYST_ID)
+    result = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "select user_id from ai_request_usage",
+    )
+    # RLS filters to the caller's own rows: ANALYST_ID sees zero rows.
+    assert result["error"] is None
+    assert result["rows"] == []
+
+
+def test_analyst_cannot_insert_usage_directly(seeded_db):
+    result = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "insert into ai_request_usage (user_id, kind, window_start, used) "
+        "values (%s, 'QUOTA', now(), 0)",
+        (ANALYST_ID,),
+    )
+    assert result["error"] is not None
+
+
+def test_analyst_cannot_update_usage_directly(seeded_db):
+    result = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "update ai_request_usage set used = 0",
+    )
+    assert result["error"] is not None
+
+
+def test_consume_ai_quota_increments_by_one_when_allowed(seeded_db):
+    rows = _consume_as(seeded_db, ANALYST_ID)
+    assert rows[0][0] is True  # allowed
+    assert rows[0][1] is None  # denial
+    assert rows[0][2] == 1  # quota_used
+    assert rows[0][3] == 2  # quota_limit
+
+
+def test_consume_ai_quota_denies_at_the_limit_without_incrementing(seeded_db):
+    # Exhaust the quota (limit 2): two allowed calls fill it.
+    _consume_as(seeded_db, ANALYST_ID)
+    _consume_as(seeded_db, ANALYST_ID)
+
+    rows = _consume_as(seeded_db, ANALYST_ID)
+    row = rows[0]
+    assert row[0] is False
+    assert row[1] == "QUOTA_EXHAUSTED"
+    assert row[2] == 2  # quota_used unchanged, still at the limit
+
+    # A refused request must not spend the analyst's budget further.
+    remaining = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "select used from ai_request_usage " "where user_id = %s and kind = 'QUOTA'",
+        (ANALYST_ID,),
+    )
+    assert remaining["rows"] == [(2,)]
+
+
+def test_concurrent_requests_with_one_unit_remaining_allow_exactly_one(seeded_db, pg_cluster):
+    """Two connections race for the quota's last unit; exactly one must pass,
+    proving consume_ai_quota serializes on the counter row."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    import psycopg
+
+    # Leave the analyst one quota unit remaining (limit 2, consume once).
+    _consume_as(seeded_db, ANALYST_ID)
+    claims = json.dumps({"sub": ANALYST_ID, "aal": "aal1", "role": "authenticated"})
+
+    def race() -> bool:
+        conn = psycopg.connect(
+            dbname="phase2_rls_test",
+            user="postgres",
+            host=pg_cluster["host"],
+            autocommit=True,
+        )
+        try:
+            # set_config(..., is_local=true) only lasts for the transaction, so
+            # the claim and the RPC must share a transaction block.
+            with conn.transaction():
+                conn.execute("select set_config('request.jwt.claims', %s, true)", (claims,))
+                cur = conn.execute(AI_QUOTA_SQL)
+                return bool(cur.fetchone()[0])
+        finally:
+            conn.close()
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: race(), [0, 1]))
+
+    assert sorted(results) == [False, True]
+
+
+def test_record_audit_event_rejects_a_non_whitelisted_metadata_key(seeded_db):
+    result = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "select record_audit_event('ai.request', 'ALLOWED', 'NVL', "
+        '\'{"secret": "should be rejected"}\'::jsonb)',
+    )
+    assert result["error"] is not None
+    count = seeded_db.execute("select count(*) from audit_log").fetchone()[0]
+    assert count == 0
+
+
+def test_record_audit_event_rejects_a_compound_metadata_value(seeded_db):
+    result = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "select record_audit_event('ai.request', 'ALLOWED', 'NVL', "
+        '\'{"reason": {"body": "hidden prompt"}}\'::jsonb)',
+    )
+    assert result["error"] is not None
+    count = seeded_db.execute("select count(*) from audit_log").fetchone()[0]
+    assert count == 0
+
+
+def test_record_audit_event_writes_a_row_without_prompt_text(seeded_db):
+    rows = _audit_as(
+        seeded_db,
+        ANALYST_ID,
+        "'ai.request', 'ALLOWED', 'HPG'",
+        "'{\"quota_remaining\": 18}'::jsonb",
+    )
+    assert rows[0][0] is not None  # returned audit id
+    row = seeded_db.execute(
+        "select actor_id, actor_role, action, resource, metadata from audit_log"
+    ).fetchone()
+    assert str(row[0]) == ANALYST_ID
+    assert row[1] == "analyst"  # pinned to the caller's real role
+    assert row[2] == "ai.request"
+    assert row[3] == "HPG"
+    assert row[4]["outcome"] == "ALLOWED"
+    assert row[4]["quota_remaining"] == 18
+
+
+def test_platform_viewer_can_read_audit_log(seeded_db):
+    _audit_as(seeded_db, ANALYST_ID, "'ai.request', 'ALLOWED', 'HPG'", "'{}'::jsonb")
+    result = run_as(
+        seeded_db,
+        PLATFORM_VIEWER_ID,
+        "aal2",
+        "select action from audit_log",
+    )
+    assert result["error"] is None
+    assert result["rows"] == [("ai.request",)]
+
+
+def test_analyst_cannot_read_another_users_audit_log(seeded_db):
+    _audit_as(seeded_db, OTHER_ANALYST_ID, "'ai.request', 'ALLOWED', 'HPG'", "'{}'::jsonb")
+    result = run_as(
+        seeded_db,
+        ANALYST_ID,
+        "aal1",
+        "select action from audit_log",
+    )
+    assert result["rows"] == []
+
+
+def test_anon_cannot_execute_consume_ai_quota(seeded_db):
+    result = run_as(
+        seeded_db,
+        None,
+        "aal1",
+        AI_QUOTA_SQL,
+        pg_role="anon",
+    )
+    assert result["error"] is not None
+
+
+def test_anon_cannot_execute_record_audit_event(seeded_db):
+    result = run_as(
+        seeded_db,
+        None,
+        "aal1",
+        "select record_audit_event('ai.request', 'ALLOWED', 'HPG', '{}'::jsonb)",
+        pg_role="anon",
+    )
+    assert result["error"] is not None

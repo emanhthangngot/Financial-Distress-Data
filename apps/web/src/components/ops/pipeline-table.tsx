@@ -38,7 +38,12 @@ export function PipelineTable({ pipelines }: { pipelines: readonly PipelineRow[]
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div
+      className="overflow-x-auto"
+      tabIndex={0}
+      role="region"
+      aria-label="Pipeline theo revision hiện tại, trạng thái và thời điểm chạy gần nhất"
+    >
       <table className="w-full min-w-[640px] border-collapse text-[14px]">
         <caption className="sr-only">
           Pipeline theo revision hiện tại, trạng thái và thời điểm chạy gần nhất

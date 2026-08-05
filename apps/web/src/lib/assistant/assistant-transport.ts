@@ -37,6 +37,8 @@ export interface AssistantRequest {
 
 export interface AssistantTransport {
   send(request: AssistantRequest): Promise<AssistantTurn>;
+  /** Cancel an in-flight request. Optional: the unavailable transport has none. */
+  abort?(): void;
 }
 
 /**

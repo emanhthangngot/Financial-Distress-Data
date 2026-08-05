@@ -41,7 +41,12 @@ export function AbExperimentPanel({
             </p>
           </div>
 
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto"
+            tabIndex={0}
+            role="region"
+            aria-label={`Kết quả 24 giờ gần nhất của từng biến thể trong thử nghiệm ${experiment.id}`}
+          >
             <table className="w-full min-w-[520px] border-collapse text-[14px]">
               <caption className="sr-only">
                 Kết quả 24 giờ gần nhất của từng biến thể trong thử nghiệm {experiment.id}

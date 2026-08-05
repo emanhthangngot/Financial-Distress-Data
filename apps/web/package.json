@@ -11,7 +11,14 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "e2e:roles": "playwright test --config playwright.roles.config.ts",
-    "e2e:live": "playwright test --config playwright.live.config.ts"
+    "e2e:assistant": "playwright test --config playwright.assistant.config.ts",
+    "e2e:assistant-quota": "playwright test --config playwright.assistant-quota.config.ts",
+    "e2e:assistant-plane-off": "playwright test --config playwright.assistant-plane-off.config.ts",
+    "e2e:live": "playwright test --config playwright.live.config.ts",
+    "outbox:worker": "tsx --conditions=react-server scripts/phase2/outbox-worker.ts",
+    "e2e:a11y": "playwright test --config playwright.a11y.config.ts",
+    "e2e:a11y-roles": "playwright test --config playwright.a11y-roles.config.ts",
+    "publish:evidence": "node scripts/phase2/publish-evidence.mjs"
   },
   "dependencies": {
     "@distresslens/contracts": "workspace:*",
@@ -22,14 +29,22 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10",
+    "@testing-library/jest-dom": "^6",
+    "@testing-library/react": "^16",
+    "@testing-library/user-event": "^14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^3",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "jsdom": "^25",
     "tailwindcss": "^4",
+    "tsx": "^4",
     "typescript": "^5",
     "vitest": "^3"
   }

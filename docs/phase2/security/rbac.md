@@ -24,6 +24,12 @@ must be rejected by both the Next.js server boundary and the database policy.
   `platform_admin` require AAL2/MFA before privileged actions.
 - Server actions/API handlers validate the signed session, role claim, origin/
   CSRF policy, request schema and rate limit before touching data or an outbox.
+- The assistant stream route (`POST /api/assistant/stream`) authorizes
+  `analyst.run_ai_request`, spends budget atomically through
+  `consume_ai_quota()`, audits exactly one row per outcome, and bounds the whole
+  upstream interaction with `ASSISTANT_TIMEOUT_MS` below the hosting response
+  limit — a silent upstream cannot hold the route open, and the response emits a
+  `timeout` frame rather than a dead connection.
 - Lifecycle mutations require a client idempotency key, a fresh fencing token,
   and a lease owned by the current actor. Replays return the original result;
   stale tokens return a fencing error and create no GitOps mutation.
@@ -38,6 +44,7 @@ must be rejected by both the Next.js server boundary and the database policy.
 |---|---|---|---|
 | `/companies`, `/companies/[ticker]`, `/compare`, `/reports/[id]` | `analyst`, admin support read | save/export own report | analyst can read; platform viewer cannot mutate analyst data |
 | `/agents/chat` | `analyst` and explicitly granted users | bounded AI request | quota/rate-limit and policy-block response |
+| `POST /api/assistant/stream` | `analyst` (authorized `analyst.run_ai_request`) | streaming AI request | 403 policy-block, 429 with reset time, or `eks_off` frame when the plane is off |
 | `/agents/registry` | `platform_viewer`, `platform_operator`, `platform_admin` | admin promotion/rollback only | viewer/operator cannot promote; server rejects direct call |
 | `/ops/evidence` | `platform_viewer`, `platform_operator`, `platform_admin` | operator lifecycle; admin role/policy changes | viewer read-only; stale lease is rejected |
 
@@ -53,6 +60,27 @@ idempotent replay.
 The UI contract's cached/EKS-off states are security relevant: a cached report
 may be read only when its row policy permits it, and an unavailable live plane
 must not cause the client to fall back to an unscoped or unauthenticated API.
+
+### AI budget counters and audit (quota / rate limit)
+
+- `ai_request_usage` is the quota/rate-limit counter table. Rows are keyed by
+  `(user_id, kind, window_start)` and scoped to the caller by a select policy on
+  `auth.uid()`; `authenticated` gets `select` only, `service_role` gets full DML.
+  Counters may only move through `consume_ai_quota()` — there is **no direct
+  insert/update/delete grant** to `authenticated`, so a caller can never write
+  their own budget or another user's row.
+- `consume_ai_quota(p_quota_limit, p_quota_window, p_rate_limit, p_rate_window)`
+  is the only write path for a bounded AI request. It increments both counters
+  only when both limits pass, increments neither on denial, and prunes rows older
+  than two windows for the calling user in the same call.
+- `record_audit_event(p_action, p_outcome, p_context_id, p_metadata)` writes to
+  `audit_log` and raises on metadata keys outside a fixed whitelist
+  (`reason`, `quota_remaining`, `rate_remaining`, `attempt`), so an RPC payload
+  cannot smuggle prompts or credentials into the audit row.
+- Both RPCs follow the grant-hardening pattern of
+  `20260804160000_phase2_function_grant_hardening.sql`: revoke from
+  `public`/`anon`/`authenticated`, then `grant execute` to `authenticated` only.
+  `anon` reaches neither table nor either RPC.
 
 ## Acceptance criteria
 

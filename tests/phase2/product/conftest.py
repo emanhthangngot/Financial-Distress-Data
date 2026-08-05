@@ -165,7 +165,7 @@ SEED_USERS: tuple[tuple[str, str], ...] = (
 def seeded_db(phase2_conn: psycopg.Connection):
     """Reset seed rows before each test so tests stay independent."""
     phase2_conn.execute(
-        "truncate audit_log, saved_reports, outbox_events, "
+        "truncate audit_log, saved_reports, outbox_events, ai_request_usage, "
         "evidence_session_transition, evidence_session, profiles cascade"
     )
     phase2_conn.execute("delete from auth.users")

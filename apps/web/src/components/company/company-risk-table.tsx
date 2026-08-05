@@ -47,7 +47,12 @@ export function CompanyRiskTable({
           composes down to the columns a decision needs rather than relying on a
           horizontal scroll nobody discovers — eight columns do not fit the
           canvas at 1024, and a scroll container there just hides that. */}
-      <div className="hidden w-0 min-w-full overflow-x-auto lg:block">
+      <div
+        className="hidden w-0 min-w-full overflow-x-auto lg:block"
+        tabIndex={0}
+        role="region"
+        aria-label={caption}
+      >
         <table className="w-full border-collapse text-[14px]">
           <caption className="sr-only">{caption}</caption>
           <thead>

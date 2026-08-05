@@ -71,23 +71,25 @@ test.describe("analyst overview", () => {
     await expect(launcher).toBeFocused();
   });
 
-  test("answers a quick action without inventing an analysis", async ({ page }, testInfo) => {
-    // With no agent backend wired, the only honest answer is that nothing ran.
-    // A fabricated risk explanation here would be the worst thing this product
-    // could ship, so it is asserted against rather than left to review.
+  test("answers a quick action honestly when no inference endpoint is configured", async ({ page }, testInfo) => {
+    // With no inference endpoint wired, the only honest answer is the plane-off
+    // state: the assistant says live analysis is off and points at the data
+    // that is still on the page. A fabricated risk explanation here would be
+    // the worst thing this product could ship, so it is asserted against
+    // rather than left to review.
     await page.goto("/");
     await page.getByRole("button", { name: "Mở trợ lý phân tích" }).click();
     await page.getByRole("button", { name: "Tóm tắt rủi ro danh mục" }).click();
 
     await expect(page.getByText("Chưa kết nối dịch vụ")).toBeVisible();
-    await expect(page.getByText(/chưa được kết nối trong bản dựng này/)).toBeVisible();
+    await expect(page.getByText(/phân tích AI trực tiếp tạm chưa bật/)).toBeVisible();
 
     await captureEvidence(page, testInfo, {
       route: "/",
       state: "assistant-unavailable",
       role: "analyst",
       planeReady: true,
-      expected: "assistant reports the missing integration and offers a next action",
+      expected: "assistant reports live analysis is off and offers the data that remains",
     });
   });
 });

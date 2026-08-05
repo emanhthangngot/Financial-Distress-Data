@@ -14,10 +14,9 @@ import {
   type AssistantContext as AssistantPageContext,
 } from "@/lib/assistant/assistant-context";
 import {
-  UNAVAILABLE_TRANSPORT,
-  type AssistantTransport,
-  type AssistantTurn,
-} from "@/lib/assistant/assistant-transport";
+  StreamingAssistantTransport,
+} from "@/lib/assistant/streaming-transport";
+import type { AssistantTransport, AssistantTurn } from "@/lib/assistant/assistant-transport";
 
 /**
  * Assistant state: which view mode is showing, which page context the assistant
@@ -43,12 +42,25 @@ interface AssistantStore {
   close(): void;
   setMode(mode: AssistantViewMode): void;
   ask(question: string): Promise<void>;
+  cancel(): void;
   clearThread(): void;
+  /** Remaining AI budget to show before it is spent; null hides the line. */
+  quotaRemaining: number | null;
   /** The launcher registers itself so focus returns there when the panel closes. */
   registerLauncher(node: HTMLButtonElement | null): void;
 }
 
 const AssistantStoreContext = createContext<AssistantStore | null>(null);
+
+/**
+ * The transport wired by default. The route always exists (even when the plane
+ * is off it answers truthfully with an `eks_off` frame), so the streaming
+ * transport is the default; `UNAVAILABLE_TRANSPORT` stays as the explicit
+ * fallback for a build where the route is deliberately absent.
+ */
+export const STREAMING_TRANSPORT: AssistantTransport = new StreamingAssistantTransport(
+  "/api/assistant/stream",
+);
 
 export function useAssistant(): AssistantStore {
   const store = useContext(AssistantStoreContext);
@@ -60,11 +72,14 @@ export function useAssistant(): AssistantStore {
 
 export function AssistantProvider({
   context,
-  transport = UNAVAILABLE_TRANSPORT,
+  transport = STREAMING_TRANSPORT,
+  quotaRemaining = null,
   children,
 }: {
   context: AssistantPageContext;
   transport?: AssistantTransport;
+  /** Remaining AI budget for the quota line; null (or omitted) hides it. */
+  quotaRemaining?: number | null;
   children: ReactNode;
 }) {
   const [mode, setMode] = useState<AssistantViewMode>("collapsed");
@@ -94,6 +109,10 @@ export function AssistantProvider({
   const clearThread = useCallback(() => {
     setThreads((current) => ({ ...current, [threadKey]: [] }));
   }, [threadKey]);
+
+  const cancel = useCallback(() => {
+    transport.abort?.();
+  }, [transport]);
 
   const ask = useCallback(
     async (question: string) => {
@@ -163,14 +182,16 @@ export function AssistantProvider({
       context,
       turns,
       pending,
+      quotaRemaining,
       open,
       close,
       setMode,
       ask,
+      cancel,
       clearThread,
       registerLauncher,
     }),
-    [mode, context, turns, pending, open, close, ask, clearThread, registerLauncher],
+    [mode, context, turns, pending, quotaRemaining, open, close, ask, cancel, clearThread, registerLauncher],
   );
 
   return <AssistantStoreContext.Provider value={store}>{children}</AssistantStoreContext.Provider>;

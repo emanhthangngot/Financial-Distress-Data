@@ -4,6 +4,7 @@ import {
   isQuotaExhausted,
   type AuthorizationDenial,
   type QuotaState,
+  type RateLimitState,
   type Role,
   type SessionAction,
 } from "@distresslens/contracts";
@@ -63,14 +64,6 @@ export function checkOrigin(context: GuardContext): GuardResult {
   return originHost === context.host
     ? ALLOWED
     : deny("ORIGIN_MISMATCH", "Yêu cầu đến từ một nguồn khác với ứng dụng.");
-}
-
-export interface RateLimitState {
-  /** Requests already made in the current window. */
-  used: number;
-  limit: number;
-  /** ISO timestamp the window resets. */
-  resetsAt: string;
 }
 
 export function checkRateLimit(state: RateLimitState): GuardResult {

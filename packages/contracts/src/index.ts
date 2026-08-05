@@ -7,4 +7,6 @@ export * from "./ui-state";
 export * from "./disclaimer";
 export * from "./company";
 export * from "./agent";
+export * from "./assistant-stream";
+export * from "./ai-budget";
 export * from "./ops";

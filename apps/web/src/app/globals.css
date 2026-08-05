@@ -19,14 +19,14 @@
      blue with enough luminance to read as text on the navy rail. */
   --color-primary-700: #1d4ed8;
   --color-primary-600: #2563eb;
-  --color-primary-500: #3b82f6;
+  --color-primary-500: #4088f7;
   --color-primary-300: #93b4ff;
   --color-primary-050: #eff4ff;
 
   /* AI accent. Used only by the analysis assistant, so its presence anywhere
      on screen means "this came from the assistant" and nothing else. */
   --color-ai-600: #4f46e5;
-  --color-ai-500: #6366f1;
+  --color-ai-500: #5b5ede;
   --color-ai-300: #a5b4fc;
   --color-ai-050: #eef1fe;
 
@@ -39,7 +39,7 @@
   /* Text roles, contrast-checked against paper-0 and paper-1. */
   --color-text-strong: #172033;
   --color-text-body: #334155;
-  --color-text-muted: #64748b;
+  --color-text-muted: #5f6f88;
   --color-text-inverse: #f6f8fb;
 
   --color-line-hairline: #e5eaf0;
