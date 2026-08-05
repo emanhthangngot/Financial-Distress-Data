@@ -1,7 +1,7 @@
 ---
 title: "Phase 2 Stage 2 Completion"
 description: "Close every open requirement of unified-phase2 phase-02: AI request path with persisted quota/rate-limit/audit, an outbox worker runtime, a >90% coverage gate on changed code, axe accessibility proof, and committed deterministic evidence."
-status: pending
+status: done
 priority: P1
 effort: "6-9 focused workdays"
 branch: dev
@@ -68,9 +68,9 @@ with no change to `apps/web` code.
 |---|-------|----------|--------|
 | 1 | [Quota, rate limit and audit persistence](./phase-01-quota-rate-limit-and-audit-persistence.md) | 1-2 days | Done |
 | 2 | [AI request path and SSE transport](./phase-02-ai-request-path-and-sse-transport.md) | 2-3 days | Done |
-| 3 | [Outbox worker runtime](./phase-03-outbox-worker-runtime.md) | 1-2 days | Pending |
-| 4 | [Coverage gate and component tests](./phase-04-coverage-gate-and-component-tests.md) | 1-2 days | Pending |
-| 5 | [Accessibility proof and evidence publication](./phase-05-accessibility-and-evidence-publication.md) | 1 day | Pending |
+| 3 | [Outbox worker runtime](./phase-03-outbox-worker-runtime.md) | 1-2 days | Done |
+| 4 | [Coverage gate and component tests](./phase-04-coverage-gate-and-component-tests.md) | 1-2 days | Done |
+| 5 | [Accessibility proof and evidence publication](./phase-05-accessibility-and-evidence-publication.md) | 1 day | Done |
 
 Dependencies: 2 depends on 1. 4 depends on 2 and 3, because it gates the code
 they add. 5 depends on 2, because it captures the assistant's streaming and

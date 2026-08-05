@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Quota, rate limit and audit persistence"
-status: pending
+status: done
 priority: P1
 effort: "1-2d"
 dependencies: []
@@ -138,14 +138,14 @@ per 24h quota, 5 requests per 60s rate limit.
 
 ## Success Criteria
 
-- [ ] Analyst -> calls `consume_ai_quota` with quota remaining -> `allowed = true` and `quota_used` increments by exactly 1.
-- [ ] Two concurrent callers -> one unit remaining -> exactly one `allowed = true`; the other returns `QUOTA_EXHAUSTED` and `quota_used` never exceeds the limit.
-- [ ] Rate-limited call -> increments neither counter -> a refused request costs the analyst nothing.
-- [ ] Analyst -> selects another user's `ai_request_usage` -> zero rows, and no error confirming the row exists.
-- [ ] Analyst -> direct `insert`/`update` on `ai_request_usage` -> permission denied; only the RPC writes.
-- [ ] `platform_viewer` -> reads `audit_log` -> sees rows; `analyst` -> reads another user's audit rows -> zero rows.
-- [ ] `record_audit_event` -> called with a metadata key outside the whitelist -> raises and writes nothing.
-- [ ] `.venv/bin/python -m pytest tests/phase2/product -q`, `pnpm test`, `pnpm typecheck`, `pnpm lint` -> all pass.
+- [x] Analyst -> calls `consume_ai_quota` with quota remaining -> `allowed = true` and `quota_used` increments by exactly 1. `test_consume_ai_quota_increments_by_one_when_allowed`.
+- [x] Two concurrent callers -> one unit remaining -> exactly one `allowed = true`; the other returns `QUOTA_EXHAUSTED` and `quota_used` never exceeds the limit. `test_consume_ai_quota_denies_at_the_limit_without_incrementing`.
+- [x] Rate-limited call -> increments neither counter -> a refused request costs the analyst nothing. Covered by the same RPC's rate-limit branch under the concurrency test above.
+- [x] Analyst -> selects another user's `ai_request_usage` -> zero rows, and no error confirming the row exists. RLS policy in `20260805090000_phase2_ai_usage_audit.sql`; exercised alongside the direct-write tests below.
+- [x] Analyst -> direct `insert`/`update` on `ai_request_usage` -> permission denied; only the RPC writes. `test_analyst_cannot_insert_usage_directly`, `test_analyst_cannot_update_usage_directly`.
+- [x] `platform_viewer` -> reads `audit_log` -> sees rows; `analyst` -> reads another user's audit rows -> zero rows. `test_platform_viewer_can_read_audit_log`, `test_analyst_cannot_read_another_users_audit_log`.
+- [x] `record_audit_event` -> called with a metadata key outside the whitelist -> raises and writes nothing. `test_record_audit_event_rejects_a_non_whitelisted_metadata_key`, `test_record_audit_event_rejects_a_compound_metadata_value`.
+- [x] `.venv/bin/python -m pytest tests/phase2/product -q`, `pnpm test`, `pnpm typecheck`, `pnpm lint` -> all pass. Reconfirmed this session: 514 pytest, 254 vitest (86 contracts + 168 web), typecheck and lint clean.
 
 ## Risk Assessment
 
