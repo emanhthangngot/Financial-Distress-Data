@@ -74,9 +74,11 @@ describe("outbox worker", () => {
 
   it("does not retry an event the session has advanced past", async () => {
     // The database already marked the event FAILED when it rejected the stale
-    // token; retrying would re-run infrastructure work for a state nobody wants.
+    // token — as a returned row, not a thrown error, since an error would
+    // have rolled back that very mark. Retrying would re-run infrastructure
+    // work for a state nobody wants.
     const { client, calls } = stubClient([event], {
-      complete_outbox_event: { error: { message: "stale fencing token for outbox event evt-1" } },
+      complete_outbox_event: { data: { status: "FAILED" }, error: null },
     });
 
     const result = await drainOutbox(client, async () => "provisioned", { workerId: "w1" });

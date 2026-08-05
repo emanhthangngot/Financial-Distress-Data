@@ -6,7 +6,7 @@ priority: P1
 effort: "57-83 focused workdays (12-17 weeks)"
 branch: dev
 tags: [coursework, ml, llm, kubernetes, gitops, aws]
-blockedBy: []
+blockedBy: [260805-0800-phase2-stage2-completion]
 blocks: []
 created: 2026-08-02
 ---

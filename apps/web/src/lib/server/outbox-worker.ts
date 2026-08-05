@@ -45,6 +45,11 @@ export interface DrainResult {
   fenced: number;
 }
 
+/** The row `complete_outbox_event` returns — only the field the worker reads. */
+interface OutboxCompletionRow {
+  status: "DONE" | "FAILED";
+}
+
 export async function drainOutbox(
   client: SupabaseClient,
   handle: OutboxHandler,
@@ -75,13 +80,16 @@ export async function drainOutbox(
       });
 
       if (completion.error !== null) {
-        // A stale fencing token is not a worker failure — the database already
-        // marked the event FAILED, and retrying would be wrong.
-        if (isStaleFencing(completion.error.message)) {
-          result.fenced += 1;
-          continue;
-        }
         throw new Error(completion.error.message);
+      }
+
+      // A stale fencing token is not a worker failure: the database already
+      // marked the event FAILED (without raising, so that mark survives) and
+      // retrying would redo infrastructure work for a state nobody wants.
+      const completed = completion.data as OutboxCompletionRow | null;
+      if (completed?.status === "FAILED") {
+        result.fenced += 1;
+        continue;
       }
 
       result.completed += 1;

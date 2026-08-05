@@ -14,7 +14,8 @@
     "e2e:assistant": "playwright test --config playwright.assistant.config.ts",
     "e2e:assistant-quota": "playwright test --config playwright.assistant-quota.config.ts",
     "e2e:assistant-plane-off": "playwright test --config playwright.assistant-plane-off.config.ts",
-    "e2e:live": "playwright test --config playwright.live.config.ts"
+    "e2e:live": "playwright test --config playwright.live.config.ts",
+    "outbox:worker": "tsx --conditions=react-server scripts/phase2/outbox-worker.ts"
   },
   "dependencies": {
     "@distresslens/contracts": "workspace:*",
@@ -33,6 +34,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
+    "tsx": "^4",
     "typescript": "^5",
     "vitest": "^3"
   }

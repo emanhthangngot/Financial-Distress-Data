@@ -248,6 +248,28 @@ rendered surface — upstream failures map to the closed error-code set above.
 - Audit events contain actor/action/result/version, never raw prompts, tokens or
   secrets.
 
+## Outbox worker
+
+A Vercel request writes a lifecycle intent and returns; it cannot babysit a
+multi-minute AWS operation. `pnpm --filter @distresslens/web outbox:worker`
+runs the separate process that claims and resolves those intents:
+
+- Runs against the service-role Supabase client only — never inside a request
+  handler, since the service-role key bypasses RLS.
+- Claims events with a lease (`claim_outbox_events`); a crashed worker's lease
+  expires and another worker reclaims the event.
+- `complete_outbox_event` refuses a stale fencing token by marking the event
+  `FAILED` and returning that row — it does not raise, because raising would
+  roll back the very mark it needs to leave behind.
+- Today's registered handler (`createDefaultOutboxHandlerRegistry` in
+  `src/lib/server/outbox-handlers.ts`) advances no real infrastructure; its
+  result string says so explicitly (`no infrastructure contacted`). The GitOps
+  dispatcher that actually drives EKS provisioning/destruction lands in
+  phase-03 of the unified plan (a separate control repo) and replaces only
+  that handler body — the loop, registry and worker contract stay the same.
+- Structured single-line JSON logs record event id, target state, attempt and
+  outcome; never the fencing token or the service-role key.
+
 ## Cross-track dashboard boundary
 
 ML observability and ML/LLM A/B dashboards remain canonical Grafana/evidence-
