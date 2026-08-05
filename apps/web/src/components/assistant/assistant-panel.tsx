@@ -28,7 +28,8 @@ import { useAssistant } from "./assistant-provider";
  * in the same breath, and a focus trap would make that impossible.
  */
 export function AssistantPanel() {
-  const { mode, context, turns, pending, close, setMode, ask, clearThread } = useAssistant();
+  const { mode, context, turns, pending, quotaRemaining, close, setMode, ask, cancel, clearThread } =
+    useAssistant();
   const [draft, setDraft] = useState("");
   const panelRef = useRef<HTMLDivElement | null>(null);
   const threadRef = useRef<HTMLDivElement | null>(null);
@@ -150,6 +151,11 @@ export function AssistantPanel() {
                 {value}
               </span>
             ))}
+          {quotaRemaining !== null && quotaRemaining >= 0 ? (
+            <span className="rounded-sm border border-line-hairline bg-paper-2 px-1.5 py-0.5 font-mono text-[11px] text-text-body">
+              Còn {quotaRemaining} lượt phân tích AI
+            </span>
+          ) : null}
           {turns.length > 0 ? (
             <button
               type="button"
@@ -194,9 +200,17 @@ export function AssistantPanel() {
                 {pending ? (
                   <li
                     aria-live="polite"
-                    className="rounded-lg border border-line-hairline bg-paper-0 px-3.5 py-3 text-[14px] text-text-muted"
+                    className="flex items-center gap-2 rounded-lg border border-line-hairline bg-paper-0 px-3.5 py-3 text-[14px] text-text-muted"
                   >
-                    Đang gửi câu hỏi…
+                    <span>Đang gửi câu hỏi…</span>
+                    <button
+                      type="button"
+                      onClick={cancel}
+                      aria-label="Dừng trợ lý"
+                      className="ml-auto rounded-sm px-2 py-1 text-[12px] font-semibold text-text-muted underline underline-offset-2 hover:text-text-body"
+                    >
+                      Dừng
+                    </button>
                   </li>
                 ) : null}
               </ul>

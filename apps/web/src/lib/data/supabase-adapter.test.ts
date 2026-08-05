@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateProvenance } from "@distresslens/contracts";
+import { AI_QUOTA_LIMIT, validateProvenance } from "@distresslens/contracts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { SupabaseDataPort, supabaseProvenance } from "./supabase-adapter";
 import type { RequestContext } from "./port";
@@ -72,6 +72,7 @@ function mockClient(rows: unknown[] | Error, single: unknown = null) {
     select: () => chain,
     order: () => chain,
     eq: () => chain,
+    gte: () => chain,
     maybeSingle: () =>
       Promise.resolve(
         single instanceof Error ? { data: null, error: { message: single.message } } : { data: single, error: null },
@@ -174,6 +175,40 @@ describe("SupabaseDataPort delegation", () => {
     expect(dashboard.state).toBe("success");
     if (dashboard.state !== "success") return;
     expect(dashboard.data.provenance.origin).toBe("REFERENCE_FIXTURE");
+  });
+});
+
+describe("SupabaseDataPort ai budget", () => {
+  it("sums quota rows in the current window for the caller", async () => {
+    const rows = [{ used: 3 }, { used: 1 }];
+    const port = new SupabaseDataPort(mockClient(rows) as unknown as SupabaseClient);
+    const result = await port.readAiBudget(analyst);
+    expect(result.state).toBe("success");
+    if (result.state !== "success") return;
+    expect(result.data.used).toBe(4);
+    expect(result.data.limit).toBe(AI_QUOTA_LIMIT);
+    expect(new Date(result.data.resetsAt).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("returns a zero-used budget when there are no rows yet", async () => {
+    const port = new SupabaseDataPort(mockClient([]) as unknown as SupabaseClient);
+    const result = await port.readAiBudget(analyst);
+    if (result.state !== "success") throw new Error("expected success");
+    expect(result.data.used).toBe(0);
+  });
+
+  it("denies the budget to a signed-out caller and a platform role", async () => {
+    const port = new SupabaseDataPort(mockClient([]) as unknown as SupabaseClient);
+    expect((await port.readAiBudget(signedOut)).state).toBe("forbidden");
+    expect((await port.readAiBudget(viewer)).state).toBe("forbidden");
+  });
+
+  it("falls back to degraded when the database read fails", async () => {
+    const port = new SupabaseDataPort(
+      mockClient(new Error("relation does not exist")) as unknown as SupabaseClient,
+    );
+    const result = await port.readAiBudget(analyst);
+    expect(result.state).toBe("degraded");
   });
 });
 

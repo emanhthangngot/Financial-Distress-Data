@@ -11,6 +11,9 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "e2e:roles": "playwright test --config playwright.roles.config.ts",
+    "e2e:assistant": "playwright test --config playwright.assistant.config.ts",
+    "e2e:assistant-quota": "playwright test --config playwright.assistant-quota.config.ts",
+    "e2e:assistant-plane-off": "playwright test --config playwright.assistant-plane-off.config.ts",
     "e2e:live": "playwright test --config playwright.live.config.ts"
   },
   "dependencies": {

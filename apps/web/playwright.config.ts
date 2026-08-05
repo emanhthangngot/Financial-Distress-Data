@@ -27,10 +27,17 @@ const fixtureEnv = {
 
 export default defineConfig({
   testDir: "./e2e",
-  // The platform suite needs an operator identity and a plane-off server, which
-  // this config does not boot (see playwright.roles.config.ts); the live smoke
-  // run needs a real Supabase project (see playwright.live.config.ts).
-  testIgnore: [/platform-surfaces\.spec\.ts/, /live-smoke\.spec\.ts/],
+  // The platform suite needs an operator identity and a plane-off server, the
+  // assistant suites need their own fake upstream / quota / plane env, and the
+  // live smoke run needs a real Supabase project. Each runs under its own
+  // config; the default run covers the analyst evidence only.
+  testIgnore: [
+    /platform-surfaces\.spec\.ts/,
+    /live-smoke\.spec\.ts/,
+    /assistant-streaming\.spec\.ts/,
+    /assistant-quota\.spec\.ts/,
+    /assistant-plane-off\.spec\.ts/,
+  ],
   outputDir: "./e2e/.artifacts",
   // Evidence must be reproducible, so a flaky pass is a failure.
   retries: 0,

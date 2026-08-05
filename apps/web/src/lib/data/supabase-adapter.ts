@@ -1,21 +1,28 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type {
-  AgentConversation,
-  AgentRegistryView,
-  AnalystOverview,
-  CompanyDetail,
-  CompanySearchResult,
-  ModelComparison,
-  OpsDashboard,
-  Provenance,
-  SavedReport,
-  SavedReportList,
-  SavedReportSummary,
-  ViewState,
+import {
+  AI_QUOTA_LIMIT,
+  AI_QUOTA_WINDOW_MS,
+  authorize,
+  resetsAtTime,
+  windowStartAt,
+  type AgentConversation,
+  type AgentRegistryView,
+  type AnalystOverview,
+  type CompanyDetail,
+  type CompanySearchResult,
+  type ModelComparison,
+  type OpsDashboard,
+  type Provenance,
+  type QuotaState,
+  type SavedReport,
+  type SavedReportList,
+  type SavedReportSummary,
+  type ViewState,
 } from "@distresslens/contracts";
 import {
   FixtureDataPort,
+  assistantCopyFor,
   copyFor,
   denied,
   guard,
@@ -182,6 +189,45 @@ export class SupabaseDataPort implements DistressLensDataPort {
   getOpsDashboard(context: RequestContext): Promise<ViewState<OpsDashboard>> {
     // See the class doc for why this stays fixture-delegated.
     return this.fixture.getOpsDashboard(context);
+  }
+
+  async readAiBudget(context: RequestContext): Promise<ViewState<QuotaState>> {
+    const decision = authorize(
+      { role: context.role, aal: context.aal },
+      "analyst.run_ai_request",
+    );
+    if (!decision.allowed || context.userId === null) {
+      return { state: "forbidden", copy: assistantCopyFor("forbidden"), data: null };
+    }
+
+    try {
+      // RLS scopes the rows to the caller; the window start is computed once in
+      // the shared contract math so the SQL bucket and this read agree.
+      const windowStart = windowStartAt(new Date(), AI_QUOTA_WINDOW_MS);
+      const { data, error } = await this.client
+        .from("ai_request_usage")
+        .select("used")
+        .eq("kind", "QUOTA")
+        .gte("window_start", windowStart.toISOString());
+      if (error !== null) {
+        throw error;
+      }
+
+      const used = (data as readonly { used: number }[]).reduce(
+        (sum, row) => sum + row.used,
+        0,
+      );
+      return {
+        state: "success",
+        data: {
+          used,
+          limit: AI_QUOTA_LIMIT,
+          resetsAt: resetsAtTime(windowStart, AI_QUOTA_WINDOW_MS).toISOString(),
+        },
+      };
+    } catch {
+      return { state: "degraded", copy: assistantCopyFor("degraded"), data: null };
+    }
   }
 }
 

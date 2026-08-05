@@ -186,6 +186,44 @@ Sample values visible in the approved images may be used as deterministic
 fixture data only when marked `REFERENCE_FIXTURE`; they must never be mistaken
 for live financial data or executed evidence.
 
+### Assistant request contract
+
+The AI assistant is a single bounded request path: `POST /api/assistant/stream`.
+The analyst's question, history and context travel in the request body (never
+the query string), and the response is an SSE stream whose frames map one-to-one
+onto the message states the panel already renders.
+
+Route order is the same policy `guardRequest` documents:
+
+1. `resolveSession()` — role, AAL, user id, `planeReady`.
+2. `guardRequest({ action: "analyst.run_ai_request", mutating: true })` — denial
+   audits `FORBIDDEN` and returns 403 with a `policy_blocked` frame.
+3. `consumeAiBudget()` — denial audits `RATE_LIMITED`/`QUOTA_EXHAUSTED` and
+   returns 429 carrying the reset time; no stream opens.
+4. Plane gate — when the plane is off or `DISTRESSLENS_INFERENCE_URL` is unset,
+   return a 200 stream with exactly `state:eks_off` + `done`. Absence of the
+   plane is product state, not a client error, and never a generated answer.
+5. Proxy — open the upstream OpenAI-compatible stream, translate chunks into
+   frames, forward abort both ways, and enforce `ASSISTANT_TIMEOUT_MS` on the
+   whole interaction (including the initial response headers).
+6. Terminate — audit `ALLOWED` or `FAILED` (a closed error class, never an
+   upstream message) and close the stream.
+
+Frames: `state` (`streaming`, `tool_running`, `complete`, `timeout`,
+`policy_blocked`, `error`, plus assistant-only `eks_off`), `token`, `tool`,
+`citation`, `quota` (remaining + reset time), `done` (agent/model version),
+`error` (closed `AssistantErrorCode`).
+
+State copy: `timeout` -> "Quá thời gian chờ" with a safe retry hint;
+`eks_off` -> cached indicators remain available, direct live AI analysis is
+temporarily off; `error` -> the request could not be completed; quota-exhausted
+-> remaining quota is spent and the reset time is shown. The remaining quota
+line is visible in the panel before the analyst spends it.
+
+Redaction rule: no prompt text, no upstream token, no inference URL and no raw
+upstream chunk ever appears in an audit row, a log line, an error message or a
+rendered surface — upstream failures map to the closed error-code set above.
+
 ## Visual and accessibility rules
 
 - Use the approved information hierarchy and labels; cosmetic motion is not a

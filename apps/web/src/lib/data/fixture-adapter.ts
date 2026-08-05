@@ -1,5 +1,9 @@
 import {
   authorize,
+  AI_QUOTA_LIMIT,
+  AI_QUOTA_WINDOW_MS,
+  resetsAtTime,
+  windowStartAt,
   type AgentConversation,
   type AgentRegistryView,
   type AnalystOverview,
@@ -8,6 +12,7 @@ import {
   type EvidenceSessionView,
   type ModelComparison,
   type OpsDashboard,
+  type QuotaState,
   type SavedReport,
   type SavedReportList,
   type SavedReportSummary,
@@ -444,5 +449,32 @@ export class FixtureDataPort implements DistressLensDataPort {
     return context.planeReady
       ? { state: "success", data }
       : { state: "degraded", copy: copyFor(route, "degraded"), data };
+  }
+
+  async readAiBudget(context: RequestContext): Promise<ViewState<QuotaState>> {
+    const decision = authorize(
+      { role: context.role, aal: context.aal },
+      "analyst.run_ai_request",
+    );
+    if (!decision.allowed) {
+      return { state: "forbidden", copy: assistantCopyFor("forbidden"), data: null };
+    }
+
+    // Deterministic so the evidence run can capture both "còn 18/20 lượt" and
+    // "hết hạn mức": DISTRESSLENS_FIXTURE_QUOTA_LEFT=0 renders an exhausted
+    // budget, anything else (or nothing) renders the default 18 remaining.
+    const raw = process.env.DISTRESSLENS_FIXTURE_QUOTA_LEFT;
+    const parsed = raw === undefined ? null : Number.parseInt(raw, 10);
+    const remaining = parsed !== null && Number.isFinite(parsed) ? Math.max(0, parsed) : 18;
+    const windowStart = windowStartAt(new Date(), AI_QUOTA_WINDOW_MS);
+
+    return {
+      state: "success",
+      data: {
+        used: Math.max(0, AI_QUOTA_LIMIT - remaining),
+        limit: AI_QUOTA_LIMIT,
+        resetsAt: resetsAtTime(windowStart, AI_QUOTA_WINDOW_MS).toISOString(),
+      },
+    };
   }
 }

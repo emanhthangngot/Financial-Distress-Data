@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { provenanceLabels, validateProvenance } from "@distresslens/contracts";
+import { AI_QUOTA_LIMIT, provenanceLabels, validateProvenance } from "@distresslens/contracts";
 import { FIXTURE_REPORT_ID, FIXTURE_USER_ID, FixtureDataPort } from "./fixture-adapter";
 import type { RequestContext } from "./port";
 
@@ -207,5 +207,32 @@ describe("agent surfaces", () => {
     expect(answer?.toolTrace.length).toBeGreaterThan(0);
     const serialized = JSON.stringify(result.data);
     expect(serialized).not.toMatch(/prompt|api[_-]?key|token|secret|password/i);
+  });
+});
+
+describe("ai budget", () => {
+  it("shows the default remaining budget to an analyst", async () => {
+    const result = await port.readAiBudget(analyst);
+    expect(result.state).toBe("success");
+    if (result.state !== "success") return;
+    expect(result.data.limit).toBe(AI_QUOTA_LIMIT);
+    expect(result.data.used).toBe(AI_QUOTA_LIMIT - 18);
+    expect(new Date(result.data.resetsAt).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("renders an exhausted budget when the fixture env says so", async () => {
+    process.env.DISTRESSLENS_FIXTURE_QUOTA_LEFT = "0";
+    try {
+      const result = await port.readAiBudget(analyst);
+      if (result.state !== "success") throw new Error("expected success");
+      expect(result.data.used).toBe(AI_QUOTA_LIMIT);
+    } finally {
+      delete process.env.DISTRESSLENS_FIXTURE_QUOTA_LEFT;
+    }
+  });
+
+  it("denies the budget line to a signed-out caller and a platform role", async () => {
+    expect((await port.readAiBudget(signedOut)).state).toBe("forbidden");
+    expect((await port.readAiBudget(viewer)).state).toBe("forbidden");
   });
 });

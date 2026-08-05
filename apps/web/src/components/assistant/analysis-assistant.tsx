@@ -12,9 +12,15 @@ import { AssistantProvider } from "./assistant-provider";
  * a page's concern. Keeping this one entry point is what stops an AI affordance
  * from being pasted into individual surfaces and drifting apart.
  */
-export function AnalysisAssistant({ context }: { context: AssistantContext }) {
+export function AnalysisAssistant({
+  context,
+  quotaRemaining = null,
+}: {
+  context: AssistantContext;
+  quotaRemaining?: number | null;
+}) {
   return (
-    <AssistantProvider context={context}>
+    <AssistantProvider context={context} quotaRemaining={quotaRemaining}>
       <AssistantLauncher />
       <AssistantPanel />
     </AssistantProvider>
