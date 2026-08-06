@@ -10,6 +10,7 @@ AGENTS.md
 .venv/
 *.pyc
 *.egg-info/
+build/
 outputs/**/*.parquet
 outputs/**/*.csv
 outputs/**/*.json

@@ -173,6 +173,10 @@ submission scope.
 Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is
 isolated and never mutates Phase 1 pipeline behavior.
 
+The Python package boundary (`pip install -e .`, the `src`-as-package-name
+decision, and which dependency manifest is authoritative for which consumer)
+is documented in the [repository map](docs/architecture/repository-map.md).
+
 ## Documentation
 
 The README only summarizes the project. Detailed design notes, contracts, and runtime evidence live under `docs/`:
