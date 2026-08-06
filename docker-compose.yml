@@ -167,7 +167,10 @@ services:
       - ./docs:/opt/airflow/docs
 
   flink-jobmanager:
-    image: apache/flink:1.19-java17
+    build:
+      context: .
+      dockerfile: infra/flink/Dockerfile
+    image: financial-distress-flink:stage1
     profiles: ["flink"]
     hostname: flink-jobmanager
     ports:
@@ -187,10 +190,14 @@ services:
       start_period: 30s
     volumes:
       - ./src/streaming/flink/jobs:/opt/flink/jobs:ro
+      - ./configs:/opt/flink/config:ro
       - flink-checkpoints:/tmp/flink-checkpoints
 
   flink-taskmanager:
-    image: apache/flink:1.19-java17
+    build:
+      context: .
+      dockerfile: infra/flink/Dockerfile
+    image: financial-distress-flink:stage1
     profiles: ["flink"]
     depends_on:
       flink-jobmanager:
