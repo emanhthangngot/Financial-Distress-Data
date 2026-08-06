@@ -37,7 +37,7 @@ services:
       - "9092:9092"
       - "9094:9094"
     volumes:
-      - ./init:/opt/financial-distress-init:ro
+      - ./infra/kafka:/opt/financial-distress-init:ro
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -56,7 +56,7 @@ services:
     depends_on:
       - kafka
     volumes:
-      - ./init:/opt/financial-distress-init:ro
+      - ./infra/kafka:/opt/financial-distress-init:ro
     command: bash /opt/financial-distress-init/kafka_init_topics.sh
 
   airflow-webserver:
