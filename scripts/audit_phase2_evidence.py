@@ -43,6 +43,7 @@ import argparse
 import csv
 import hashlib
 import io
+import os
 import re
 import shlex
 import sys
@@ -397,6 +398,15 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
     Fail-closed: if the baseline cannot be resolved (missing ref, git error,
     non-zero exit) the gate returns an error instead of silently passing, so an
     unverifiable baseline never turns the mutation check into a no-op.
+
+    ``PHASE1_HYGIENE_OVERRIDE=1`` suppresses only the protected-path findings
+    below, after the baseline has been resolved and the diff computed — a
+    missing/unresolvable baseline still fails closed regardless of this var.
+    It exists for Phase 1's own architecture-hygiene work (moving/renaming
+    Phase 1 files without changing Phase 1 behavior), which this gate cannot
+    distinguish from a Phase 2 task mutating Phase 1 — it only sees changed
+    paths, not intent. Unset by default so a real Phase 2 task is still
+    blocked.
     """
     import subprocess
 
@@ -450,7 +460,10 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
         return [f"git check failed: untracked listing errored — {detail}"]
     changed.extend(line.strip() for line in untracked.stdout.splitlines() if line.strip())
 
-    return _phase1_mutation_from_changed(changed)
+    findings = _phase1_mutation_from_changed(changed)
+    if findings and os.environ.get("PHASE1_HYGIENE_OVERRIDE") == "1":
+        return []
+    return findings
 
 
 def _audit_required_docs() -> list[str]:

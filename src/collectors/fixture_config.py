@@ -1,9 +1,12 @@
 """
-Loader and validator for generator configuration files.
+Loader and validator for the collector fixture's tuning knobs.
 
-Reads YAML configs (e.g. ``configs/generator/*.yaml``), applies environment overrides, validates
-against the schema in ``docs/01_data_generator.md``, and returns a typed config object. The fixture
-adapter and streaming factory both consume this config.
+Reads the ``generator:`` block from ``configs/collector_config.yaml``, applies environment
+overrides, validates against the schema in ``docs/01_data_generator.md``, and returns a typed
+config object. Powers the offline data generator required by rubric row 2 (skew, cardinality,
+schema evolution, duplicates) and the streaming problem factory (burst, late, duplicate events),
+which reads this config too. Output is fed into the Bronze zone via the fixture adapter so the
+rest of the pipeline stays vendor-agnostic.
 """
 
 from __future__ import annotations
@@ -81,13 +84,13 @@ class LateArrivalConfig:
 
 
 @dataclass(frozen=True)
-class StreamingConfig:
+class FixtureStreamingConfig:
     burst: BurstConfig = field(default_factory=BurstConfig)
     late_arrival: LateArrivalConfig = field(default_factory=LateArrivalConfig)
 
 
 @dataclass(frozen=True)
-class GeneratorConfig:
+class FixtureGeneratorConfig:
     """Top-level generator knobs loaded from `configs/collector_config.yaml`.
 
     `enabled` is the master switch. When False, callers must keep the legacy
@@ -101,7 +104,7 @@ class GeneratorConfig:
     cardinality: CardinalityConfig = field(default_factory=CardinalityConfig)
     evolution: EvolutionConfig = field(default_factory=EvolutionConfig)
     duplication: DuplicationConfig = field(default_factory=DuplicationConfig)
-    streaming: StreamingConfig = field(default_factory=StreamingConfig)
+    streaming: FixtureStreamingConfig = field(default_factory=FixtureStreamingConfig)
 
 
 def _as_tuple(value: Any) -> tuple[Any, ...]:
@@ -189,35 +192,35 @@ def _build_late_arrival(block: dict[str, Any] | None) -> LateArrivalConfig:
     )
 
 
-def _build_streaming(block: dict[str, Any] | None) -> StreamingConfig:
+def _build_streaming(block: dict[str, Any] | None) -> FixtureStreamingConfig:
     block = block or {}
-    return StreamingConfig(
+    return FixtureStreamingConfig(
         burst=_build_burst(block.get("burst")),
         late_arrival=_build_late_arrival(block.get("late_arrival")),
     )
 
 
-def load_generator_config(path: str | Path = DEFAULT_CONFIG_PATH) -> GeneratorConfig:
+def load_fixture_config(path: str | Path = DEFAULT_CONFIG_PATH) -> FixtureGeneratorConfig:
     """Load `generator:` block from the collector config YAML.
 
-    Returns a default-off `GeneratorConfig` when the file is missing, the
+    Returns a default-off `FixtureGeneratorConfig` when the file is missing, the
     `generator:` block is absent, or any nested key is malformed. Existing
     callers that build the adapter without a config object are unaffected.
     """
     config_path = Path(path)
     if not config_path.exists():
-        return GeneratorConfig()
+        return FixtureGeneratorConfig()
 
     try:
         raw = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError:
-        return GeneratorConfig()
+        return FixtureGeneratorConfig()
 
     block = raw.get("generator")
     if not isinstance(block, dict):
-        return GeneratorConfig()
+        return FixtureGeneratorConfig()
 
-    return GeneratorConfig(
+    return FixtureGeneratorConfig(
         enabled=bool(block.get("enabled", False)),
         fixture_seed=_coerce_int(block.get("fixture_seed"), 42),
         skew=_build_skew(block.get("skew")),
@@ -233,9 +236,9 @@ __all__ = [
     "CardinalityConfig",
     "DuplicationConfig",
     "EvolutionConfig",
-    "GeneratorConfig",
+    "FixtureGeneratorConfig",
     "LateArrivalConfig",
     "SkewConfig",
-    "StreamingConfig",
-    "load_generator_config",
+    "FixtureStreamingConfig",
+    "load_fixture_config",
 ]

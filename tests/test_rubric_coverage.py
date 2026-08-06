@@ -111,8 +111,8 @@ def test_generator_duplicate_rate_evidence() -> None:
 
 def test_generator_uses_config() -> None:
     # Generator must be driven by a config file
-    assert _exists("src/generators/config_loader.py") or _exists(
-        "src/generator/config.yaml"
+    assert _exists("src/collectors/fixture_config.py") or _exists(
+        "configs/generator-config.yaml"
     ), "Generator config not found"
 
 

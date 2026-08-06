@@ -18,14 +18,9 @@ from typing import Any
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.collectors.company_list_collector import collect_companies
 from src.collectors.financial_statement_collector import collect_financial_statements
+from src.collectors.fixture_config import load_fixture_config
 from src.collectors.market_price_collector import collect_market_prices
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
-from src.generators.config_loader import load_generator_config
-from src.generators.streaming_problem_factory import (
-    inject_streaming_duplicates,
-    plan_burst,
-    plan_late_arrivals,
-)
 from src.io.minio_writer import write_minio_dataset, write_minio_text
 from src.io.paths import DEFAULT_BUCKET, stage1_dataset_object_keys
 from src.metadata.metadata_writer import (
@@ -38,6 +33,11 @@ from src.quality.dq_checks import check_freshness, check_not_null, check_unique
 from src.security.secrets import require
 from src.streaming.events import StreamEvent
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
+from src.streaming.problem_factory import (
+    inject_streaming_duplicates,
+    plan_burst,
+    plan_late_arrivals,
+)
 from src.transforms.bronze_to_silver import bronze_to_silver
 from src.transforms.compute_distress_labels import compute_labels
 from src.transforms.silver_to_gold import (
@@ -222,7 +222,7 @@ def build_generator_characteristics() -> dict[str, Any]:
     * ``streaming`` - counts of burst, late-arrival, and duplicate events.
     * ``volume`` - bronze row counts and the storage format.
     """
-    cfg = load_generator_config()
+    cfg = load_fixture_config()
     adapter = VnstockFixtureAdapter(config=cfg) if cfg.enabled else VnstockFixtureAdapter()
 
     companies = adapter.fetch_companies()
