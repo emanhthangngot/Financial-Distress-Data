@@ -31,11 +31,11 @@ docker compose --profile flink build flink-jobmanager
 docker compose --profile flink up -d kafka flink-jobmanager flink-taskmanager
 
 docker compose --profile flink exec flink-jobmanager \
-  flink run --python /opt/flink/project/flink/jobs/price_event_job.py \
+  flink run --python /opt/flink/jobs/price_event_job.py \
   --config /opt/flink/config/flink-streaming.yaml --variant baseline
 
 docker compose --profile flink exec flink-jobmanager \
-  flink run --python /opt/flink/project/flink/jobs/price_event_job.py \
+  flink run --python /opt/flink/jobs/price_event_job.py \
   --config /opt/flink/config/flink-streaming.yaml --variant optimized
 
 python scripts/run_flink_benchmark.py --variant baseline \

@@ -6,23 +6,23 @@ from pathlib import Path
 
 import pytest
 
-from src.generators.config_loader import (
+from src.collectors.fixture_config import (
     BurstConfig,
     CardinalityConfig,
     DuplicationConfig,
     EvolutionConfig,
-    GeneratorConfig,
+    FixtureGeneratorConfig,
+    FixtureStreamingConfig,
     LateArrivalConfig,
     SkewConfig,
-    StreamingConfig,
-    load_generator_config,
+    load_fixture_config,
 )
 
 
 def test_load_generator_config_returns_default_off_when_file_missing(tmp_path: Path) -> None:
-    cfg = load_generator_config(tmp_path / "missing.yaml")
+    cfg = load_fixture_config(tmp_path / "missing.yaml")
     assert cfg.enabled is False
-    assert isinstance(cfg, GeneratorConfig)
+    assert isinstance(cfg, FixtureGeneratorConfig)
     assert cfg.fixture_seed == 42
     assert cfg.skew.top_company_share == pytest.approx(0.6)
     assert cfg.duplication.offline_rate == pytest.approx(0.02)
@@ -33,7 +33,7 @@ def test_load_generator_config_returns_default_off_when_file_missing(tmp_path: P
 def test_load_generator_config_returns_default_off_when_block_absent(tmp_path: Path) -> None:
     cfg_file = tmp_path / "collector.yaml"
     cfg_file.write_text("collector:\n  mode: local\n", encoding="utf-8")
-    cfg = load_generator_config(cfg_file)
+    cfg = load_fixture_config(cfg_file)
     assert cfg.enabled is False
     assert cfg.skew.top_company_ticker == "AAA"
 
@@ -66,7 +66,7 @@ def test_load_generator_config_coerces_string_numbers(tmp_path: Path) -> None:
         "      max_lag_seconds: '1800'\n",
         encoding="utf-8",
     )
-    cfg = load_generator_config(cfg_file)
+    cfg = load_fixture_config(cfg_file)
     assert cfg.enabled is True
     assert cfg.fixture_seed == 7
     assert cfg.skew.top_company_share == pytest.approx(0.6)
@@ -83,14 +83,14 @@ def test_load_generator_config_coerces_string_numbers(tmp_path: Path) -> None:
 def test_load_generator_config_falls_back_on_malformed_yaml(tmp_path: Path) -> None:
     cfg_file = tmp_path / "broken.yaml"
     cfg_file.write_text("generator: {enabled: true,\n", encoding="utf-8")
-    cfg = load_generator_config(cfg_file)
+    cfg = load_fixture_config(cfg_file)
     assert cfg.enabled is False
 
 
 def test_load_generator_config_falls_back_on_non_dict_block(tmp_path: Path) -> None:
     cfg_file = tmp_path / "collector.yaml"
     cfg_file.write_text("generator: not-a-dict\n", encoding="utf-8")
-    cfg = load_generator_config(cfg_file)
+    cfg = load_fixture_config(cfg_file)
     assert cfg.enabled is False
 
 
@@ -101,11 +101,11 @@ def test_sub_configs_have_expected_defaults() -> None:
     assert DuplicationConfig().offline_rate == pytest.approx(0.02)
     assert BurstConfig().enabled is True
     assert LateArrivalConfig().max_lag_seconds == 3600
-    assert isinstance(StreamingConfig().burst, BurstConfig)
+    assert isinstance(FixtureStreamingConfig().burst, BurstConfig)
 
 
 def test_load_generator_config_uses_project_default_path() -> None:
-    cfg = load_generator_config("configs/collector_config.yaml")
+    cfg = load_fixture_config("configs/collector_config.yaml")
     # Project default file currently has generator block with enabled=true.
     assert cfg.enabled is True
     assert cfg.fixture_seed == 42
