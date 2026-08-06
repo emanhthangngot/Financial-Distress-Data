@@ -160,7 +160,10 @@ submission scope.
 ├── tests/                 - PyTest unit, contract, and runtime smoke tests
 ├── docs/                  - Specs and evidence notes
 ├── images/                - Architecture diagrams
-├── init/                  - Kafka topic init script
+├── infra/                 - Container build/bootstrap assets
+│   ├── airflow/            - Airflow image build context
+│   ├── flink/              - Flink jobmanager/taskmanager image build context
+│   └── kafka/              - Kafka topic init script
 ├── scripts/               - Local E2E, DQ failure, and evidence audit runners
 ├── docker-compose.yml     - Local platform services
 ├── pyproject.toml         - Python package and tooling config
@@ -169,6 +172,10 @@ submission scope.
 
 Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is
 isolated and never mutates Phase 1 pipeline behavior.
+
+The Python package boundary (`pip install -e .`, the `src`-as-package-name
+decision, and which dependency manifest is authoritative for which consumer)
+is documented in the [repository map](docs/architecture/repository-map.md).
 
 ## Documentation
 
@@ -185,6 +192,7 @@ The README only summarizes the project. Detailed design notes, contracts, and ru
 - [Data governance evidence](docs/data-governance.md) — DataHub lineage, assertions, and data contracts.
 - [Docker optimization evidence](docs/docker-optimization.md) — baseline vs optimized Airflow image sizes.
 - [System architecture (numbered deployment flows)](docs/system-architecture.md) — deployable units and data flow.
+- [Repository map](docs/architecture/repository-map.md) — owner, plane, and generated-status for every tracked top-level directory.
 - [Phase 2 coursework (accepted source of truth)](docs/coursework.md) — explicit Phase 2 scope, two-plane design, and evidence contract.
 - [Phase 2 requirements](docs/phase2/requirements.md) — per-deliverable acceptance criteria in WHO -> ACTION -> RESULT form.
 - [Phase 2 architecture](docs/phase2/architecture.md) — two-plane design, 8 numbered data flows, cost envelope.

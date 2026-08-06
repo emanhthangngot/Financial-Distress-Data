@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-01T18:28:54.021973+00:00",
+  "generated_at": "2026-08-06T17:05:48.390347+00:00",
   "rubric_total": 100,
   "covered_points": 100,
   "partial_points": 0,
@@ -73,7 +73,8 @@
       "points": 2,
       "status": "covered",
       "evidence": [
-        "src/generators/config_loader.py"
+        "src/collectors/fixture_config.py",
+        "configs/generator-config.yaml"
       ]
     },
     {
