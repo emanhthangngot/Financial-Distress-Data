@@ -22,6 +22,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+      - name: Package installability
+        run: |
+          pip install -e .
+          cd /tmp && python -c "import src.ml.contracts; print('ok')"
       - name: Install Postgres server binaries
         # The Phase 2 RLS suite spins up its own ephemeral cluster with
         # initdb/pg_ctl. Without these on PATH the suite skips itself, which
