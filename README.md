@@ -173,32 +173,9 @@ submission scope.
 Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is
 isolated and never mutates Phase 1 pipeline behavior.
 
-### Python package boundary
-
-`pyproject.toml` declares `[build-system]`/`[tool.setuptools.packages.find]`
-so the tree is installable (`pip install -e .`) from a working directory other
-than the repo root — required for phases 5-6 to `pip install` this repo into a
-model/agent container image. The distributed package is named `src`, which is
-a known wart: `src` is conventionally a layout directory, not an importable
-name. A proper fix renames it to `financial_distress` with a repo-wide import
-rewrite across `src/`, `dags/`, `tests/`, `scripts/`, and the Phase 1 spec's
-file tables in `docs/mini_coursework.md` — rejected for now (YAGNI) since
-declaring `src` as the package name buys full installability at a few lines of
-config. `dags/` is deliberately excluded from the distribution: Airflow
-discovers DAGs by filesystem path via the compose bind mount, not by import,
-and packaging them would create a second, competing discovery path.
-
-Runtime dependency versions are declared in three places that can drift; each
-is authoritative for a different consumer:
-
-| Manifest | Authoritative for | Content |
-|---|---|---|
-| `requirements.txt` | CI (`Install dependencies` step) | Overlapping floors, plus dev tools, minus `pyspark`/`kafka-python`/`minio` |
-| `pyproject.toml` `[project.optional-dependencies] runtime` | Local dev extras | `duckdb>=1.1`, `kafka-python>=2.0`, `minio>=7.2`, `pyarrow>=17.0`, `psycopg[binary]>=3.2`, `pyspark>=3.5` (floors) |
-| `infra/airflow/Dockerfile` | The Airflow image | Exact pins (`duckdb==1.1.3`, `pyspark==3.5.6`, …) |
-
-Consolidating them is a separate change with its own blast radius (CI installs
-from `requirements.txt`; the image rebuild is expensive) — not done here.
+The Python package boundary (`pip install -e .`, the `src`-as-package-name
+decision, and which dependency manifest is authoritative for which consumer)
+is documented in the [repository map](docs/architecture/repository-map.md).
 
 ## Documentation
 
