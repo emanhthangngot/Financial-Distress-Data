@@ -91,6 +91,22 @@ class TestPhase1ContractNoMutation:
         dag_errors = mod._phase1_mutation_from_changed(["dags/01_collect_company_master_data.py"])
         assert dag_errors, "an existing Phase 1 DAG change must fail"
 
+        # A diff confined to the opt-in Flink job home carve-out must pass:
+        # it holds no Phase 1 burst/late-arrival/dedup logic by design.
+        flink_ok = mod._phase1_mutation_from_changed(
+            [
+                "src/streaming/flink/jobs/price_event_job.py",
+                "src/streaming/flink/jobs/README.md",
+            ]
+        )
+        assert flink_ok == [], f"expected no Phase 1 mutation, got {flink_ok}"
+
+        # But any other file directly under src/streaming/ must still fail.
+        streaming_errors = mod._phase1_mutation_from_changed(
+            ["src/streaming/kafka_to_bronze_consumer.py"]
+        )
+        assert streaming_errors, "a core streaming file change must still fail"
+
 
 class TestRubricMatrix:
     """Validate rubric matrix completeness and invariants."""

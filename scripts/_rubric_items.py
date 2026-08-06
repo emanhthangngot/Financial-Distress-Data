@@ -129,7 +129,7 @@ ITEMS: tuple[RubricItem, ...] = (
         claim="Generator is driven by configuration",
         points=2,
         evidence_check=lambda: _exists_any(
-            "src/generators/config_loader.py", "src/generator/config.yaml"
+            "src/collectors/fixture_config.py", "configs/generator-config.yaml"
         ),
     ),
     RubricItem(

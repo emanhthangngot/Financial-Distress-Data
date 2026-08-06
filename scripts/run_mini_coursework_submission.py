@@ -45,7 +45,7 @@ PROOFS = (
     Proof("documents/pit-leakage.md", "document", "docs/novel-idea-pit-leakage-guard.md"),
     Proof("code/documentation-check.py", "code_reference", "scripts/check_documentation.py"),
     Proof("code/spark-optimized.py", "code_reference", "src/jobs/spark_optimized_job.py"),
-    Proof("code/flink-job.py", "code_reference", "flink/jobs/price_event_job.py"),
+    Proof("code/flink-job.py", "code_reference", "src/streaming/flink/jobs/price_event_job.py"),
     Proof("code/airflow-dp2.py", "code_reference", "dags/build_silver_gold.py"),
     Proof("code/schema.sql", "code_reference", "sql/schema_evidence.sql"),
     Proof("code/run-manifest.py", "code_reference", "src/evidence/run_manifest.py"),

@@ -145,7 +145,7 @@ Nằm trong thư mục `src/collectors/`:
 * [company_list_collector.py](../src/collectors/company_list_collector.py): Collector chịu trách nhiệm thu thập thông tin danh sách doanh nghiệp (Ticker, Company Name, Exchange, Industry, Sector, Listing Date).
 * [financial_statement_collector.py](../src/collectors/financial_statement_collector.py): Collector thu thập Báo cáo tài chính hợp nhất theo quý (Bảng cân đối kế toán, Báo cáo kết quả kinh doanh, Báo cáo lưu chuyển tiền tệ).
 * [market_price_collector.py](../src/collectors/market_price_collector.py): Collector thu thập dữ liệu giá và khối lượng giao dịch hàng ngày (OHLCV, Market Cap, Shares Outstanding).
-* [streaming_problem_factory.py](../src/generators/streaming_problem_factory.py): Bộ sinh dữ liệu kiểm thử theo rubric bài tập, hỗ trợ tạo các kịch bản lỗi dữ liệu ngẫu nhiên để kiểm tra sức chịu đựng của Data Quality Engine.
+* [streaming_problem_factory.py](../src/streaming/problem_factory.py): Bộ sinh dữ liệu kiểm thử theo rubric bài tập, hỗ trợ tạo các kịch bản lỗi dữ liệu ngẫu nhiên để kiểm tra sức chịu đựng của Data Quality Engine.
 
 Cấu hình nguồn thu thập được lưu trữ tại [collector_config.yaml](../configs/collector_config.yaml) và [source_mapping.yaml](../configs/source_mapping.yaml).
 
