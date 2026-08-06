@@ -47,3 +47,9 @@ include = ["src*"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "slow: takes more than ~2s; excluded by the fast loop",
+    "services: requires the docker compose stack to be running",
+    "postgres: requires local initdb/pg_ctl binaries",
+]

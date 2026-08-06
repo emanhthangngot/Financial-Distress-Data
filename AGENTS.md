@@ -56,8 +56,9 @@ Definition of done for any code change: the one-shot gate above passes. CI (`.gi
 ## Time-Costly — avoid unless the task needs it
 
 - `scripts/run_stage1_quality_gates.py --include-services` and `scripts/stage1_readiness_report.py --include-services` need the Docker stack (`docker compose up`) already running — don't start the stack just to run these.
-- `tests/test_real_e2e_contracts.py`, `scripts/run_stage1_real_e2e.py` hit live Kafka/MinIO/Postgres/Airflow containers — full stack boot, not a quick check.
-- Flink-gated tests (`tests/test_flink_integration.py`, `scripts/run_flink_benchmark.py`) require `ENABLE_FLINK=1` and the `flink` compose profile — skip unless the task is Flink/W17/W20 streaming evidence.
+- `scripts/run_stage1_real_e2e.py` hits live Kafka/MinIO/Postgres/Airflow containers — full stack boot, not a quick check. `tests/test_real_e2e_contracts.py` only pins that script's contracts (evidence-audit logic, DAG task-chain shape, serializer behavior) against fixtures/`tmp_path`; it needs no live service and runs in the fast loop (measured: 514-test suite in <6s, zero skips without Docker up).
+- `scripts/run_flink_benchmark.py` requires `ENABLE_FLINK=1` and the `flink` compose profile — skip unless the task is Flink/W17/W20 streaming evidence. `tests/test_flink_integration.py` pins the Flink client + DAG 04 opt-in behavior with `urllib` fakes and `monkeypatch`, by design (see its docstring); it needs no live Flink and runs in the fast loop.
+- `pytest tests -m "not slow"` runs the fast loop only — no Docker stack, no Postgres binaries. `pytest tests` (no `-m`) is the full suite and the definition of done; markers select, they never skip. `-m "postgres"` selects `tests/phase2/product/*`, which spins an ephemeral Postgres cluster per session via local `initdb`/`pg_ctl` (skips without them, unless `PHASE2_REQUIRE_PG=1`, which CI sets). Note `--strict-markers` only catches an unregistered marker used via `@pytest.mark.foo`, not a typo in an `-m` selection expression — `-m "not sloow"` silently matches zero tests rather than erroring.
 - Don't run the full `pytest tests` suite for a one-file change — target it with `-k` first, run the full suite before declaring done.
 
 ## Acceptance Criteria Format

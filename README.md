@@ -430,6 +430,10 @@ docker compose config
 .venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
 ```
 
+While iterating, `.venv/bin/python -m pytest tests -m "not slow"` runs the fast
+loop — no Docker stack, no Postgres binaries. Markers select tests; they never
+skip, so `pytest tests` with no `-m` stays the definition of done.
+
 List Kafka topics.
 
 ```bash
