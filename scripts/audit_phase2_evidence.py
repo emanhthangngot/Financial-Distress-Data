@@ -66,6 +66,15 @@ PHASE1_PROTECTED = [
     "docs/02_schema_design.md",
 ]
 
+# Carve-outs inside a PHASE1_PROTECTED prefix that hold no Phase 1 pipeline
+# behavior. `src/streaming/flink/jobs/` is the opt-in W26 Flink job home: by
+# design (see its README) it holds no burst/late-arrival/dedup logic — that
+# lives in `kafka_to_bronze_consumer.py`, which stays fully protected. A diff
+# confined to this carve-out is not a Phase 1 behavior mutation.
+PHASE1_PROTECTED_EXCEPTIONS = [
+    "src/streaming/flink/jobs/",
+]
+
 REQUIRED_DOCS = [
     "docs/phase2/requirements.md",
     "docs/phase2/acceptance-criteria.md",
@@ -381,7 +390,13 @@ def _phase1_mutation_from_changed(changed: list[str]) -> list[str]:
     """
     errors: list[str] = []
     for path in PHASE1_PROTECTED:
-        if any(entry == path or entry.startswith(path) for entry in changed):
+        matched = [entry for entry in changed if entry == path or entry.startswith(path)]
+        unexcepted = [
+            entry
+            for entry in matched
+            if not any(entry.startswith(exc) for exc in PHASE1_PROTECTED_EXCEPTIONS)
+        ]
+        if unexcepted:
             errors.append(f"Git diff modifies Phase 1 protected path '{path}'")
     if any(entry.startswith("dags/") and not entry.startswith("dags/phase2/") for entry in changed):
         errors.append("Git diff modifies Phase 1 protected DAG path 'dags/'")
