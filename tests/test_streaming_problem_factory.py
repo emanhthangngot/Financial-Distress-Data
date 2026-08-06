@@ -6,12 +6,12 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from src.generators.streaming_problem_factory import (
+from src.streaming.events import StreamEvent
+from src.streaming.problem_factory import (
     inject_streaming_duplicates,
     plan_burst,
     plan_late_arrivals,
 )
-from src.streaming.events import StreamEvent
 
 
 def _iso(ts: datetime) -> str:

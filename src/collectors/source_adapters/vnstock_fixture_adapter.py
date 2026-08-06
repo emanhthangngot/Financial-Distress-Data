@@ -13,7 +13,7 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.generators.config_loader import GeneratorConfig
+    from src.collectors.fixture_config import FixtureGeneratorConfig
 
 
 def _legacy_companies(source_name: str) -> list[dict]:
@@ -189,7 +189,7 @@ class VnstockFixtureAdapter:
 
     source_name = "vnstock_fixture"
 
-    def __init__(self, config: GeneratorConfig | None = None) -> None:
+    def __init__(self, config: FixtureGeneratorConfig | None = None) -> None:
         self._config = config
         self._rng_seed = config.fixture_seed if config is not None else 0
 
