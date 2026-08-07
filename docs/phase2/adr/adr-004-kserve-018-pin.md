@@ -1,9 +1,18 @@
 # ADR-004: KServe 0.18 Pin
 
-- Status: Accepted
+- Status: **Partially revived by [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md) (2026-08-07, afternoon amendment)**
 - Date: 2026-08-02
 - Deciders: Phase 2 architecture review, platform operator
 - Related: `docs/phase2/architecture.md`
+
+> **Partially revived:** the 2026-08-07 morning amendment to ADR-010 dropped
+> KServe entirely (evidence plane was a 16 GB rented `k3d` VM). The same day's
+> afternoon amendment moved the evidence plane to GKE (~43 GB allocatable) and
+> restored KServe `InferenceService` + Knative Serving + an llm-d router — this
+> pin is back in effect for those three. **Envoy Gateway and Envoy AI Gateway
+> stay dropped**: the plan routes through agentgateway, not the Envoy chain the
+> 0.18 guide assumes, so that half of this ADR does not apply. Every chart and
+> manifest stays version-pinned; no upgrade happens during the evidence window.
 
 ## Context
 
