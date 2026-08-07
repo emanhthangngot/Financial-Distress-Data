@@ -342,9 +342,9 @@ Ansible role, Terraform, and the separate GitOps control repo.
 ## Success Criteria
 
 - [ ] Platform operator -> reads `gcloud compute regions describe asia-southeast1` -> records the real `CPUS` quota and selects a node pool from the sizing table before provisioning anything.
-- [ ] Maintainer -> runs `audit_phase2_evidence.py --require-executed --track LLM` -> sees zero `ML-` errors, while omitting `--track` still demands all 117 rows.
-- [ ] Test runner -> executes any row's exact `validation_command` -> selects at least one assertion and exits 0, never pytest's exit code 5.
-- [ ] Reviewer -> lists the GitOps checkout -> finds all 14 declared gitops artifact paths present.
+- [x] Maintainer -> runs `audit_phase2_evidence.py --require-executed --track LLM` -> sees zero `ML-` errors, while omitting `--track` still demands all 117 rows.
+- [x] Test runner -> executes any row's exact `validation_command` -> selects at least one assertion and exits 0, never pytest's exit code 5. *(60/60 LLM rows verified 2026-08-07. Two rubric_id prefix collisions found and fixed via `_COLLISION_RENAMES` in `scripts/_phase2_rubric_items.py`; regression-pinned by `test_no_rubric_id_is_a_prefix_of_another`.)*
+- [x] Reviewer -> lists the GitOps checkout -> finds all 14 declared gitops artifact paths present. *(https://github.com/emanhthangngot/financial-distress-gitops, day-0 skeleton — placeholders only, no cluster yet.)*
 - [ ] Platform operator -> runs `terraform apply` -> obtains a GKE cluster and a GCE VM, with plan/apply/cost output captured and `terraform/gcp/` split one file per service.
 - [ ] Auditor -> greps the GitOps repo and the local machine -> finds no service-account key JSON, no plaintext token, and Workload Identity configured on the cluster.
 - [ ] Platform operator -> pushes an image without a GitOps PR -> observes no Argo deployment; merges an approved digest PR -> observes automated sync, self-heal and a recorded revision.
@@ -352,7 +352,7 @@ Ansible role, Terraform, and the separate GitOps control repo.
 - [ ] Reviewer -> opens the Web API kéo dữ liệu at its DuckDNS domain over HTTPS -> receives a cert-manager-issued Let's Encrypt certificate that a browser accepts without a warning.
 - [ ] Platform operator -> runs `make gcp-down` then `make gcp-up` -> observes node pools at zero with PVCs intact, then a healthy cluster after resize, with the cost delta recorded.
 - [ ] Platform operator -> runs `kubectl get crd | grep -E 'knative|kserve'` -> finds the inference CRDs installed and ready for phase-06.
-- [ ] Phase 1 maintainer -> runs `scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by Phase 2 dependencies.
+- [x] Phase 1 maintainer -> runs `scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by Phase 2 dependencies.
 
 ## Risk Assessment
 

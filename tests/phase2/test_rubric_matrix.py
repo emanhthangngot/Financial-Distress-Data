@@ -197,6 +197,25 @@ class TestRubricMatrix:
                     missing.append(f"{rid}: missing '{field}'")
         assert not missing, "\n".join(missing)
 
+    def test_no_rubric_id_is_a_prefix_of_another(self) -> None:
+        """No rubric_id may be a substring of another's.
+
+        `validation_command` selects rows with `pytest -k '<rubric_id>'`,
+        which is a substring match, not an exact/anchored one. If one row's id
+        is a prefix of another's (e.g. a blind `-1` dedup suffix on an
+        otherwise-identical slug), `-k` selects both and phase-08's
+        `_audit_behavior_validations` mis-attributes one row's failure to the
+        other. Caught 2026-08-07 for two such pairs; see
+        `_COLLISION_RENAMES` in scripts/_phase2_rubric_items.py for the fix.
+        """
+        import csv
+        import io
+
+        reader = csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8")))
+        ids = [row["rubric_id"] for row in reader]
+        collisions = [(a, b) for a in ids for b in ids if a != b and b.startswith(a)]
+        assert not collisions, f"rubric_id prefix collisions (breaks -k selection): {collisions}"
+
     def test_contract_and_behavior_commands_are_distinct(self) -> None:
         """Every row separates mapping checks from feature behavior proof."""
         import csv
@@ -639,6 +658,43 @@ class TestLinterSmoke:
         )
         assert result.returncode == 1
         assert "requires --require-executed" in result.stdout
+
+    def test_track_filter_scopes_executed_gate_to_llm(self) -> None:
+        """`--track LLM` must report zero ML-prefixed findings under --require-executed."""
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, str(AUDIT_SCRIPT), "--require-executed", "--track", "LLM"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        ml_findings = [line for line in result.stdout.splitlines() if re.match(r"^ML-", line)]
+        assert not ml_findings, f"--track LLM must not scope ML rows, found: {ml_findings[:5]}"
+
+    def test_track_never_scopes_canonical_coverage(self) -> None:
+        """`--track LLM` on --matrix-only must not shrink the 117-row requirement.
+
+        Pins the unfiltered call sites (_audit_matrix, _audit_canonical_coverage)
+        for real: passing --track here would still have to fail if either one
+        started consuming the scoped list instead of the full matrix.
+        """
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, str(AUDIT_SCRIPT), "--matrix-only", "--strict", "--track", "LLM"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 0, (
+            "matrix-only gate must still require all 117 canonical rows even "
+            f"with --track LLM passed: {result.stdout[-400:]}"
+        )
 
     def test_missing_git_base_fails_closed(self) -> None:
         """An unresolvable `--git-base` must fail the gate, not skip it.
