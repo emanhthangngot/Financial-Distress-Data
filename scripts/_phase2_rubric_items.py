@@ -280,7 +280,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
         "source",
         "src/ml/feast/offline_job.py",
     ),
-    "ML-feature-store-job-ch-u-tr-ch-nhi-m-push-stre-1": (
+    "ML-feature-store-job-online-store-push": (
         "data_engineer",
         "source",
         "src/ml/feast/online_job.py",
@@ -671,7 +671,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
         "gitops",
         "platform/observability/prometheus-values.yaml",
     ),
-    "LLM-observability-m-b-o-t-nh-t-c-c-metrics-1": (
+    "LLM-observability-agent-tool-call-metrics": (
         "platform_operator",
         "gitops",
         "platform/observability/prometheus-values.yaml",
@@ -965,6 +965,19 @@ _RAW_ML = _parse_csv(_ML_PATH, "ML")
 _RAW_LLM = _parse_csv(_LLM_PATH, "LLM")
 
 
+# A numeric dedup suffix (below) keeps the un-suffixed id as an exact prefix
+# of the suffixed one, so `pytest -k '<base>'` — the exact command every row's
+# own validation_command carries — matches both rows instead of one. `-k`
+# does substring search, not prefix/anchor matching, and there is no numeric
+# suffix that fixes this; only a slug describing what actually differs does.
+# Content-based renames for the two pairs found to collide this way (verified
+# 2026-08-07 — every other `-N` suffix in the matrix does not share a prefix
+# with an unsuffixed sibling id, so this table stays this small on purpose).
+_COLLISION_RENAMES = {
+    "LLM-observability-m-b-o-t-nh-t-c-c-metrics-1": "LLM-observability-agent-tool-call-metrics",
+    "ML-feature-store-job-ch-u-tr-ch-nhi-m-push-stre-1": "ML-feature-store-job-online-store-push",
+}
+
 # De-duplicate semantic IDs (slugs may collide for very similar rows). Any
 # field derived from the id — the validation command and the evidence path —
 # must be regenerated against the final deduplicated id so `pytest -k '<rid>'`
@@ -979,6 +992,7 @@ for row in _RAW_ML + _RAW_LLM:
         original = rid
         rid = f"{original}-{n}"
         n += 1
+    rid = _COLLISION_RENAMES.get(rid, rid)
     _seen.add(rid)
     row["rubric_id"] = rid
     row["test"] = "pytest tests/phase2 -k '" + rid + "'"
