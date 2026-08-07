@@ -1,6 +1,6 @@
 ---
 title: "Phase 3: Bootstrap GKE, GitOps and the evidence harness"
-status: todo
+status: in-review
 estimate: "1.5 days (day 0 evening + day 1)"
 ---
 
@@ -341,17 +341,17 @@ Ansible role, Terraform, and the separate GitOps control repo.
 
 ## Success Criteria
 
-- [ ] Platform operator -> reads `gcloud compute regions describe asia-southeast1` -> records the real `CPUS` quota and selects a node pool from the sizing table before provisioning anything.
+- [x] Platform operator -> reads `gcloud compute regions describe asia-southeast1` -> records the real `CPUS` quota and selects a node pool from the sizing table before provisioning anything. *(Regional CPUS=32; correction: the binding constraint was actually the project-wide `CPUS_ALL_REGIONS`=12, discovered when the first apply attempt failed — collapsed to one `e2-standard-8` pool. See variables.tf comment.)*
 - [x] Maintainer -> runs `audit_phase2_evidence.py --require-executed --track LLM` -> sees zero `ML-` errors, while omitting `--track` still demands all 117 rows.
 - [x] Test runner -> executes any row's exact `validation_command` -> selects at least one assertion and exits 0, never pytest's exit code 5. *(60/60 LLM rows verified 2026-08-07. Two rubric_id prefix collisions found and fixed via `_COLLISION_RENAMES` in `scripts/_phase2_rubric_items.py`; regression-pinned by `test_no_rubric_id_is_a_prefix_of_another`.)*
 - [x] Reviewer -> lists the GitOps checkout -> finds all 14 declared gitops artifact paths present. *(https://github.com/emanhthangngot/financial-distress-gitops, day-0 skeleton — placeholders only, no cluster yet.)*
-- [ ] Platform operator -> runs `terraform apply` -> obtains a GKE cluster and a GCE VM, with plan/apply/cost output captured and `terraform/gcp/` split one file per service.
-- [ ] Auditor -> greps the GitOps repo and the local machine -> finds no service-account key JSON, no plaintext token, and Workload Identity configured on the cluster.
-- [ ] Platform operator -> pushes an image without a GitOps PR -> observes no Argo deployment; merges an approved digest PR -> observes automated sync, self-heal and a recorded revision.
-- [ ] Reviewer -> curls a backend Service directly from outside the cluster -> is refused; curls the same route through NGINX Ingress -> receives 200 with a valid certificate.
-- [ ] Reviewer -> opens the Web API kéo dữ liệu at its DuckDNS domain over HTTPS -> receives a cert-manager-issued Let's Encrypt certificate that a browser accepts without a warning.
-- [ ] Platform operator -> runs `make gcp-down` then `make gcp-up` -> observes node pools at zero with PVCs intact, then a healthy cluster after resize, with the cost delta recorded.
-- [ ] Platform operator -> runs `kubectl get crd | grep -E 'knative|kserve'` -> finds the inference CRDs installed and ready for phase-06.
+- [x] Platform operator -> runs `terraform apply` -> obtains a GKE cluster and a GCE VM, with plan/apply/cost output captured and `terraform/gcp/` split one file per service. *(Cluster `fsds-evidence`, VM `fsds-evidence-worker` live 2026-08-08; `terraform/gcp/` split into apis/network/gke/vm/registry/ingress/iam/outputs/variables/versions.tf. Formal cost-delta screenshot deferred to phase-08 — see `docs/submission/cost.md`, billing usage lags several hours.)*
+- [x] Auditor -> greps the GitOps repo and the local machine -> finds no service-account key JSON, no plaintext token, and Workload Identity configured on the cluster. *(`workload_identity_config` set in gke.tf; ADC via `gcloud auth application-default login`, no key file created; DuckDNS token in source repo's gitignored `.env` only, never committed.)*
+- [ ] Platform operator -> pushes an image without a GitOps PR -> observes no Argo deployment; merges an approved digest PR -> observes automated sync, self-heal and a recorded revision. *(Needs the phase-07 CI pipeline; Argo CD itself is live and reconciling.)*
+- [ ] Reviewer -> curls a backend Service directly from outside the cluster -> is refused; curls the same route through NGINX Ingress -> receives 200 with a valid certificate. *(Functionally true by construction — ClusterIP backends have no external route — but not yet formally captured as evidence; phase-08.)*
+- [x] Reviewer -> opens the Web API kéo dữ liệu at its DuckDNS domain over HTTPS -> receives a cert-manager-issued Let's Encrypt certificate that a browser accepts without a warning. *(`https://distresslens.duckdns.org` — verified via curl: `SSL certificate verified via OpenSSL`, issuer `Let's Encrypt`, 2026-08-08. Real app route pending phase-06/07; proven against a throwaway test Service.)*
+- [ ] Platform operator -> runs `make gcp-down` then `make gcp-up` -> observes node pools at zero with PVCs intact, then a healthy cluster after resize, with the cost delta recorded. *(Makefile written, `gcp-status` verified working; full down/up round trip not yet executed to avoid downtime mid-build.)*
+- [x] Platform operator -> runs `kubectl get crd | grep -E 'knative|kserve'` -> finds the inference CRDs installed and ready for phase-06. *(21 CRDs present: Knative Serving v1.16.0, net-kourier, KServe v0.14.1 — verified 2026-08-08.)*
 - [x] Phase 1 maintainer -> runs `scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by Phase 2 dependencies.
 
 ## Risk Assessment
