@@ -27,8 +27,14 @@ section-level criterion, but Phase 8 still requires its own executed artifact.
 
 ## LLM Track — 60 rows / 100 points
 
-- `LLM-AC-01-INFERENCE`: LLM reviewer -> deploys and benchmarks the custom Qwen model through KServe/llm-d -> receives versioned baseline/optimized TTFT, throughput, memory, quality, and cost evidence.
-- `LLM-AC-02-MODEL-CONFIG`: Registered agent -> resolves its kagent `ModelConfig` -> reaches the model only through agentgateway, Envoy AI Gateway, and KServe/llm-d with traceable configuration.
+> **Submission scope (2026-08-07, [ADR-010](./adr/adr-010-llm-only-scope-and-platform-simplification.md)):**
+> the LLM track is the submitted track. The criteria below were amended to
+> describe what the submission actually demonstrates — KServe/llm-d, Envoy
+> gateways, Istio mesh and the Vast.ai worker are out of scope. The ML criteria
+> above are unchanged and belong to the deferred phase-05 retrofit.
+
+- `LLM-AC-01-INFERENCE`: LLM reviewer -> deploys and benchmarks the custom model server behind agentgateway -> receives versioned baseline/optimized TTFT, inter-token latency, throughput, memory, and cost evidence.
+- `LLM-AC-02-MODEL-CONFIG`: Registered agent -> resolves its kagent `ModelConfig` -> reaches the model only through the agentgateway AI backend, with traceable configuration and a negative test proving direct access is refused.
 - `LLM-AC-03-REGISTRY`: Release operator -> publishes an agent version -> finds its model config, replicas, sandbox policy, health, promotion history, and rollback target in agentregistry and the registry UI.
 - `LLM-AC-04-RAG`: RAG pipeline -> ingests licensed documents -> writes chunked, deduplicated, versioned Feast/PGVector data with retrievable citations and lineage.
 - `LLM-AC-05-FEATURE-RAG-API`: MCP consumer -> requests stored user features or RAG chunks -> receives validated async FastAPI output with health, errors, Helm rollout, load, and fallback evidence.
@@ -36,14 +42,14 @@ section-level criterion, but Phase 8 still requires its own executed artifact.
 - `LLM-AC-07-AGENT-UNDERSTANDING`: LLM reviewer -> runs the agent notebook -> observes both specialist agents using governed MCP tools and returning cited results.
 - `LLM-AC-08-COORDINATOR`: User -> asks the coordinator a bounded multi-part question -> receives a cited synthesis after controlled A2A delegation, bounded hops, and deterministic partial-failure handling.
 - `LLM-AC-09-WARMUP`: Load tester -> compares cold and warm agent/model pools -> observes improved startup/TTFT with recorded cost, minimum capacity, multi-replica spread, and scale-down behavior.
-- `LLM-AC-10-VALIDATION`: Test runner -> executes LLM unit, equivalence, boundary, property, mutation, safety, and Locust gates -> obtains >90% changed-code coverage, >80% mutation score, and reproducible SLA output.
+- `LLM-AC-10-VALIDATION`: Test runner -> executes LLM unit, equivalence, boundary, property, mutation, safety, and Locust gates -> obtains >90% unit test coverage with fixture/mock proof on the Web API tests, a recorded `mutmut` score on its declared module subset, and reproducible SLA output with no hidden failures.
 - `LLM-AC-11-DATA-GENERATOR`: Data engineer -> generates prompt/document/drift/PII/citation scenarios -> obtains versioned, schema-valid cases that exercise safe and unsafe boundaries.
 - `LLM-AC-12-CICD`: Developer -> changes an LLM, MCP, or agent deployable -> CI tests/scans/signs once and opens a digest-only GitOps PR whose merge is the sole Argo trigger.
-- `LLM-AC-13-ROUTING`: Reviewer -> exercises agent chat, registry, MCP, A2A, and model routes -> observes F5 NGINX TLS at the edge, Istio mTLS, agentgateway protocol routes, and the declared Envoy/KServe model chain without bypass.
-- `LLM-AC-14-IAC`: Platform operator -> applies Terraform and the mandatory Vast.ai Ansible role twice -> obtains reproducible infrastructure and an idempotent OpenAI/llm-d CPU load/evidence client within USD 10.
+- `LLM-AC-13-ROUTING`: Reviewer -> exercises agent chat, registry, MCP, A2A, metric-viewer, log-viewer, trace-viewer, and model routes -> observes a browser-valid certificate on the registered domain, basic authentication and a rate limit on the chat UI, and every backend reachable only through the ingress, proven by a refused direct call and a successful routed call.
+- `LLM-AC-14-IAC`: Platform operator -> applies Terraform once and the evidence-host Ansible role twice -> obtains reproducible cloud state with a cost record, and a healthy host reporting `changed=0` on the second run.
 - `LLM-AC-15-OBSERVABILITY`: Platform observer -> follows one agent request -> finds correlated token/TTFT/round-trip, per-agent/per-tool calls, failures, PII catches, redacted logs, and traces.
 - `LLM-AC-16-AB`: Reviewer -> compares two LLM versions and two agent model configs -> sees version-attributed quality, TTFT, tokens, safety, failure, and cost metrics plus Git rollback.
-- `LLM-AC-17-SECURITY`: Unauthorized agent/tool -> attempts a protected route or unsafe action -> is denied by identity, sandbox, mesh, policy, and budget controls while redacted audit evidence remains.
+- `LLM-AC-17-SECURITY`: Unauthorized agent/tool -> attempts a protected route or unsafe action -> is denied by identity, the restricted-PSS sandbox namespace, default-deny NetworkPolicy, and budget controls while redacted audit evidence remains.
 - `LLM-AC-18-REPOSITORY`: Maintainer -> inspects the source monorepo and GitOps control repo -> finds coherent LLM/agent/MCP modules, one desired-state owner, tests, and no per-service repositories.
 - `LLM-AC-19-DOCUMENTATION`: Coursework reviewer -> opens README and LLM documents -> finds business context, TOC, repo map, deployable-unit diagram, numbered/described flows, docstrings, and evidence links.
 - `LLM-AC-20-NOVEL`: LLM reviewer -> executes embedding hot-swap and citation/PII guard scenarios -> receives zero-downtime vector compatibility proof and trace-linked safety decisions.

@@ -8,6 +8,7 @@ AGENTS.md
 .pytest_cache/
 .ruff_cache/
 .venv/
+.venv-phase2/
 *.pyc
 *.egg-info/
 build/

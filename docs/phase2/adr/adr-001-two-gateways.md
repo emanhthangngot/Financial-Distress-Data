@@ -1,9 +1,14 @@
 # ADR-001: Two Gateways — agentgateway and Envoy AI Gateway
 
-- Status: Accepted
+- Status: **Superseded in part by [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md) (2026-08-07)**
 - Date: 2026-08-02
 - Deciders: Phase 2 architecture review
 - Related: `docs/phase2/architecture.md`, `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md`
+
+> **Superseded:** Envoy Gateway and Envoy AI Gateway are dropped. The chain is
+> now `kagent Agent -> kagent ModelConfig -> agentgateway AI backend -> an
+> OpenAI-compatible CPU model server`. What survives: agentgateway remains the
+> only path agents use to reach models or tools, enforced by negative tests.
 
 ## Context
 

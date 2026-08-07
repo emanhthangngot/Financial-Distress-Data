@@ -30,6 +30,10 @@ Modes:
   --run-validations   Execute every feature-specific validation command after
                       evidence/artifact checks; canonical matrix only, without
                       invoking a shell.
+  --track {ML,LLM}    Repeatable; restrict --require-executed/--run-validations
+                      to one track (default both). The 117-row canonical
+                      coverage and matrix-completeness checks are never
+                      filtered — they always demand all rows present.
 
 Exit codes:
   0  all checks passed
@@ -114,6 +118,7 @@ CANONICAL_RUBRICS = {
     / "docs/Coursework Tracking (Public) - rubic final-coursework (final - llm).csv",
 }
 EXPECTED_ROW_COUNTS = {"ML": 57, "LLM": 60}
+TRACKS = ("ML", "LLM")
 
 # Per-artifact metadata required by docs/phase2/evidence-contract.md. A file
 # that exists but lacks any of these cannot prove a rubric point.
@@ -785,6 +790,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Execute every row's feature-specific validation command (Phase 8)",
     )
+    parser.add_argument(
+        "--track",
+        action="append",
+        choices=TRACKS,
+        default=None,
+        help="Restrict executed/frozen-revision/behavior-validation auditing to one "
+        "track (repeatable); default both. Canonical coverage and the 117-row "
+        "matrix contract are never filtered by this flag.",
+    )
     parser.add_argument("--ml", type=int, default=100, help="Expected ML total points")
     parser.add_argument("--llm", type=int, default=100, help="Expected LLM total points")
     parser.add_argument(
@@ -803,6 +817,12 @@ def main(argv: list[str] | None = None) -> int:
     expected = {"ML": args.ml, "LLM": args.llm}
     errors: list[str] = []
     matrix = _read_matrix(args.matrix)
+    selected_tracks = tuple(args.track) if args.track else TRACKS
+    scoped = (
+        [row for row in matrix if row.get("track", "") in selected_tracks]
+        if matrix is not None
+        else None
+    )
 
     if matrix is None:
         errors.append("💀 docs/phase2/rubric-matrix.csv not found or unreadable")
@@ -820,8 +840,8 @@ def main(argv: list[str] | None = None) -> int:
             errors.extend(_audit_canonical_coverage(matrix))
 
     if args.require_executed:
-        if matrix is not None:
-            errors.extend(_audit_executed(matrix, args.gitops_root))
+        if scoped is not None:
+            errors.extend(_audit_executed(scoped, args.gitops_root))
             if args.matrix is None:
                 if not args.phase1_base or not _is_full_git_sha(args.phase1_base):
                     errors.append(
@@ -830,7 +850,7 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 else:
                     errors.extend(_audit_phase1_git_diff(args.phase1_base))
-                errors.extend(_audit_frozen_revisions(matrix, args.gitops_root))
+                errors.extend(_audit_frozen_revisions(scoped, args.gitops_root))
         errors.extend(_audit_required_docs())
 
     if args.run_validations:
@@ -838,8 +858,8 @@ def main(argv: list[str] | None = None) -> int:
             errors.append("--run-validations requires --require-executed")
         elif args.matrix is not None:
             errors.append("--run-validations is allowed only for the canonical matrix")
-        elif matrix is not None:
-            errors.extend(_audit_behavior_validations(matrix))
+        elif scoped is not None:
+            errors.extend(_audit_behavior_validations(scoped))
 
     if args.matrix_only:
         errors.extend(_audit_required_docs())
