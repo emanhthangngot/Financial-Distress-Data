@@ -1,9 +1,15 @@
 # ADR-007: Mixed Helm/Kustomize Ownership
 
-- Status: Accepted
+- Status: **Superseded by [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md) (2026-08-07)**
 - Date: 2026-08-02
 - Deciders: Phase 2 architecture review, platform operator
 - Related: `docs/phase2/architecture.md`
+
+> **Superseded:** Helm is the only render tool. Kustomize is dropped, so one
+> resource has exactly one owner by construction; `resource-ownership.yaml` and
+> the duplicate-owner CI check are removed as unnecessary. The ADR's premise —
+> that KServe ships pinned Kustomize overlays — no longer applies, because
+> KServe is not installed.
 
 ## Context
 

@@ -430,7 +430,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-a-llm-inference-platform--llm-inference-platform-setup-c": (
         "llm_engineer",
         "gitops",
-        "platform/inference/llminferenceservice.yaml",
+        "platform/inference/model-server.yaml",
     ),
     "LLM-a-llm-inference-platform--a-custom-model": (
         "llm_engineer",
@@ -659,12 +659,12 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-observability-t-ng-t-cho-logs": (
         "platform_operator",
         "gitops",
-        "platform/observability/eck-otel-values.yaml",
+        "platform/observability/loki-otel-values.yaml",
     ),
     "LLM-observability-t-ng-t-cho-traces": (
         "platform_operator",
         "gitops",
-        "platform/observability/eck-otel-values.yaml",
+        "platform/observability/loki-otel-values.yaml",
     ),
     "LLM-observability-m-b-o-t-nh-t-c-c-metrics": (
         "platform_operator",
@@ -689,7 +689,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-security-centralize-secret-management": (
         "platform_operator",
         "gitops",
-        "platform/security/vault-external-secrets.yaml",
+        "platform/security/sealed-secrets.yaml",
     ),
     "LLM-repository-design-clean-code-clean-repo-demonstr": (
         "platform_operator",

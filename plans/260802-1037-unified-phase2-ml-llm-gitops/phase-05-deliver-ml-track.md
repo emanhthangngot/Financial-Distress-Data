@@ -1,10 +1,79 @@
 ---
 title: "Phase 5: Deliver ML track"
-status: todo
-estimate: "8-12 days"
+status: deferred
+estimate: "8-12 days standalone / 4-5 days as retrofit after the LLM track ships"
 ---
 
 # Phase 5: Deliver ML track
+
+> **DEFERRED — 2026-08-07. Not in the submission scope; resume after the deadline.**
+>
+> The coursework accepts one of the two tracks. With 7 days remaining and zero
+> executed evidence, the submission delivers the LLM track only. This file stays
+> in place unchanged in substance: it is the retrofit backlog, not dead work.
+>
+> **Do not churn the ML rows** in `docs/phase2/rubric-matrix.csv`,
+> `scripts/_phase2_rubric_items.py`, or `docs/phase2/acceptance-criteria.md`.
+> The 4-5 day retrofit estimate holds only while those 57 rows stay frozen, and
+> the phase-08 auditor's canonical-coverage check requires all 117 rows present
+> regardless of which track is submitted.
+
+## Deferral Contract
+
+### Why the retrofit is cheap (4-5 days, additive only)
+
+ML's 100 points split into 68 points in sections shared with the LLM track and
+32 points that are ML-only. Shipping the LLM track builds the shared 68 first.
+The residual work:
+
+| ML section | Points | State after the LLM track ships |
+|---|---:|---|
+| CI/CD | 16 | pipeline, signing, digest, Argo, GitOps PR exist; add ML deployables to the matrix |
+| Routing & Gateway | 11 | NGINX + cert-manager + ingress exist; add the ML inference route |
+| Observability | 10 | Prometheus/Grafana/Loki/Jaeger exist; add ML dashboards and metrics |
+| Validation & Verification | 10 | coverage/mutation/property/Locust harness exists; add ML tests |
+| Web API kéo dữ liệu + drift API | 12 | **already built** — the LLM track ships both as MCP-backed services |
+| Improve the Data Generator | 6 | **already built** — done to ML depth in phase-04 |
+| Feature Store | 6 | Feast online store exists; add offline materialization |
+| IaC / Repository / Security / Docs / Novel / A/B | 15 | largely reusable |
+| ML Pipelines (KFP) | 4 | new |
+| Versioning (MLflow) | 4 | new |
+| Autoscale | 4 | HPA config exists; copy values |
+| ML (train LogReg + XGBoost) | 2 | new |
+
+### Load-bearing decisions the LLM track MUST honor
+
+Breaking any of these turns the retrofit from additive into rework:
+
+1. **Feast offline store is defined from day one**, even though the LLM track
+   only reads the online store. Feature views carry a correct `event_timestamp`
+   and an offline source. Retrofitting point-in-time correctness onto an
+   online-only key-value design is a schema redesign, not an addition.
+2. **The label table schema is created in phase-04** (`ticker`,
+   `event_timestamp`, `label`, `label_version`, `created_ts`,
+   `training_eligible`) even with no training consumer. The LLM rubric requires
+   the label table anyway (`LLM-improve-the-data-generato-t-o-b-ng-l...`, 2 pts).
+3. **Both Web APIs stay generic services**; the MCP tool is a thin wrapper over
+   them. Business logic never lives in the MCP server. ML reuses the services
+   verbatim for its own 12 points.
+4. **CI matrix iterates a deployable list**, never a hardcoded LLM service set.
+   Adding an ML service is one list entry.
+5. **One parameterized Helm chart** serves every FastAPI deployable. ML adds a
+   values file only.
+6. **Argo CD ApplicationSet uses a directory generator**, so a new ML app is
+   discovered without editing Argo config.
+7. **Metrics carry a `service` label; Grafana dashboards use template
+   variables**, so ML panels are a variable value rather than a new dashboard.
+8. **`src/ml/contracts.py` stubs stay in the repository**, unchanged.
+9. **`src/drift/` is created by the LLM track** (the drift MCP tool needs it)
+   with the ML drift contract shape already in mind.
+
+### Explicitly out of the LLM-track scope
+
+Kubeflow Pipelines, Kubeflow Trainer, MLflow, distributed XGBoost training,
+model promotion gates, KServe ML `InferenceService`, and Knative Eventing. None
+of these appear in any LLM rubric row. Installing them "just in case" is the
+single largest way to lose the 7-day budget.
 
 ## Overview
 
