@@ -96,3 +96,40 @@ def emit_phase2_lineage(
     report = emit_governance(scoped_model, client, run_id)
     report["pipeline_name"] = pipeline_name
     return report
+
+
+def emit_phase2_lineage_if_configured(
+    run_id: str, pipeline_name: str, config_path: Path = DEFAULT_CONFIG_PATH
+) -> dict[str, Any]:
+    """Every real Phase 2 task entrypoint calls this (not the bare
+    ``emit_phase2_lineage``) so a run always *attempts* a real DataHub emit
+    when one is reachable, instead of leaving ``emit_phase2_lineage``
+    defined but never invoked. No live DataHub server exists in this
+    sandbox, so this mirrors the env-gated no-op pattern already used by
+    ``FeastMaterializationService._write_revision_row`` and
+    ``record_stream_checkpoint`` (src/ml/feast/materialization.py): unset
+    ``PHASE2_DATAHUB_SERVER`` means "no server configured", not "skip
+    silently forever" — set it in the container/Airflow environment to turn
+    this into a real emit with no code change. This entrypoint currently
+    lives unwired into any deployment surface (no compose service, Airflow
+    env, or image installs ``datahub``) — flip it on by adding
+    ``PHASE2_DATAHUB_SERVER``/``PHASE2_DATAHUB_TOKEN`` plus the ``datahub``
+    package to whichever image/Airflow environment should emit for real.
+
+    Governance telemetry must never fail the data task that produced it —
+    every caller here already committed its Kafka offset / wrote its rows
+    before calling this. A ``datahub`` import error, auth failure, or
+    network error is caught and reported the same way as the unconfigured
+    case, never raised."""
+    import os
+
+    server = os.environ.get("PHASE2_DATAHUB_SERVER")
+    if not server:
+        return {"emitted": False, "reason": "PHASE2_DATAHUB_SERVER not set"}
+    token = os.environ.get("PHASE2_DATAHUB_TOKEN")
+    try:
+        report = emit_phase2_lineage(run_id, pipeline_name, server, token, config_path)
+    except Exception as exc:  # noqa: BLE001 - telemetry must never fail the caller
+        return {"emitted": False, "reason": f"{type(exc).__name__}: {exc}"}
+    report["emitted"] = True
+    return report

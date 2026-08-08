@@ -15,10 +15,12 @@ adapts a plain ``list[float]`` to a Postgres ``float8[]``, and there is no
 implicit ``float8[] -> vector`` cast — ``insert_chunks`` would fail against a
 real ``vector(384)`` column. This module cannot register it itself without
 importing psycopg at call time for a side effect unrelated to any query it
-runs, so the obligation is documented here instead. Not exercised by
-tests/phase2/pipelines/test_pgvector_store.py: that suite skips whenever the
-pgvector extension itself is unavailable (true on this development machine),
-so the adapter mismatch has not been verified against a real server.
+runs, so the obligation is documented here instead. ``src.llm.rag_pipeline.
+run_ingestion_task`` is the one production caller and does call it before
+constructing ``PgVectorStore``, verified against a real
+``pgvector/pgvector:pg16`` container (fresh insert + idempotent rerun).
+``tests/phase2/pipelines/test_pgvector_store.py`` still skips whenever the
+pgvector extension itself is unavailable in the test environment.
 """
 
 from __future__ import annotations

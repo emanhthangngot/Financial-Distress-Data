@@ -12,6 +12,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir \
     pyyaml>=6.0 \
     "psycopg[binary]>=3.2" \
+    pgvector>=0.3 \
     requests>=2.31 \
     tenacity>=8.0 \
     numpy>=1.26
@@ -19,6 +20,11 @@ RUN pip install --no-cache-dir \
 COPY src ./src
 COPY configs ./configs
 COPY sql ./sql
+# configs/rag-sources.yaml's source_uri entries are repo-relative fixture
+# paths that RagIngestionPipeline.fetch_documents reads directly at
+# runtime (no live network fetch — see configs/rag-sources.yaml's header) —
+# the image must carry them or every ingestion run fails FileNotFoundError.
+COPY tests/phase2/fixtures/rag_corpus ./tests/phase2/fixtures/rag_corpus
 
 ENV PYTHONPATH=/app
 

@@ -167,10 +167,18 @@ def run_materialize_task() -> dict[str, Any]:
     start_ts = os.environ.get("PHASE2_MATERIALIZE_START_TS", (now - timedelta(days=1)).isoformat())
     end_ts = os.environ.get("PHASE2_MATERIALIZE_END_TS", now.isoformat())
 
+    import uuid
+
     service = FeastMaterializationService(repo_path)
     result = service.materialize_offline_to_online(feature_view, start_ts, end_ts)
 
-    from src.governance.phase2_lineage import audit_phase2_lineage
+    from src.governance.phase2_lineage import (
+        audit_phase2_lineage,
+        emit_phase2_lineage_if_configured,
+    )
 
     result["lineage_audit"] = audit_phase2_lineage(pipeline_name="phase2_feature_materialize")
+    result["lineage_emit"] = emit_phase2_lineage_if_configured(
+        run_id=uuid.uuid4().hex, pipeline_name="phase2_feature_materialize"
+    )
     return result

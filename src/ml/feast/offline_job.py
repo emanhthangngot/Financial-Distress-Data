@@ -9,7 +9,7 @@ tested directly (no Kafka needed). Kafka/minio/psycopg are lazy imports (D4).
 
 from __future__ import annotations
 
-import uuid
+import hashlib
 from collections import defaultdict
 from typing import Any
 
@@ -46,27 +46,43 @@ def aggregate_stream_events(events: list[dict[str, Any]]) -> list[dict[str, Any]
 
 
 def write_offline_rows(rows: list[dict[str, Any]], client: Any, bucket: str) -> None:
-    """Appends one new object under ``phase2/offline/stream_features/`` per
-    call via the existing MinIO writer (src.io.minio_writer — reused, not
+    """Appends one object under ``phase2/offline/stream_features/`` per call
+    via the existing MinIO writer (src.io.minio_writer — reused, not
     reimplemented, per phase-04-implementation-notes.md section 3.1's "no
-    new S3 client" rule). Each run gets a unique, timestamp-ordered object
-    key (never the same key twice) so successive runs accumulate rather
-    than each overwriting the last one — a fixed key here would silently
-    destroy the previous batch, since ``write_minio_dataset`` always
-    overwrites its exact key. A no-op on an empty batch — Bronze is
-    append-only, but an empty write is not an event."""
+    new S3 client" rule). The object key is a content hash of every field of
+    ``rows`` (``_deterministic_batch_id``), not a random/timestamp id: two
+    batches whose full row content differs still land at two different keys
+    and accumulate, but an *exact* replay of the same aggregated rows —
+    e.g. the consumer re-delivers the same messages because a crash
+    happened after this write and before the offset commit in
+    ``run_offline_job`` — recomputes the same key, so
+    ``write_minio_dataset``'s overwrite makes that replay a no-op instead of
+    a duplicate row. This is not a guarantee against every retry shape (a
+    partial-batch retry that ends up with a different message set is a
+    genuinely different batch and correctly gets its own key). A no-op on
+    an empty batch — Bronze is append-only, but an empty write is not an
+    event."""
     if not rows:
         return
     from src.io.minio_writer import write_minio_dataset
 
-    object_key = f"{bucket}/phase2/offline/stream_features/{_new_object_id()}.parquet"
+    object_key = f"{bucket}/phase2/offline/stream_features/{_deterministic_batch_id(rows)}.parquet"
     write_minio_dataset(client, bucket, object_key, rows)
 
 
-def _new_object_id() -> str:
-    from datetime import UTC, datetime
+def _deterministic_batch_id(rows: list[dict[str, Any]]) -> str:
+    """Hashes every field of every row (not just ticker/timestamp/price) —
+    hashing a subset let two batches with the same ticker/timestamp/price
+    but a different ``event_count_1h``/``price_change_pct_1h`` collide on
+    the same key and silently overwrite each other."""
+    import json
 
-    return f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
+    payload = json.dumps(
+        sorted(rows, key=lambda row: (row["ticker"], row["event_timestamp"])),
+        sort_keys=True,
+        default=str,
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:24]
 
 
 def run_offline_job() -> dict[str, Any]:
@@ -115,7 +131,12 @@ def run_offline_job() -> dict[str, Any]:
     finally:
         consumer.close()
 
-    from src.governance.phase2_lineage import audit_phase2_lineage
+    import uuid
+
+    from src.governance.phase2_lineage import (
+        audit_phase2_lineage,
+        emit_phase2_lineage_if_configured,
+    )
     from src.ml.feast.materialization import record_stream_checkpoint
 
     last_event_ts = rows[-1]["event_timestamp"] if rows else None
@@ -124,6 +145,9 @@ def run_offline_job() -> dict[str, Any]:
         "events_consumed": len(events),
         "rows_written": len(rows),
         "lineage_audit": audit_phase2_lineage(pipeline_name="phase2_stream_feature_offline"),
+        "lineage_emit": emit_phase2_lineage_if_configured(
+            run_id=uuid.uuid4().hex, pipeline_name="phase2_stream_feature_offline"
+        ),
     }
 
 

@@ -62,3 +62,43 @@ def test_accepts_kafka_message_shaped_events_with_nested_payload() -> None:
 
 def test_empty_batch_yields_no_rows() -> None:
     assert aggregate_stream_events([]) == []
+
+
+# --- _deterministic_batch_id (offline-job write-key idempotency) -------------
+
+
+def test_batch_id_is_stable_for_an_exact_replay() -> None:
+    from src.ml.feast.offline_job import _deterministic_batch_id
+
+    events = [_payload("AAA", 10.0, "2026-08-08T09:00:00+00:00")]
+    rows = aggregate_stream_events(events)
+    replayed_rows = aggregate_stream_events(events)  # same Kafka messages redelivered
+    assert _deterministic_batch_id(rows) == _deterministic_batch_id(replayed_rows)
+
+
+def test_batch_id_differs_when_event_count_differs_but_last_price_matches() -> None:
+    """Regression: hashing only ticker/timestamp/last_price let a
+    3-event batch and a 1-event batch that happen to share the same last
+    price collide on the same object key and silently overwrite each
+    other — event_count_1h/price_change_pct_1h must be part of the hash."""
+    from src.ml.feast.offline_job import _deterministic_batch_id
+
+    three_events = [
+        _payload("AAA", 10.0, "2026-08-08T09:00:00+00:00"),
+        _payload("AAA", 11.0, "2026-08-08T09:15:00+00:00"),
+        _payload("AAA", 12.0, "2026-08-08T09:30:00+00:00"),
+    ]
+    one_event = [_payload("AAA", 12.0, "2026-08-08T09:30:00+00:00")]
+    rows_a = aggregate_stream_events(three_events)
+    rows_b = aggregate_stream_events(one_event)
+    assert rows_a[0]["last_price"] == rows_b[0]["last_price"] == 12.0  # same tail price
+    assert rows_a[0]["event_timestamp"] == rows_b[0]["event_timestamp"]  # same timestamp
+    assert _deterministic_batch_id(rows_a) != _deterministic_batch_id(rows_b)
+
+
+def test_batch_id_differs_for_a_different_ticker_set() -> None:
+    from src.ml.feast.offline_job import _deterministic_batch_id
+
+    rows_a = aggregate_stream_events([_payload("AAA", 10.0, "2026-08-08T09:00:00+00:00")])
+    rows_b = aggregate_stream_events([_payload("BBB", 10.0, "2026-08-08T09:00:00+00:00")])
+    assert _deterministic_batch_id(rows_a) != _deterministic_batch_id(rows_b)

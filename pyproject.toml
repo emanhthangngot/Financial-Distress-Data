@@ -25,6 +25,7 @@ runtime = [
     "minio>=7.2",
     "pyarrow>=17.0",
     "psycopg[binary]>=3.2",
+    "pgvector>=0.3",
     "pyspark>=3.5",
     "requests>=2.31",
     "tenacity>=8.0",
