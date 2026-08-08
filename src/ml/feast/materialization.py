@@ -168,4 +168,9 @@ def run_materialize_task() -> dict[str, Any]:
     end_ts = os.environ.get("PHASE2_MATERIALIZE_END_TS", now.isoformat())
 
     service = FeastMaterializationService(repo_path)
-    return service.materialize_offline_to_online(feature_view, start_ts, end_ts)
+    result = service.materialize_offline_to_online(feature_view, start_ts, end_ts)
+
+    from src.governance.phase2_lineage import audit_phase2_lineage
+
+    result["lineage_audit"] = audit_phase2_lineage(pipeline_name="phase2_feature_materialize")
+    return result

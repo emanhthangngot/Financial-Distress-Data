@@ -82,8 +82,13 @@ def run_online_job() -> dict[str, Any]:
     finally:
         consumer.close()
 
+    from src.governance.phase2_lineage import audit_phase2_lineage
     from src.ml.feast.materialization import record_stream_checkpoint
 
     last_event_ts = rows[-1]["event_timestamp"] if rows else None
     record_stream_checkpoint("phase2_stream_feature_online", last_offset, last_event_ts)
-    return {"events_consumed": len(events), **result}
+    return {
+        "events_consumed": len(events),
+        "lineage_audit": audit_phase2_lineage(pipeline_name="phase2_stream_feature_online"),
+        **result,
+    }

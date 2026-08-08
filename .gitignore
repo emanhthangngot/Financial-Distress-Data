@@ -15,6 +15,7 @@ build/
 outputs/**/*.parquet
 outputs/**/*.csv
 outputs/**/*.json
+outputs/**/*.md
 warehouse.db
 docs/_plans/
 node_modules/

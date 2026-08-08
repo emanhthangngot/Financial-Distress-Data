@@ -314,4 +314,9 @@ def run_ingestion_task() -> dict[str, Any]:
     )
     with psycopg.connect(os.environ["PHASE2_PG_DSN"]) as conn:
         pipeline = RagIngestionPipeline(PgVectorStore(conn), embedder)
-        return run_ingestion(pipeline, source)
+        result = run_ingestion(pipeline, source)
+
+    from src.governance.phase2_lineage import audit_phase2_lineage
+
+    result["lineage_audit"] = audit_phase2_lineage(pipeline_name="phase2_rag_ingest")
+    return result

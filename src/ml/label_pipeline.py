@@ -168,8 +168,12 @@ def run_label_drift_build_task() -> dict[str, Any]:
         )
 
     label_result = run_label_build(generator_config_path, profile=profile)
+
+    from src.governance.phase2_lineage import audit_phase2_lineage
+
     return {
         "drift_report_path": str(drift_directory),
         "drift_passed": drift_report["passed"],
+        "lineage_audit": audit_phase2_lineage(pipeline_name="phase2_label_drift_build"),
         **label_result,
     }

@@ -1,0 +1,28 @@
+name: Phase 2 — RAG pipeline
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "src/llm/**"
+      - "configs/rag-sources.yaml"
+      - "dags/phase2/phase2_rag_ingest.py"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "src/llm/**"
+      - "configs/rag-sources.yaml"
+      - "dags/phase2/phase2_rag_ingest.py"
+
+jobs:
+  ci:
+    uses: ./.github/workflows/phase2-ci.yaml
+    with:
+      pipeline_name: rag-pipeline
+      image_context: .
+      dockerfile: infra/phase2/rag-pipeline/Dockerfile
+      test_selector: "tests/phase2/pipelines -k 'rag or governance'"
+      lint_paths: "src/llm tests/phase2/pipelines/test_rag_chunking.py tests/phase2/pipelines/test_rag_dedup.py tests/phase2/pipelines/test_rag_metadata_contract.py tests/phase2/pipelines/test_data_governance.py"
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

@@ -5,9 +5,20 @@ estimate: "1 day (day 2)"
 ---
 
 **Slice 4A (infra + data) done 2026-08-08. Slice 4B (RAG pipeline) done
-2026-08-08. Slice 4C (Feast + jobs + DAGs) done 2026-08-08** — see
-`phase-04-implementation-notes.md` §13 for the slice plan. Remaining: 4D
-(CI + lineage + evidence).
+2026-08-08. Slice 4C (Feast + jobs + DAGs) done 2026-08-08. Slice 4D
+(CI + lineage + evidence) done 2026-08-08 — phase-04 complete** — see
+`phase-04-implementation-notes.md` §13 for the slice plan.
+
+**4D scope note:** this sandbox has no working Docker container networking,
+so live Postgres/pgvector/Redis/Kafka/DataHub/GitHub-Actions runs were not
+possible. CI workflows, the Phase 2 lineage emitter, and the governance
+config were built and tested without live services. Real evidence markdown
+was written only for the 3 rubric rows honestly reproducible without them
+(both drift-report rows + the label-table row — pure Python, deterministic,
+reproduced exactly). The RAG-pipeline and both CI/CD-job evidence rows
+remain `design_only` with no file — they need a live Postgres+pgvector run
+and a real GitHub Actions run respectively, neither achievable here. Not
+fabricated.
 
 # Phase 4: Publish data, Feast stores and RAG corpus
 
