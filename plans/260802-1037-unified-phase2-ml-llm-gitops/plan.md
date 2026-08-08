@@ -40,7 +40,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 | 1 | [Lock specification and rubric contract](./phase-01-start.md) | 3-4 days | — | In Review |
 | 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 8-12 days | — | Done |
 | 3 | [Bootstrap GKE, GitOps and the evidence harness](./phase-03-bootstrap-gitops-and-aws-evidence-platform.md) | 1.5 days | 0 evening, 1 | In Review |
-| 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 1 day | 2 | Pending |
+| 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 1 day | 2 | Done (4A-4D; RAG/CI-CD evidence rows still design_only, need live services) |
 | 5 | [Deliver ML track](./phase-05-deliver-ml-track.md) | 4-5 days as retrofit | post-deadline | **Deferred** |
 | 6 | [Deliver LLM, MCP and agent track](./phase-06-deliver-llm-mcp-and-agent-track.md) | 3.5 days | 3, 4 | Pending |
 | 7 | [Complete CI/CD, security and observability](./phase-07-complete-ci-cd-security-and-observability.md) | 0.5 day | 5 | Pending |
@@ -318,5 +318,54 @@ invalidated the rented-VM/k3d/AWS design from Session 2.
 **Whole-plan consistency:** phase-03 reconciled this session. `plan.md`
 reconciled in this same pass. phase-04/06/07/08 and ADR-010/ADR-004 are the
 remaining sweep surface — see action items above.
+
+### Session 4 — 2026-08-08
+
+**Trigger:** `/ak:cook phase-04` — planner produced a file-level implementation
+supplement (`phase-04-implementation-notes.md`); brainstorm gate surfaced a
+real cross-phase dependency before any code was written.
+
+**Decisive fact established:** `src/llm/rag_pipeline.py::write_vectors` needs
+a real embedding backend for its evidence run. The user rejected both the
+sentence-transformers stopgap and the deterministic-hash-embedder-now/hot-swap
+option, choosing instead to call phase-06's vLLM-CPU inference endpoint
+directly. That endpoint does not exist until phase-06 (days 3-4). Chunking,
+dedup, governance, the Feast repo, DAG wrappers and CI/CD do not depend on the
+embedding backend and were not blocked — but the user chose to stop rather
+than implement that unblocked subset this session.
+
+**Confirmed decision:**
+
+- Critical path reorders: **phase-06 (KServe/Knative/llm-d/vLLM-CPU inference
+  stack) moves before phase-04 completes**, inverting the "Seven-day critical
+  path" table's stated ordering ("Feast/RAG now precede the agent track
+  because the MCP tools read Feast"). That rationale no longer holds for the
+  embedding step specifically — RAG's vector-write path now depends on the
+  agent/inference track instead of preceding it.
+- Phase-04 is **not started** this session. `phase-04-implementation-notes.md`
+  (file-level plan, Feast/RAG/drift/label design, 4-slice execution order) is
+  written and stays valid — it targets the pinned rubric-matrix artifact paths
+  and is the plan to resume from once phase-06's endpoint exists.
+- Next work: `/ak:cook phase-06` to stand up the vLLM-CPU inference endpoint,
+  then resume phase-04 slices 4A-4D per the implementation-notes file. Slices
+  4A (drift+labels) and 4C (Feast+jobs+DAGs) do not actually require the
+  endpoint and remain safe to implement first when phase-04 resumes, if a
+  future session wants to parallelize rather than strictly serialize.
+
+**Action items:**
+
+- [ ] Reconcile `phase-06-deliver-llm-mcp-and-agent-track.md`'s day slot (3-4)
+      against this reorder — does its own scope still assume Feast/RAG already
+      published, or does it now need to expose an embeddings-compatible route
+      before RAG can complete?
+- [ ] Update the "Seven-day critical path" table above once the new day-by-day
+      shape is confirmed (currently still shows Feast/RAG on day 2, agent
+      track on days 3-4, unreordered).
+- [ ] Resume phase-04 (4A/4B/4C/4D per `phase-04-implementation-notes.md`)
+      after phase-06's inference endpoint exists.
+
+**Whole-plan consistency:** not reconciled this session — the critical-path
+table above and `phase-06-deliver-llm-mcp-and-agent-track.md` still reflect
+the pre-reorder ordering. Flagged for the next planning session on either file.
 
 <!-- slug: unified-phase2-ml-llm-gitops -->

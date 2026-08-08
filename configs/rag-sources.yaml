@@ -1,0 +1,55 @@
+# Phase 2 RAG trusted-source registry (RagIngestionService.fetch_documents).
+#
+# Committed fixture corpus, not a live HTTP fetch (confirmed 2026-08-08 —
+# plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md,
+# Open Question Q4). source_uri is a repo-relative path to a committed text
+# extract; fetch_documents reads it directly — no network call, no scraping
+# code, byte-identical across runs. Mirrors the existing
+# vnstock_fixture_adapter precedent (src/collectors/source_adapters/) for
+# the same reason: deterministic, network-free evidence runs.
+#
+# governance_policy is the licensing/access-class allowlist enforced by
+# RagIngestionPipeline (src/llm/rag_pipeline.py). It is declared separately
+# from each source's own license/access_class rather than derived from
+# them — every registered source obviously satisfies its own declared
+# values, so deriving the allowlist from this same file would make
+# check_licensing/check_access_class unable to ever fail. A new source
+# must be added here explicitly, not just under `sources:`.
+governance_policy:
+  allowed_licenses:
+    - vnstock_public_api_terms
+    - company_disclosure_public_domain
+  allowed_access_classes:
+    - public_market_commentary
+    - public_financial_disclosure
+
+sources:
+  vnstock_news_vnm:
+    source_uri: tests/phase2/fixtures/rag_corpus/vnstock_news_vnm.txt
+    source_name: vnstock_news
+    company: VNM
+    report_date: null
+    content_type: text/plain
+    license: vnstock_public_api_terms
+    access_class: public_market_commentary
+    rate_limit_rps: 2
+
+  vnstock_news_hpg:
+    source_uri: tests/phase2/fixtures/rag_corpus/vnstock_news_hpg.txt
+    source_name: vnstock_news
+    company: HPG
+    report_date: null
+    content_type: text/plain
+    license: vnstock_public_api_terms
+    access_class: public_market_commentary
+    rate_limit_rps: 2
+
+  annual_report_fpt_2025:
+    source_uri: tests/phase2/fixtures/rag_corpus/annual_report_fpt_2025_extract.txt
+    source_name: annual_report_extract
+    company: FPT
+    report_date: "2025-12-31"
+    content_type: text/plain
+    license: company_disclosure_public_domain
+    access_class: public_financial_disclosure
+    rate_limit_rps: 1
