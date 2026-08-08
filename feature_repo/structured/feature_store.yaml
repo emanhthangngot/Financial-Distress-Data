@@ -1,0 +1,18 @@
+# Feast substitutes ${VAR} via os.path.expandvars (verified:
+# .venv-phase2/.../feast/repo_config.py) — plain POSIX expansion only, no
+# bash-style ${VAR:-default}, and an unset var is left as the literal
+# "${VAR}" string rather than erroring. connection_string hardcodes the
+# docker-compose service DNS ("phase2-redis:6379", the container port), the
+# address any other container on the same compose network reaches it at
+# (docker-compose.yml:phase2-redis, profile "phase2"). From the host machine
+# (outside the compose network) use localhost:${PHASE2_REDIS_HOST_PORT}
+# instead (docker-compose.yml's port mapping; default 6380).
+project: fd_structured
+provider: local
+registry: s3://financial-distress-lake/phase2/feast/structured/registry.db
+online_store:
+  type: redis
+  connection_string: "phase2-redis:6379,db=0"
+offline_store:
+  type: file
+entity_key_serialization_version: 3

@@ -8,18 +8,15 @@ from __future__ import annotations
 from pathlib import Path
 
 from src.llm.rag.embedding import DeterministicHashEmbedder
-from src.llm.rag_pipeline import RagIngestionPipeline
+from src.llm.rag_pipeline import RagIngestionPipeline, run_ingestion
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SOURCES_CONFIG = REPO_ROOT / "configs" / "rag-sources.yaml"
 
 
 def _run_full_ingest(pipeline: RagIngestionPipeline, source: str, embedding_version: str) -> str:
-    documents = pipeline.fetch_documents(source, window=None)
-    chunks = pipeline.parse_and_chunk(documents)
-    chunks = pipeline.deduplicate_chunks(chunks)
-    pipeline.enforce_licensing_and_metadata(chunks)
-    return pipeline.write_vectors(chunks, embedding_version)
+    assert embedding_version == pipeline.embedding_backend.version
+    return run_ingestion(pipeline, source)["ingestion_version"]
 
 
 def test_reprocessing_unchanged_document_yields_zero_new_chunks(fake_store) -> None:

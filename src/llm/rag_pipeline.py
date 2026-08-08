@@ -262,3 +262,56 @@ class RagIngestionPipeline(RagIngestionService):
             ingestion_version=ingestion_version,
         )
         return ingestion_version if inserted else ""
+
+
+def run_ingestion(
+    pipeline: RagIngestionPipeline, source: str, window: Any = None
+) -> dict[str, Any]:
+    """Runs all five contract methods in order against one pipeline instance
+    — see ``RagIngestionPipeline``'s class docstring for why they must not
+    be split across separate Airflow tasks. This is the single callable
+    ``dags/phase2/phase2_rag_ingest.py`` wraps in one ``PythonOperator``.
+
+    Lineage emission (Flow E, phase-04-implementation-notes.md section 2) is
+    deliberately not wired here — ``src/governance/phase2_lineage.py`` and
+    ``configs/phase2-governance.yaml`` are slice 4D's files, not 4C's."""
+    documents = pipeline.fetch_documents(source, window)
+    chunks = pipeline.parse_and_chunk(documents)
+    chunks = pipeline.deduplicate_chunks(chunks)
+    chunks_before_governance = len(chunks)
+    pipeline.enforce_licensing_and_metadata(chunks)
+    ingestion_version = pipeline.write_vectors(chunks, pipeline.embedding_backend.version)
+    return {
+        "source": source,
+        "documents_fetched": len(documents),
+        "chunks_new": len(chunks) if ingestion_version else 0,
+        "chunks_quarantined": chunks_before_governance - len(chunks),
+        "ingestion_version": ingestion_version,
+    }
+
+
+def run_ingestion_task() -> dict[str, Any]:
+    """Airflow entrypoint, no args: reads every setting from environment
+    inside this function (never at DAG-module import time —
+    dags/phase2/phase2_rag_ingest.py's only job is to point a
+    PythonOperator at this callable). ``PHASE2_PG_DSN`` required;
+    ``PHASE2_EMBEDDING_ENDPOINT`` unset falls back to the network-free hash
+    embedder, matching D5's CI default; ``PHASE2_RAG_SOURCE`` defaults to
+    the first registered source."""
+    import os
+
+    import psycopg
+
+    from src.llm.rag.embedding import DeterministicHashEmbedder, TeiHttpEmbedder
+    from src.llm.rag.pgvector_store import PgVectorStore
+
+    source = os.environ.get("PHASE2_RAG_SOURCE", "vnstock_news_vnm")
+    embedding_endpoint = os.environ.get("PHASE2_EMBEDDING_ENDPOINT")
+    embedder = (
+        TeiHttpEmbedder(endpoint=embedding_endpoint)
+        if embedding_endpoint
+        else DeterministicHashEmbedder()
+    )
+    with psycopg.connect(os.environ["PHASE2_PG_DSN"]) as conn:
+        pipeline = RagIngestionPipeline(PgVectorStore(conn), embedder)
+        return run_ingestion(pipeline, source)

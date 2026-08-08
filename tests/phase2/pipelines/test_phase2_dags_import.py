@@ -1,0 +1,113 @@
+"""Pins dags/phase2/*.py: zero import-time side effects, phase2_ dag_id
+prefix, no collision with any existing Phase 1 dag_id. Airflow is not
+installed in `.venv` (only in the Airflow container image), so
+``airflow_imports()`` returns ``(None, None)`` here and the DAG object is
+never built — this test instead proves the module *imports cleanly* under
+that fallback, which is exactly the path a socket/filesystem guard would
+also need to survive."""
+
+from __future__ import annotations
+
+import builtins
+import importlib.util
+import re
+import socket
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+PHASE2_DAGS_DIR = REPO_ROOT / "dags" / "phase2"
+PHASE1_DAGS_DIR = REPO_ROOT / "dags"
+
+PHASE2_DAG_FILES = sorted(p for p in PHASE2_DAGS_DIR.glob("*.py") if p.name != "__init__.py")
+
+
+def _load_module(path: Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:  # pragma: no cover - defensive
+        raise ImportError(f"cannot load module at {path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _guarded_import(path: Path, name: str, monkeypatch: pytest.MonkeyPatch):
+    """Blocks real socket connections and disk writes during import — a
+    module that tries either at import time (rather than inside a function,
+    per D4/the DAG zero-side-effect rule) fails loudly here instead of
+    silently working in this sandbox and breaking in a stricter one."""
+    real_open = builtins.open
+
+    def _no_socket(*args, **kwargs):
+        raise AssertionError(f"{path.name} opened a socket at import time")
+
+    def _no_write_open(file, mode="r", *args, **kwargs):
+        if "w" in mode or "a" in mode or "x" in mode:
+            raise AssertionError(f"{path.name} opened {file!r} for writing at import time")
+        return real_open(file, mode, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "socket", _no_socket)
+    monkeypatch.setattr(builtins, "open", _no_write_open)
+    return _load_module(path, name)
+
+
+@pytest.mark.parametrize("path", PHASE2_DAG_FILES, ids=lambda p: p.stem)
+def test_dag_module_imports_without_side_effects(
+    path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _guarded_import(path, f"_phase2_dag_{path.stem}", monkeypatch)
+    assert hasattr(module, "DAG_ID")
+    assert hasattr(module, "DAG")
+
+
+@pytest.mark.parametrize("path", PHASE2_DAG_FILES, ids=lambda p: p.stem)
+def test_dag_id_carries_phase2_prefix_and_matches_filename(path: Path) -> None:
+    module = _load_module(path, f"_phase2_dagid_{path.stem}")
+    assert module.DAG_ID.startswith("phase2_")
+    assert module.DAG_ID == path.stem
+
+
+@pytest.mark.parametrize("path", PHASE2_DAG_FILES, ids=lambda p: p.stem)
+def test_dag_object_is_none_without_airflow_installed(path: Path) -> None:
+    # Documents the actual state of this venv (no airflow) rather than
+    # assuming it — if airflow becomes a `.venv` dependency later this
+    # assertion is the signal to also assert real DAG/task wiring.
+    import importlib.util as _ilu
+
+    module = _load_module(path, f"_phase2_dagnone_{path.stem}")
+    if _ilu.find_spec("airflow") is None:
+        assert module.DAG is None
+
+
+_PHASE2_DAG_IDS = {_load_module(p, f"_phase2_collect_{p.stem}").DAG_ID for p in PHASE2_DAG_FILES}
+
+
+def test_no_phase2_dag_id_collides_with_a_phase1_dag_id() -> None:
+    phase1_dag_ids: set[str] = set()
+    for path in PHASE1_DAGS_DIR.glob("*.py"):
+        if path.parent != PHASE1_DAGS_DIR or path.name.startswith("_"):
+            continue
+        match = re.search(r'^DAG_ID\s*=\s*"([^"]+)"', path.read_text(encoding="utf-8"), re.M)
+        if match:
+            phase1_dag_ids.add(match.group(1))
+    assert phase1_dag_ids, "sanity check: expected to find at least one Phase 1 DAG_ID"
+    assert _PHASE2_DAG_IDS.isdisjoint(phase1_dag_ids)
+
+
+def test_every_phase2_dag_id_is_unique() -> None:
+    ids = [_load_module(p, f"_phase2_uniq_{p.stem}").DAG_ID for p in PHASE2_DAG_FILES]
+    assert len(ids) == len(set(ids))
+
+
+def test_expected_five_dag_files_present() -> None:
+    stems = {p.stem for p in PHASE2_DAG_FILES}
+    assert stems == {
+        "phase2_rag_ingest",
+        "phase2_feature_materialize",
+        "phase2_stream_feature_offline",
+        "phase2_stream_feature_online",
+        "phase2_label_drift_build",
+    }

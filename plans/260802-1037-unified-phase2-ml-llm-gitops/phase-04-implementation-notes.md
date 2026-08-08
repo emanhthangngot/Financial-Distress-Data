@@ -255,11 +255,24 @@ S3 endpoint override via `FEAST_S3_ENDPOINT_URL` / `AWS_*` env pointing at MinIO
 
 Entity: `ticker` (`ValueType.STRING`, join key `ticker`).
 
+Table below is the original design intent. **As implemented (slice 4C,
+2026-08-08), field names are the real Gold column names** — verified against
+`src/transforms/gold/*.py`, which retain every Silver column via
+`dict(row)`/`**row` plus surrogate keys rather than projecting to a fixed
+renamed subset. There is no `risk_bucket` column anywhere in the real Gold
+schema (dropped); `current_ratio`/`debt_to_asset`/`roa`/`z_score` live on
+`obt_company_quarter_risk`, not `fact_financial_statement`, so they moved to
+`company_risk_features`. `close`/`volatility_30d` are real column names
+`close_price`/`volatility_signal` (a boolean flag, not a rolling stdev — see
+`src/drift/generator.py`'s comment on the same real-schema-vs-plan gap for
+drift). See `feature_definitions.py`'s `GOLD_DATASETS`/`FEATURE_VIEW_RATIONALE`
+for the authoritative field lists.
+
 | Feature view | Source | Fields | TTL | One-line business-freshness rationale |
 |---|---|---|---:|---|
-| `company_financial_features` | `FileSource` → MinIO `gold/fact_financial_statement/` | total_assets, total_liabilities, equity, current_ratio, debt_to_asset, z_score, roa | **100 days** | A quarterly filing stays the authoritative view of the company until the next filing lands; 100 d ≈ one quarter plus filing lag, so nothing expires while it is still the newest truth. |
-| `company_risk_features` | `FileSource` → MinIO `gold/obt_company_quarter_risk/` | distress_label_proxy, distress_reason, risk_bucket | **100 days** | Derived from the same quarterly filing, so it must not expire before its parent fact does. |
-| `market_price_features` | `FileSource` → MinIO `gold/fact_market_price/` | close, volume, volatility_30d | **2 days** | A daily bar is superseded by the next trading session; 2 d survives a weekend/holiday gap without ever serving a week-old price as current. |
+| `company_financial_features` | `FileSource` → MinIO `gold/fact_financial_statement/` | total_assets, total_liabilities, equity, current_assets, current_liabilities, ebit, net_income | **100 days** | A quarterly filing stays the authoritative view of the company until the next filing lands; 100 d ≈ one quarter plus filing lag, so nothing expires while it is still the newest truth. |
+| `company_risk_features` | `FileSource` → MinIO `gold/obt_company_quarter_risk/` | current_ratio, debt_to_asset, roa, z_score, distress_label, distress_reason, training_eligible | **100 days** | Derived from the same quarterly filing, so it must not expire before its parent fact does. |
+| `market_price_features` | `FileSource` → MinIO `gold/fact_market_price/` | close_price, volume, daily_return, volatility_signal | **2 days** | A daily bar is superseded by the next trading session; 2 d survives a weekend/holiday gap without ever serving a week-old price as current. |
 | `stream_market_features` | `PushSource` (batch fallback = the file source above) | last_price, event_count_1h, price_change_pct_1h | **1 hour** | Intraday aggregates describe the current trading hour only; a longer TTL would let the online API answer "live" with a stale tick. |
 
 `event_timestamp_column` is set on every source even though only the online

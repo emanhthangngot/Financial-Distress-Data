@@ -225,3 +225,44 @@ def write_drift_report(
 
 def new_run_id() -> str:
     return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+
+
+# Which offline dataset each target_metric is read from — explicit so a
+# third metric added to generator_config.DERIVED_METRIC_NAMES fails loudly
+# here instead of silently defaulting to the wrong dataset.
+_TARGET_METRIC_DATASET = {
+    "debt_to_asset": "financial_statements",
+    "close_price": "market_prices",
+}
+
+
+def run_scenario_against_generator(
+    scenario_name: str,
+    drift_config_path: Path,
+    generator_config_path: Path,
+    profile: str = "ci",
+    output_root: Path = OUTPUT_ROOT,
+) -> tuple[Path, dict[str, Any]]:
+    """Generate deterministic offline data, apply the named drift scenario,
+    write the before/after report. The single orchestrator both
+    scripts/run_phase2_drift_report.py (CLI evidence command) and
+    dags/phase2/phase2_label_drift_build.py (Airflow wrapper) call — kept
+    here rather than in scripts/ because dags/ containers mount src/ and
+    configs/ but not scripts/ (docker-compose.yml's airflow-* volumes)."""
+    from src.drift.generator_config import get_scenario, load_drift_config
+    from src.generator.config import load_generator_config
+    from src.generator.offline import generate_offline_data
+
+    drift_config = load_drift_config(drift_config_path)
+    scenario = get_scenario(drift_config, scenario_name)
+
+    generator_config = load_generator_config(generator_config_path, profile=profile)
+    offline_data = generate_offline_data(generator_config)
+    dataset_name = _TARGET_METRIC_DATASET[scenario.target_metric]
+    rows = getattr(offline_data, dataset_name)
+
+    drifted = apply_drift(rows, scenario)
+    report = build_drift_report(rows, drifted.rows, scenario)
+    markdown = render_drift_report_markdown(report)
+    directory = write_drift_report(report, markdown, run_id=new_run_id(), output_root=output_root)
+    return directory, report
