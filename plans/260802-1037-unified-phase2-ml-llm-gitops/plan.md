@@ -40,7 +40,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 | 1 | [Lock specification and rubric contract](./phase-01-start.md) | 3-4 days | — | In Review |
 | 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 8-12 days | — | Done |
 | 3 | [Bootstrap GKE, GitOps and the evidence harness](./phase-03-bootstrap-gitops-and-aws-evidence-platform.md) | 1.5 days | 0 evening, 1 | In Review |
-| 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 1 day | 2 | Pending |
+| 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 1 day | 2 | In Progress (4A done) |
 | 5 | [Deliver ML track](./phase-05-deliver-ml-track.md) | 4-5 days as retrofit | post-deadline | **Deferred** |
 | 6 | [Deliver LLM, MCP and agent track](./phase-06-deliver-llm-mcp-and-agent-track.md) | 3.5 days | 3, 4 | Pending |
 | 7 | [Complete CI/CD, security and observability](./phase-07-complete-ci-cd-security-and-observability.md) | 0.5 day | 5 | Pending |

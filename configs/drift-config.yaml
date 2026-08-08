@@ -1,0 +1,60 @@
+schema_version: 1
+
+# Phase 2 drift scenarios. Applied as a pure, seeded post-transform over
+# src.generator output rows — src/generator/ itself is never modified
+# (AGENTS.md: Phase 1 is read-only). See src/drift/generator.py.
+#
+# market_stress.target_metric is close_price (not volatility_30d): the
+# generator's offline output is a single snapshot per ticker with no
+# intraday/rolling time series to compute a real 30-day volatility from.
+# observed_stat: std treats the cross-sectional stdev of close_price across
+# all tickers as the volatility proxy — documented substitution, see
+# plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md,
+# section 6 (amend that file's "volatility_30d" mention to match).
+#
+# Neither scenario co-shifts a feature's dependents (e.g. total_liabilities
+# shifts without total_assets/equity moving to match; close_price shifts
+# without high/low_price moving to match) — see the scope-limitation note in
+# src/drift/generator.py's module docstring.
+scenarios:
+  financial_deterioration:
+    seed: 4001
+    start_quarter: 2
+    affected_fraction: 0.5
+    feature_shifts:
+      total_liabilities:
+        mode: multiplicative
+        magnitude: 0.60
+      retained_earnings:
+        mode: multiplicative
+        magnitude: -0.30
+      ebit:
+        mode: multiplicative
+        magnitude: -0.30
+      net_income:
+        mode: additive
+        magnitude: -50000
+    target_metric: debt_to_asset
+    observed_stat: mean
+    expected_direction: increase
+    threshold: 0.10
+
+  market_stress:
+    seed: 4002
+    start_quarter: 1
+    affected_fraction: 0.5
+    feature_shifts:
+      close_price:
+        # Positive multiplicative magnitude on the affected subgroup widens
+        # the gap to the untouched subgroup, raising the cross-sectional
+        # stdev (the observed_stat below) — see src/drift/generator.py's
+        # _apply_shift comment for why this differs from a negative magnitude.
+        mode: multiplicative
+        magnitude: 0.60
+      volume:
+        mode: multiplicative
+        magnitude: 0.40
+    target_metric: close_price
+    observed_stat: std
+    expected_direction: increase
+    threshold: 0.25

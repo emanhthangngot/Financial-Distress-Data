@@ -1,8 +1,12 @@
 ---
 title: "Phase 4: Publish data, Feast stores and RAG corpus"
-status: todo
+status: in_progress
 estimate: "1 day (day 2)"
 ---
+
+**Slice 4A (infra + data) done 2026-08-08** — see
+`phase-04-implementation-notes.md` §13 for the slice plan. Remaining: 4B (RAG),
+4C (Feast + jobs + DAGs), 4D (CI + lineage + evidence).
 
 # Phase 4: Publish data, Feast stores and RAG corpus
 

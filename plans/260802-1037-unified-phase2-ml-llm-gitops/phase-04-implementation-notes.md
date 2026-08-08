@@ -434,14 +434,20 @@ ShiftSpec:     mode ('multiplicative'|'additive'|'variance'), magnitude, ramp
 DriftConfig:   schema_version, scenarios: dict[str, DriftScenario]
 ```
 
-### Two scenarios in `configs/drift-config.yaml`
+### Two scenarios in `configs/drift-config.yaml` (as implemented, slice 4A)
 1. **`financial_deterioration`** — from `start_quarter` onward, on
-   `affected_fraction` of tickers: `total_liabilities` ×(1+ramp),
-   `retained_earnings` ×(1−ramp), `ebit` ×(1−ramp), `net_income` additive shift
-   down. `expected_direction: increase` on `debt_to_asset`, threshold 0.10.
-2. **`market_stress`** — `close` ×(1−ramp), `volume` ×(1+ramp),
-   variance-mode shift on `volatility_30d`. `expected_direction: increase` on
-   `volatility_30d`, threshold 0.25.
+   `affected_fraction` of tickers: `total_liabilities` ×1.60,
+   `retained_earnings` ×0.70, `ebit` ×0.70, `net_income` additive shift down.
+   `expected_direction: increase` on `debt_to_asset` (population mean),
+   threshold 0.10.
+2. **`market_stress`** — `close_price` ×1.60, `volume` ×1.40, on the affected
+   subgroup only. **Deviation from the original design above**: the generator's
+   offline output is a single snapshot per ticker with no intraday/rolling
+   time series, so there is no `volatility_30d` to shift or observe. The
+   implemented proxy is the **cross-sectional stdev of `close_price` across
+   all tickers** — widening the gap between the affected and unaffected
+   subgroups raises this stdev. `expected_direction: increase` on that stdev,
+   threshold 0.25. See `configs/drift-config.yaml`'s header comment.
 
 ### `src/drift/generator.py`
 - `apply_drift(rows, scenario) -> DriftedData` — pure; `random.Random(scenario.seed)`
