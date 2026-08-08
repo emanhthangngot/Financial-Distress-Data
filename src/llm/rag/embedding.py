@@ -73,35 +73,13 @@ class EmbeddingBackendError(RuntimeError):
 def _retry_policy():
     """Shared tenacity retry: transport/5xx/429 only, never on 4xx.
 
-    Defined here rather than in ``src.llm.data_governance`` because that
-    module does not exist yet (phase-04 slice 4B). When 4B lands, hoist this
-    into ``data_governance.retry_policy()`` and import it here instead of
-    keeping a second copy (DRY note left deliberately — see
-    phase-06-embedding-slice-notes.md Phase E3).
+    Hoisted into ``src.llm.data_governance.retry_policy`` now that 4B exists
+    (phase-06-embedding-slice-notes.md Phase E3's deliberate DRY note) — this
+    is a thin re-export so existing call sites in this module don't churn.
     """
-    from tenacity import (
-        retry,
-        retry_if_exception,
-        stop_after_attempt,
-        wait_exponential,
-    )
+    from src.llm.data_governance import retry_policy
 
-    def _is_retryable(exc: BaseException) -> bool:
-        import requests
-
-        if isinstance(exc, (requests.ConnectionError, requests.Timeout)):
-            return True
-        if isinstance(exc, requests.HTTPError):
-            status = exc.response.status_code if exc.response is not None else None
-            return status is not None and (status == 429 or status >= 500)
-        return False
-
-    return retry(
-        retry=retry_if_exception(_is_retryable),
-        stop=stop_after_attempt(5),
-        wait=wait_exponential(multiplier=1, min=1, max=30),
-        reraise=True,
-    )
+    return retry_policy()
 
 
 class TeiHttpEmbedder:
