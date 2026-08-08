@@ -299,8 +299,10 @@ def run_ingestion_task() -> dict[str, Any]:
     embedder, matching D5's CI default; ``PHASE2_RAG_SOURCE`` defaults to
     the first registered source."""
     import os
+    import uuid
 
     import psycopg
+    from pgvector.psycopg import register_vector
 
     from src.llm.rag.embedding import DeterministicHashEmbedder, TeiHttpEmbedder
     from src.llm.rag.pgvector_store import PgVectorStore
@@ -313,10 +315,20 @@ def run_ingestion_task() -> dict[str, Any]:
         else DeterministicHashEmbedder()
     )
     with psycopg.connect(os.environ["PHASE2_PG_DSN"]) as conn:
+        # PgVectorStore's own docstring documents this obligation: without
+        # it, psycopg3 adapts list[float] to float8[] and there is no
+        # implicit float8[] -> vector cast for a real vector(384) column.
+        register_vector(conn)
         pipeline = RagIngestionPipeline(PgVectorStore(conn), embedder)
         result = run_ingestion(pipeline, source)
 
-    from src.governance.phase2_lineage import audit_phase2_lineage
+    from src.governance.phase2_lineage import (
+        audit_phase2_lineage,
+        emit_phase2_lineage_if_configured,
+    )
 
     result["lineage_audit"] = audit_phase2_lineage(pipeline_name="phase2_rag_ingest")
+    result["lineage_emit"] = emit_phase2_lineage_if_configured(
+        run_id=uuid.uuid4().hex, pipeline_name="phase2_rag_ingest"
+    )
     return result

@@ -77,7 +77,13 @@ jobs:
       - name: pytest (fast loop, no Docker services)
         env:
           TEST_SELECTOR: ${{ inputs.test_selector }}
-        run: python -m pytest $TEST_SELECTOR -m "not slow"
+        # Callers pass a selector like "tests/phase2/pipelines -k 'rag or
+        # governance'" — the embedded quotes are only meaningful if the
+        # shell re-parses the string. Unquoted $TEST_SELECTOR here does
+        # plain word-splitting instead, so pytest would receive the quote
+        # characters as literal tokens in its -k expression. eval re-parses
+        # the string as shell input, honoring the embedded quotes.
+        run: eval "python -m pytest $TEST_SELECTOR -m 'not slow'"
 
   build:
     runs-on: ubuntu-latest

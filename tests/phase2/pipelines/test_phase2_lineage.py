@@ -13,6 +13,7 @@ import pytest
 from src.governance.phase2_lineage import (
     audit_phase2_lineage,
     emit_phase2_lineage,
+    emit_phase2_lineage_if_configured,
     load_phase2_governance_model,
 )
 
@@ -89,3 +90,39 @@ def test_audit_narrowed_pipeline_only_carries_its_own_datasets() -> None:
 def test_audit_rejects_unknown_pipeline_name() -> None:
     with pytest.raises(KeyError, match="unknown phase2 pipeline"):
         audit_phase2_lineage(pipeline_name="not_a_real_pipeline")
+
+
+# --- emit_phase2_lineage_if_configured (wired into every real task entrypoint) -
+
+
+def test_emit_if_configured_is_a_true_no_op_when_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The default state in every environment today (no compose service,
+    Airflow env, or image installs `datahub`) — must never import datahub
+    or raise, only report why it skipped."""
+    monkeypatch.delenv("PHASE2_DATAHUB_SERVER", raising=False)
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _blocking_import(name, *args, **kwargs):
+        if name == "datahub" or name.startswith("datahub."):
+            raise AssertionError("must never import datahub when unconfigured")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _blocking_import)
+    report = emit_phase2_lineage_if_configured("run-1", "phase2_rag_ingest")
+    assert report == {"emitted": False, "reason": "PHASE2_DATAHUB_SERVER not set"}
+
+
+def test_emit_if_configured_catches_emit_failure_instead_of_raising(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Governance telemetry must never fail the data task that already
+    committed its work — a bad/unreachable server (or a missing `datahub`
+    package) reports {"emitted": False, ...} instead of raising."""
+    monkeypatch.setenv("PHASE2_DATAHUB_SERVER", "http://unreachable.invalid:9999")
+    report = emit_phase2_lineage_if_configured("run-1", "phase2_rag_ingest")
+    assert report["emitted"] is False
+    assert "reason" in report

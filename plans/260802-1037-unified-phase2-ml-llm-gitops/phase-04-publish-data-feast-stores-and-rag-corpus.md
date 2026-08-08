@@ -9,16 +9,31 @@ estimate: "1 day (day 2)"
 (CI + lineage + evidence) done 2026-08-08 — phase-04 complete** — see
 `phase-04-implementation-notes.md` §13 for the slice plan.
 
-**4D scope note:** this sandbox has no working Docker container networking,
-so live Postgres/pgvector/Redis/Kafka/DataHub/GitHub-Actions runs were not
-possible. CI workflows, the Phase 2 lineage emitter, and the governance
-config were built and tested without live services. Real evidence markdown
-was written only for the 3 rubric rows honestly reproducible without them
-(both drift-report rows + the label-table row — pure Python, deterministic,
-reproduced exactly). The RAG-pipeline and both CI/CD-job evidence rows
-remain `design_only` with no file — they need a live Postgres+pgvector run
-and a real GitHub Actions run respectively, neither achievable here. Not
-fabricated.
+**4D scope note (superseded 2026-08-08):** the original note here claimed no
+working Docker container networking in this sandbox — that stopped being
+true. Docker + `docker compose --profile phase2 up phase2-postgres
+phase2-redis` works. Real evidence markdown now exists for 5 of 7 LLM rows —
+both drift-report rows, the label-table row, the RAG-data-pipeline row (live
+two-run idempotency proof against real pgvector), and the RAG-data-governance
+row (live quarantine proof) — see `docs/phase2/evidence/llm/`. The 2
+remaining rows (`LLM-ci-cd-job-1`, `LLM-ci-cd-job-2`) are blocked on this
+GitHub repo having no `GHCR_TOKEN`/`GITOPS_PAT` secrets configured — the
+reusable `phase2-ci.yaml` workflow now correctly triggers on PR/push but
+fails `startup_failure` at the required-secrets check before any job runs.
+
+**Post-adversarial-review fixes (2026-08-08):** an adversarial Codex review
+of this phase found 5 real runtime bugs, since fixed and regression-tested:
+RAG image was missing its own fixture corpus; `phase2-ci.yaml`'s
+`$TEST_SELECTOR` word-split broke `-k` expressions with embedded quotes;
+`offline_job.py` could silently overwrite a materially different batch under
+the same object key (content-hash bug, caught by the code-reviewer subagent,
+fixed to hash every row field); `run_ingestion_task` never called
+`register_vector` before using `PgVectorStore` against a real `vector(384)`
+column; `emit_phase2_lineage` was defined but never invoked by any task
+entrypoint. All 5 fixed under `emit_phase2_lineage_if_configured` (env-gated,
+error-swallowing) and verified against a live `pgvector/pgvector:pg16`
+container. `PHASE2_DATAHUB_SERVER`/`datahub` package still not wired into any
+deployment surface — emit stays a documented no-op until that lands.
 
 # Phase 4: Publish data, Feast stores and RAG corpus
 
