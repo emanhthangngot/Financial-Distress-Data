@@ -1,0 +1,26 @@
+# Embedding backend registry pin. Read by src/llm/rag/embedding.py's
+# TeiHttpEmbedder and (once it exists, phase-06 proper) by
+# EmbeddingRegistryService.register_version(model_name, dims, digest).
+#
+# `digest` is sha256 over the canonical (sort_keys=True) JSON of every field
+# below except `digest` itself — recompute it, don't hand-edit it. A test
+# (tests/phase2/pipelines/test_embedding_http.py) pins this file's digest to
+# catch silent drift.
+#
+# See plans/260802-1037-unified-phase2-ml-llm-gitops/phase-06-embedding-slice-notes.md
+# D-E7 for the full rationale.
+schema_version: 1
+backends:
+  e5-small-tei:
+    model_name: intfloat/multilingual-e5-small
+    model_revision: 614241f622f53c4eeff9890bdc4f31cfecc418b3
+    dims: 384
+    prefix_scheme:
+      passage: "passage: "
+      query: "query: "
+    normalize: true
+    server:
+      runtime: text-embeddings-inference
+      image_digest: sha256:ad950d30878eceb72aaf32024d26fa2b1d04a75304fa0b4776b49aa1941fea07
+    embedding_version: e5s-tei-v1
+    digest: 418c8f7d466a7ed5ca623cc68c7b7b71a807da8f8b71671ff602d92205bdd2ca
