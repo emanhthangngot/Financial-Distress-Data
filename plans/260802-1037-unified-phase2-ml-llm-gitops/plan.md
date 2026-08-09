@@ -7,7 +7,7 @@ effort: "7 days to submission (LLM track); ML retrofit a further 4-5 days"
 branch: dev
 tags: [coursework, ml, llm, kubernetes, gitops, gcp]
 blockedBy: []
-blocks: []
+blocks: [260809-2039-complete-phase2-llm-submission]
 created: 2026-08-02
 ---
 
@@ -39,12 +39,18 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 |---|-------|----------|-----|--------|
 | 1 | [Lock specification and rubric contract](./phase-01-start.md) | 3-4 days | — | In Review |
 | 2 | [Build product shell, Supabase, RBAC and UX states](./phase-02-build-product-shell-supabase-rbac-and-ux-states.md) | 8-12 days | — | Done |
-| 3 | [Bootstrap GKE, GitOps and the evidence harness](./phase-03-bootstrap-gitops-and-aws-evidence-platform.md) | 1.5 days | 0 evening, 1 | In Review |
-| 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 1 day | 2 | Done (4A-4D; RAG/CI-CD evidence rows still design_only, need live services) |
+| 3 | [Bootstrap GKE, GitOps and the evidence harness](./phase-03-bootstrap-gitops-and-aws-evidence-platform.md) | 1.5 days | 0 evening, 1 | Done (built; 3 evidence files still uncaptured — harvested by the successor plan's phase 1) |
+| 4 | [Publish data, Feast stores and RAG corpus](./phase-04-publish-data-feast-stores-and-rag-corpus.md) | 1 day | 2 | **Done** — 7 LLM rows executed (12/100 pts) |
 | 5 | [Deliver ML track](./phase-05-deliver-ml-track.md) | 4-5 days as retrofit | post-deadline | **Deferred** |
-| 6 | [Deliver LLM, MCP and agent track](./phase-06-deliver-llm-mcp-and-agent-track.md) | 3.5 days | 3, 4 | Pending |
-| 7 | [Complete CI/CD, security and observability](./phase-07-complete-ci-cd-security-and-observability.md) | 0.5 day | 5 | Pending |
-| 8 | [Produce evidence, mock-grade and promote](./phase-08-produce-evidence-mock-grade-and-promote.md) | 1.5 days | 6, 7 | Pending |
+| 6 | [Deliver LLM, MCP and agent track](./phase-06-deliver-llm-mcp-and-agent-track.md) | 3.5 days | 3, 4 | Pending — sequencing owned by the successor plan |
+| 7 | [Complete CI/CD, security and observability](./phase-07-complete-ci-cd-security-and-observability.md) | 0.5 day | 5 | Pending — sequencing owned by the successor plan |
+| 8 | [Produce evidence, mock-grade and promote](./phase-08-produce-evidence-mock-grade-and-promote.md) | 1.5 days | 6, 7 | Pending — sequencing owned by the successor plan |
+
+**Successor execution plan (2026-08-09):**
+[`plans/260809-2039-complete-phase2-llm-submission/`](../260809-2039-complete-phase2-llm-submission/plan.md)
+re-sequences the remaining 88 points of phases 6-8 against measured repository
+and cluster state. This file stays the rubric, architecture and evidence-contract
+authority; that plan owns day-by-day execution order.
 
 ### Seven-day critical path
 
@@ -367,5 +373,89 @@ than implement that unblocked subset this session.
 **Whole-plan consistency:** not reconciled this session — the critical-path
 table above and `phase-06-deliver-llm-mcp-and-agent-track.md` still reflect
 the pre-reorder ordering. Flagged for the next planning session on either file.
+
+### Session 5 — 2026-08-09
+
+**Trigger:** `/ak:plan` — plan the remaining phases after phase-04 closed.
+
+**Decisive facts measured (not assumed):**
+
+1. 7 LLM rows carry real evidence — **12 of 100 points**. 53 rows / 88 points
+   remain. `--matrix-only --strict` passes across all 117 rows.
+2. The Session 4 embedding blocker is **resolved**: GitOps commit `0b2e476`
+   deployed a TEI embedding `InferenceService`, and phase-04's RAG rows
+   (`rag-data-pipeline`, `data-governance`) are executed. The phase-06-before-
+   phase-04 reorder that Session 4 recorded is therefore spent; the remaining
+   ordering is the natural one again.
+3. Phase-03 built Terraform, Ansible roles and sealed-secrets but **wrote no
+   evidence file for any of them**. Three points
+   (`LLM-iac-d-ng-terraform-*`, `LLM-iac-d-ng-ansible-*`,
+   `LLM-security-centralize-secret-management`) are earned in substance and
+   merely uncaptured — cheap and first, not day 6.
+4. The GKE cluster `fsds-evidence` is **hibernated**: both pools resized to 0,
+   ingress LB IP `34.21.242.110` retained. Every capture session must
+   `make gcp-up` first and `make gcp-down` after.
+5. `tests/phase2/requirements/test_llm_ac_01..20.py` exist as metadata contract
+   tests; the per-row assertions are unfilled. `src/llm/api/`, `src/llm/mcp/`,
+   `src/llm/agents/`, `src/drift/api/` and `notebooks/` content do not exist.
+6. User confirmed 7+ days remain and the scope stays **LLM only**; phase-05 ML
+   is still deferred.
+
+**Confirmed decisions:**
+
+- Create a successor execution plan,
+  `plans/260809-2039-complete-phase2-llm-submission/`, owning day-by-day
+  sequencing of the 88 remaining points across six phases. This file keeps the
+  rubric, architecture, cut policy and evidence-contract authority — the rubric
+  detail is not duplicated there.
+- Sequence: harvest built-but-uncaptured evidence (3) → inference platform and
+  model chain (8) → APIs/MCP/agents/registry/sandbox (24) → gateway, UIs and
+  observability (21) → CI/CD, verification, warm-up, A/B (23) → notebooks,
+  novel ideas, docs, SHA stamping, audit and mock grade (9).
+- Session-4 action item "reconcile phase-06's day slot against the reorder" is
+  **closed by fact 2** rather than by editing the day table: the embedding
+  dependency no longer inverts the ordering.
+
+**Whole-plan consistency:** phase table and this log reconciled. The
+"Seven-day critical path" table above is now historical — the successor plan's
+phase table supersedes it for execution ordering.
+
+#### Red-team deltas — four decisions in this file are superseded
+
+`/ak:plan red-team` on the successor plan (2026-08-09, four hostile reviewers,
+15 accepted findings) overturned four things recorded above. All four were
+re-verified against the repository before acceptance; see
+`plans/260809-2039-complete-phase2-llm-submission/plan.md#red-team-review`.
+
+1. **`Mutation score > 80%` is NOT retired.** The Session 2 claim that
+   "canonical row 28 asks that mutation testing be used, not that a score be
+   met" is wrong: the canonical CSV prints `Mutation score > 80%.` verbatim in
+   both the `requirement` and `deliverables` columns of that 2-point row. It is
+   restored as a hard gate (user decision, 2026-08-09). The retired-threshold
+   language in "Timebox and Cut Policy" above no longer applies.
+2. **llm-d is dropped again.** The Session 3 restore assumed ~43 GB allocatable.
+   The real cluster is one `e2-standard-8` (`make gcp-up` restores
+   `primary-pool` only; `secondary_pool_node_count` = 0; `CPUS_ALL_REGIONS`
+   quota 12). Independently, decision D-E3 already recorded "No llm-d in this
+   slice", and the pinned KServe v0.14.1 ships no `LLMInferenceService`. The
+   chain is now KServe `InferenceService` on Knative → agentgateway → kagent
+   `ModelConfig`. KServe and Knative themselves stay restored.
+3. **"GKE has ~43 GB allocatable" (Fixed Architecture Decisions) is wrong in
+   practice.** It describes the top of the quota table, not the pool the
+   hibernate/restore cycle actually brings back.
+4. **The evidence-plane state described above overstates what is deployed.**
+   Eleven GitOps manifests named across phases 3-8 — sealed-secrets, the model
+   server, the agent registry, the sandbox, the global `ModelConfig`, the warm
+   pool, A/B, both observability values files, both MCP charts, and
+   `terraform/envs/evidence/main.tf` — are five-line placeholder comments, and
+   no Argo Application watches `platform/agents`, `platform/llm`,
+   `platform/observability` or `charts/`.
+
+Also established: all 117 rows are still `evidence_type: design_only`, so
+`--require-executed` fails today regardless of evidence quality; the phase-08
+SHA-stamping ritual as written in `phase-08` is non-convergent and its auditor
+rule is being changed; and the GitOps control repo is **private** while this
+repo is public, so evidence links need a grader access grant. Phases 6, 7 and 8
+of this plan are superseded for sequencing by the successor plan.
 
 <!-- slug: unified-phase2-ml-llm-gitops -->

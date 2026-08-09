@@ -73,17 +73,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-phase2.txt
       - name: pytest (fast loop, no Docker services)
         env:
           TEST_SELECTOR: ${{ inputs.test_selector }}
-        # Callers pass a selector like "tests/phase2/pipelines -k 'rag or
-        # governance'" — the embedded quotes are only meaningful if the
-        # shell re-parses the string. Unquoted $TEST_SELECTOR here does
-        # plain word-splitting instead, so pytest would receive the quote
-        # characters as literal tokens in its -k expression. eval re-parses
-        # the string as shell input, honoring the embedded quotes.
-        run: eval "python -m pytest $TEST_SELECTOR -m 'not slow'"
+        # Convert the caller's shell-style selector to a NUL-delimited argv
+        # without executing it, then invoke pytest with a real Bash array.
+        run: |
+          readarray -d '' -t test_args < <(
+            python -c 'import os, shlex; print("\0".join(shlex.split(os.environ["TEST_SELECTOR"])), end="\0")'
+          )
+          python -m pytest "${test_args[@]}" -m "not slow"
 
   build:
     runs-on: ubuntu-latest

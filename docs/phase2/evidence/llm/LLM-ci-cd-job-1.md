@@ -14,7 +14,7 @@ a real push to `dev`, deploying `src/ml/feast/offline_job.py`
 - command: `git push origin dev` (merge of PR #54) triggering `phase2-stream-feature-offline.yaml` on the `push` event; workflow run watched via `gh run list --branch dev` and `gh run view <id> --json jobs`
 - expected_result: all four jobs (`lint`, `test`, `build`, `gitops-pr`) succeed; `build` pushes an immutable digest to GHCR; `gitops-pr` opens a PR in `financial-distress-gitops` bumping `pipelines/stream-feature-offline/digest.txt` to that digest
 - actual_result: run [31300863227](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31300863227) — `lint` success, `test` success, `build` success (pushed `ghcr.io/emanhthangngot/financial-distress-data/stream-feature-offline:94774e59ba72a815005ed2ea93874c1424a24676`, digest `sha256:a0f8f194774d07ce9df95bd0cdbe3481910c8cc3c9ec4f15588658ad6db9cb67`), `gitops-pr` success — opened [financial-distress-gitops#3](https://github.com/emanhthangngot/financial-distress-gitops/pull/3) bumping `pipelines/stream-feature-offline/digest.txt` to the same digest, base `master` (the gitops repo's real default branch — two earlier attempts on the same run chain failed with a hardcoded `--base main` and a missing `packages: write` permission; both fixed in PRs #53/#54 before this run)
-- redaction_status: none — public repo, no secrets or PII in workflow output; `GHCR_TOKEN`/`GITOPS_PAT` values never printed (masked by Actions)
+- redaction_status: reviewed — source repository is public, GitOps repository is private; secret values are masked and absent from this evidence
 
 ## Command output (real run)
 

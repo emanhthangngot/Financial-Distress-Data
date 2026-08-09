@@ -1,5 +1,10 @@
 # Repository map
 
+For an interview-oriented, file-by-file lookup with “question → entrypoint →
+test → command” routing, start with
+[`docs/project-file-map.md`](../project-file-map.md). This document remains the
+compact ownership/generated-artifact map used for repository maintenance.
+
 One row per tracked top-level entry (`git ls-files | awk -F/ '{print $1}' | sort -u`).
 Owner uses AGENTS.md's role convention: `data_engineer`, `ml_engineer`,
 `llm_engineer`, `platform_operator`, `product_engineer`. Re-run the command
