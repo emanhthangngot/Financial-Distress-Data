@@ -154,4 +154,4 @@ jobs:
           gh pr create --repo emanhthangngot/financial-distress-gitops \
             --title "chore(${PIPELINE_NAME}): bump image digest" \
             --body "Automated digest bump from source commit ${GITHUB_SHA}." \
-            --base main --head "$branch"
+            --base master --head "$branch"
