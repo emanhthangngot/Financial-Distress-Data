@@ -332,3 +332,6 @@ def run_ingestion_task() -> dict[str, Any]:
         run_id=uuid.uuid4().hex, pipeline_name="phase2_rag_ingest"
     )
     return result
+
+
+# Touched to trigger phase2-rag-pipeline.yaml after secrets configuration.
