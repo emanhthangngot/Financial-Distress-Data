@@ -148,6 +148,10 @@ jobs:
           git add "pipelines/${PIPELINE_NAME}/digest.txt"
           git commit -m "chore(${PIPELINE_NAME}): bump image digest to ${DIGEST}"
           git push origin "$branch"
-          gh pr create --title "chore(${PIPELINE_NAME}): bump image digest" \
+          # gh defaults to $GITHUB_REPOSITORY (the calling repo) inside
+          # Actions runs, not the git remote of this checked-out subdir —
+          # --repo pins it to the gitops control repo explicitly.
+          gh pr create --repo emanhthangngot/financial-distress-gitops \
+            --title "chore(${PIPELINE_NAME}): bump image digest" \
             --body "Automated digest bump from source commit ${GITHUB_SHA}." \
             --base main --head "$branch"
