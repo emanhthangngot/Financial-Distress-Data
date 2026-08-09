@@ -176,4 +176,4 @@ def build_feature_objects() -> dict[str, Any]:
     }
 
 
-# Touched to trigger the stream-feature-offline/online workflows after the gitops-pr base-branch fix.
+# Touched to trigger stream-feature-offline/online after the gitops-pr base-branch fix.
