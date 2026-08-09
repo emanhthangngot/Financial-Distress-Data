@@ -334,4 +334,4 @@ def run_ingestion_task() -> dict[str, Any]:
     return result
 
 
-# Touched to trigger phase2-rag-pipeline.yaml after secrets configuration.
+# Touched to trigger phase2-rag-pipeline.yaml after the gitops-pr repo fix.
