@@ -82,6 +82,7 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     ),
     "LLM-rag-m-b-o-data-governance-cho-pipe": ("python_ast_symbol:enforce_chunk_governance"),
     "LLM-rag-rag-data-pipeline": "python_ast_symbol:RagIngestionPipeline",
+    "LLM-iac-d-ng-terraform-setup-gke-ho-c-": "text_contains:evidence",
 }
 
 
@@ -1084,6 +1085,7 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-improve-the-data-generato-using-generator-configuration",
     "LLM-rag-m-b-o-data-governance-cho-pipe",
     "LLM-rag-rag-data-pipeline",
+    "LLM-iac-d-ng-terraform-setup-gke-ho-c-",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:
