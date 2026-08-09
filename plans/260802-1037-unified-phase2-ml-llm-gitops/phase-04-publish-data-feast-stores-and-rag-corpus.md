@@ -9,17 +9,25 @@ estimate: "1 day (day 2)"
 (CI + lineage + evidence) done 2026-08-08 — phase-04 complete** — see
 `phase-04-implementation-notes.md` §13 for the slice plan.
 
-**4D scope note (superseded 2026-08-08):** the original note here claimed no
-working Docker container networking in this sandbox — that stopped being
-true. Docker + `docker compose --profile phase2 up phase2-postgres
-phase2-redis` works. Real evidence markdown now exists for 5 of 7 LLM rows —
-both drift-report rows, the label-table row, the RAG-data-pipeline row (live
-two-run idempotency proof against real pgvector), and the RAG-data-governance
-row (live quarantine proof) — see `docs/phase2/evidence/llm/`. The 2
-remaining rows (`LLM-ci-cd-job-1`, `LLM-ci-cd-job-2`) are blocked on this
-GitHub repo having no `GHCR_TOKEN`/`GITOPS_PAT` secrets configured — the
-reusable `phase2-ci.yaml` workflow now correctly triggers on PR/push but
-fails `startup_failure` at the required-secrets check before any job runs.
+**4D scope note (superseded 2026-08-08, closed 2026-08-09):** the original
+note here claimed no working Docker container networking in this sandbox —
+that stopped being true. Docker + `docker compose --profile phase2 up
+phase2-postgres phase2-redis` works. All 7 of 7 LLM rows now have real
+evidence markdown under `docs/phase2/evidence/llm/` — both drift-report rows,
+the label-table row, the RAG-data-pipeline row (live two-run idempotency
+proof against real pgvector), the RAG-data-governance row (live quarantine
+proof), and both CI/CD rows (`LLM-ci-cd-job-1`, `LLM-ci-cd-job-2`), closed
+2026-08-09 once `GHCR_TOKEN`/`GITOPS_PAT` were configured as real repository
+Actions secrets. Getting those last 2 rows from `startup_failure` to a real
+`gitops-pr` PR surfaced and fixed 3 more bugs in `phase2-ci.yaml`: callers
+missing `permissions: packages: write` (repo default `GITHUB_TOKEN` is
+read-only), an uppercase GHCR image tag (`github.repository` preserves
+mixed case, Docker tags must be lowercase), and `gh pr create` defaulting to
+the calling repo and a hardcoded `--base main` when
+`financial-distress-gitops`'s real default branch is `master` — see
+`docs/phase2/evidence/llm/LLM-ci-cd-job-1.md` for the full account and both
+GHCR digests + GitOps PR links. `scripts/audit_phase2_evidence.py
+--matrix-only --strict` passes; phase-04 is complete.
 
 **Post-adversarial-review fixes (2026-08-08):** an adversarial Codex review
 of this phase found 5 real runtime bugs, since fixed and regression-tested:
@@ -125,13 +133,13 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
 
 ## Success Criteria
 
-- [ ] RAG pipeline -> reprocesses an unchanged document -> reuses its chunk and content hashes instead of writing duplicate vectors.
-- [ ] Materialization job -> reruns the same interval -> produces no duplicate offline rows and identical online values.
-- [ ] Stream publisher -> receives new records -> pushes to the offline store and the online store as two separately deployed jobs, each with captured success evidence.
-- [ ] Data generator -> runs with a drift scenario configuration -> produces the configured drift direction and a before/after report with a deterministic seed.
-- [ ] Reviewer -> inspects any RAG chunk -> finds source URI, company, report date, document and content hashes, parser version, embedding model and version, created time, and access class.
-- [ ] Feature consumer -> queries the online store by `ticker` -> receives values whose TTL rationale is documented in the registry definition.
-- [ ] Phase 1 maintainer -> runs the Stage 1 quality gates -> receives the same outputs and contracts as before Phase 2 adapters were added.
+- [x] RAG pipeline -> reprocesses an unchanged document -> reuses its chunk and content hashes instead of writing duplicate vectors.
+- [x] Materialization job -> reruns the same interval -> produces no duplicate offline rows and identical online values.
+- [x] Stream publisher -> receives new records -> pushes to the offline store and the online store as two separately deployed jobs, each with captured success evidence.
+- [x] Data generator -> runs with a drift scenario configuration -> produces the configured drift direction and a before/after report with a deterministic seed.
+- [x] Reviewer -> inspects any RAG chunk -> finds source URI, company, report date, document and content hashes, parser version, embedding model and version, created time, and access class.
+- [x] Feature consumer -> queries the online store by `ticker` -> receives values whose TTL rationale is documented in the registry definition.
+- [x] Phase 1 maintainer -> runs the Stage 1 quality gates -> receives the same outputs and contracts as before Phase 2 adapters were added.
 
 ## Risk Assessment
 
