@@ -14,6 +14,10 @@ on:
       - "src/ml/feast/feature_definitions.py"
       - "dags/phase2/phase2_stream_feature_offline.py"
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   ci:
     uses: ./.github/workflows/phase2-ci.yaml

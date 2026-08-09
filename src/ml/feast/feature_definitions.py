@@ -174,3 +174,6 @@ def build_feature_objects() -> dict[str, Any]:
         "market_price_features": market_price_features,
         "stream_market_features": stream_market_features,
     }
+
+
+# Touched to trigger the stream-feature-offline/online workflows after secrets configuration.
