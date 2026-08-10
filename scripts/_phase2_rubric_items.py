@@ -26,6 +26,7 @@ import csv
 import hashlib
 import io
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -67,6 +68,90 @@ def _first_line(text: str, width: int = 120) -> str:
     """First non-empty line, truncating."""
     line = text.strip().split("\n")[0].strip()
     return line[:width]
+
+
+EXECUTED_BEHAVIORAL_ASSERTIONS = {
+    "LLM-ci-cd-job-1": "yaml_path:jobs.test",
+    "LLM-ci-cd-job-2": "yaml_path:jobs.build",
+    "LLM-improve-the-data-generato-simulate-data-drift": "python_ast_symbol:apply_drift",
+    "LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la": (
+        "python_ast_symbol:run_label_build"
+    ),
+    "LLM-improve-the-data-generato-using-generator-configuration": (
+        "python_ast_symbol:load_drift_config"
+    ),
+    "LLM-rag-m-b-o-data-governance-cho-pipe": ("python_ast_symbol:enforce_chunk_governance"),
+    "LLM-rag-rag-data-pipeline": "python_ast_symbol:RagIngestionPipeline",
+    "LLM-iac-d-ng-terraform-setup-gke-ho-c-": "text_contains:evidence",
+    "LLM-iac-d-ng-ansible-configure-v-deplo": "text_contains:evidence",
+    "LLM-security-centralize-secret-management": "text_contains:secrets",
+    "LLM-a-llm-inference-platform--llm-inference-platform-setup-c": "text_contains:server",
+    "LLM-a-llm-inference-platform--a-custom-model": "python_ast_contains:server",
+    "LLM-a-llm-inference-platform--benchmark-model-server-and-opt": (
+        "python_ast_contains:benchmark"
+    ),
+    "LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen": "text_contains:global",
+    "LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati": "python_ast_contains:app",
+    "LLM-web-api-k-o-d-li-u-user-s-d-ng-async": "python_ast_contains:app",
+    "LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s": "yaml_mapping_contains:feature",
+    "LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v": "python_ast_contains:feature",
+    "LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o": "text_contains:sandbox",
+    "LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr": "text_contains:agentregistry",
+    "LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati": "python_ast_contains:app",
+    "LLM-web-api-cho-real-time-dri-s-d-ng-async": "python_ast_contains:app",
+    "LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s": "yaml_mapping_contains:drift",
+    "LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v": "python_ast_contains:drift",
+    "LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o": "text_contains:sandbox",
+    "LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr": "text_contains:agentregistry",
+    "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori": "text_contains:agentregistry",
+    "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": "python_ast_contains:coordinator",
+    "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": "text_contains:agentregistry",
+}
+
+
+def _behavioral_assertion(rubric_id: str, artifact_path: str) -> str:
+    """Return a safe, declarative artifact assertion for generated tests.
+
+    The assertion is deliberately data, not Python source: requirement tests
+    interpret this small contract without ``eval``.  The token comes from the
+    concrete implementation path so each row checks the behavior-bearing
+    module/chart/notebook it declares rather than merely checking existence.
+    """
+    if rubric_id in EXECUTED_BEHAVIORAL_ASSERTIONS:
+        return EXECUTED_BEHAVIORAL_ASSERTIONS[rubric_id]
+    path = Path(artifact_path)
+    stem = path.stem.lower()
+    if stem in {"main", "chart", "values", "readme", "__init__"} or stem.startswith("test_"):
+        stem = path.parent.name.lower()
+    words = re.findall(r"[a-z0-9]+", stem)
+    meaningful = [word for word in words if word not in {"data", "pipeline", "phase2", "test"}]
+    token = max(meaningful or words, key=len, default="phase2")
+    if not token:
+        token = "phase2"
+    suffix = path.suffix.lower()
+    if suffix == ".py":
+        return f"python_ast_contains:{token}"
+    if suffix == ".ipynb":
+        return f"notebook_code_contains:{token}"
+    if suffix in {".yaml", ".yml"}:
+        return f"yaml_mapping_contains:{token}"
+    return f"text_contains:{token}"
+
+
+def _validate_executed_behavioral_assertion(row: dict[str, object]) -> None:
+    """Executed claims require a reviewed row-specific behavioral contract."""
+    if row.get("evidence_type") != "executed":
+        return
+    rubric_id = str(row.get("rubric_id", ""))
+    expected = EXECUTED_BEHAVIORAL_ASSERTIONS.get(rubric_id)
+    if not expected:
+        raise ValueError(
+            f"{rubric_id}: executed row has no explicit row-specific behavioral assertion"
+        )
+    if row.get("behavioral_assertion") != expected:
+        raise ValueError(
+            f"{rubric_id}: executed row behavioral assertion diverges from reviewed override"
+        )
 
 
 # Keyword phrase lists used by _assign_owner. Order matters: intent rules
@@ -526,7 +611,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a": (
         "llm_engineer",
         "source",
-        "notebooks/agent-mcp-demo.ipynb",
+        "notebooks/agent-understanding-demo.ipynb",
     ),
     "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": (
         "llm_engineer",
@@ -944,6 +1029,7 @@ def _parse_csv(csv_path: Path, track: str) -> list[dict[str, object]]:
                 "source_digest": _source_digest(cells),
                 "artifact_repo": "",
                 "artifact_path": "",
+                "behavioral_assertion": "",
             }
         )
 
@@ -1010,7 +1096,45 @@ for row in _RAW_ML + _RAW_LLM:
         raise ValueError(f"Owner mismatch for {rid}: rubric={row['owner']!r}, map={mapped_owner!r}")
     row["artifact_repo"] = artifact_repo
     row["artifact_path"] = artifact_path
+    row["behavioral_assertion"] = _behavioral_assertion(rid, artifact_path)
     _deduped.append(row)
+
+
+EXECUTED_RUBRIC_IDS = {
+    "LLM-ci-cd-job-1",
+    "LLM-ci-cd-job-2",
+    "LLM-improve-the-data-generato-simulate-data-drift",
+    "LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la",
+    "LLM-improve-the-data-generato-using-generator-configuration",
+    "LLM-rag-m-b-o-data-governance-cho-pipe",
+    "LLM-rag-rag-data-pipeline",
+    "LLM-iac-d-ng-terraform-setup-gke-ho-c-",
+    "LLM-iac-d-ng-ansible-configure-v-deplo",
+    "LLM-security-centralize-secret-management",
+    "LLM-a-llm-inference-platform--llm-inference-platform-setup-c",
+    "LLM-a-llm-inference-platform--a-custom-model",
+    "LLM-a-llm-inference-platform--benchmark-model-server-and-opt",
+    "LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen",
+    "LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati",
+    "LLM-web-api-k-o-d-li-u-user-s-d-ng-async",
+    "LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s",
+    "LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v",
+    "LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o",
+    "LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr",
+    "LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati",
+    "LLM-web-api-cho-real-time-dri-s-d-ng-async",
+    "LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s",
+    "LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v",
+    "LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o",
+    "LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr",
+    "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori",
+    "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n",
+    "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry",
+}
+for row in _deduped:
+    if row["rubric_id"] in EXECUTED_RUBRIC_IDS:
+        row["evidence_type"] = "executed"
+    _validate_executed_behavioral_assertion(row)
 
 if set(EXPLICIT_IMPLEMENTATION) != _seen:
     missing = sorted(_seen - set(EXPLICIT_IMPLEMENTATION))
@@ -1038,6 +1162,7 @@ class Phase2RubricItem:
     source_digest: str = ""
     artifact_repo: str = ""
     artifact_path: str = ""
+    behavioral_assertion: str = ""
 
     @classmethod
     def from_dict(cls, d: dict[str, object]) -> Phase2RubricItem:
@@ -1060,6 +1185,7 @@ class Phase2RubricItem:
             source_digest=str(d.get("source_digest", "")),
             artifact_repo=str(d.get("artifact_repo", "")),
             artifact_path=str(d.get("artifact_path", "")),
+            behavioral_assertion=str(d.get("behavioral_assertion", "")),
         )
 
 
@@ -1160,6 +1286,14 @@ def validate_matrix() -> tuple[list[str], bool]:
                 f"{item.rubric_id}: artifact_path '{item.artifact_path}' not under "
                 f"an allowed GitOps root {GITOPS_ARTIFACT_ROOTS}"
             )
+        if not item.behavioral_assertion:
+            errors.append(f"{item.rubric_id}: missing behavioral_assertion")
+        if item.evidence_type == "executed":
+            expected_assertion = EXECUTED_BEHAVIORAL_ASSERTIONS.get(item.rubric_id)
+            if item.behavioral_assertion != expected_assertion:
+                errors.append(
+                    f"{item.rubric_id}: executed row lacks its reviewed behavioral assertion"
+                )
         if item.evidence_type not in ("executed", "design_only", "stretch"):
             errors.append(f"{item.rubric_id}: bad evidence_type '{item.evidence_type}'")
 
@@ -1176,7 +1310,8 @@ def export_matrix_csv() -> str:
     header = (
         "rubric_id,track,section,points,requirement,proof,deliverables,"
         "owner,test,validation_command,evidence_path,evidence_type,acceptance_id,"
-        "source_file,source_row_index,source_digest,artifact_repo,artifact_path\n"
+        "source_file,source_row_index,source_digest,artifact_repo,artifact_path,"
+        "behavioral_assertion\n"
     )
     lines = []
 
@@ -1197,6 +1332,31 @@ def export_matrix_csv() -> str:
             f'{item.owner},"{test}","{validation_command}",{item.evidence_path},'
             f'{item.evidence_type},"{acceptance_id}",{item.source_file},'
             f"{item.source_row_index},{item.source_digest},{item.artifact_repo},"
-            f"{item.artifact_path}"
+            f'{item.artifact_path},"{_clean(item.behavioral_assertion)}"'
         )
     return header + "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Regenerate the committed matrix, or check it for drift."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="exit 1 when the CSV is stale")
+    args = parser.parse_args(argv)
+    path = DOCS / "phase2" / "rubric-matrix.csv"
+    expected = export_matrix_csv()
+    current = path.read_text(encoding="utf-8") if path.exists() else None
+    if args.check:
+        if current != expected:
+            print(f"stale/missing: {path.relative_to(REPO_ROOT)}", file=sys.stderr)
+            return 1
+        print("✅ rubric matrix is up to date.")
+        return 0
+    path.write_text(expected, encoding="utf-8")
+    print(f"✅ wrote {path.relative_to(REPO_ROOT)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
