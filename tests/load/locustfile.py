@@ -34,7 +34,7 @@ class FeatureApiUser(HttpUser):
     def lookup_features(self) -> None:
         response = self.client.post(
             FEATURE_PATH,
-            json={"user_id": "AAA", "feature_names": ["company_features:risk_score"]},
+            json={"user_id": "VNM", "feature_names": ["company_risk_features:z_score"]},
             auth=self.auth,
             name="POST /v1/features/by-id",
             catch_response=True,
