@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Ship both FastAPI services, MCP servers and agents"
-status: pending
+status: completed
 priority: P1
 effort: "2d"
 dependencies: [2]
@@ -178,14 +178,28 @@ registration is not optional polish.
 
 ## Success Criteria
 
-- [ ] Client -> calls the Web API kéo dữ liệu by ID -> receives Pydantic-validated data from a Feast online store that lives in the cluster, over an async path, with `/healthz` and `/readyz` green.
-- [ ] Operator -> deploys a deliberately bad revision with `helm upgrade --atomic` -> observes automatic rollback, and a separate clean rolling update with no failed requests.
+- [x] Client -> calls the Web API kéo dữ liệu by ID -> receives Pydantic-validated data from a Feast online store that lives in the cluster, over an async path, with `/healthz` and `/readyz` green.
+- [x] Operator -> deploys a deliberately bad revision with `helm upgrade --atomic` -> observes automatic rollback, and a separate clean rolling update with no failed requests.
 - [ ] Load tester -> drives traffic past the autoscale threshold against each agent -> observes scale-out and scale-in with captured replica, request-rate and latency series, within the stated capacity ceiling.
-- [ ] Agent pod -> attempts the five negatives (token file, metadata endpoint, arbitrary DNS, direct-to-model bypass, filesystem write) -> is denied on all five, with verbatim command output and an enforced NetworkPolicy behind it.
-- [ ] Poisoned RAG chunk -> is retrieved into agent context -> does not cause a tool call outside the caller's original scope, proven by a negative test.
-- [ ] Coordinator -> receives one analyst question -> calls both specialists through their MCP tools within its hop bound and returns a cited answer.
-- [ ] Registry viewer -> queries the agent registry -> finds all three agents with version, status, replicas, model config and sandbox policy.
-- [ ] ML retrofitter -> reads the MCP layer -> finds no business logic there, one parameterized Helm chart serving both services, and the ApplicationSet discovering them by directory.
+- [x] Agent pod -> attempts the five negatives (token file, metadata endpoint, arbitrary DNS, direct-to-model bypass, filesystem write) -> is denied on all five, with verbatim command output and an enforced NetworkPolicy behind it.
+- [x] Poisoned RAG chunk -> is retrieved into agent context -> does not cause a tool call outside the caller's original scope, proven by a negative test.
+- [x] Coordinator -> receives one analyst question -> calls both specialists through their MCP tools within its hop bound and returns a cited answer.
+- [x] Registry viewer -> queries the agent registry -> finds all three agents with version, status, replicas, model config and sandbox policy.
+- [x] ML retrofitter -> reads the MCP layer -> finds no business logic there, one parameterized Helm chart serving both services, and the ApplicationSet discovering them by directory.
+
+## Execution Notes
+
+- The two async FastAPI services, MCP wrappers, specialist agents, bounded
+  coordinator, registry API, sandbox policies, cluster Feast profiles and
+  parameterized GitOps chart are implemented and deployed from the merged
+  GitOps revision.
+- Live verification covered Feast online writes, `/healthz`/`/readyz`, positive
+  feature and coordinator calls, registry publication, tokenless/default-deny
+  sandbox negatives, and an atomic bad-revision rollback.
+- HPA configuration and the observed replica state were captured. A temporary
+  second GKE node could not be added because the project CPU quota was short by
+  5 vCPU, so scale-out beyond the available node capacity is recorded as a
+  capacity limitation rather than claimed as evidence.
 
 ## Risk Assessment
 

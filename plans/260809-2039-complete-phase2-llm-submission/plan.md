@@ -84,7 +84,7 @@ filenames are contractually `docs/phase2/evidence/llm/<rubric_id>.md`.
 |---|-------|-------:|------|--------|
 | 1 | [Reconcile contracts, capacity and platform gaps](./phase-01-start.md) | 3 | 1.5 | In Progress |
 | 2 | [Stand up inference platform and model chain](./phase-02-stand-up-inference-platform-and-model-chain.md) | 8 | 1 | Pending |
-| 3 | [Ship both FastAPI services, MCP servers and agents](./phase-03-ship-both-fastapi-services-mcp-servers-and-agents.md) | 24 | 2 | Pending |
+| 3 | [Ship both FastAPI services, MCP servers and agents](./phase-03-ship-both-fastapi-services-mcp-servers-and-agents.md) | 24 | 2 | Completed |
 | 4 | [Complete gateway, UIs and observability](./phase-04-complete-gateway-uis-and-observability.md) | 21 | 1.5 | Pending |
 | 5 | [Close CI/CD, security and verification gates](./phase-05-close-ci-cd-security-and-verification-gates.md) | 23 | 1.5 | Pending |
 | 6 | [Produce evidence, stamp SHAs and mock-grade](./phase-06-produce-evidence-stamp-shas-and-mock-grade.md) | 9 | 1.5 | Pending |

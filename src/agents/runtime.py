@@ -104,6 +104,7 @@ async def dependencies_ready(role: str) -> tuple[bool, list[str]]:
         "MODEL_BASE_URL",
         "http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1",
     ).rstrip("/")
+
     def service_health(url: str) -> str:
         parsed = urlsplit(url)
         return f"{parsed.scheme}://{parsed.netloc}/healthz"

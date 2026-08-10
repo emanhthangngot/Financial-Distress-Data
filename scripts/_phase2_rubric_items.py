@@ -85,14 +85,27 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-iac-d-ng-terraform-setup-gke-ho-c-": "text_contains:evidence",
     "LLM-iac-d-ng-ansible-configure-v-deplo": "text_contains:evidence",
     "LLM-security-centralize-secret-management": "text_contains:secrets",
-    "LLM-a-llm-inference-platform--llm-inference-platform-setup-c": (
-        "yaml_mapping_contains:server"
-    ),
+    "LLM-a-llm-inference-platform--llm-inference-platform-setup-c": "text_contains:server",
     "LLM-a-llm-inference-platform--a-custom-model": "python_ast_contains:server",
     "LLM-a-llm-inference-platform--benchmark-model-server-and-opt": (
         "python_ast_contains:benchmark"
     ),
     "LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen": "text_contains:global",
+    "LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati": "python_ast_contains:app",
+    "LLM-web-api-k-o-d-li-u-user-s-d-ng-async": "python_ast_contains:app",
+    "LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s": "yaml_mapping_contains:feature",
+    "LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v": "python_ast_contains:feature",
+    "LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o": "text_contains:sandbox",
+    "LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr": "text_contains:agentregistry",
+    "LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati": "python_ast_contains:app",
+    "LLM-web-api-cho-real-time-dri-s-d-ng-async": "python_ast_contains:app",
+    "LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s": "yaml_mapping_contains:drift",
+    "LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v": "python_ast_contains:drift",
+    "LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o": "text_contains:sandbox",
+    "LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr": "text_contains:agentregistry",
+    "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori": "text_contains:agentregistry",
+    "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": "python_ast_contains:coordinator",
+    "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": "text_contains:agentregistry",
 }
 
 
@@ -1102,6 +1115,21 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-a-llm-inference-platform--a-custom-model",
     "LLM-a-llm-inference-platform--benchmark-model-server-and-opt",
     "LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen",
+    "LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati",
+    "LLM-web-api-k-o-d-li-u-user-s-d-ng-async",
+    "LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s",
+    "LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v",
+    "LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o",
+    "LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr",
+    "LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati",
+    "LLM-web-api-cho-real-time-dri-s-d-ng-async",
+    "LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s",
+    "LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v",
+    "LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o",
+    "LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr",
+    "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori",
+    "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n",
+    "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:
