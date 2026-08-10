@@ -77,3 +77,24 @@ State before editing code or pipeline configs:
 ## Codex-Specific Tooling
 
 Codex sessions and Claude Code sessions use the installed `ak:*` skill catalog instead — see `CLAUDE.md`.
+
+## Mandatory Skill Activation
+
+Before acting, classify the request using the installed skill catalog and the local routing rules in this file.
+
+- User names a skill -> use that skill.
+- Codebase discovery or structure questions -> use `ak:scout`.
+- Bug investigation -> use `ak:debug`; bug implementation -> use `ak:fix`.
+- Feature or configuration implementation -> use `ak:plan` for multi-step work, then `ak:cook`; execute an existing plan directly when one is provided.
+- Test strategy or test execution -> use `ak:test`; code review -> use `ak:code-review`.
+- Documentation changes -> use `ak:docs`; frontend, backend, database, infrastructure, security, AI, media, or office-file work -> use the matching domain skill.
+- Direct explanations and simple read-only answers -> no skill is required; state that decision when it is not obvious.
+
+When a skill is selected:
+
+1. Read its complete `SKILL.md` before taking task actions.
+2. Announce the selected skill and its purpose in the session progress update (`commentary` when available).
+3. Follow its workflow, including required verification and review gates.
+4. If multiple skills apply, use the smallest ordered set that covers the request.
+
+Do not invoke skills merely for ceremony. Do not skip a clearly matching skill because the task appears small; use its lightweight path when available.
