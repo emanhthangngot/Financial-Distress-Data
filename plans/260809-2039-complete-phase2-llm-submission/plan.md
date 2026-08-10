@@ -1,6 +1,6 @@
 ---
 title: "Complete Phase2 LLM Submission"
-description: "Execution roadmap for the 88 unscored LLM rubric points that remain after phase-04 closed: contract reconciliation, inference platform, both Web APIs as MCP tools, three agents, gateway UIs, observability, CI/CD, verification gates, and the frozen evidence submission."
+description: "Execution roadmap for the 88 unscored LLM rubric points that remain after phase-03 implementation, with phase-04 source work statically verified but blocked on deployment-time evidence: contract reconciliation, inference platform, both Web APIs as MCP tools, three agents, gateway UIs, observability, CI/CD, verification gates, and the frozen evidence submission."
 status: in-progress
 priority: P1
 effort: "9 focused days (re-budgeted after the 2026-08-09 red team)"
@@ -17,7 +17,8 @@ created: 2026-08-09
 
 Active phase: **explicit Phase 2**, LLM track only. This plan is the execution
 roadmap for what is left after `plans/260802-1037-unified-phase2-ml-llm-gitops/`
-closed phase-01 through phase-04.
+closed phase-01 through phase-03, plus the deployment-time evidence still
+blocking phase-04.
 
 That plan stays the **rubric and architecture authority** — fixed architecture
 decisions, the evidence contract, and the phase-05 ML deferral contract live
@@ -85,7 +86,7 @@ filenames are contractually `docs/phase2/evidence/llm/<rubric_id>.md`.
 | 1 | [Reconcile contracts, capacity and platform gaps](./phase-01-start.md) | 3 | 1.5 | In Progress |
 | 2 | [Stand up inference platform and model chain](./phase-02-stand-up-inference-platform-and-model-chain.md) | 8 | 1 | Pending |
 | 3 | [Ship both FastAPI services, MCP servers and agents](./phase-03-ship-both-fastapi-services-mcp-servers-and-agents.md) | 24 | 2 | Completed |
-| 4 | [Complete gateway, UIs and observability](./phase-04-complete-gateway-uis-and-observability.md) | 21 | 1.5 | Pending |
+| 4 | [Complete gateway, UIs and observability](./phase-04-complete-gateway-uis-and-observability.md) | 21 | 1.5 | Blocked — pending live evidence |
 | 5 | [Close CI/CD, security and verification gates](./phase-05-close-ci-cd-security-and-verification-gates.md) | 23 | 1.5 | Pending |
 | 6 | [Produce evidence, stamp SHAs and mock-grade](./phase-06-produce-evidence-stamp-shas-and-mock-grade.md) | 9 | 1.5 | Pending |
 
@@ -99,6 +100,28 @@ exist in-cluster. If 9 days is not available, execute the cut ladder below
 deliberately rather than discovering the overrun on day 7.
 
 Dependencies are linear: 1 → 2 → 3 → 4, phase 5 needs 3 and 4, phase 6 needs all.
+
+## Phase 04 synchronization — 2026-08-10
+
+- Project manager -> records Phase 04 implementation -> source and private
+  GitOps worktrees contain the web standalone/live-plane wiring, shared
+  telemetry/redaction, gateway routes, auth/TLS/rate-limit manifests, and
+  Prometheus/Loki/Jaeger/OTel/dashboard wiring -> static implementation is
+  present, with the file-level inventory in
+  [phase 04](./phase-04-complete-gateway-uis-and-observability.md).
+- Project manager -> records verification -> Python source tests are 16/16
+  passed, web behavior tests are 19/19 passed with coverage disabled, web
+  typecheck/build passed, GitOps Helm/YAML checks passed, and both diffs are
+  whitespace-clean -> the default narrow web test command still exits 1 on
+  the package-wide 90% coverage gate.
+- Project manager -> keeps Phase 04 blocked -> the active cluster has no nodes,
+  only the prior `hello-web` route/certificates, `platform-observability` is
+  `OutOfSync/Healthy`, and Phase 04 pods are `Pending` -> no live route/auth/
+  TLS/observability proof exists.
+- Project manager -> records deployment blockers -> auth ciphertexts remain
+  placeholders, the web chart digest is empty, GitOps changes are uncommitted,
+  and all 13 Phase 04 evidence filenames are missing -> no executed-evidence
+  claim or evidence-row flip is made.
 
 ## Cut Ladder
 
