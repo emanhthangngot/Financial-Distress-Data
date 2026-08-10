@@ -1,0 +1,31 @@
+name: Phase 2 — coordinator agent
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "src/agents/**"
+      - "tests/phase2/agents/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "src/agents/**"
+      - "tests/phase2/agents/**"
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/phase2-ci.yaml
+    with:
+      deployables: >-
+        [{"name":"coordinator","image_context":".","dockerfile":"apps/feature-mcp/Dockerfile",
+        "test_selector":"tests/phase2/agents -k 'coordinator'",
+        "lint_paths":"src/agents tests/phase2/agents",
+        "gitops_path":"platform/agents/agent-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"Deployment","gitops_target_selector":"coordinator"}]
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

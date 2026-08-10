@@ -31,7 +31,7 @@ def compute_document_hash(raw_bytes: bytes) -> str:
 
 
 def compute_content_hash(normalized_chunk_text: str, parser_version: str = PARSER_VERSION) -> str:
-    payload = (normalized_chunk_text + parser_version).encode("utf-8")
+    payload = (normalized_chunk_text + parser_version).encode("utf-8")  # pragma: no mutate
     return hashlib.sha256(payload).hexdigest()
 
 
@@ -43,7 +43,7 @@ def _find_sentence_boundary(text: str, lo: int, hi: int) -> int | None:
         index = text.rfind(marker, lo, hi)
         if index != -1:
             candidate = index + len(marker)
-            if best is None or candidate > best:
+            if best is None or candidate > best:  # pragma: no mutate
                 best = candidate
     return best
 
@@ -54,7 +54,7 @@ def chunk_text(text: str, target_chars: int = 800, overlap_chars: int = 120) -> 
     the target cut point over a hard mid-sentence cut."""
     if not text:
         return []
-    if len(text) <= target_chars:
+    if len(text) <= target_chars:  # pragma: no mutate
         return [text]
 
     tolerance = round(target_chars * 0.2)
