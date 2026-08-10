@@ -25,6 +25,27 @@ from psycopg import Rollback, sql
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MIGRATIONS_DIR = REPO_ROOT / "supabase" / "migrations"
 
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Stamp every test collected from this package with postgres + slow.
+
+    One place, no per-file churn, cannot drift as files are added to this
+    package. The PHASE2_REQUIRE_PG availability skip below is unrelated and
+    stays untouched — the skip answers "can this machine run it at all?",
+    this marker answers "do I want to run it right now?".
+
+    A conftest.py hook of this name is registered session-wide, not scoped
+    to its own directory — pytest calls every implementation with the full
+    item list. Filter explicitly so a sibling package's tests are never
+    stamped.
+    """
+    package_dir = Path(__file__).resolve().parent
+    for item in items:
+        if package_dir in Path(str(item.fspath)).resolve().parents:
+            item.add_marker(pytest.mark.postgres)
+            item.add_marker(pytest.mark.slow)
+
+
 AUTH_STUB_SQL = """
 create schema if not exists auth;
 
@@ -165,7 +186,7 @@ SEED_USERS: tuple[tuple[str, str], ...] = (
 def seeded_db(phase2_conn: psycopg.Connection):
     """Reset seed rows before each test so tests stay independent."""
     phase2_conn.execute(
-        "truncate audit_log, saved_reports, outbox_events, "
+        "truncate audit_log, saved_reports, outbox_events, ai_request_usage, "
         "evidence_session_transition, evidence_session, profiles cascade"
     )
     phase2_conn.execute("delete from auth.users")

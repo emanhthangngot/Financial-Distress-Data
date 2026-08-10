@@ -22,6 +22,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
+      - name: Package installability
+        run: |
+          pip install -e .
+          cd /tmp && python -c "import src.ml.contracts; print('ok')"
       - name: Install Postgres server binaries
         # The Phase 2 RLS suite spins up its own ephemeral cluster with
         # initdb/pg_ctl. Without these on PATH the suite skips itself, which
@@ -48,3 +52,20 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Install Playwright browser
+        run: pnpm --filter @distresslens/web exec playwright install --with-deps chromium
+      - name: Accessibility gate
+        run: |
+          pnpm --filter @distresslens/web e2e:a11y
+          pnpm --filter @distresslens/web e2e:a11y-roles
+      - name: Upload coverage report
+        # pnpm test already fails the job below threshold; this just makes the
+        # per-file breakdown reviewable without re-running it locally.
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            apps/web/coverage
+            packages/contracts/coverage
+          retention-days: 14

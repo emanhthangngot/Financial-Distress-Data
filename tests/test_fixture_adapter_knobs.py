@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
-from src.generators.config_loader import (
+from src.collectors.fixture_config import (
     CardinalityConfig,
     DuplicationConfig,
     EvolutionConfig,
-    GeneratorConfig,
+    FixtureGeneratorConfig,
     SkewConfig,
 )
+from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 
 
-def _enabled_config(**overrides) -> GeneratorConfig:
-    base = GeneratorConfig(
+def _enabled_config(**overrides) -> FixtureGeneratorConfig:
+    base = FixtureGeneratorConfig(
         enabled=True,
         fixture_seed=42,
         skew=SkewConfig(
@@ -46,7 +46,7 @@ def test_legacy_default_behavior_when_config_is_none() -> None:
 
 
 def test_legacy_default_behavior_when_config_disabled() -> None:
-    adapter = VnstockFixtureAdapter(config=GeneratorConfig(enabled=False))
+    adapter = VnstockFixtureAdapter(config=FixtureGeneratorConfig(enabled=False))
     companies = adapter.fetch_companies()
     assert [c["ticker"] for c in companies] == ["AAA", "BBB"]
 

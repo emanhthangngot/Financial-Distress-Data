@@ -1,9 +1,16 @@
 # ADR-005: Feast Stores — Structured and RAG
 
-- Status: Accepted
+- Status: **Amended by [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md) (2026-08-07)**
 - Date: 2026-08-02
 - Deciders: Phase 2 architecture review, data engineer
 - Related: `docs/phase2/architecture.md`, `plan.md` phase-04
+
+> **Amended:** store backends move in-cluster — Redis for the structured online
+> store (not ElastiCache Valkey), PGVector in-cluster (not RDS), local object
+> storage for offline data and version manifests (not S3). Everything else
+> stands. The offline store is still defined with correct `event_timestamp`
+> semantics even though only the online store is read during the LLM-only week;
+> that is load-bearing for the deferred ML retrofit.
 
 ## Context
 

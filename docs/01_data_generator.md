@@ -338,7 +338,7 @@ The fixture adapter is parameterised by an opt-in `GeneratorConfig` block at the
 ### Loader and factory helpers
 
 - `load_generator_config(path: Path | None = None) -> GeneratorConfig` reads `configs/collector_config.yaml` (or the path supplied) and returns the frozen config. Missing fields fall back to the dataclass defaults.
-- `plan_burst(events, window_seconds, record_count)`, `plan_late_arrivals(events, max_lag_seconds)`, and `inject_streaming_duplicates(events, rate)` live in `src/generators/streaming_problem_factory.py` and are pure functions over `StreamEvent` lists. They are used by the evidence writer to summarise the streaming problem distribution.
+- `plan_burst(events, window_seconds, record_count)`, `plan_late_arrivals(events, max_lag_seconds)`, and `inject_streaming_duplicates(events, rate)` live in `src/streaming/problem_factory.py` and are pure functions over `StreamEvent` lists. They are used by the evidence writer to summarise the streaming problem distribution.
 
 ### Evidence artifact
 

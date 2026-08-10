@@ -7,12 +7,17 @@ AGENTS.md
 .mcp.json
 .pytest_cache/
 .ruff_cache/
+.coverage
+mutants/
 .venv/
+.venv-phase2/
 *.pyc
 *.egg-info/
+build/
 outputs/**/*.parquet
 outputs/**/*.csv
 outputs/**/*.json
+outputs/**/*.md
 warehouse.db
 docs/_plans/
 node_modules/

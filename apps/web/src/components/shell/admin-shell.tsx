@@ -1,7 +1,6 @@
 import type { PlaneHealth, Provenance, Role } from "@distresslens/contracts";
 import type { ReactNode } from "react";
 import { BrandLockup, BrandMark } from "./brand-mark";
-import { EvidenceRibbon } from "./evidence-ribbon";
 import {
   AgentIcon,
   CostIcon,
@@ -12,8 +11,9 @@ import {
   SettingsIcon,
   UsersIcon,
 } from "./icons";
-import { NavRail, type NavItem } from "./nav-rail";
+import { NavRail, type NavGroup, type NavItem } from "./nav-rail";
 import { PlaneStatusPill } from "./plane-status";
+import { SystemStatus } from "./system-status";
 import { UserMenu } from "./user-menu";
 
 /**
@@ -24,13 +24,28 @@ import { UserMenu } from "./user-menu";
  * it is expressed in the shell, not just in the route path.
  */
 
-const ADMIN_NAV: readonly NavItem[] = [
-  { label: "Vận hành", href: "/ops/evidence", icon: <OperationsIcon /> },
-  { label: "Dữ liệu", href: null, icon: <DataIcon />, unavailableNote: "Sắp có" },
-  { label: "Mô hình & Agent", href: "/agents/registry", icon: <AgentIcon /> },
-  { label: "Thử nghiệm A/B", href: null, icon: <ExperimentIcon />, unavailableNote: "Sắp có" },
-  { label: "Người dùng", href: null, icon: <UsersIcon />, unavailableNote: "Sắp có" },
-  { label: "Chi phí & Audit", href: null, icon: <CostIcon />, unavailableNote: "Sắp có" },
+const ADMIN_NAV: readonly NavGroup[] = [
+  {
+    label: "Vận hành",
+    items: [
+      { label: "Evidence & GitOps", href: "/ops/evidence", icon: <OperationsIcon /> },
+      { label: "Dữ liệu", href: null, icon: <DataIcon />, unavailableNote: "Sắp có" },
+    ],
+  },
+  {
+    label: "Mô hình",
+    items: [
+      { label: "Sổ đăng ký agent", href: "/agents/registry", icon: <AgentIcon /> },
+      { label: "Thử nghiệm A/B", href: null, icon: <ExperimentIcon />, unavailableNote: "Sắp có" },
+    ],
+  },
+  {
+    label: "Quản trị",
+    items: [
+      { label: "Người dùng", href: null, icon: <UsersIcon />, unavailableNote: "Sắp có" },
+      { label: "Chi phí & Audit", href: null, icon: <CostIcon />, unavailableNote: "Sắp có" },
+    ],
+  },
 ];
 
 const ADMIN_NAV_FOOTER: readonly NavItem[] = [
@@ -42,6 +57,8 @@ export interface AdminShellProps {
   provenance: Provenance;
   environmentLabel: string;
   planeHealth: PlaneHealth;
+  /** Sync time shown in the header status, e.g. "23/05/2025 08:46". */
+  syncedAtLabel: string;
   /** Desired GitOps commit, shown in the chrome so it is never a click away. */
   desiredCommit: string;
   notificationCount?: number;
@@ -53,6 +70,7 @@ export function AdminShell({
   provenance,
   environmentLabel,
   planeHealth,
+  syncedAtLabel,
   desiredCommit,
   notificationCount = 0,
   children,
@@ -68,7 +86,7 @@ export function AdminShell({
           <BrandLockup suffix="Admin" />
         </div>
         <div className="flex-1">
-          <NavRail items={ADMIN_NAV} footerItems={ADMIN_NAV_FOOTER} label="Điều hướng vận hành" />
+          <NavRail groups={ADMIN_NAV} footerItems={ADMIN_NAV_FOOTER} label="Điều hướng vận hành" />
         </div>
       </div>
 
@@ -82,7 +100,7 @@ export function AdminShell({
               </summary>
               <div className="absolute inset-x-0 top-[57px] z-(--z-drawer) bg-ink-900 shadow-(--shadow-overlay)">
                 <NavRail
-                  items={ADMIN_NAV}
+                  groups={ADMIN_NAV}
                   footerItems={ADMIN_NAV_FOOTER}
                   label="Điều hướng vận hành"
                 />
@@ -114,6 +132,7 @@ export function AdminShell({
                 Desired commit:
                 <code className="font-mono text-text-body">{desiredCommit}</code>
               </span>
+              <SystemStatus provenance={provenance} syncedAtLabel={syncedAtLabel} />
               <UserMenu
                 displayName={user.displayName}
                 role={user.role}
@@ -122,8 +141,6 @@ export function AdminShell({
             </div>
           </div>
         </header>
-
-        <EvidenceRibbon provenance={provenance} />
 
         <main id="main-content" className="min-w-0 flex-1 px-4 py-5 lg:px-6 lg:py-6">
           {children}

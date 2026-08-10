@@ -91,6 +91,22 @@ class TestPhase1ContractNoMutation:
         dag_errors = mod._phase1_mutation_from_changed(["dags/01_collect_company_master_data.py"])
         assert dag_errors, "an existing Phase 1 DAG change must fail"
 
+        # A diff confined to the opt-in Flink job home carve-out must pass:
+        # it holds no Phase 1 burst/late-arrival/dedup logic by design.
+        flink_ok = mod._phase1_mutation_from_changed(
+            [
+                "src/streaming/flink/jobs/price_event_job.py",
+                "src/streaming/flink/jobs/README.md",
+            ]
+        )
+        assert flink_ok == [], f"expected no Phase 1 mutation, got {flink_ok}"
+
+        # But any other file directly under src/streaming/ must still fail.
+        streaming_errors = mod._phase1_mutation_from_changed(
+            ["src/streaming/kafka_to_bronze_consumer.py"]
+        )
+        assert streaming_errors, "a core streaming file change must still fail"
+
 
 class TestRubricMatrix:
     """Validate rubric matrix completeness and invariants."""
@@ -180,6 +196,25 @@ class TestRubricMatrix:
                 if not row.get(field, "").strip():
                     missing.append(f"{rid}: missing '{field}'")
         assert not missing, "\n".join(missing)
+
+    def test_no_rubric_id_is_a_prefix_of_another(self) -> None:
+        """No rubric_id may be a substring of another's.
+
+        `validation_command` selects rows with `pytest -k '<rubric_id>'`,
+        which is a substring match, not an exact/anchored one. If one row's id
+        is a prefix of another's (e.g. a blind `-1` dedup suffix on an
+        otherwise-identical slug), `-k` selects both and phase-08's
+        `_audit_behavior_validations` mis-attributes one row's failure to the
+        other. Caught 2026-08-07 for two such pairs; see
+        `_COLLISION_RENAMES` in scripts/_phase2_rubric_items.py for the fix.
+        """
+        import csv
+        import io
+
+        reader = csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8")))
+        ids = [row["rubric_id"] for row in reader]
+        collisions = [(a, b) for a in ids for b in ids if a != b and b.startswith(a)]
+        assert not collisions, f"rubric_id prefix collisions (breaks -k selection): {collisions}"
 
     def test_contract_and_behavior_commands_are_distinct(self) -> None:
         """Every row separates mapping checks from feature behavior proof."""
@@ -624,6 +659,43 @@ class TestLinterSmoke:
         assert result.returncode == 1
         assert "requires --require-executed" in result.stdout
 
+    def test_track_filter_scopes_executed_gate_to_llm(self) -> None:
+        """`--track LLM` must report zero ML-prefixed findings under --require-executed."""
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, str(AUDIT_SCRIPT), "--require-executed", "--track", "LLM"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        ml_findings = [line for line in result.stdout.splitlines() if re.match(r"^ML-", line)]
+        assert not ml_findings, f"--track LLM must not scope ML rows, found: {ml_findings[:5]}"
+
+    def test_track_never_scopes_canonical_coverage(self) -> None:
+        """`--track LLM` on --matrix-only must not shrink the 117-row requirement.
+
+        Pins the unfiltered call sites (_audit_matrix, _audit_canonical_coverage)
+        for real: passing --track here would still have to fail if either one
+        started consuming the scoped list instead of the full matrix.
+        """
+        import subprocess
+        import sys
+
+        result = subprocess.run(
+            [sys.executable, str(AUDIT_SCRIPT), "--matrix-only", "--strict", "--track", "LLM"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        assert result.returncode == 0, (
+            "matrix-only gate must still require all 117 canonical rows even "
+            f"with --track LLM passed: {result.stdout[-400:]}"
+        )
+
     def test_missing_git_base_fails_closed(self) -> None:
         """An unresolvable `--git-base` must fail the gate, not skip it.
 
@@ -888,3 +960,309 @@ class TestLinterSmoke:
         assert (
             "implementation artifact not found" in result.stdout
         ), f"failure must name the missing artifact, got: {result.stdout[-400:]}"
+
+
+class TestPhase2PromotionHardening:
+    """Adversarial regression tests for generated artifacts and promotion gates."""
+
+    @staticmethod
+    def _load_module(path: Path, name: str):
+        import importlib.util
+        import sys
+
+        spec = importlib.util.spec_from_file_location(name, path)
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[name] = module
+        spec.loader.exec_module(module)
+        return module
+
+    @staticmethod
+    def _git(root: Path, *args: str) -> str:
+        import subprocess
+
+        result = subprocess.run(
+            ["git", *args],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    @classmethod
+    def _commit(cls, root: Path, message: str) -> str:
+        cls._git(root, "add", ".")
+        cls._git(
+            root,
+            "-c",
+            "user.name=phase2-test",
+            "-c",
+            "user.email=phase2-test@example.invalid",
+            "commit",
+            "-m",
+            message,
+        )
+        return cls._git(root, "rev-parse", "HEAD")
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "def behavior():\n    ...\n",
+            "def behavior():\n    raise NotImplementedError\n",
+            "def behavior():\n    raise NotImplementedError('TODO')\n",
+        ],
+    )
+    def test_python_symbol_rejects_placeholder_bodies(self, tmp_path: Path, body: str) -> None:
+        helper = self._load_module(
+            REPO_ROOT / "tests/phase2/requirements/conftest.py",
+            "phase2_generated_contract_helper",
+        )
+        artifact = tmp_path / "behavior.py"
+        artifact.write_text(body, encoding="utf-8")
+        with pytest.raises(AssertionError, match="placeholder"):
+            helper.assert_behavioral_contract(artifact, "python_ast_symbol:behavior")
+
+    @pytest.mark.parametrize(
+        ("content", "assertion"),
+        [
+            ("placeholder: true\n", "yaml_mapping_contains:placeholder"),
+            ("jobs:\n  test:\n    placeholder: true\n", "yaml_path:jobs.test"),
+            ("# reserved\nTODO service\n", "text_contains:service"),
+            (
+                '{"cells":[{"cell_type":"code","source":["..."]}]}',
+                "notebook_code_contains:cells",
+            ),
+        ],
+    )
+    def test_generated_contract_rejects_placeholder_artifacts(
+        self, tmp_path: Path, content: str, assertion: str
+    ) -> None:
+        helper = self._load_module(
+            REPO_ROOT / "tests/phase2/requirements/conftest.py",
+            "phase2_generated_placeholder_helper",
+        )
+        suffix = ".ipynb" if assertion.startswith("notebook") else ".yaml"
+        artifact = tmp_path / f"artifact{suffix}"
+        artifact.write_text(content, encoding="utf-8")
+        with pytest.raises(AssertionError):
+            helper.assert_behavioral_contract(artifact, assertion)
+
+    def test_generic_python_requires_behavior_beyond_imports(self, tmp_path: Path) -> None:
+        helper = self._load_module(
+            REPO_ROOT / "tests/phase2/requirements/conftest.py",
+            "phase2_generated_python_helper",
+        )
+        artifact = tmp_path / "service.py"
+        artifact.write_text('"""service"""\nimport os\n', encoding="utf-8")
+        with pytest.raises(AssertionError, match="no executable"):
+            helper.assert_behavioral_contract(artifact, "python_ast_contains:service")
+
+    @pytest.mark.parametrize(
+        "method_body",
+        ["...", "pass", '"""future"""', "raise NotImplementedError"],
+    )
+    def test_python_class_symbol_rejects_placeholder_methods(
+        self, tmp_path: Path, method_body: str
+    ) -> None:
+        helper = self._load_module(
+            REPO_ROOT / "tests/phase2/requirements/conftest.py",
+            "phase2_generated_class_helper",
+        )
+        artifact = tmp_path / "service.py"
+        artifact.write_text(
+            "class Service:\n"
+            "    ACTIVE = True\n"
+            "    def run(self):\n"
+            f"        {method_body}\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(AssertionError, match="Service.run is a placeholder"):
+            helper.assert_behavioral_contract(artifact, "python_ast_symbol:Service")
+
+    def test_generic_python_rejects_metadata_only_assignment(self, tmp_path: Path) -> None:
+        helper = self._load_module(
+            REPO_ROOT / "tests/phase2/requirements/conftest.py",
+            "phase2_generated_assignment_helper",
+        )
+        artifact = tmp_path / "service.py"
+        artifact.write_text("SERVICE = None\n", encoding="utf-8")
+        with pytest.raises(AssertionError, match="no executable"):
+            helper.assert_behavioral_contract(artifact, "python_ast_contains:service")
+
+    def test_generic_yaml_rejects_metadata_only_configmap(self, tmp_path: Path) -> None:
+        helper = self._load_module(
+            REPO_ROOT / "tests/phase2/requirements/conftest.py",
+            "phase2_generated_configmap_helper",
+        )
+        artifact = tmp_path / "service.yaml"
+        artifact.write_text(
+            "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: service\n",
+            encoding="utf-8",
+        )
+        with pytest.raises(AssertionError, match="metadata only"):
+            helper.assert_behavioral_contract(artifact, "yaml_mapping_contains:service")
+
+    def test_generic_text_rejects_one_token_skeleton(self, tmp_path: Path) -> None:
+        helper = self._load_module(
+            REPO_ROOT / "tests/phase2/requirements/conftest.py",
+            "phase2_generated_text_helper",
+        )
+        artifact = tmp_path / "service.md"
+        artifact.write_text("service\n", encoding="utf-8")
+        with pytest.raises(AssertionError, match="path/token skeleton"):
+            helper.assert_behavioral_contract(artifact, "text_contains:service")
+
+    def test_executed_row_requires_explicit_behavioral_override(self) -> None:
+        rubric = self._load_module(
+            REPO_ROOT / "scripts/_phase2_rubric_items.py",
+            "phase2_rubric_executed_assertion",
+        )
+        row = {
+            "rubric_id": "LLM-unreviewed-executed-row",
+            "evidence_type": "executed",
+            "behavioral_assertion": "python_ast_contains:service",
+        }
+        with pytest.raises(ValueError, match="no explicit row-specific"):
+            rubric._validate_executed_behavioral_assertion(row)
+
+    def test_ancestor_sha_allows_only_evidence_sha_delta(self, tmp_path: Path) -> None:
+        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_ancestor")
+        self._git(tmp_path, "init", "-b", "main")
+        evidence = tmp_path / "docs/phase2/evidence/llm/row.md"
+        evidence.parent.mkdir(parents=True)
+        evidence.write_text("- source_sha: old\n", encoding="utf-8")
+        (tmp_path / "implementation.py").write_text("VALUE = 1\n", encoding="utf-8")
+        implementation_sha = self._commit(tmp_path, "implementation")
+        evidence.write_text("- source_sha: stamped\n", encoding="utf-8")
+        stamped_sha = self._commit(tmp_path, "stamp sha")
+
+        assert audit._revision_is_ancestor(tmp_path, implementation_sha, stamped_sha)
+        assert audit._only_evidence_sha_lines_changed(tmp_path, implementation_sha, stamped_sha)
+
+        evidence.write_text(
+            "- source_sha: stamped\n- actual_result: changed after execution\n",
+            encoding="utf-8",
+        )
+        non_sha_evidence_change = self._commit(tmp_path, "change evidence result")
+        assert not audit._only_evidence_sha_lines_changed(
+            tmp_path, implementation_sha, non_sha_evidence_change
+        )
+
+        (tmp_path / "implementation.py").write_text("VALUE = 2\n", encoding="utf-8")
+        tampered_sha = self._commit(tmp_path, "tamper implementation")
+        assert not audit._only_evidence_sha_lines_changed(
+            tmp_path, implementation_sha, tampered_sha
+        )
+
+    def test_nonancestor_sha_is_rejected(self, tmp_path: Path) -> None:
+        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_nonancestor")
+        self._git(tmp_path, "init", "-b", "main")
+        (tmp_path / "base.txt").write_text("base\n", encoding="utf-8")
+        base_sha = self._commit(tmp_path, "base")
+        self._git(tmp_path, "switch", "-c", "alternate")
+        (tmp_path / "alternate.txt").write_text("alternate\n", encoding="utf-8")
+        alternate_sha = self._commit(tmp_path, "alternate")
+        self._git(tmp_path, "switch", "main")
+        (tmp_path / "main.txt").write_text("main\n", encoding="utf-8")
+        main_sha = self._commit(tmp_path, "main")
+
+        assert audit._revision_is_ancestor(tmp_path, base_sha, main_sha)
+        assert not audit._revision_is_ancestor(tmp_path, alternate_sha, main_sha)
+
+    @pytest.mark.parametrize(
+        ("body", "finding"),
+        [
+            ("ghp_" + "a" * 36, "GitHub token"),
+            ("- Authorization: Bearer fake", "authorization header"),
+            ("ssh -i key evidence-user@host", "SSH username"),
+        ],
+    )
+    def test_secret_denylist_rejects_adversarial_forms(self, body: str, finding: str) -> None:
+        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_secrets")
+        errors = audit._audit_evidence_secrets("row", "row.md", body)
+        assert any(finding in error for error in errors)
+
+    def test_accept_design_only_rejects_non_design_rows(self) -> None:
+        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_cuts")
+        for evidence_type in ("executed", "stretch", "invalid"):
+            row = {"rubric_id": "row", "evidence_type": evidence_type}
+            errors = audit._audit_executed([row], None, {"row"})
+            if evidence_type == "executed":
+                assert errors and "no evidence_path" in errors[0]
+            else:
+                assert errors and "cannot accept" in errors[0]
+
+    def test_interim_pending_audit_does_not_require_documented_final_cuts(self) -> None:
+        import csv
+        import os
+        import subprocess
+        import sys
+
+        rows = list(csv.DictReader(MATRIX_CSV.read_text(encoding="utf-8").splitlines()))
+        pending = [
+            row["rubric_id"]
+            for row in rows
+            if row["track"] == "LLM" and row["evidence_type"] == "design_only"
+        ]
+        gitops_root = os.environ.get("PHASE2_GITOPS_ROOT")
+        args = [
+            sys.executable,
+            str(AUDIT_SCRIPT),
+            "--strict",
+            "--require-executed",
+            "--track",
+            "LLM",
+            "--accept-design-only",
+            ",".join(pending),
+        ]
+        if gitops_root:
+            args += ["--gitops-root", gitops_root]
+        result = subprocess.run(
+            args,
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if gitops_root is None:
+            pytest.skip(
+                "PHASE2_GITOPS_ROOT unset; the matrix has at least one executed "
+                "gitops-artifact row and its behavioral validation needs a "
+                "checked-out GitOps repo"
+            )
+        assert result.returncode == 0, result.stdout[-2000:]
+        assert "pending interim row" in result.stdout
+        assert "accepted final cut" not in result.stdout
+
+    def test_final_promotion_requires_documented_cuts_and_frozen_base(self) -> None:
+        import csv
+        import subprocess
+        import sys
+
+        rows = list(csv.DictReader(MATRIX_CSV.read_text(encoding="utf-8").splitlines()))
+        pending = next(
+            row["rubric_id"]
+            for row in rows
+            if row["track"] == "LLM" and row["evidence_type"] == "design_only"
+        )
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(AUDIT_SCRIPT),
+                "--strict",
+                "--require-executed",
+                "--track",
+                "LLM",
+                "--phase1-base",
+                "0" * 40,
+                "--accept-design-only",
+                pending,
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        assert result.returncode == 1
+        assert "final --accept-design-only cuts must be documented" in result.stdout

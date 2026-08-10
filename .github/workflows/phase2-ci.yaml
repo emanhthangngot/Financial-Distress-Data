@@ -1,0 +1,265 @@
+name: Phase 2 pipeline CI (reusable)
+
+# Reusable job template: lint -> test -> build -> sign/push immutable digests ->
+# open a GitOps digest-bump PR. Each caller passes a JSON deployable list;
+# adding a deployable changes that list, not this workflow body.
+#
+# ci.yml (Phase 1 gate) is untouched and unnarrowed — Phase 1 keeps running
+# on every push regardless of what touches this file.
+
+on:
+  workflow_call:
+    inputs:
+      deployables:
+        description: "JSON list of deployables with name, build, test, lint and GitOps paths"
+        required: true
+        type: string
+    secrets:
+      GHCR_TOKEN:
+        required: true
+      GITOPS_PAT:
+        required: true
+
+concurrency:
+  group: phase2-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        deployable: ${{ fromJSON(inputs.deployables) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lint dependencies
+        run: python -m pip install "ruff==0.8.*" "black==24.*"
+      - name: ruff
+        env:
+          LINT_PATHS: ${{ matrix.deployable.lint_paths }}
+        run: ruff check $LINT_PATHS
+      - name: black --check
+        env:
+          LINT_PATHS: ${{ matrix.deployable.lint_paths }}
+        run: black --check $LINT_PATHS
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        deployable: ${{ fromJSON(inputs.deployables) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-phase2.txt
+      - name: pytest (fast loop, no Docker services)
+        env:
+          TEST_SELECTOR: ${{ matrix.deployable.test_selector }}
+        # Convert the caller's shell-style selector to a NUL-delimited argv
+        # without executing it, then invoke pytest with a real Bash array.
+        run: |
+          readarray -d '' -t test_args < <(
+            python -c 'import os, shlex; print("\0".join(shlex.split(os.environ["TEST_SELECTOR"])), end="\0")'
+          )
+          python -m pytest "${test_args[@]}" -m "not slow"
+
+  phase5-verification:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Phase 2 verification dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-phase2.txt
+      - name: Enforce Web API fixture/mock coverage gate
+        run: python scripts/run_phase5_web_gate.py
+      - name: Enforce pure-module mutation gate
+        run: python scripts/run_phase5_mutation_gate.py
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, phase5-verification]
+    strategy:
+      fail-fast: false
+      matrix:
+        deployable: ${{ fromJSON(inputs.deployables) }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      - name: Compute lowercase image repository
+        # GHCR/Docker tags must be all-lowercase; github.repository preserves
+        # the repo's mixed-case name, so it cannot be used directly in a tag.
+        id: image_repo
+        run: echo "name=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.deployable.image_context }}
+          file: ${{ matrix.deployable.dockerfile }}
+          # Never push from a pull_request run — every caller also triggers
+          # on pull_request:, and an untrusted/internal PR must not publish
+          # a GHCR image before it merges.
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/${{ steps.image_repo.outputs.name }}/${{ matrix.deployable.name }}:${{ github.sha }}
+
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Sign immutable image digest
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE_REPOSITORY: ghcr.io/${{ steps.image_repo.outputs.name }}/${{ matrix.deployable.name }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "${IMAGE_REPOSITORY}@${IMAGE_DIGEST}"
+
+      - name: Publish digest handoff
+        if: github.event_name != 'pull_request'
+        env:
+          DEPLOYABLE_NAME: ${{ matrix.deployable.name }}
+          IMAGE_REPOSITORY: ghcr.io/${{ steps.image_repo.outputs.name }}/${{ matrix.deployable.name }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "digest/${DEPLOYABLE_NAME}"
+          printf '%s\n' "${IMAGE_REPOSITORY}" > "digest/${DEPLOYABLE_NAME}/repository"
+          printf '%s\n' "${IMAGE_DIGEST}" > "digest/${DEPLOYABLE_NAME}/digest"
+      - name: Upload digest handoff
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase2-digest-${{ matrix.deployable.name }}
+          path: digest/${{ matrix.deployable.name }}
+
+  gitops-pr:
+    runs-on: ubuntu-latest
+    needs: build
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.ref_name == 'main' || github.ref_name == 'dev')
+    strategy:
+      fail-fast: false
+      matrix:
+        deployable: ${{ fromJSON(inputs.deployables) }}
+    steps:
+      - name: Checkout GitOps control repo
+        uses: actions/checkout@v4
+        with:
+          repository: emanhthangngot/financial-distress-gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          path: gitops
+      - name: Download signed digest handoff
+        uses: actions/download-artifact@v4
+        with:
+          name: phase2-digest-${{ matrix.deployable.name }}
+          path: digest/${{ matrix.deployable.name }}
+      - name: Rewrite pinned digest and open PR
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_PAT }}
+          DEPLOYABLE_NAME: ${{ matrix.deployable.name }}
+          GITOPS_PATH: ${{ matrix.deployable.gitops_path }}
+          GITOPS_TARGET_TYPE: ${{ matrix.deployable.gitops_target_type }}
+          GITOPS_TARGET_KIND: ${{ matrix.deployable.gitops_target_kind }}
+          GITOPS_TARGET_SELECTOR: ${{ matrix.deployable.gitops_target_selector }}
+        run: |
+          cd gitops
+          branch="digest-bump/${DEPLOYABLE_NAME}-${GITHUB_SHA::12}"
+          git checkout -b "$branch"
+          test -f "$GITOPS_PATH"
+          repository="$(cat "../digest/${DEPLOYABLE_NAME}/repository")"
+          digest="$(cat "../digest/${DEPLOYABLE_NAME}/digest")"
+          test "${digest#sha256:}" != "$digest"
+          python - "$GITOPS_PATH" "$GITOPS_TARGET_TYPE" "$GITOPS_TARGET_KIND" "$GITOPS_TARGET_SELECTOR" "$repository" "$digest" <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          path = Path(sys.argv[1])
+          target_type, kind, selector, repository, digest = sys.argv[2:]
+          text = path.read_text(encoding="utf-8")
+          image = f"{repository}@{digest}"
+          if target_type == "values":
+              updated, count = re.subn(
+                  r"(?m)^(\s*repository:\s*).*$",
+                  rf"\g<1>{repository}",
+                  text,
+                  count=1,
+              )
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one image.repository key")
+              updated, count = re.subn(
+                  r"(?m)^(\s*digest:\s*).*$",
+                  rf"\g<1>{digest}",
+                  updated,
+                  count=1,
+              )
+              if count != 1:
+                  raise SystemExit(f"{path}: expected one image.digest key")
+          elif target_type == "manifest":
+              documents = text.split("\n---\n")
+              matches = [
+                  index for index, document in enumerate(documents)
+                  if re.search(rf"(?m)^kind:\s*{re.escape(kind)}\s*$", document)
+                  and re.search(
+                      rf"metadata:\s*\{{name:\s*{re.escape(selector)}(?:,|\s)",
+                      document,
+                  )
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(
+                      f"{path}: expected one {kind} manifest named {selector!r}"
+                  )
+              index = matches[0]
+              updated, count = re.subn(
+                  r"(?m)^(\s*image:\s*).*$",
+                  rf"\g<1>{image}",
+                  documents[index],
+                  count=1,
+              )
+              if count != 1:
+                  raise SystemExit(f"{path}: {selector!r} has no image key")
+              documents[index] = updated
+              updated = "\n---\n".join(documents)
+          else:
+              raise SystemExit(f"unsupported GitOps target type: {target_type!r}")
+          path.write_text(updated, encoding="utf-8")
+          PY
+          git diff --check
+          git diff --quiet -- "$GITOPS_PATH" && {
+            echo "${GITOPS_PATH} already contains this digest" >&2
+            exit 1
+          }
+          git config user.name "phase2-ci"
+          git config user.email "phase2-ci@users.noreply.github.com"
+          git add "$GITOPS_PATH"
+          git commit -m "chore(${DEPLOYABLE_NAME}): bump image digest"
+          git push origin "$branch"
+          # gh defaults to $GITHUB_REPOSITORY (the calling repo) inside
+          # Actions runs, not the git remote of this checked-out subdir —
+          # --repo pins it to the gitops control repo explicitly.
+          gh pr create --repo emanhthangngot/financial-distress-gitops \
+            --title "chore(${DEPLOYABLE_NAME}): bump image digest" \
+            --body "Automated signed digest bump from source commit ${GITHUB_SHA}." \
+            --base master --head "$branch"

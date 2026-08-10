@@ -166,6 +166,16 @@ export interface EvidenceSessionView {
   costSnapshotUsd: number | null;
   gitSha: string | null;
   updatedAt: string | null;
+  /**
+   * The current concurrency guard the operator observed when this view was
+   * rendered. Lifecycle mutations echo it back to `request_session_transition`;
+   * a page that renders a stale token (because another operator already moved
+   * the session) is rejected with a fencing error instead of clobbering it.
+   *
+   * This is a freshness guard, not a credential: RLS already limits who may
+   * read the session row. It is null only when no session exists.
+   */
+  fencingToken: string | null;
   /** Transition history, newest first. */
   history: readonly SessionTransitionView[];
 }

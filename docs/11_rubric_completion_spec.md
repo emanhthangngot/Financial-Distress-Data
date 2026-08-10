@@ -195,12 +195,12 @@ Bronze-to-Silver helper -> receives duplicate business keys -> keeps only the la
 Work completed:
 
 - Generator knobs live in `configs/collector_config.yaml`.
-- Loader behavior is covered by `src/generators/config_loader.py`.
+- Loader behavior is covered by `src/collectors/fixture_config.py`.
 
 Proof:
 
 - `configs/collector_config.yaml`
-- `src/generators/config_loader.py`
+- `src/collectors/fixture_config.py`
 - `tests/test_generator_config.py`
 
 Acceptance:
@@ -236,7 +236,7 @@ Work completed:
 
 Proof:
 
-- `src/generators/streaming_problem_factory.py`
+- `src/streaming/problem_factory.py`
 - `src/streaming/kafka_to_bronze_consumer.py`
 - `docs/evidence/stage1_generator_characteristics.json`
 
@@ -255,7 +255,7 @@ Work completed:
 Proof:
 
 - `configs/collector_config.yaml`
-- `src/generators/streaming_problem_factory.py`
+- `src/streaming/problem_factory.py`
 - `tests/test_streaming_problem_factory.py`
 
 Acceptance:

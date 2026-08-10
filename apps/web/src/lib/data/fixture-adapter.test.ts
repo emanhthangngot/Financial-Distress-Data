@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { provenanceLabels, validateProvenance } from "@distresslens/contracts";
+import { AI_QUOTA_LIMIT, provenanceLabels, validateProvenance } from "@distresslens/contracts";
 import { FIXTURE_REPORT_ID, FIXTURE_USER_ID, FixtureDataPort } from "./fixture-adapter";
 import type { RequestContext } from "./port";
 
@@ -132,6 +132,35 @@ describe("saved reports", () => {
       missing.state !== "success" && missing.state !== "loading" && missing.copy,
     );
   });
+
+  it("lists only the caller's own reports", async () => {
+    const owner = await port.listSavedReports(analyst);
+    expect(owner.state).toBe("success");
+    if (owner.state === "success") {
+      expect(owner.data.reports.map((report) => report.id)).toEqual([FIXTURE_REPORT_ID]);
+    }
+
+    // Same signed-in role, different user: the list is empty rather than
+    // filtered in the browser.
+    const other = await port.listSavedReports({ ...analyst, userId: "someone-else" });
+    expect(other.state).toBe("empty");
+    if (other.state === "empty") {
+      expect(other.data?.reports).toEqual([]);
+    }
+  });
+
+  it("denies the report list to a signed-out caller and to a platform role", async () => {
+    expect((await port.listSavedReports(signedOut)).state).toBe("forbidden");
+    expect((await port.listSavedReports(viewer)).state).toBe("forbidden");
+  });
+
+  it("keeps report summaries free of the full company detail", async () => {
+    const result = await port.listSavedReports(analyst);
+    if (result.state !== "success") return;
+    // A summary that carried indicators and sources would put every company's
+    // detail into a list the analyst only skims.
+    expect(result.data.reports[0]).not.toHaveProperty("detail");
+  });
 });
 
 describe("operations surfaces", () => {
@@ -178,5 +207,32 @@ describe("agent surfaces", () => {
     expect(answer?.toolTrace.length).toBeGreaterThan(0);
     const serialized = JSON.stringify(result.data);
     expect(serialized).not.toMatch(/prompt|api[_-]?key|token|secret|password/i);
+  });
+});
+
+describe("ai budget", () => {
+  it("shows the default remaining budget to an analyst", async () => {
+    const result = await port.readAiBudget(analyst);
+    expect(result.state).toBe("success");
+    if (result.state !== "success") return;
+    expect(result.data.limit).toBe(AI_QUOTA_LIMIT);
+    expect(result.data.used).toBe(AI_QUOTA_LIMIT - 18);
+    expect(new Date(result.data.resetsAt).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it("renders an exhausted budget when the fixture env says so", async () => {
+    process.env.DISTRESSLENS_FIXTURE_QUOTA_LEFT = "0";
+    try {
+      const result = await port.readAiBudget(analyst);
+      if (result.state !== "success") throw new Error("expected success");
+      expect(result.data.used).toBe(AI_QUOTA_LIMIT);
+    } finally {
+      delete process.env.DISTRESSLENS_FIXTURE_QUOTA_LEFT;
+    }
+  });
+
+  it("denies the budget line to a signed-out caller and a platform role", async () => {
+    expect((await port.readAiBudget(signedOut)).state).toBe("forbidden");
+    expect((await port.readAiBudget(viewer)).state).toBe("forbidden");
   });
 });

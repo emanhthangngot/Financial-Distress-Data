@@ -1,0 +1,19 @@
+{
+  "route": "/companies",
+  "state": "success",
+  "role": "analyst",
+  "viewport": "390x844",
+  "project": "mobile-390",
+  "planeAvailability": "LIVE_AVAILABLE",
+  "dataOrigin": "REFERENCE_FIXTURE",
+  "dataVersion": "gold-2025-05-22",
+  "modelVersion": "DL-Score v2.1",
+  "agentVersion": "coordinator-exp-20250522",
+  "sourceSha": "local",
+  "gitopsSha": "a1b2c3d",
+  "expected": "full portfolio list with risk band, trend and data-through columns",
+  "actual": "captured",
+  "redaction": "no prompts, tokens, credentials or PII rendered",
+  "capturedAt": "2026-08-05T11:26:31.135Z",
+  "image": "companies--success--analyst--mobile-390.png"
+}

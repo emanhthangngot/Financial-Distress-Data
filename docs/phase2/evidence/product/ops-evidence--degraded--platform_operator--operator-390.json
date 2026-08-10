@@ -1,0 +1,19 @@
+{
+  "route": "/ops/evidence",
+  "state": "degraded",
+  "role": "platform_operator",
+  "viewport": "390x844",
+  "project": "operator-390",
+  "planeAvailability": "LIVE_UNAVAILABLE",
+  "dataOrigin": "REFERENCE_FIXTURE",
+  "dataVersion": "gold-2025-05-22",
+  "modelVersion": "DL-Score v2.1",
+  "agentVersion": "coordinator-exp-20250522",
+  "sourceSha": "local",
+  "gitopsSha": "a1b2c3d",
+  "expected": "lifecycle timeline, cost gauges, GitOps drift, pipelines, promotions, audit",
+  "actual": "captured",
+  "redaction": "no prompts, tokens, credentials or PII rendered",
+  "capturedAt": "2026-08-05T11:25:30.238Z",
+  "image": "ops-evidence--degraded--platform_operator--operator-390.png"
+}

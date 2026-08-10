@@ -1,0 +1,19 @@
+{
+  "route": "/companies",
+  "state": "empty",
+  "role": "analyst",
+  "viewport": "1440x900",
+  "project": "desktop-1440",
+  "planeAvailability": "LIVE_AVAILABLE",
+  "dataOrigin": "REFERENCE_FIXTURE",
+  "dataVersion": "gold-2025-05-22",
+  "modelVersion": "DL-Score v2.1",
+  "agentVersion": "coordinator-exp-20250522",
+  "sourceSha": "local",
+  "gitopsSha": "a1b2c3d",
+  "expected": "no-results state naming the safe next action",
+  "actual": "captured",
+  "redaction": "no prompts, tokens, credentials or PII rendered",
+  "capturedAt": "2026-08-05T11:26:20.440Z",
+  "image": "companies--empty--analyst--desktop-1440.png"
+}

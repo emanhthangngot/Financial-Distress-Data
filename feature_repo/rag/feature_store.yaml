@@ -1,0 +1,20 @@
+# ${VAR} substitution works here (feast/repo_config.py:829,
+# os.path.expandvars — POSIX-only, no ${VAR:-default}; PHASE2_PG_USER/
+# PHASE2_PG_PASSWORD must be set in the environment `feast apply`/
+# `materialize` runs in, e.g. from docker-compose.yml's phase2-postgres
+# service env). "phase2-postgres:5432" is the docker-compose service DNS
+# name (profile "phase2").
+project: fd_rag
+provider: local
+registry: s3://financial-distress-lake/phase2/feast/rag/registry.db
+online_store:
+  type: postgres
+  host: phase2-postgres
+  port: 5432
+  database: ml_metadata
+  db_schema: ml_metadata
+  user: ${PHASE2_PG_USER}
+  password: ${PHASE2_PG_PASSWORD}
+offline_store:
+  type: file
+entity_key_serialization_version: 3

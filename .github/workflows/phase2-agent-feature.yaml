@@ -1,0 +1,34 @@
+name: Phase 2 — feature agent
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "src/agents/**"
+      - "apps/feature-mcp/**"
+      - "tests/phase2/agents/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "src/agents/**"
+      - "apps/feature-mcp/**"
+      - "tests/phase2/agents/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/phase2-ci.yaml
+    with:
+      deployables: >-
+        [{"name":"feature-agent","image_context":".","dockerfile":"apps/feature-mcp/Dockerfile",
+        "test_selector":"tests/phase2/agents tests/phase2/apps -k 'feature or agent'",
+        "lint_paths":"src/agents apps/feature-mcp/app tests/phase2/agents",
+        "gitops_path":"platform/agents/agent-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"Deployment","gitops_target_selector":"feature-agent"}]
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

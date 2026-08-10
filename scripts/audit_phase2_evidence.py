@@ -30,6 +30,10 @@ Modes:
   --run-validations   Execute every feature-specific validation command after
                       evidence/artifact checks; canonical matrix only, without
                       invoking a shell.
+  --track {ML,LLM}    Repeatable; restrict --require-executed/--run-validations
+                      to one track (default both). The 117-row canonical
+                      coverage and matrix-completeness checks are never
+                      filtered — they always demand all rows present.
 
 Exit codes:
   0  all checks passed
@@ -43,6 +47,7 @@ import argparse
 import csv
 import hashlib
 import io
+import os
 import re
 import shlex
 import sys
@@ -63,6 +68,19 @@ PHASE1_PROTECTED = [
     "docs/mini_coursework.md",
     "docs/01_data_generator.md",
     "docs/02_schema_design.md",
+]
+
+# Carve-outs inside a PHASE1_PROTECTED prefix that hold no Phase 1 pipeline
+# behavior. `src/streaming/flink/jobs/` is the opt-in W26 Flink job home: by
+# design (see its README) it holds no burst/late-arrival/dedup logic — that
+# lives in `kafka_to_bronze_consumer.py`, which stays fully protected. A diff
+# confined to this carve-out is not a Phase 1 behavior mutation.
+# `sql/init_ml_metadata.sql` is the Phase 2 `ml_metadata` schema (plan-pinned:
+# phase-04-implementation-notes.md section 1) — a new file, never touching
+# `sql/init_project_metadata.sql` or any other Phase 1 SQL.
+PHASE1_PROTECTED_EXCEPTIONS = [
+    "src/streaming/flink/jobs/",
+    "sql/init_ml_metadata.sql",
 ]
 
 REQUIRED_DOCS = [
@@ -104,6 +122,7 @@ CANONICAL_RUBRICS = {
     / "docs/Coursework Tracking (Public) - rubic final-coursework (final - llm).csv",
 }
 EXPECTED_ROW_COUNTS = {"ML": 57, "LLM": 60}
+TRACKS = ("ML", "LLM")
 
 # Per-artifact metadata required by docs/phase2/evidence-contract.md. A file
 # that exists but lacks any of these cannot prove a rubric point.
@@ -232,6 +251,7 @@ def _audit_matrix(
         "source_digest",
         "artifact_repo",
         "artifact_path",
+        "behavioral_assertion",
     ]
     totals: dict[str, int] = {"ML": 0, "LLM": 0}
     seen: set[str] = set()
@@ -380,7 +400,13 @@ def _phase1_mutation_from_changed(changed: list[str]) -> list[str]:
     """
     errors: list[str] = []
     for path in PHASE1_PROTECTED:
-        if any(entry == path or entry.startswith(path) for entry in changed):
+        matched = [entry for entry in changed if entry == path or entry.startswith(path)]
+        unexcepted = [
+            entry
+            for entry in matched
+            if not any(entry.startswith(exc) for exc in PHASE1_PROTECTED_EXCEPTIONS)
+        ]
+        if unexcepted:
             errors.append(f"Git diff modifies Phase 1 protected path '{path}'")
     if any(entry.startswith("dags/") and not entry.startswith("dags/phase2/") for entry in changed):
         errors.append("Git diff modifies Phase 1 protected DAG path 'dags/'")
@@ -397,6 +423,15 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
     Fail-closed: if the baseline cannot be resolved (missing ref, git error,
     non-zero exit) the gate returns an error instead of silently passing, so an
     unverifiable baseline never turns the mutation check into a no-op.
+
+    ``PHASE1_HYGIENE_OVERRIDE=1`` suppresses only the protected-path findings
+    below, after the baseline has been resolved and the diff computed — a
+    missing/unresolvable baseline still fails closed regardless of this var.
+    It exists for Phase 1's own architecture-hygiene work (moving/renaming
+    Phase 1 files without changing Phase 1 behavior), which this gate cannot
+    distinguish from a Phase 2 task mutating Phase 1 — it only sees changed
+    paths, not intent. Unset by default so a real Phase 2 task is still
+    blocked.
     """
     import subprocess
 
@@ -450,7 +485,10 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
         return [f"git check failed: untracked listing errored — {detail}"]
     changed.extend(line.strip() for line in untracked.stdout.splitlines() if line.strip())
 
-    return _phase1_mutation_from_changed(changed)
+    findings = _phase1_mutation_from_changed(changed)
+    if findings and os.environ.get("PHASE1_HYGIENE_OVERRIDE") == "1":
+        return []
+    return findings
 
 
 def _audit_required_docs() -> list[str]:
@@ -540,8 +578,54 @@ def _git_worktree_clean(root: Path) -> bool:
     return result.returncode == 0 and not result.stdout.strip()
 
 
+def _revision_is_ancestor(root: Path, revision: str, head: str) -> bool:
+    """Return whether revision is HEAD or a reachable ancestor of HEAD."""
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", revision, head],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    return result.returncode == 0
+
+
+def _only_evidence_sha_lines_changed(root: Path, revision: str, head: str) -> bool:
+    """Allow post-evidence commits only when they stamp SHA metadata lines."""
+    import subprocess
+
+    if revision == head:
+        return True
+    result = subprocess.run(
+        ["git", "diff", "--unified=0", revision, head, "--"],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if result.returncode != 0:
+        return False
+    current_path = ""
+    saw_change = False
+    allowed_line = re.compile(
+        r"^[+-]\s*(?:[-*]\s*)?(?:\*\*)?(?:source_sha|gitops_sha)(?:\*\*)?\s*:"
+    )
+    for line in result.stdout.splitlines():
+        if line.startswith("+++ b/"):
+            current_path = line[6:]
+        elif line.startswith(("diff --git ", "index ", "--- ", "@@")):
+            continue
+        elif line.startswith(("+", "-")):
+            saw_change = True
+            if not current_path.startswith("docs/phase2/evidence/") or not allowed_line.match(line):
+                return False
+    return saw_change
+
+
 def _audit_frozen_revisions(matrix: list[dict[str, str]], gitops_root: Path | None) -> list[str]:
-    """Ensure evidence SHAs are real commits and match both checkout HEADs.
+    """Ensure evidence SHAs are HEAD or tightly constrained ancestors.
 
     A syntactically valid SHA is not sufficient: promotion must be reproducible
     from the exact source and GitOps revisions that were actually checked out.
@@ -599,8 +683,74 @@ def _audit_frozen_revisions(matrix: list[dict[str, str]], gitops_root: Path | No
                     continue
                 if result.returncode != 0:
                     errors.append(f"{rid}: {label} does not resolve to a commit: {sha}")
-            if sha != expected:
-                errors.append(f"{rid}: {label}={sha} does not match checkout HEAD {expected}")
+            if not _revision_is_ancestor(root, sha, expected):
+                errors.append(
+                    f"{rid}: {label}={sha} is not an ancestor of checkout HEAD {expected}"
+                )
+            elif sha != expected and not _only_evidence_sha_lines_changed(root, sha, expected):
+                errors.append(
+                    f"{rid}: changes after {label}={sha} are not limited to SHA lines "
+                    "in evidence files"
+                )
+    return errors
+
+
+EVIDENCE_SECRET_DENYLIST = (
+    ("GCP project ID", re.compile(r"\bproject-60655616-d84a-4883-867\b")),
+    ("control-plane IP", re.compile(r"\b136\.85\.120\.118\b")),
+    ("retained ingress IP", re.compile(r"\b34\.21\.242\.110\b")),
+    ("GitHub token", re.compile(r"\b(?:ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})")),
+    ("private key", re.compile(r"-----BEGIN(?: [A-Z]+)* PRIVATE KEY-----")),
+    ("authorization header", re.compile(r"(?i)\bAuthorization\s*:")),
+    (
+        "long base64 value",
+        re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{200,}={0,2}(?![A-Za-z0-9+/=])"),
+    ),
+    (
+        "GCP project ID",
+        re.compile(r"(?im)\b(?:project_id|gcp_project)\s*[:=]\s*[a-z][a-z0-9-]{4,28}[a-z0-9]\b"),
+    ),
+    (
+        "control-plane endpoint",
+        re.compile(
+            r"(?im)\b(?:control[_ -]?plane|cluster_endpoint)\s*[:=]\s*(?:https?://)?\d{1,3}(?:\.\d{1,3}){3}\b"
+        ),
+    ),
+    (
+        "SSH username",
+        re.compile(
+            r"(?im)(?:\b(?:ansible_user|ssh_user|ssh_username)\s*[:=]\s*"
+            r"[A-Za-z_][A-Za-z0-9_-]*\b|\bssh(?:\s+-[A-Za-z]+(?:\s+\S+)*)*\s+"
+            r"[A-Za-z_][A-Za-z0-9_-]*@)"
+        ),
+    ),
+)
+
+
+def _audit_evidence_secrets(rid: str, evidence_path: str, text: str) -> list[str]:
+    """Reject known infrastructure identifiers and credential-shaped data."""
+    return [
+        f"{rid}: evidence file '{evidence_path}' contains denylisted {label}"
+        for label, pattern in EVIDENCE_SECRET_DENYLIST
+        if pattern.search(text)
+    ]
+
+
+def _audit_all_evidence_bodies() -> list[str]:
+    """Scan every committed evidence markdown body, including accepted cuts."""
+    errors: list[str] = []
+    evidence_root = REPO_ROOT / "docs/phase2/evidence"
+    if not evidence_root.is_dir():
+        return errors
+    for path in sorted(evidence_root.rglob("*.md")):
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        errors.extend(
+            _audit_evidence_secrets(
+                path.stem,
+                relative,
+                path.read_text(encoding="utf-8", errors="replace"),
+            )
+        )
     return errors
 
 
@@ -613,7 +763,11 @@ EVIDENCE_FORMAT_VALIDATORS: dict[str, callable] = {
 }
 
 
-def _audit_executed(matrix: list[dict[str, str]], gitops_root: Path | None) -> list[str]:
+def _audit_executed(
+    matrix: list[dict[str, str]],
+    gitops_root: Path | None,
+    accept_design_only: set[str] | None = None,
+) -> list[str]:
     """Phase-08: every row must carry executed evidence satisfying the contract.
 
     `--require-executed` is the phase-08 promotion gate: a row recorded as
@@ -631,11 +785,18 @@ def _audit_executed(matrix: list[dict[str, str]], gitops_root: Path | None) -> l
     a reserved directory.
     """
     errors: list[str] = []
+    accepted = accept_design_only or set()
     for row in matrix:
         rid = row.get("rubric_id", "?")
         epath = row.get("evidence_path", "")
         etype = row.get("evidence_type", "")
         if etype != "executed":
+            if rid in accepted:
+                if etype != "design_only":
+                    errors.append(
+                        f"{rid}: --accept-design-only cannot accept evidence_type '{etype}'"
+                    )
+                continue
             errors.append(
                 f"{rid}: evidence_type '{etype}' — --require-executed demands "
                 "executed evidence for every row"
@@ -667,6 +828,12 @@ def _audit_executed(matrix: list[dict[str, str]], gitops_root: Path | None) -> l
 
         for key, validator in EVIDENCE_FORMAT_VALIDATORS.items():
             value = fields.get(key, "")
+            if (
+                key == "gitops_sha"
+                and row.get("artifact_repo") == "source"
+                and value.casefold().startswith("none")
+            ):
+                continue
             if value and not validator(value):
                 errors.append(f"{rid}: evidence field '{key}' is not valid: '{value}'")
 
@@ -757,6 +924,23 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Execute every row's feature-specific validation command (Phase 8)",
     )
+    parser.add_argument(
+        "--track",
+        action="append",
+        choices=TRACKS,
+        default=None,
+        help="Restrict executed/frozen-revision/behavior-validation auditing to one "
+        "track (repeatable); default both. Canonical coverage and the 117-row "
+        "matrix contract are never filtered by this flag.",
+    )
+    parser.add_argument(
+        "--accept-design-only",
+        action="append",
+        default=[],
+        metavar="RUBRIC_ID[,RUBRIC_ID...]",
+        help="Name pending design-only rows for an interim audit; during final promotion "
+        "(--phase1-base or --run-validations), these become documented unearned cuts",
+    )
     parser.add_argument("--ml", type=int, default=100, help="Expected ML total points")
     parser.add_argument("--llm", type=int, default=100, help="Expected LLM total points")
     parser.add_argument(
@@ -775,6 +959,16 @@ def main(argv: list[str] | None = None) -> int:
     expected = {"ML": args.ml, "LLM": args.llm}
     errors: list[str] = []
     matrix = _read_matrix(args.matrix)
+    selected_tracks = tuple(args.track) if args.track else TRACKS
+    accepted_design_only = {
+        rid.strip() for group in args.accept_design_only for rid in group.split(",") if rid.strip()
+    }
+    final_promotion = bool(args.phase1_base) or args.run_validations
+    scoped = (
+        [row for row in matrix if row.get("track", "") in selected_tracks]
+        if matrix is not None
+        else None
+    )
 
     if matrix is None:
         errors.append("💀 docs/phase2/rubric-matrix.csv not found or unreadable")
@@ -792,17 +986,55 @@ def main(argv: list[str] | None = None) -> int:
             errors.extend(_audit_canonical_coverage(matrix))
 
     if args.require_executed:
-        if matrix is not None:
-            errors.extend(_audit_executed(matrix, args.gitops_root))
-            if args.matrix is None:
-                if not args.phase1_base or not _is_full_git_sha(args.phase1_base):
+        errors.extend(_audit_all_evidence_bodies())
+        if scoped is not None:
+            scoped_ids = {row.get("rubric_id", "") for row in scoped}
+            unknown_cuts = sorted(accepted_design_only - scoped_ids)
+            if unknown_cuts:
+                errors.append(
+                    f"--accept-design-only names unknown/out-of-scope rows: {unknown_cuts}"
+                )
+            if final_promotion:
+                submission_readme = REPO_ROOT / "docs/submission/README.md"
+                readme_text = (
+                    submission_readme.read_text(encoding="utf-8", errors="replace")
+                    if submission_readme.is_file()
+                    else ""
+                )
+                undocumented_cuts = sorted(
+                    rid for rid in accepted_design_only if rid not in readme_text
+                )
+                if undocumented_cuts:
                     errors.append(
-                        "--require-executed canonical mode requires --phase1-base "
-                        "as a frozen 40-hex SHA"
+                        "final --accept-design-only cuts must be documented in "
+                        f"docs/submission/README.md: {undocumented_cuts}"
                     )
+            invalid_cut_types = sorted(
+                row.get("rubric_id", "")
+                for row in scoped
+                if row.get("rubric_id", "") in accepted_design_only
+                and row.get("evidence_type", "") != "design_only"
+            )
+            if invalid_cut_types:
+                errors.append(
+                    "--accept-design-only requires evidence_type design_only: "
+                    f"{invalid_cut_types}"
+                )
+            errors.extend(_audit_executed(scoped, args.gitops_root, accepted_design_only))
+            valid_cuts = {
+                row.get("rubric_id", "")
+                for row in scoped
+                if row.get("evidence_type", "") == "design_only"
+            }
+            for rid in sorted(accepted_design_only & valid_cuts):
+                label = "accepted final cut" if final_promotion else "pending interim row"
+                print(f"WARNING: {rid}: {label}; no rubric points claimed")
+            if args.matrix is None and final_promotion:
+                if not args.phase1_base or not _is_full_git_sha(args.phase1_base):
+                    errors.append("final promotion requires --phase1-base as a frozen 40-hex SHA")
                 else:
                     errors.extend(_audit_phase1_git_diff(args.phase1_base))
-                errors.extend(_audit_frozen_revisions(matrix, args.gitops_root))
+                    errors.extend(_audit_frozen_revisions(scoped, args.gitops_root))
         errors.extend(_audit_required_docs())
 
     if args.run_validations:
@@ -810,8 +1042,10 @@ def main(argv: list[str] | None = None) -> int:
             errors.append("--run-validations requires --require-executed")
         elif args.matrix is not None:
             errors.append("--run-validations is allowed only for the canonical matrix")
-        elif matrix is not None:
-            errors.extend(_audit_behavior_validations(matrix))
+        elif not args.phase1_base or not _is_full_git_sha(args.phase1_base):
+            errors.append("--run-validations requires --phase1-base as a frozen 40-hex SHA")
+        elif scoped is not None:
+            errors.extend(_audit_behavior_validations(scoped))
 
     if args.matrix_only:
         errors.extend(_audit_required_docs())

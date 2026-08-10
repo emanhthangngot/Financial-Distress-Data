@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { roleAllows, isPrivilegedRole } from "./role";
+import { roleAllows, isPrivilegedRole, isRole } from "./role";
 
 describe("roleAllows", () => {
   it("denies platform operations to analyst", () => {
@@ -33,5 +33,17 @@ describe("roleAllows", () => {
 
   it("denies (not throws) for a role string outside the known union", () => {
     expect(roleAllows("nonexistent_role" as never, "session.read")).toBe(false);
+  });
+});
+
+describe("isRole", () => {
+  it("accepts every known role", () => {
+    expect(isRole("analyst")).toBe(true);
+    expect(isRole("platform_admin")).toBe(true);
+  });
+
+  it("rejects a value outside the known union, including non-strings", () => {
+    expect(isRole("superuser")).toBe(false);
+    expect(isRole(null)).toBe(false);
   });
 });

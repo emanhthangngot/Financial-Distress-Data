@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "financial-distress-data"
 version = "0.1.0"
@@ -21,7 +25,10 @@ runtime = [
     "minio>=7.2",
     "pyarrow>=17.0",
     "psycopg[binary]>=3.2",
+    "pgvector>=0.3",
     "pyspark>=3.5",
+    "requests>=2.31",
+    "tenacity>=8.0",
 ]
 
 [tool.black]
@@ -36,6 +43,31 @@ exclude = ["docs/evidence/final"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "slow: takes more than ~2s; excluded by the fast loop",
+    "services: requires the docker compose stack to be running",
+    "postgres: requires local initdb/pg_ctl binaries",
+]
+
+[tool.mutmut]
+# Phase 05's mutation gate is intentionally limited to small pure modules;
+# service/network boundaries are covered with fixtures and mocks instead.
+source_paths = ["src/llm/rag/chunking.py"]
+also_copy = [
+    "src/drift",
+    "src/generator",
+    "src/llm/contracts.py",
+    "configs",
+]
+pytest_add_cli_args_test_selection = [
+    "tests/phase2/verification/test_mutmut_pure.py",
+]
+mutate_only_covered_lines = false

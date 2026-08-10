@@ -1,6 +1,10 @@
 # ADR-006: MLflow Promotion Contract
 
-- Status: Accepted
+- Status: **Deferred with the ML track — see [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md) (2026-08-07)**
+
+> **Deferred:** MLflow is not installed for the LLM-only submission. This ADR
+> stays valid and unchanged for the post-deadline ML retrofit
+> (`plans/260802-1037-unified-phase2-ml-llm-gitops/phase-05-deliver-ml-track.md`).
 - Date: 2026-08-02
 - Deciders: Phase 2 architecture review, ML engineer
 - Related: `docs/phase2/architecture.md`, `plans/.../phase-05-deliver-ml-track.md`

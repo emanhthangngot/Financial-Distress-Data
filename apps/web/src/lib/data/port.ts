@@ -6,8 +6,10 @@ import type {
   CompanySearchResult,
   ModelComparison,
   OpsDashboard,
+  QuotaState,
   Role,
   SavedReport,
+  SavedReportList,
   ViewState,
 } from "@distresslens/contracts";
 
@@ -51,6 +53,8 @@ export interface DistressLensDataPort {
     ticker: string,
   ): Promise<ViewState<ModelComparison>>;
 
+  listSavedReports(context: RequestContext): Promise<ViewState<SavedReportList>>;
+
   getSavedReport(context: RequestContext, reportId: string): Promise<ViewState<SavedReport>>;
 
   getAgentConversation(
@@ -61,4 +65,7 @@ export interface DistressLensDataPort {
   getAgentRegistry(context: RequestContext): Promise<ViewState<AgentRegistryView>>;
 
   getOpsDashboard(context: RequestContext): Promise<ViewState<OpsDashboard>>;
+
+  /** Remaining AI quota for the assistant's budget line, scoped by RLS. */
+  readAiBudget(context: RequestContext): Promise<ViewState<QuotaState>>;
 }
