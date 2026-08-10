@@ -1,0 +1,27 @@
+{
+  "cold_start_seconds": 7.732,
+  "warm_start_seconds": 9.058,
+  "cold_ttft_seconds": 0.743,
+  "warm_ttft_seconds": 0.671,
+  "warm_ttft_samples_seconds": [
+    0.983,
+    0.698,
+    0.671,
+    0.621,
+    0.65
+  ],
+  "replica_spread": {
+    "min": 1,
+    "max": 2,
+    "target": 2
+  },
+  "estimated_cost_delta": {
+    "hourly_cost_per_replica_usd": 0.001187,
+    "warm_replicas_during_window": 2,
+    "hourly_cost_during_window_usd": 0.002375,
+    "hourly_cost_outside_window_usd": 0.0,
+    "note": "scale-to-zero outside the evidence window per warm-pool.yaml operations.evidenceEnd"
+  },
+  "deployment": "feature-agent",
+  "namespace": "agents-sandbox"
+}
