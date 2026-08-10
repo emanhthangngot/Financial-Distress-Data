@@ -30,6 +30,7 @@ import {
 import { FIXTURE_DATA_VERSION, FIXTURE_SOURCE_SHA } from "./fixtures/provenance-fixtures";
 import type { CompanySearchParams, DistressLensDataPort, RequestContext } from "./port";
 import type { ProductRoute } from "../states/route-states";
+import { getLiveAgentRegistry } from "./live-registry-adapter";
 
 /**
  * Supabase-backed data port for the surfaces Supabase owns.
@@ -183,6 +184,9 @@ export class SupabaseDataPort implements DistressLensDataPort {
   }
 
   getAgentRegistry(context: RequestContext): Promise<ViewState<AgentRegistryView>> {
+    if (process["env"]["DISTRESSLENS_LIVE_PLANE"] === "1") {
+      return getLiveAgentRegistry(context);
+    }
     return this.fixture.getAgentRegistry(context);
   }
 

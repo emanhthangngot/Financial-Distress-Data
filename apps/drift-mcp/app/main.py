@@ -4,18 +4,22 @@ from __future__ import annotations
 
 import asyncio
 import time
-from contextlib import AsyncExitStack, asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager, nullcontext
 from typing import Any, Literal, Protocol
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
-from prometheus_client import CollectorRegistry, Counter, Histogram, generate_latest
-from prometheus_client.exposition import CONTENT_TYPE_LATEST
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from src.drift.generator import apply_drift, build_drift_report
 from src.drift.generator_config import DriftScenario, ShiftSpec
+from src.observability.telemetry import (
+    CONTENT_TYPE_LATEST,
+    Telemetry,
+    metadata_from_headers,
+    redact_fields,
+)
 
 
 class MetricsHook(Protocol):
@@ -40,50 +44,9 @@ class NoopMetrics:
         return b""
 
 
-class PrometheusMetrics:
-    def __init__(self) -> None:
-        self.registry = CollectorRegistry()
-        self.requests = Counter(
-            "fd_http_requests_total",
-            "HTTP requests completed by the service.",
-            ("route", "status"),
-            registry=self.registry,
-        )
-        self.latency = Histogram(
-            "fd_http_request_duration_seconds",
-            "HTTP request latency.",
-            ("route",),
-            registry=self.registry,
-        )
-        self.tokens = Counter(
-            "fd_model_tokens_total",
-            "Model token counts supplied by agent/model integrations.",
-            ("model", "direction"),
-            registry=self.registry,
-        )
-        self.ttft = Histogram(
-            "fd_model_ttft_seconds",
-            "Model time to first token supplied by model integrations.",
-            ("model",),
-            registry=self.registry,
-        )
-
-    def observe(self, route: str, status_code: int, elapsed_seconds: float) -> None:
-        self.requests.labels(route=route, status=str(status_code)).inc()
-        self.latency.labels(route=route).observe(elapsed_seconds)
-
-    def observe_tokens(self, model: str, direction: str, count: int) -> None:
-        if count < 0:
-            raise ValueError("token count cannot be negative")
-        self.tokens.labels(model=model, direction=direction).inc(count)
-
-    def observe_ttft(self, model: str, elapsed_seconds: float) -> None:
-        if elapsed_seconds < 0:
-            raise ValueError("TTFT cannot be negative")
-        self.ttft.labels(model=model).observe(elapsed_seconds)
-
-    def render(self) -> bytes:
-        return generate_latest(self.registry)
+class PrometheusMetrics(Telemetry):
+    def __init__(self, service: str = "drift-mcp") -> None:
+        super().__init__(service=service)
 
 
 class ShiftPayload(BaseModel):
@@ -180,7 +143,9 @@ def create_app(metrics: MetricsHook | None = None, mount_mcp: bool = True) -> Fa
     if mount_mcp:
         from .mcp_server import create_mcp_runtime
 
-        mcp_runtime = create_mcp_runtime()
+        mcp_runtime = create_mcp_runtime(
+            metric_hook if callable(getattr(metric_hook, "observe_tool_call", None)) else None
+        )
 
     @asynccontextmanager
     async def lifespan(_application: FastAPI):
@@ -200,9 +165,51 @@ def create_app(metrics: MetricsHook | None = None, mount_mcp: bool = True) -> Fa
     @application.middleware("http")
     async def metric_middleware(request: Request, call_next):
         started = time.monotonic()
-        response = await call_next(request)
-        metric_hook.observe(request.url.path, response.status_code, time.monotonic() - started)
-        return response
+        route = request.url.path
+        observe_http = getattr(metric_hook, "observe_http", metric_hook.observe)
+        request_in_flight = getattr(metric_hook, "request_in_flight", None)
+        if callable(request_in_flight):
+            request_in_flight(route, 1)
+        metadata = metadata_from_headers(request.headers).as_attributes()
+        span_factory = getattr(metric_hook, "span", None)
+        span_context = (
+            span_factory(
+                "drift_mcp.http_request",
+                {
+                    **metadata,
+                    "operation": route,
+                    "method": request.method,
+                },
+                headers=request.headers,
+            )
+            if callable(span_factory)
+            else nullcontext()
+        )
+        try:
+            with span_context as span:
+                try:
+                    response = await call_next(request)
+                except Exception as exc:
+                    elapsed = time.monotonic() - started
+                    if callable(getattr(metric_hook, "observe_http", None)):
+                        observe_http(route, 500, elapsed, request.method)
+                    else:
+                        metric_hook.observe(route, 500, elapsed)
+                    failure = getattr(metric_hook, "observe_failure", None)
+                    if callable(failure):
+                        failure("http.request", type(exc).__name__)
+                    raise
+                if span is not None:
+                    span.set_attribute("status_code", response.status_code)
+                elapsed = time.monotonic() - started
+                if callable(getattr(metric_hook, "observe_http", None)):
+                    observe_http(route, response.status_code, elapsed, request.method)
+                else:
+                    metric_hook.observe(route, response.status_code, elapsed)
+                return response
+        finally:
+            if callable(request_in_flight):
+                request_in_flight(route, -1)
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(_request: Request, exc: RequestValidationError):
@@ -213,7 +220,7 @@ def create_app(metrics: MetricsHook | None = None, mount_mcp: bool = True) -> Fa
             422,
             "validation_error",
             "request validation failed",
-            details,
+            redact_fields({"details": details})["details"],
         )
 
     @application.get("/healthz", response_model=HealthResponse)

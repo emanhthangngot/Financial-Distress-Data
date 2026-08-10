@@ -8,6 +8,7 @@ from typing import Any, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.agents.models import Citation, SpecialistResponse
+from src.observability.telemetry import Telemetry, current_telemetry
 
 UNTRUSTED_CONTENT_START = "<UNTRUSTED_RAG_CONTENT>"
 UNTRUSTED_CONTENT_END = "</UNTRUSTED_RAG_CONTENT>"
@@ -59,8 +60,19 @@ class FeatureAgent:
     tool: FeatureToolClient
     renderer: AnswerRenderer
     identity: str = "feature-agent"
+    telemetry: Telemetry | None = None
 
     async def run(self, raw: FeatureAgentRequest | dict[str, Any]) -> SpecialistResponse:
+        telemetry = self.telemetry or current_telemetry()
+        telemetry.observe_agent_call(self.identity)
+        try:
+            with telemetry.span("agent.feature.run", {"agent": self.identity}):
+                return await self._run(raw)
+        except Exception as exc:
+            telemetry.observe_failure("agent.feature.run", type(exc).__name__)
+            raise
+
+    async def _run(self, raw: FeatureAgentRequest | dict[str, Any]) -> SpecialistResponse:
         request = (
             raw if isinstance(raw, FeatureAgentRequest) else FeatureAgentRequest.model_validate(raw)
         )

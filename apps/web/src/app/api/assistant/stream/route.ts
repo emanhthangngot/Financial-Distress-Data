@@ -1,4 +1,5 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { NextRequest } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { encodeSseFrame, type AssistantFrame } from "@distresslens/contracts";
@@ -134,7 +135,8 @@ export async function handleAssistantStream(
   // 4. Plane gate: an absent plane is product state, not a client error, so it
   // is a 200 stream of exactly the eks_off state and done frames.
   const config = deps.readConfig();
-  if (!context.planeReady || !config.isConfigured) {
+  const coordinatorUrl = process["env"]["DISTRESSLENS_" + "COORDINATOR_URL"] ?? null;
+  if (!context.planeReady || (!config.isConfigured && coordinatorUrl === null)) {
     await deps.recordAudit(client, {
       action: "ai.request",
       outcome: "PLANE_OFF",
@@ -154,6 +156,7 @@ export async function handleAssistantStream(
   req.signal.addEventListener("abort", onClientAbort, { once: true });
 
   const encoder = new TextEncoder();
+  const propagationHeaders = downstreamTraceHeaders(req.headers);
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let outcome: AIAuditOutcome = "ALLOWED";
@@ -162,11 +165,26 @@ export async function handleAssistantStream(
 
       try {
         send({ type: "state", state: "streaming", reason: null });
+        if (coordinatorUrl !== null) {
+          await streamCoordinatorResponse(
+            deps.fetchImpl,
+            coordinatorUrl,
+            request,
+            upstreamController.signal,
+            config.timeoutMs,
+            propagationHeaders,
+            send,
+          ).then((succeeded) => {
+            if (!succeeded) outcome = "FAILED";
+          });
+          return;
+        }
         const upstreamOrTimeout = await withDeadline(
           deps.fetchImpl(config.url as string, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...propagationHeaders,
               ...(config.token === null ? {} : { Authorization: `Bearer ${config.token}` }),
             },
             body: JSON.stringify(upstreamBody(request)),
@@ -319,6 +337,155 @@ function upstreamBody(request: AssistantRequestBody): Record<string, unknown> {
     { role: "user" as const, content: request.question },
   ];
   return { stream: true, messages };
+}
+
+function coordinatorBody(request: AssistantRequestBody): Record<string, unknown> {
+  const env = process["env"];
+  const ticker = request.context?.ticker ?? request.context?.selectedTickers[0] ?? "portfolio";
+  const featureNames = (env["DISTRESSLENS_" + "COORDINATOR_FEATURE_NAMES"] ??
+    "company_features:risk_score")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  return {
+    question: request.question,
+    feature_request: {
+      user_id: ticker,
+      feature_names: featureNames,
+      scope: request.context?.scope ?? "portfolio",
+    },
+    drift_request: {
+      rows: [{ ticker }],
+      scenario: coordinatorScenario(env["DISTRESSLENS_" + "COORDINATOR_DRIFT_SCENARIO"]),
+      scope: request.context?.scope ?? "portfolio",
+    },
+  };
+}
+
+function coordinatorScenario(raw: string | undefined): Record<string, unknown> {
+  if (!raw) throw new Error("coordinator drift scenario is not configured");
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed !== null && typeof parsed === "object") return parsed as Record<string, unknown>;
+  } catch {
+    // Deployment configuration errors are reported as a closed upstream
+    // failure; the raw value never crosses the response boundary.
+  }
+  throw new Error("coordinator drift scenario is invalid");
+}
+
+async function streamCoordinatorResponse(
+  fetchImpl: typeof fetch,
+  url: string,
+  request: AssistantRequestBody,
+  signal: AbortSignal,
+  timeoutMs: number,
+  propagationHeaders: Record<string, string>,
+  send: (frame: AssistantFrame) => void,
+): Promise<boolean> {
+  const responseOrTimeout = await withDeadline(
+    fetchImpl(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...propagationHeaders },
+      body: JSON.stringify(coordinatorBody(request)),
+      signal,
+    }),
+    timeoutMs,
+  );
+  if (responseOrTimeout === "timeout") {
+    send({ type: "state", state: "timeout", reason: null });
+    return false;
+  }
+  if (!responseOrTimeout.ok) {
+    send({ type: "error", code: "UPSTREAM_UNAVAILABLE", reason: UPSTREAM_UNAVAILABLE_COPY });
+    return false;
+  }
+
+  const payload = (await responseOrTimeout.json()) as {
+    answer?: unknown;
+    specialists?: unknown;
+    citations?: unknown;
+    hops_used?: unknown;
+  };
+  if (typeof payload.answer !== "string" || payload.answer.trim() === "") {
+    send({ type: "error", code: "MALFORMED_RESPONSE", reason: FAILED_COPY });
+    return false;
+  }
+
+  if (Array.isArray(payload.specialists)) {
+    for (const specialist of payload.specialists) {
+      if (specialist === null || typeof specialist !== "object") continue;
+      const rawName = (specialist as { specialist?: unknown }).specialist;
+      const name = typeof rawName === "string" ? rawName : "specialist";
+      send({
+        type: "tool",
+        entry: {
+          id: `agent-${name}`,
+          toolName: name,
+          status: "SUCCEEDED",
+          summary: `Đã gọi ${name}`,
+          startedAt: new Date().toISOString(),
+          durationMs: 0,
+        },
+      });
+    }
+  }
+  if (Array.isArray(payload.citations)) {
+    let ordinal = 1;
+    for (const citation of payload.citations) {
+      if (citation === null || typeof citation !== "object") continue;
+      const sourceUri = (citation as { source_uri?: unknown }).source_uri;
+      const label = (citation as { label?: unknown }).label;
+      if (typeof sourceUri !== "string" || typeof label !== "string") continue;
+      send({
+        type: "citation",
+        citation: {
+          ordinal,
+          sourceId: sourceUri,
+          title: label,
+          publisher: "Evidence plane",
+          url: sourceUri,
+        },
+      });
+      ordinal += 1;
+    }
+  }
+  send({ type: "token", text: payload.answer });
+  send({
+    type: "done",
+    agentVersion:
+      typeof payload.hops_used === "number"
+        ? `coordinator-hop-${payload.hops_used}`
+        : "coordinator",
+    modelVersion: null,
+  });
+  return true;
+}
+
+function downstreamTraceHeaders(headers: Headers): Record<string, string> {
+  const propagated: Record<string, string> = {};
+  const traceparent = headers.get("traceparent") ?? newTraceparent();
+  propagated.traceparent = traceparent;
+  for (const name of [
+    "tracestate",
+    "baggage",
+    "x-request-id",
+    "x-correlation-id",
+    "x-release-id",
+    "x-session-id",
+  ]) {
+    const value = headers.get(name);
+    if (value !== null && value.trim() !== "") propagated[name] = value.slice(0, 256);
+  }
+  const requestId = headers.get("x-request-id") ?? traceparent.slice(3, 35);
+  const correlationId = headers.get("x-correlation-id") ?? requestId;
+  propagated["x-request-id"] = requestId.slice(0, 256);
+  propagated["x-correlation-id"] = correlationId.slice(0, 256);
+  return propagated;
+}
+
+function newTraceparent(): string {
+  return `00-${randomBytes(16).toString("hex")}-${randomBytes(8).toString("hex")}-01`;
 }
 
 /**

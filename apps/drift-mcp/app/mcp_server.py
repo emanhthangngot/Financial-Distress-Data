@@ -12,6 +12,10 @@ from typing import Any, Protocol
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.observability.telemetry import Telemetry, inject_trace_headers, redact_fields
+
+_DEFAULT_TELEMETRY = Telemetry("drift-mcp")
+
 
 class DriftApiClient(Protocol):
     async def report(self, payload: dict[str, Any]) -> dict[str, Any]: ...
@@ -31,7 +35,10 @@ class LoggingTraceSink:
 
     def emit(self, event: str, attributes: dict[str, Any]) -> None:
         logging.getLogger("phase2.mcp.audit").info(
-            json.dumps({"event": event, **attributes}, sort_keys=True)
+            json.dumps(
+                redact_fields({"event": event, **attributes}),
+                sort_keys=True,
+            )
         )
 
 
@@ -42,7 +49,10 @@ class HttpxDriftApiClient:
         self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> HttpxDriftApiClient:
-        self._client = httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout)
+        self._client = httpx.AsyncClient(
+            base_url=self._base_url,
+            timeout=self._timeout,
+        )
         return self
 
     async def __aexit__(self, *_exc: Any) -> None:
@@ -53,7 +63,9 @@ class HttpxDriftApiClient:
     async def report(self, payload: dict[str, Any]) -> dict[str, Any]:
         if self._client is None:
             raise RuntimeError("drift API client is not running")
-        response = await self._client.post("/v1/drift/report", json=payload)
+        response = await self._client.post(
+            "/v1/drift/report", json=payload, headers=inject_trace_headers()
+        )
         response.raise_for_status()
         return dict(response.json())
 
@@ -79,15 +91,28 @@ class DriftMcpService:
     trace_sink: TraceSink
     timeout_seconds: float = 5.0
     max_calls: int = 1
+    telemetry: Telemetry | None = None
 
     async def invoke(self, raw: dict[str, Any]) -> ToolResult:
+        telemetry = self.telemetry or _DEFAULT_TELEMETRY
+        telemetry.observe_tool_call("build_realtime_drift_report")
+        with telemetry.span(
+            "drift_mcp.build_realtime_drift_report",
+            {"tool": "build_realtime_drift_report"},
+        ):
+            return await self._invoke(raw, telemetry)
+
+    async def _invoke(self, raw: dict[str, Any], telemetry: Telemetry) -> ToolResult:
         try:
             request = ToolRequest.model_validate(raw)
         except ValueError as exc:
+            telemetry.observe_failure("mcp.build_realtime_drift_report", "validation_error")
             return ToolResult(ok=False, error=f"validation_error:{exc}")
         if request.scope not in self.grants.get(request.agent_identity, set()):
+            telemetry.observe_failure("mcp.build_realtime_drift_report", "forbidden")
             return ToolResult(ok=False, error="forbidden")
         if self.max_calls < 1:
+            telemetry.observe_failure("mcp.build_realtime_drift_report", "tool_budget_exhausted")
             return ToolResult(ok=False, error="tool_budget_exhausted")
         self.trace_sink.emit(
             "drift_mcp.invoke",
@@ -100,8 +125,10 @@ class DriftMcpService:
             )
             return ToolResult(ok=True, data=data)
         except (TimeoutError, httpx.TimeoutException):
+            telemetry.observe_failure("mcp.build_realtime_drift_report", "timeout")
             return ToolResult(ok=False, error="timeout")
         except httpx.HTTPError:
+            telemetry.observe_failure("mcp.build_realtime_drift_report", "api_error")
             return ToolResult(ok=False, error="api_error")
 
 
@@ -161,7 +188,7 @@ class McpRuntime:
     api: HttpxDriftApiClient
 
 
-def create_mcp_runtime() -> McpRuntime:
+def create_mcp_runtime(telemetry: Telemetry | None = None) -> McpRuntime:
     """Assemble transport dependencies without opening sockets or sessions."""
     base_url = os.getenv("DRIFT_API_BASE_URL", "http://127.0.0.1:8000")
     api = HttpxDriftApiClient(base_url)
@@ -169,5 +196,6 @@ def create_mcp_runtime() -> McpRuntime:
         api=api,
         grants=_grants_from_env(),
         trace_sink=LoggingTraceSink(),
+        telemetry=telemetry or _DEFAULT_TELEMETRY,
     )
     return McpRuntime(application=create_mcp_server(service).streamable_http_app(), api=api)
