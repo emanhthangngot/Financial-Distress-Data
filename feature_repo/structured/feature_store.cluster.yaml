@@ -1,0 +1,11 @@
+# GKE profile. The local profile remains feature_store.yaml and keeps the
+# docker-compose DNS contract; cluster workloads opt in to this file.
+project: fd_structured
+provider: local
+registry: ${FEAST_REGISTRY_PATH}
+online_store:
+  type: redis
+  connection_string: "${FEAST_REDIS_HOST}:6379,db=0"
+offline_store:
+  type: file
+entity_key_serialization_version: 3
