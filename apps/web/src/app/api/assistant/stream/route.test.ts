@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { decodeSseChunk, type AssistantFrame } from "@distresslens/contracts";
 import { handleAssistantStream, type AssistantStreamDeps } from "./route";
@@ -120,6 +120,12 @@ function clearAudits(): void {
 }
 
 describe("assistant stream route", () => {
+  afterEach(() => {
+    delete process["env"]["DISTRESSLENS_COORDINATOR_URL"];
+    delete process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"];
+    delete process["env"]["DISTRESSLENS_COORDINATOR_FEATURE_NAMES"];
+  });
+
   it("forbids a signed-out caller before parsing body or consuming budget", async () => {
     clearAudits();
     const { deps, consumeCalls } = harness({
@@ -240,6 +246,54 @@ describe("assistant stream route", () => {
     expect(consumeCalls()).toBe(1);
     expect(AUDITS).toHaveLength(1);
     expect(AUDITS[0]).toMatchObject({ action: "ai.request", outcome: "ALLOWED", contextId: "NVL" });
+  });
+
+  it("routes a live company request through the coordinator with citations and tool status", async () => {
+    clearAudits();
+    process["env"]["DISTRESSLENS_COORDINATOR_URL"] = "http://coordinator.test/v1/run";
+    process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"] = JSON.stringify({
+      name: "financial_deterioration",
+      seed: 4001,
+      start_quarter: 2,
+      affected_fraction: 0.5,
+      feature_shifts: { total_liabilities: { mode: "multiplicative", magnitude: 0.6 } },
+      target_metric: "debt_to_asset",
+      observed_stat: "mean",
+      expected_direction: "increase",
+      threshold: 0.1,
+    });
+    process["env"]["DISTRESSLENS_COORDINATOR_FEATURE_NAMES"] = "company_features:risk_score";
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          answer: "NVL đang có tín hiệu rủi ro.",
+          specialists: [{ specialist: "feature" }],
+          citations: [{ source_uri: "feature://user/NVL", label: "features" }],
+          hops_used: 1,
+        }),
+        { status: 200 },
+      ),
+    );
+    const { deps } = harness({
+      readConfig: () => ({ url: null, token: null, timeoutMs: 55_000, isConfigured: false }),
+      fetchImpl,
+    });
+
+    const response = await handleAssistantStream(request(), deps);
+    const frames = await readFrames(response);
+
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "http://coordinator.test/v1/run",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(frames).toEqual([
+      { type: "state", state: "streaming", reason: null },
+      expect.objectContaining({ type: "tool", entry: expect.objectContaining({ toolName: "feature" }) }),
+      expect.objectContaining({ type: "citation", citation: expect.objectContaining({ sourceId: "feature://user/NVL" }) }),
+      { type: "token", text: "NVL đang có tín hiệu rủi ro." },
+      { type: "done", agentVersion: "coordinator-hop-1", modelVersion: null },
+    ]);
+    expect(AUDITS.map((event) => event.outcome)).toEqual(["ALLOWED"]);
   });
 
   it("audits FAILED and streams an error frame when the upstream request fails", async () => {
