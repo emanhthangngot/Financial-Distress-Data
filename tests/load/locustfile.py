@@ -32,12 +32,14 @@ class FeatureApiUser(HttpUser):
 
     @task
     def lookup_features(self) -> None:
-        response = self.client.post(
+        with self.client.post(
             FEATURE_PATH,
             json={"user_id": "VNM", "feature_names": ["company_risk_features:z_score"]},
             auth=self.auth,
             name="POST /v1/features/by-id",
             catch_response=True,
-        )
-        if response.status_code != 200:
-            response.failure(f"expected 200, got {response.status_code}")
+        ) as response:
+            if response.status_code != 200:
+                response.failure(f"expected 200, got {response.status_code}")
+            else:
+                response.success()
