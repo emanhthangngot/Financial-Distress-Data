@@ -13,6 +13,7 @@ on:
       - "src/agents/**"
       - "apps/feature-mcp/**"
       - "tests/phase2/agents/**"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
