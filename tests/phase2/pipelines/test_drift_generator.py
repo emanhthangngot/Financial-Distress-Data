@@ -8,7 +8,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.drift.generator import apply_drift, build_drift_report, write_drift_report
+import pytest
+
+from src.drift.generator import (
+    _apply_shift,
+    _distribution_stats,
+    _population_stability_index,
+    apply_drift,
+    build_drift_report,
+    render_drift_report_markdown,
+    run_scenario_against_generator,
+    write_drift_report,
+)
 from src.drift.generator_config import (
     DERIVED_METRIC_NAMES,
     DriftScenario,
@@ -155,6 +166,51 @@ def test_ramp_gates_rows_before_start_quarter() -> None:
     q1_row, q3_row = drifted.rows
     assert q1_row["total_liabilities"] == 50  # before start_quarter: unchanged
     assert q3_row["total_liabilities"] != 50  # at/after start_quarter: shifted
+
+
+def test_additive_shift_and_ramp_fallbacks_are_deterministic() -> None:
+    additive = DriftScenario(
+        name="additive",
+        seed=1,
+        start_quarter=1,
+        affected_fraction=1.0,
+        feature_shifts={"close_price": ShiftSpec(mode="additive", magnitude=2)},
+        target_metric="close_price",
+        observed_stat="mean",
+        expected_direction="increase",
+        threshold=0.01,
+    )
+    rows = [
+        {"ticker": "AAA", "close_price": 10.0, "fiscal_quarter": 1},
+        {"ticker": "AAA", "close_price": 10.0, "report_period": "unknown"},
+    ]
+    result = apply_drift(rows, additive)
+    assert [row["close_price"] for row in result.rows] == [12.0, 12.0]
+    with pytest.raises(ValueError, match="unhandled shift mode"):
+        _apply_shift(1.0, ShiftSpec(mode="invalid", magnitude=1), 1.0)
+
+
+def test_empty_and_constant_statistics_and_psi_are_safe() -> None:
+    assert _distribution_stats([])["count"] == 0
+    assert _distribution_stats([1.0])["std"] == 0.0
+    assert _population_stability_index([], [1.0]) == 0.0
+    assert _population_stability_index([1.0], [1.0]) == 0.0
+
+
+def test_report_renderer_and_orchestrator_write_evidence(tmp_path) -> None:
+    rows = _price_rows(4)
+    drifted = apply_drift(rows, MARKET_STRESS)
+    report = build_drift_report(rows, drifted.rows, MARKET_STRESS)
+    markdown = render_drift_report_markdown(report)
+    assert "| stat | before | after |" in markdown
+    directory, generated = run_scenario_against_generator(
+        "market_stress",
+        DRIFT_CONFIG_PATH,
+        GENERATOR_CONFIG_PATH,
+        output_root=tmp_path,
+    )
+    assert generated["passed"] is True
+    assert (directory / "report.json").is_file()
 
 
 def test_write_drift_report_writes_json_and_markdown(tmp_path) -> None:

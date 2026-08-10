@@ -56,3 +56,18 @@ markers = [
     "services: requires the docker compose stack to be running",
     "postgres: requires local initdb/pg_ctl binaries",
 ]
+
+[tool.mutmut]
+# Phase 05's mutation gate is intentionally limited to small pure modules;
+# service/network boundaries are covered with fixtures and mocks instead.
+source_paths = ["src/llm/rag/chunking.py"]
+also_copy = [
+    "src/drift",
+    "src/generator",
+    "src/llm/contracts.py",
+    "configs",
+]
+pytest_add_cli_args_test_selection = [
+    "tests/phase2/verification/test_mutmut_pure.py",
+]
+mutate_only_covered_lines = false
