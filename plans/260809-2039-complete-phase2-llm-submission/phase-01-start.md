@@ -187,10 +187,10 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
 - [x] Maintainer -> runs the audit against an evidence file containing a fake `ghp_` token -> the secret denylist fails it. (`test_secret_denylist_rejects_adversarial_forms`)
 - [x] Test runner -> regenerates the requirement tests -> each row's test asserts something behavioral, and a placeholder-comment artifact fails the non-placeholder check. (`test_generated_contract_rejects_placeholder_artifacts` + friends; 72 requirement tests pass)
 - [x] Phase 1 maintainer -> runs the Stage 1 quality gate after the phase-2 install -> passes, proving `.venv` untouched. (`.venv/bin/python -m pytest tests -m "not slow"` → 658 passed; ruff/black clean)
-- [ ] Operator -> deploys a deny-all NetworkPolicy in a scratch namespace -> a pod inside it cannot reach the internet.
+- [x] Operator -> deploys a deny-all NetworkPolicy in a scratch namespace -> a pod inside it cannot reach the internet. (`platform/security/default-deny-networkpolicy.yaml`, GitOps-tracked via `platform-security` Argo app, live in `networkpolicy-negative-test` ns; probe pod log: `curl: (28) Resolving timed out` → `EGRESS_BLOCKED`)
 - [x] Operator -> reads the capacity budget -> knows the vCPU/GiB ceiling for phases 2-5 and whether a second node is available. (`docs/submission/cost.md`: 8+2=10/12 with VM up, 8+4=12/12 only after VM stop, secondary pool must return to 0 before VM restart)
 - [x] Platform operator -> runs `terraform plan` with the cluster up -> gets "No changes", captured with `terraform output`. (`terraform/envs/evidence` init + plan against live cluster: "No changes. Your infrastructure matches the configuration." — `docs/phase2/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`, flipped to `executed`)
-- [ ] Platform operator -> runs the Ansible playbook twice -> healthy host, `changed=0` on the second run.
+- [x] Platform operator -> runs the Ansible playbook twice -> healthy host, `changed=0` on the second run. (run 1 `changed=1`, run 2 `changed=0`; `docs/phase2/evidence/llm/LLM-iac-d-ng-ansible-configure-v-deplo.md`, flipped to `executed`)
 - [ ] Operator -> runs `make gcp-down` then `gcp-status` -> node pools at zero **and** the evidence VM stopped.
 
 ## Risk Assessment
