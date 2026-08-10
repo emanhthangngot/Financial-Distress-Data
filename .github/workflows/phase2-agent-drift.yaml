@@ -17,6 +17,7 @@ on:
       - "apps/drift-mcp/**"
       - "tests/phase2/agents/**"
       - "tests/phase2/apps/test_drift_api_and_mcp.py"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
