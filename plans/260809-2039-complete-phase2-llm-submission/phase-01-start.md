@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Reconcile contracts, capacity and platform gaps"
-status: in-progress
+status: done (9/10 criteria; gcp-down deferred to end of multi-phase session)
 priority: P1
 effort: "1.5d"
 dependencies: []
@@ -191,7 +191,7 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
 - [x] Operator -> reads the capacity budget -> knows the vCPU/GiB ceiling for phases 2-5 and whether a second node is available. (`docs/submission/cost.md`: 8+2=10/12 with VM up, 8+4=12/12 only after VM stop, secondary pool must return to 0 before VM restart)
 - [x] Platform operator -> runs `terraform plan` with the cluster up -> gets "No changes", captured with `terraform output`. (`terraform/envs/evidence` init + plan against live cluster: "No changes. Your infrastructure matches the configuration." — `docs/phase2/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`, flipped to `executed`)
 - [x] Platform operator -> runs the Ansible playbook twice -> healthy host, `changed=0` on the second run. (run 1 `changed=1`, run 2 `changed=0`; `docs/phase2/evidence/llm/LLM-iac-d-ng-ansible-configure-v-deplo.md`, flipped to `executed`)
-- [ ] Operator -> runs `make gcp-down` then `gcp-status` -> node pools at zero **and** the evidence VM stopped.
+- [ ] Operator -> runs `make gcp-down` then `gcp-status` -> node pools at zero **and** the evidence VM stopped. **Deliberately deferred** — user decision 2026-08-10: keep the cluster up across phases 2-6 in this session rather than hibernate between every phase; run this at the true end of the multi-phase session.
 
 ## Risk Assessment
 

@@ -84,6 +84,7 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-rag-rag-data-pipeline": "python_ast_symbol:RagIngestionPipeline",
     "LLM-iac-d-ng-terraform-setup-gke-ho-c-": "text_contains:evidence",
     "LLM-iac-d-ng-ansible-configure-v-deplo": "text_contains:evidence",
+    "LLM-security-centralize-secret-management": "text_contains:secrets",
 }
 
 
@@ -1088,6 +1089,7 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-rag-rag-data-pipeline",
     "LLM-iac-d-ng-terraform-setup-gke-ho-c-",
     "LLM-iac-d-ng-ansible-configure-v-deplo",
+    "LLM-security-centralize-secret-management",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:
