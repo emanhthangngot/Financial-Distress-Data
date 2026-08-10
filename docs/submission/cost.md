@@ -16,6 +16,25 @@ Doubles as the row-67 (IaC) cost deliverable. GCP free-trial credit only —
 
 Status: cost levers implemented; actual spend report pending phase-08.
 
+## Session — 2026-08-10 (Phase 5 live evidence capture)
+
+- `make gcp-up` restored primary-pool (1 node) + evidence VM.
+- Stopped the evidence VM and raised secondary-pool to 1 node
+  (e2-standard-4) to give the A/B experiment's two extra chat-model
+  revisions room to schedule — exactly the sequencing this file already
+  prescribed (8 + 0 + 4 = 12 vCPU, at the project quota cap).
+- A/B revisions could not both go `Ready`: `fd-chat-model-weights` is a
+  `ReadWriteOnce` PVC already mounted read-write by the live
+  `fd-chat-model-predictor` pod; GCE PD rejects a second node's attach
+  (`Multi-Attach error`) regardless of CPU headroom. Deleted the A/B
+  resources and scaled secondary-pool back to 0 rather than run
+  under-provisioned; the row stays `design_only`.
+- Ran Locust, the warm-pool cold/warm measurement, and 4 real CI/CD digest
+  releases (rag-pipeline + 3 agents) during the primary-pool-only window.
+- Session ends with `make gcp-down`: primary pool 0, secondary pool 0,
+  evidence VM stopped. Billing balance delta: pending phase-08 (usage
+  reporting lag), consistent with the rest of this file.
+
 ## Capacity and quota budget
 
 Figures below deliberately separate observed state, Terraform/manifest
