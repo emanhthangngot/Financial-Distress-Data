@@ -51,8 +51,14 @@ def wait_ready(min_ready: int, timeout_s: float = 180.0) -> float:
     started = time.perf_counter()
     while True:
         out = kubectl(
-            "get", "pods", "-n", NAMESPACE, "-l", f"app={DEPLOYMENT}",
-            "-o", "jsonpath={range .items[*]}{.status.containerStatuses[0].ready}{\"\\n\"}{end}",
+            "get",
+            "pods",
+            "-n",
+            NAMESPACE,
+            "-l",
+            f"app={DEPLOYMENT}",
+            "-o",
+            'jsonpath={range .items[*]}{.status.containerStatuses[0].ready}{"\\n"}{end}',
         )
         ready_count = out.count("true")
         if ready_count >= min_ready:
@@ -99,7 +105,12 @@ def main() -> None:
         # Cold start: scale to zero, then back up from nothing.
         scale(0)
         kubectl(
-            "wait", "--for=delete", "pod", "-n", NAMESPACE, f"-l app={DEPLOYMENT}",
+            "wait",
+            "--for=delete",
+            "pod",
+            "-n",
+            NAMESPACE,
+            f"-l app={DEPLOYMENT}",
             "--timeout=120s",
         )
         scale(1)
@@ -112,7 +123,6 @@ def main() -> None:
         proc.wait(timeout=10)
 
         # Warm start: pool already warm at 1, add one more replica.
-        warm_start_started = time.perf_counter()
         scale(2)
         warm_start_seconds = wait_ready(2)
 
@@ -124,15 +134,14 @@ def main() -> None:
         # Cost delta: replicas kept warm outside the evidence window vs the
         # scale-to-zero policy, at the Deployment's declared resource requests.
         hourly_cost_per_replica = (
-            CPU_REQUEST_CORES * CPU_COST_PER_CORE_HOUR
-            + MEMORY_REQUEST_GB * MEMORY_COST_PER_GB_HOUR
+            CPU_REQUEST_CORES * CPU_COST_PER_CORE_HOUR + MEMORY_REQUEST_GB * MEMORY_COST_PER_GB_HOUR
         )
         estimated_cost_delta = {
             "hourly_cost_per_replica_usd": round(hourly_cost_per_replica, 6),
             "warm_replicas_during_window": args.warm_replicas,
             "hourly_cost_during_window_usd": round(hourly_cost_per_replica * args.warm_replicas, 6),
             "hourly_cost_outside_window_usd": 0.0,
-            "note": "scale-to-zero outside the evidence window per warm-pool.yaml operations.evidenceEnd",
+            "note": "scale-to-zero outside the window, per warm-pool.yaml operations.evidenceEnd",
         }
 
         result = {

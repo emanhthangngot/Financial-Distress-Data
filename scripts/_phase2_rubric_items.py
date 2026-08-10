@@ -106,6 +106,31 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori": "text_contains:agentregistry",
     "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": "python_ast_contains:coordinator",
     "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": "text_contains:agentregistry",
+    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": "yaml_path:jobs.gitops-pr",
+    "LLM-ci-cd-agent-k-o-d-li-u": "yaml_path:jobs.build",
+    "LLM-ci-cd-agent-drift-detection": "yaml_path:jobs.test",
+    "LLM-ci-cd-agent-l-m-coordinator": "yaml_path:jobs.lint",
+    "LLM-validation-verification-validation-verification": (
+        "python_ast_contains:test_requirement_evidence_contract"
+    ),
+    "LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p": (
+        "python_ast_contains:test_requirement_evidence_contract"
+    ),
+    "LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g": (
+        "python_ast_contains:test_requirement_evidence_contract"
+    ),
+    "LLM-validation-verification-idempotency-testing-s-d-ng-pro": (
+        "python_ast_contains:test_requirement_evidence_contract"
+    ),
+    "LLM-validation-verification-load-test-the-web-api": (
+        "python_ast_contains:test_requirement_evidence_contract"
+    ),
+    "LLM-repository-design-clean-code-clean-repo-demonstr": (
+        "python_ast_contains:BoundedAgentOrchestrationService"
+    ),
+    "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a": (
+        "yaml_mapping_contains:evidenceWindow"
+    ),
 }
 
 
@@ -1130,6 +1155,17 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori",
     "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n",
     "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry",
+    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline",
+    "LLM-ci-cd-agent-k-o-d-li-u",
+    "LLM-ci-cd-agent-drift-detection",
+    "LLM-ci-cd-agent-l-m-coordinator",
+    "LLM-validation-verification-validation-verification",
+    "LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p",
+    "LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g",
+    "LLM-validation-verification-idempotency-testing-s-d-ng-pro",
+    "LLM-validation-verification-load-test-the-web-api",
+    "LLM-repository-design-clean-code-clean-repo-demonstr",
+    "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:
