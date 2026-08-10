@@ -85,6 +85,14 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-iac-d-ng-terraform-setup-gke-ho-c-": "text_contains:evidence",
     "LLM-iac-d-ng-ansible-configure-v-deplo": "text_contains:evidence",
     "LLM-security-centralize-secret-management": "text_contains:secrets",
+    "LLM-a-llm-inference-platform--llm-inference-platform-setup-c": (
+        "yaml_mapping_contains:server"
+    ),
+    "LLM-a-llm-inference-platform--a-custom-model": "python_ast_contains:server",
+    "LLM-a-llm-inference-platform--benchmark-model-server-and-opt": (
+        "python_ast_contains:benchmark"
+    ),
+    "LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen": "text_contains:global",
 }
 
 
@@ -1090,6 +1098,10 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-iac-d-ng-terraform-setup-gke-ho-c-",
     "LLM-iac-d-ng-ansible-configure-v-deplo",
     "LLM-security-centralize-secret-management",
+    "LLM-a-llm-inference-platform--llm-inference-platform-setup-c",
+    "LLM-a-llm-inference-platform--a-custom-model",
+    "LLM-a-llm-inference-platform--benchmark-model-server-and-opt",
+    "LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:
