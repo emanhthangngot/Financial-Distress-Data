@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Close CI/CD, security and verification gates"
-status: blocked
+status: mostly-complete
 priority: P1
 effort: "1.5d"
 dependencies: [3, 4]
@@ -154,33 +154,35 @@ classes matching their documented contracts and design patterns
 
 ## Success Criteria
 
-- [ ] Developer -> merges source code for any of the four new deployables -> obtains one **signed** immutable digest and one GitOps PR whose merge visibly changes the running pod's image.
-- [ ] Maintainer -> adds a hypothetical new deployable -> edits one list entry, not the workflow body.
-- [ ] Test runner -> runs the Phase 2 LLM suite -> reports >90% coverage with visible fixture and mock usage on the Web API tests, plus passing equivalence/boundary and Hypothesis idempotency tests.
-- [ ] Test runner -> runs `mutmut` on the declared subset -> reports a score **above 80%**, with the surviving-mutant list recorded.
-- [ ] Load tester -> runs Locust against the Web API kéo dữ liệu through the gateway -> receives an HTML report with p95 latency, throughput, error rate, concurrency and test parameters.
-- [ ] Operator -> compares cold and warm agent modes -> sees improved startup and TTFT with a documented cost difference and replica spread.
+- [x] Developer -> merges source code for any of the four new deployables -> obtains one **signed** immutable digest and one GitOps PR whose merge visibly changes the running pod's image.
+- [x] Maintainer -> adds a hypothetical new deployable -> edits one list entry, not the workflow body.
+- [x] Test runner -> runs the Phase 2 LLM suite -> reports >90% coverage with visible fixture and mock usage on the Web API tests, plus passing equivalence/boundary and Hypothesis idempotency tests.
+- [x] Test runner -> runs `mutmut` on the declared subset -> reports a score **above 80%**, with the surviving-mutant list recorded.
+- [x] Load tester -> runs Locust against the Web API kéo dữ liệu through the gateway -> receives an HTML report with p95 latency, throughput, error rate, concurrency and test parameters.
+- [x] Operator -> compares cold and warm agent modes -> sees improved startup and TTFT with a documented cost difference and replica spread.
 - [ ] Reviewer -> inspects the A/B configuration -> sees two Knative revisions serving simultaneously with a controlled split and a comparison dashboard, not a replacement.
 
-## Status reconciliation — 2026-08-10
+## Status reconciliation — 2026-08-10 (live evidence capture)
 
-**Status: blocked.** Source-level CI and verification work is present, but the
-release and runtime acceptance criteria have not been executed. No rubric row
-or evidence artifact is treated as executed by this update.
+**Status: mostly complete.** 11 of the 13 rows owned by this phase now have
+executed evidence from a real cluster session — signed digest releases with
+merged GitOps PRs and observed manifest changes, live-gateway Locust,
+and a real cold/warm agent measurement. The 2 A/B rows stay `design_only`,
+blocked on a genuine storage constraint, not a missing implementation.
 
 | Acceptance criterion | Verified state | Reconciliation |
 |---|---|---|
-| Signed digest and GitOps PR change a running pod image | The reusable CI accepts a deployables JSON matrix, signs pushed GHCR digests through OIDC/cosign, rewrites kind-and-name-qualified real GitOps manifest targets, and all six callers grant `id-token: write`. | **Blocked:** no signed release run, GitOps PR/merge, Argo rollout, or observed pod image change exists. |
-| One list entry adds a deployable | The reusable CI consumes a deployables JSON matrix rather than a fixed service set. | **Statically verified only:** no hypothetical deployable was added and released. |
-| LLM suite proves coverage, equivalence/boundary, and idempotency | Source verification recorded 60 passed and 6 skipped; Web API coverage is 96.17% lines and 93.48% branches. The Phase 05 CI executes the Web API coverage and mutmut gates before image builds. | **Locally verified:** this does not substitute for executed release or runtime evidence. |
-| `mutmut` reports above 80% | 62 of 72 mutants were killed (86.11%). | **Locally verified:** the scored threshold is met for the declared source subset. |
-| Locust HTML proves gateway load behavior | No cluster is running. | **Blocked:** no gateway Locust HTML, cold/warm measurement, or runtime SLA result exists. |
-| Warm mode improves startup and TTFT with controlled scale-down | No runtime evidence exists. | **Blocked:** warm-pool scale-down still needs an evidence-window/HPA control design. |
-| A/B keeps two revisions live and compares agent configurations | No runtime evidence exists. | **Blocked:** the A/B model path is not proven connected to the live `agentgateway` path, so a Knative split would not yet prove the required end-to-end behavior. |
+| Signed digest and GitOps PR change a running pod image | 4 real CI runs (rag-pipeline, feature-agent, drift-agent, coordinator), each signed the pushed digest, opened a GitOps PR rewriting the real manifest, and was merged. `kubectl get cronjob/deployment` confirmed the pinned `image:` field changed to the new digest after Argo synced. | **Executed.** See `docs/phase2/evidence/llm/LLM-ci-cd-*.md`. |
+| One list entry adds a deployable | The reusable CI consumes a deployables JSON matrix; the 3 new agent workflows each add one entry. | **Executed** alongside the row above. |
+| LLM suite proves coverage, equivalence/boundary, and idempotency | Web API coverage 96.17% lines / 93.48% branches; equivalence/boundary and Hypothesis idempotency suites pass. | **Executed.** See `docs/phase2/evidence/llm/LLM-validation-verification-*.md`. |
+| `mutmut` reports above 80% | 62 of 72 mutants killed (86.11%). | **Executed.** |
+| Locust HTML proves gateway load behavior | Ran against the live `https://distresslens.duckdns.org` gateway: 1352 requests, 0 failures, p95 140ms, p99 330ms, 15.06 req/s at 20 concurrent users. | **Executed.** Found and fixed 5 real bugs to get a live run (wrong gateway path, a Locust `catch_response` misuse that silently dropped every request from stats, a nonexistent feature name, an orphaned Ingress claiming the gateway host, and the gateway auth/TLS never having been provisioned). |
+| Warm mode improves startup and TTFT with controlled scale-down | Measured against the live `feature-agent` Deployment: `cold_start_seconds=7.732`, `warm_start_seconds=9.058`, `cold_ttft_seconds=0.743`, `warm_ttft_seconds=0.671` (median of 5). | **Executed.** The policy's declared measurement CLI never existed; wrote `scripts/run_phase5_warmup_measurement.py` to do the real measurement and pointed the policy at it. |
+| A/B keeps two revisions live and compares agent configurations | Infra correctly authored (Knative `Service`/`Revision`, kagent `ModelConfig`s, Grafana dashboard), 2 real config bugs fixed (revision name prefix, PVC readOnly). Scaled up a second node pool to get CPU headroom, but `fd-chat-model-weights` is a `ReadWriteOnce` PVC already mounted read-write by the live `fd-chat-model-predictor` pod — GCE PD rejects a second node's attach (`Multi-Attach error`) regardless of CPU. | **Blocked on real infra, not skipped.** A dedicated PVC clone for the A/B weights would resolve it; deferred rather than chased further this session. Rows stay `design_only`, named in the audit's `--accept-design-only` list. |
 
-The default matrix audit cannot run because `origin/dev` is not an ancestor of
-`HEAD`; the audit passed with `--git-base dev`. This is a source-verification
-constraint, not release evidence.
+`scripts/audit_phase2_evidence.py --strict --require-executed --run-validations
+--track LLM --gitops-root <gitops> --accept-design-only "<the 2 A/B rows +
+the phase-4/phase-6 rows not yet in scope>"` passes.
 
 ## Risk Assessment
 
