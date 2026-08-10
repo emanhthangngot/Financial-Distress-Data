@@ -14,7 +14,7 @@ import os
 from locust import HttpUser, between, task
 
 TARGET_HOST = os.environ.get("BENCHMARK_TARGET_HOST", "https://distresslens.duckdns.org")
-FEATURE_PATH = os.environ.get("BENCHMARK_FEATURE_PATH", "/api/features/by-id")
+FEATURE_PATH = os.environ.get("BENCHMARK_FEATURE_PATH", "/v1/features/by-id")
 BENCHMARK_USER = os.environ.get("BENCHMARK_BASIC_AUTH_USER")
 BENCHMARK_PASSWORD = os.environ.get("BENCHMARK_BASIC_AUTH_PASSWORD")
 
@@ -36,7 +36,7 @@ class FeatureApiUser(HttpUser):
             FEATURE_PATH,
             json={"user_id": "AAA", "feature_names": ["company_features:risk_score"]},
             auth=self.auth,
-            name="POST /api/features/by-id",
+            name="POST /v1/features/by-id",
             catch_response=True,
         )
         if response.status_code != 200:
