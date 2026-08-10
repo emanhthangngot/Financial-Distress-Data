@@ -5,7 +5,6 @@ import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatePanel } from "@/components/ui/state-panel";
 import { getDataPort } from "@/lib/data";
-import { LIVE_FIXTURE_PROVENANCE } from "@/lib/data/fixtures/provenance-fixtures";
 import { resolveSession } from "@/lib/server/session";
 import { LOADING_COPY } from "@/lib/states/loading-copy";
 import { isFailureState, viewCopy, viewData } from "@/lib/states/view-state";
@@ -26,14 +25,25 @@ export default async function AgentRegistryPage() {
   const result = await getDataPort(accessToken).getAgentRegistry(context);
   const data: AgentRegistryView | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.registry);
-  const provenance = data?.provenance ?? LIVE_FIXTURE_PROVENANCE;
+  const provenance = data?.provenance ?? {
+    freshness: "CACHED_RESULT" as const,
+    planeAvailability: "LIVE_UNAVAILABLE" as const,
+    origin: "EVIDENCE_PLANE" as const,
+    cachedAt: null,
+    sourceSha: "0000000",
+    gitopsSha: null,
+    dataVersion: "unavailable",
+    modelVersion: null,
+    agentVersion: null,
+    runId: null,
+  };
 
   return (
     <AdminShell
       user={user}
       provenance={provenance}
-      syncedAtLabel="22/05/2025 18:32"
-      environmentLabel="AWS Evidence"
+      syncedAtLabel={data === null ? "Unavailable" : "Live registry"}
+      environmentLabel="Evidence plane"
       planeHealth={context.planeReady ? "ONLINE" : "OFFLINE"}
       desiredCommit={provenance.gitopsSha ?? "—"}
     >

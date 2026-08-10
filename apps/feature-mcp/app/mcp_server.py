@@ -12,6 +12,10 @@ from typing import Any, Protocol
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.observability.telemetry import Telemetry, inject_trace_headers, redact_fields
+
+_DEFAULT_TELEMETRY = Telemetry("feature-mcp")
+
 
 class FeatureApiClient(Protocol):
     async def feature_by_id(
@@ -35,7 +39,10 @@ class LoggingTraceSink:
 
     def emit(self, event: str, attributes: dict[str, Any]) -> None:
         logging.getLogger("phase2.mcp.audit").info(
-            json.dumps({"event": event, **attributes}, sort_keys=True)
+            json.dumps(
+                redact_fields({"event": event, **attributes}),
+                sort_keys=True,
+            )
         )
 
 
@@ -48,7 +55,10 @@ class HttpxFeatureApiClient:
         self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> HttpxFeatureApiClient:
-        self._client = httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout)
+        self._client = httpx.AsyncClient(
+            base_url=self._base_url,
+            timeout=self._timeout,
+        )
         return self
 
     async def __aexit__(self, *_exc: Any) -> None:
@@ -65,12 +75,17 @@ class HttpxFeatureApiClient:
         response = await self._active_client().post(
             "/v1/features/by-id",
             json={"user_id": user_id, "feature_names": list(feature_names)},
+            headers=inject_trace_headers(),
         )
         response.raise_for_status()
         return dict(response.json()["features"])
 
     async def rag_by_id(self, chunk_id: str) -> dict[str, Any]:
-        response = await self._active_client().post("/v1/rag/by-id", json={"chunk_id": chunk_id})
+        response = await self._active_client().post(
+            "/v1/rag/by-id",
+            json={"chunk_id": chunk_id},
+            headers=inject_trace_headers(),
+        )
         response.raise_for_status()
         return dict(response.json())
 
@@ -97,16 +112,29 @@ class FeatureMcpService:
     trace_sink: TraceSink
     timeout_seconds: float = 5.0
     max_calls: int = 2
+    telemetry: Telemetry | None = None
 
     async def invoke(self, raw: dict[str, Any]) -> ToolResult:
+        telemetry = self.telemetry or _DEFAULT_TELEMETRY
+        telemetry.observe_tool_call("lookup_feature_context")
+        with telemetry.span(
+            "feature_mcp.lookup_feature_context",
+            {"tool": "lookup_feature_context"},
+        ):
+            return await self._invoke(raw, telemetry)
+
+    async def _invoke(self, raw: dict[str, Any], telemetry: Telemetry) -> ToolResult:
         try:
             request = ToolRequest.model_validate(raw)
         except ValueError as exc:
+            telemetry.observe_failure("mcp.lookup_feature_context", "validation_error")
             return ToolResult(ok=False, error=f"validation_error:{exc}")
         if request.scope not in self.grants.get(request.agent_identity, set()):
+            telemetry.observe_failure("mcp.lookup_feature_context", "forbidden")
             return ToolResult(ok=False, error="forbidden")
         required_calls = 1 + int(request.chunk_id is not None)
         if required_calls > self.max_calls:
+            telemetry.observe_failure("mcp.lookup_feature_context", "tool_budget_exhausted")
             return ToolResult(ok=False, error="tool_budget_exhausted")
         self.trace_sink.emit(
             "feature_mcp.invoke",
@@ -124,8 +152,10 @@ class FeatureMcpService:
                 )
             return ToolResult(ok=True, data=data)
         except (TimeoutError, httpx.TimeoutException):
+            telemetry.observe_failure("mcp.lookup_feature_context", "timeout")
             return ToolResult(ok=False, error="timeout")
         except httpx.HTTPError:
+            telemetry.observe_failure("mcp.lookup_feature_context", "api_error")
             return ToolResult(ok=False, error="api_error")
 
 
@@ -185,7 +215,7 @@ class McpRuntime:
     api: HttpxFeatureApiClient
 
 
-def create_mcp_runtime() -> McpRuntime:
+def create_mcp_runtime(telemetry: Telemetry | None = None) -> McpRuntime:
     """Assemble transport dependencies without opening sockets or sessions."""
     base_url = os.getenv("FEATURE_API_BASE_URL", "http://127.0.0.1:8000")
     api = HttpxFeatureApiClient(base_url)
@@ -193,5 +223,6 @@ def create_mcp_runtime() -> McpRuntime:
         api=api,
         grants=_grants_from_env(),
         trace_sink=LoggingTraceSink(),
+        telemetry=telemetry or _DEFAULT_TELEMETRY,
     )
     return McpRuntime(application=create_mcp_server(service).streamable_http_app(), api=api)

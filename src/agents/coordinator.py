@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.agents.models import AgentFailure, Citation, SpecialistResponse
+from src.observability.telemetry import Telemetry, current_telemetry
 
 
 class Specialist(Protocol):
@@ -46,8 +47,24 @@ class Coordinator:
     max_hops: int = 2
     max_parallel: int = 2
     timeout_seconds: float = 10.0
+    telemetry: Telemetry | None = None
 
     async def coordinate(
+        self, raw: CoordinatorRequest | dict[str, Any]
+    ) -> CoordinatorResponse | AgentFailure:
+        telemetry = self.telemetry or current_telemetry()
+        telemetry.observe_agent_call("coordinator")
+        try:
+            with telemetry.span("agent.coordinator.coordinate", {"agent": "coordinator"}):
+                result = await self._coordinate(raw)
+        except Exception as exc:
+            telemetry.observe_failure("agent.coordinator.coordinate", type(exc).__name__)
+            raise
+        if isinstance(result, AgentFailure):
+            telemetry.observe_failure("agent.coordinator.coordinate", result.error)
+        return result
+
+    async def _coordinate(
         self, raw: CoordinatorRequest | dict[str, Any]
     ) -> CoordinatorResponse | AgentFailure:
         request = (

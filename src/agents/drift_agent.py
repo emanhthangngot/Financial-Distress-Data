@@ -8,6 +8,7 @@ from typing import Any, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.agents.models import Citation, SpecialistResponse
+from src.observability.telemetry import Telemetry, current_telemetry
 
 
 class DriftToolClient(Protocol):
@@ -32,8 +33,19 @@ class DriftAgent:
     tool: DriftToolClient
     renderer: AnswerRenderer
     identity: str = "drift-agent"
+    telemetry: Telemetry | None = None
 
     async def run(self, raw: DriftAgentRequest | dict[str, Any]) -> SpecialistResponse:
+        telemetry = self.telemetry or current_telemetry()
+        telemetry.observe_agent_call(self.identity)
+        try:
+            with telemetry.span("agent.drift.run", {"agent": self.identity}):
+                return await self._run(raw)
+        except Exception as exc:
+            telemetry.observe_failure("agent.drift.run", type(exc).__name__)
+            raise
+
+    async def _run(self, raw: DriftAgentRequest | dict[str, Any]) -> SpecialistResponse:
         request = (
             raw if isinstance(raw, DriftAgentRequest) else DriftAgentRequest.model_validate(raw)
         )

@@ -1,7 +1,7 @@
 ---
 phase: 4
 title: "Complete gateway, UIs and observability"
-status: pending
+status: blocked
 priority: P1
 effort: "1.5d"
 dependencies: [3]
@@ -14,6 +14,58 @@ dependencies: [3]
 Make everything from phases 2-3 reachable and observable through the F5 NGINX
 edge: two product UI routes, three viewer routes, authentication plus a rate
 limit, and the full metrics/logs/traces set.
+
+## Current Status (2026-08-10)
+
+**Blocked — pending deployment-time evidence.**
+
+- Project manager -> records source implementation -> the shared telemetry,
+  redaction, trace-context, live-registry, assistant, MCP, agent, and web
+  standalone changes are present in the source worktree -> static source work
+  exists but is not deployment evidence.
+- Project manager -> records GitOps implementation -> the web chart and values,
+  F5 UI/viewer routes, DuckDNS Certificate, auth manifest, dashboards, OTel
+  collector, Prometheus/Loki/Jaeger values, ServiceMonitors, and Argo wiring
+  are present in the private GitOps worktree -> static deployment manifests
+  exist but have no committed GitOps revision or live reconciliation result.
+
+### Verification recorded
+
+| WHO -> ACTION -> RESULT |
+|---|
+| Phase 04 source tests -> run `PYTHONDONTWRITEBYTECODE=1 .venv-phase2/bin/python -m pytest -p no:cacheprovider tests/phase2/test_observability.py tests/phase2/apps tests/phase2/agents` -> exit 0, **16 passed, 0 failed, 0 skipped** in 1.90s. |
+| Phase 04 Python syntax check -> run `PYTHONDONTWRITEBYTECODE=1 .venv-phase2/bin/python -m compileall -q apps/drift-mcp/app apps/feature-mcp/app src/agents src/observability` -> exit 0. |
+| Web behavior tests -> run `pnpm --filter @distresslens/web exec vitest run src/app/api/assistant/stream/route.test.ts src/lib/data/live-registry-adapter.test.ts` -> **19 tests passed**, but exit 1 because the narrow run produced 23.51% line and 72.54% branch coverage against the package-wide 90% threshold. |
+| Web behavior tests -> rerun `pnpm --filter @distresslens/web exec vitest run --coverage.enabled=false src/app/api/assistant/stream/route.test.ts src/lib/data/live-registry-adapter.test.ts` -> exit 0, **2 files and 19 tests passed** in 1.45s. |
+| Web type checker -> run `pnpm --filter @distresslens/web typecheck` -> exit 0. |
+| Web production build -> run `pnpm --filter @distresslens/web build` -> exit 0; Next.js 16.2.12 compiled and generated `/agents/registry` and `/api/assistant/stream`. |
+| GitOps web chart -> run `helm lint charts/web -f apps/dev/web/values.yaml` and render it -> exit 0; 1 chart linted and 90 lines rendered. |
+| GitOps service charts -> lint and render the feature and drift charts with their app values -> exit 0 for both; 128 feature lines and 111 drift lines rendered, with informational missing-`values.yaml` notices only. |
+| GitOps YAML -> parse 20 changed/untracked non-template YAML files with PyYAML -> exit 0; Go-template files were validated through Helm instead. |
+| Source and GitOps repositories -> run `git diff --check` -> both exit 0 with no whitespace errors. |
+
+### Deployment blockers and live gate
+
+- Cluster observer -> runs the active-context read-only checks -> finds context
+  `gke_project-60655616-d84a-4883-867_asia-southeast1-b_fsds-evidence` with **no
+  nodes**, only the prior `default/hello-web` ingress and its certificates,
+  `platform-observability` `OutOfSync/Healthy`, and Phase 04-related pods in
+  `Pending` -> live Phase 04 execution is unavailable.
+- Release owner -> replaces the four
+  `REPLACE_WITH_KUBESEAL_OUTPUT` ciphertext markers and injects the web image
+  digest (`tag: phase4`, `digest: ""` currently) -> deployable basic auth and
+  immutable web provenance remain pending.
+- Cluster operator -> syncs the GitOps changes onto schedulable capacity -> the
+  five gateway routes, TLS issuance, auth challenge/429, enforced
+  hide-services proof, and Argo-managed observability remain unexecuted.
+- Evidence owner -> captures live HTTPS, UI-approval, metric/log/trace
+  correlation, and redaction results -> all 13 Phase 04 rubric filenames are
+  currently missing; no evidence row was flipped and no generated evidence was
+  edited.
+
+Project manager -> preserves Phase 04 status -> `status: blocked` remains in
+  this file and the parent plan tracks Phase 04 as blocked on live evidence;
+  no executed-evidence or completion claim is made.
 
 Rubric rows owned (21 points) — IDs and paths copied verbatim from the CSV:
 
