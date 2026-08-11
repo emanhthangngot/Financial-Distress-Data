@@ -18,12 +18,14 @@ on:
       - "apps/web/**"
       - "packages/contracts/**"
       - "tests/phase2/verification/test_web_api_adapters.py"
+      - ".github/workflows/phase2-web.yaml"
   pull_request:
     branches: [main, dev]
     paths:
       - "apps/web/**"
       - "packages/contracts/**"
       - "tests/phase2/verification/test_web_api_adapters.py"
+      - ".github/workflows/phase2-web.yaml"
   workflow_dispatch: {}
 
 permissions:
