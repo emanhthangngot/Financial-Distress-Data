@@ -7,8 +7,8 @@ separation (source repo for code/CI, private GitOps repo for deployed state).
 
 - rubric_id: LLM-repository-design-clean-code-clean-repo-demonstr
 - execution_timestamp: 2026-08-10T13:10:00+07:00
-- source_sha: ddea8d49ed2480cc9e59a9e6082071b5e96c0b8c
-- gitops_sha: 99fcab18c79f34fdcf6a4bf65e2fd83c00afb01f
+- source_sha: 758722c52ef3035a7e3f9464dc03c5a39e50a74e
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: python 3.11
 - command: `pytest tests/phase2/verification/test_contract_implementations.py -v`
 - expected_result: `src/llm/contracts.py` defines abstract service contracts (`RagIngestionService`, `EmbeddingRegistryService`, `McpToolService`, `AgentOrchestrationService`, `AgentReleaseService`) with concrete, behaviorally-tested implementations (`BoundedMcpToolService`, `BoundedAgentOrchestrationService`, `InMemoryEmbeddingRegistry`), not stubs

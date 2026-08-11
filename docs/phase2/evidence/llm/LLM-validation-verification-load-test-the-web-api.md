@@ -7,8 +7,8 @@ p95 latency, throughput, error rate and concurrency.
 
 - rubric_id: LLM-validation-verification-load-test-the-web-api
 - execution_timestamp: 2026-08-10T23:19:36+07:00
-- source_sha: ddea8d49ed2480cc9e59a9e6082071b5e96c0b8c
-- gitops_sha: 99fcab18c79f34fdcf6a4bf65e2fd83c00afb01f
+- source_sha: 758722c52ef3035a7e3f9464dc03c5a39e50a74e
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: locust 2.46.3, nginx/nginx-ingress:5.5.4, feature-mcp@sha256:6bfb99fc834bf9a2cac78b9c59c5de259f9738cd9c61dcfe626e2da6e6cfd510
 - command: `locust -f tests/load/locustfile.py --headless --users 20 --spawn-rate 5 --run-time 90s --host https://distresslens.duckdns.org --html docs/phase2/evidence/llm/locust-report.html --csv docs/phase2/evidence/llm/locust`
 - expected_result: HTML report with p95 latency, throughput (req/s), error rate and concurrency, generated from real requests through the gateway to the live `feature-mcp` service

@@ -7,8 +7,8 @@ measures a real cold-vs-warm startup and TTFT delta against the live
 
 - rubric_id: LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a
 - execution_timestamp: 2026-08-10T23:24:00+07:00
-- source_sha: ddea8d49ed2480cc9e59a9e6082071b5e96c0b8c
-- gitops_sha: 99fcab18c79f34fdcf6a4bf65e2fd83c00afb01f
+- source_sha: 758722c52ef3035a7e3f9464dc03c5a39e50a74e
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: feature-agent@sha256:6bfb99fc834bf9a2cac78b9c59c5de259f9738cd9c61dcfe626e2da6e6cfd510, kubectl v1.35, GKE v1.35.6-gke.1250000
 - command: `python scripts/run_phase5_warmup_measurement.py --warm-replicas 2 --output docs/phase2/evidence/llm/warmup.json`
 - expected_result: measured `cold_start_seconds`, `warm_start_seconds`, `cold_ttft_seconds`, `warm_ttft_seconds`, `replica_spread` and `estimated_cost_delta`, with warm TTFT lower than or comparable to cold TTFT and the pool restored to its declared minimum (2 replicas) afterward

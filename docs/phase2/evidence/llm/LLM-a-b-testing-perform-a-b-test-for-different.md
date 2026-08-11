@@ -6,8 +6,8 @@ needed to evaluate the split.
 
 - rubric_id: LLM-a-b-testing-perform-a-b-test-for-different
 - execution_timestamp: 2026-08-11T00:31+07:00
-- source_sha: 668273d7e28c9f4221f09942c95730bea0cb432a
-- gitops_sha: 99c01252d5aec53737d697fcb02b0e7061d8824e
+- source_sha: 758722c52ef3035a7e3f9464dc03c5a39e50a74e
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: v1 (`fd-chat-model-v1-config-ab`) and v2 (`fd-chat-model-ab-v2-clone`); Knative Service `fd-chat-model-ab`
 - command: live Kubernetes inspection of `platform-llm`, the two model revisions/PVCs, the Knative Service traffic split, both DNS routes (`/health` and `/v1/models`), and the dashboard/model-config resources
 - expected_result: two ready LLM versions receive an explicit stable/canary split, both routes pass readiness and model-identity checks, and dashboard/config resources are present for A/B evaluation

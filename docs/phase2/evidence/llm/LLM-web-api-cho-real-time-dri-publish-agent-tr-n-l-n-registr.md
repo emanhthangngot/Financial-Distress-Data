@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr
 - execution_timestamp: 2026-08-10T05:13:00+00:00
-- source_sha: 2f0d189fb3607bd0d509201869792246202f23b0
-- gitops_sha: 6ba77a0464916ee86206b4e63090d5bd4742e048
+- source_sha: 758722c52ef3035a7e3f9464dc03c5a39e50a74e
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: agentregistry API 1.0.0, registry.fd.dev/v1alpha1
 - command: `kubectl exec -n kagent deploy/agentregistry -- python -c "urllib.request.urlopen('http://127.0.0.1:8000/v1/agents/drift-agent')"`
 - expected_result: registry exposes drift-agent governance and tool metadata
