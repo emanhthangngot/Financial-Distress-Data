@@ -9,7 +9,9 @@ name: Phase 2 — web
 # artifact that touches the web deployable — the API-adapter contract test —
 # so this caller's lint/test jobs do real, if narrow, work instead of a
 # silent no-op. Decision recorded 2026-08-11
-# (plans/260811-1627-close-llm-rubric-to-100/phase-02).
+# (plans/260811-1627-close-llm-rubric-to-100/phase-02). Retrigger note:
+# bumped alongside phase2-ci.yaml's provenance-SHA rewrite so this file's
+# own path match re-runs the digest bump with the fix included.
 
 on:
   push:
