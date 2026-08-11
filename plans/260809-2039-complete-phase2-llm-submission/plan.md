@@ -87,7 +87,7 @@ filenames are contractually `docs/phase2/evidence/llm/<rubric_id>.md`.
 | 2 | [Stand up inference platform and model chain](./phase-02-stand-up-inference-platform-and-model-chain.md) | 8 | 1 | Pending |
 | 3 | [Ship both FastAPI services, MCP servers and agents](./phase-03-ship-both-fastapi-services-mcp-servers-and-agents.md) | 24 | 2 | Completed |
 | 4 | [Complete gateway, UIs and observability](./phase-04-complete-gateway-uis-and-observability.md) | 21 | 1.5 | Blocked — pending live evidence |
-| 5 | [Close CI/CD, security and verification gates](./phase-05-close-ci-cd-security-and-verification-gates.md) | 23 | 1.5 | Mostly complete — 21/23 points executed with live evidence; A/B (2 pts) blocked on a ReadWriteOnce PVC |
+| 5 | [Close CI/CD, security and verification gates](./phase-05-close-ci-cd-security-and-verification-gates.md) | 23 | 1.5 | Completed — 23/23 points executed with live evidence, including two-node Knative A/B |
 | 6 | [Produce evidence, stamp SHAs and mock-grade](./phase-06-produce-evidence-stamp-shas-and-mock-grade.md) | 9 | 1.5 | Pending |
 
 12 points already executed + 88 planned = 100, in **9 days**, not 7.

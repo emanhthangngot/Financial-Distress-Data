@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Close CI/CD, security and verification gates"
-status: mostly-complete
+status: completed
 priority: P1
 effort: "1.5d"
 dependencies: [3, 4]
@@ -160,15 +160,15 @@ classes matching their documented contracts and design patterns
 - [x] Test runner -> runs `mutmut` on the declared subset -> reports a score **above 80%**, with the surviving-mutant list recorded.
 - [x] Load tester -> runs Locust against the Web API kéo dữ liệu through the gateway -> receives an HTML report with p95 latency, throughput, error rate, concurrency and test parameters.
 - [x] Operator -> compares cold and warm agent modes -> sees improved startup and TTFT with a documented cost difference and replica spread.
-- [ ] Reviewer -> inspects the A/B configuration -> sees two Knative revisions serving simultaneously with a controlled split and a comparison dashboard, not a replacement.
+- [x] Reviewer -> inspects the A/B configuration -> sees two Knative revisions serving simultaneously with a controlled split and a comparison dashboard, not a replacement.
 
-## Status reconciliation — 2026-08-10 (live evidence capture)
+## Status reconciliation — 2026-08-11 (live evidence capture)
 
-**Status: mostly complete.** 11 of the 13 rows owned by this phase now have
-executed evidence from a real cluster session — signed digest releases with
-merged GitOps PRs and observed manifest changes, live-gateway Locust,
-and a real cold/warm agent measurement. The 2 A/B rows stay `design_only`,
-blocked on a genuine storage constraint, not a missing implementation.
+**Status: complete.** All 13 rows owned by this phase now have executed
+evidence from real cluster sessions — signed digest releases with merged
+GitOps PRs and observed manifest changes, live-gateway Locust, a real
+cold/warm agent measurement, and a live Knative A/B split with both model
+revisions and both independent RWO weight clones ready on separate nodes.
 
 | Acceptance criterion | Verified state | Reconciliation |
 |---|---|---|
@@ -178,11 +178,11 @@ blocked on a genuine storage constraint, not a missing implementation.
 | `mutmut` reports above 80% | 62 of 72 mutants killed (86.11%). | **Executed.** |
 | Locust HTML proves gateway load behavior | Ran against the live `https://distresslens.duckdns.org` gateway: 1352 requests, 0 failures, p95 140ms, p99 330ms, 15.06 req/s at 20 concurrent users. | **Executed.** Found and fixed 5 real bugs to get a live run (wrong gateway path, a Locust `catch_response` misuse that silently dropped every request from stats, a nonexistent feature name, an orphaned Ingress claiming the gateway host, and the gateway auth/TLS never having been provisioned). |
 | Warm mode improves startup and TTFT with controlled scale-down | Measured against the live `feature-agent` Deployment: `cold_start_seconds=7.732`, `warm_start_seconds=9.058`, `cold_ttft_seconds=0.743`, `warm_ttft_seconds=0.671` (median of 5). | **Executed.** The policy's declared measurement CLI never existed; wrote `scripts/run_phase5_warmup_measurement.py` to do the real measurement and pointed the policy at it. |
-| A/B keeps two revisions live and compares agent configurations | Infra correctly authored (Knative `Service`/`Revision`, kagent `ModelConfig`s, Grafana dashboard), 2 real config bugs fixed (revision name prefix, PVC readOnly). Scaled up a second node pool to get CPU headroom, but `fd-chat-model-weights` is a `ReadWriteOnce` PVC already mounted read-write by the live `fd-chat-model-predictor` pod — GCE PD rejects a second node's attach (`Multi-Attach error`) regardless of CPU. | **Blocked on real infra, not skipped.** A dedicated PVC clone for the A/B weights would resolve it; deferred rather than chased further this session. Rows stay `design_only`, named in the audit's `--accept-design-only` list. |
+| A/B keeps two revisions live and compares agent configurations | GitOps PRs #31–#34 created one PD CSI PVC clone per revision, rotated immutable Knative names, pinned webhook-defaulted probes, and changed v1 to a Configuration-backed revision. `fd-chat-model-v1-config-ab` and `fd-chat-model-ab-v2-clone` are Ready with 1/1 replicas on primary/secondary nodes; `fd-chat-model-ab` reports RoutesReady with 80% stable and 20% canary traffic; both stable/canary `/health` and `/v1/models` probes returned successfully; `fd-agent-model-v1`, `fd-agent-model-v2`, and `phase2-ab-dashboard` are present. | **Executed.** The original RWO Multi-Attach blocker is resolved by independent 2Gi clones `fd-chat-model-weights-ab-v1` and `fd-chat-model-weights-ab-v2`, each Bound to a distinct PD. See both A/B evidence files. |
 
 `scripts/audit_phase2_evidence.py --strict --require-executed --run-validations
---track LLM --gitops-root <gitops> --accept-design-only "<the 2 A/B rows +
-the phase-4/phase-6 rows not yet in scope>"` passes.
+--track LLM --gitops-root <gitops> --accept-design-only "<the phase-4/phase-6
+rows not yet in scope>"` passes.
 
 ## Risk Assessment
 
@@ -196,6 +196,5 @@ the phase-4/phase-6 rows not yet in scope>"` passes.
 - **Rewiring the digest key touches the one CI path that already works.**
   Mitigation: prove the loop on a single service before adding the four callers;
   the existing `LLM-ci-cd-job-1`/`job-2` evidence is the regression baseline.
-- **Warm-up and A/B are cut-ladder entries 1 and 2** (2 points each, decide by
-  the end of this phase's day 1). Cutting them requires naming the rows in
-  `--accept-design-only` and in `docs/submission/README.md`.
+- **Warm-up and A/B were cut-ladder entries 1 and 2** (2 points each); both
+  were retained and executed with live evidence on 2026-08-11.
