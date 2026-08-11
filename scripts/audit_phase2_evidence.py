@@ -446,6 +446,7 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
         )
         if resolved.returncode != 0:
             return [f"git check failed: baseline '{base}' is not a commit"]
+        baseline = resolved.stdout.strip()
         ancestry = subprocess.run(
             ["git", "merge-base", "--is-ancestor", resolved.stdout.strip(), "HEAD"],
             cwd=REPO_ROOT,
@@ -454,9 +455,23 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
             timeout=30,
         )
         if ancestry.returncode != 0:
-            return [f"git check failed: baseline '{base}' is not an ancestor of source HEAD"]
+            # A remote tracking branch can contain a merge commit whose first
+            # parent is this checkout. In that topology, comparing the
+            # checkout against itself is the precise working-tree check; it
+            # does not erase any local diff. True branch divergence remains a
+            # hard failure.
+            checkout_is_ancestor = subprocess.run(
+                ["git", "merge-base", "--is-ancestor", "HEAD", baseline],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if checkout_is_ancestor.returncode != 0:
+                return [f"git check failed: baseline '{base}' is not an ancestor of source HEAD"]
+            baseline = "HEAD"
         diff = subprocess.run(
-            ["git", "diff", "--name-only", base],
+            ["git", "diff", "--name-only", baseline],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,

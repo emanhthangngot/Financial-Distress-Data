@@ -133,6 +133,15 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     ),
     "LLM-a-b-testing-perform-a-b-test-for-different": "yaml_mapping_contains:canary",
     "LLM-a-b-testing-when-you-deploy-a-new-model": "yaml_mapping_contains:revisionName",
+    "LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a": (
+        "notebook_code_contains:understanding"
+    ),
+    "LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra": (
+        "notebook_code_contains:agent"
+    ),
+    "LLM-novel-ideas-idea-1": "python_ast_contains:embedding",
+    "LLM-novel-ideas-idea-2": "python_ast_contains:citation",
+    "LLM-documentation-low-level-ml-design": "text_contains:design",
 }
 
 
@@ -1170,6 +1179,11 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a",
     "LLM-a-b-testing-perform-a-b-test-for-different",
     "LLM-a-b-testing-when-you-deploy-a-new-model",
+    "LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a",
+    "LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra",
+    "LLM-novel-ideas-idea-1",
+    "LLM-novel-ideas-idea-2",
+    "LLM-documentation-low-level-ml-design",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:

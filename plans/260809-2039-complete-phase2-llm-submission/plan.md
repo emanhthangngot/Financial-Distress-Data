@@ -88,7 +88,7 @@ filenames are contractually `docs/phase2/evidence/llm/<rubric_id>.md`.
 | 3 | [Ship both FastAPI services, MCP servers and agents](./phase-03-ship-both-fastapi-services-mcp-servers-and-agents.md) | 24 | 2 | Completed |
 | 4 | [Complete gateway, UIs and observability](./phase-04-complete-gateway-uis-and-observability.md) | 21 | 1.5 | Blocked — pending live evidence |
 | 5 | [Close CI/CD, security and verification gates](./phase-05-close-ci-cd-security-and-verification-gates.md) | 23 | 1.5 | Completed — 23/23 points executed with live evidence, including two-node Knative A/B |
-| 6 | [Produce evidence, stamp SHAs and mock-grade](./phase-06-produce-evidence-stamp-shas-and-mock-grade.md) | 9 | 1.5 | Pending |
+| 6 | [Produce evidence, stamp SHAs and mock-grade](./phase-06-produce-evidence-stamp-shas-and-mock-grade.md) | 9 | 1.5 | In Progress — live proofs captured; evidence and SHA stamping pending commit approval |
 
 12 points already executed + 88 planned = 100, in **9 days**, not 7.
 
@@ -122,6 +122,24 @@ Dependencies are linear: 1 → 2 → 3 → 4, phase 5 needs 3 and 4, phase 6 nee
   placeholders, the web chart digest is empty, GitOps changes are uncommitted,
   and all 13 Phase 04 evidence filenames are missing -> no executed-evidence
   claim or evidence-row flip is made.
+
+## Phase 06 synchronization — 2026-08-11
+
+- Project manager -> records the five live Phase 06 artifact proofs ->
+  `notebooks/agent-understanding-demo.ipynb`, `notebooks/agent-mcp-demo.ipynb`,
+  `src/llm/embedding_registry.py`,
+  `src/llm/citation_guard.py`, and `docs/phase2/low-level-design.md` were
+  captured -> live artifact capture is complete, while the five canonical
+  evidence markdown files and SHA-stamping remain pending commit approval.
+- Project manager -> preserves rubric honesty -> the six
+  `LLM-observability-*` rows and seven `LLM-routing-gateway-*` rows remain
+  `design_only` -> no live observability or gateway evidence is claimed.
+- Cost owner -> records the infrastructure state -> the evidence GCP VM is
+  stopped and the pool resize is still being verified -> the final zero-node
+  hibernation check remains open.
+- Project manager -> keeps Phase 06 in progress -> canonical evidence,
+  separate SHA commits, strict audit, mock-grade, and final hibernation
+  verification remain open -> no phase is marked complete.
 
 ## Cut Ladder
 

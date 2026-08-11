@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Produce evidence, stamp SHAs and mock-grade"
-status: pending
+status: in-progress
 priority: P1
 effort: "1.5d"
 dependencies: [1, 2, 3, 4, 5]
@@ -30,6 +30,24 @@ Both notebook rows shipped pointing at the same file; phase 1 gives the second
 its own path so each row has distinct proof. The two novel ideas are **code
 modules**, not just a prose document — `src/llm/embedding_registry.py` and
 `src/llm/citation_guard.py` are what the generated tests assert exist.
+
+## Current status — 2026-08-11
+
+- Project manager -> records the five live Phase 06 artifact proofs ->
+  `notebooks/agent-understanding-demo.ipynb`, `notebooks/agent-mcp-demo.ipynb`,
+  `src/llm/embedding_registry.py`,
+  `src/llm/citation_guard.py`, and `docs/phase2/low-level-design.md` were
+  captured -> live artifact capture is complete, while the five canonical
+  evidence markdown files and SHA-stamping remain pending commit approval.
+- Project manager -> preserves rubric honesty -> six observability rows and
+  seven gateway rows remain `design_only` -> no live route, viewer, or
+  observability proof is claimed for those rows.
+- Cost owner -> records the infrastructure state -> the evidence GCP VM is
+  stopped and the pool resize is still being verified -> final hibernation
+  verification remains open.
+- Project manager -> keeps this phase in progress -> canonical evidence,
+  separate SHA commits, strict audit, mock-grade, and final hibernation
+  verification remain open -> Phase 06 is not complete.
 
 ## Requirements
 

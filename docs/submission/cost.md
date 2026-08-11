@@ -16,6 +16,19 @@ Doubles as the row-67 (IaC) cost deliverable. GCP free-trial credit only —
 
 Status: cost levers implemented; actual spend report pending phase-08.
 
+## Phase 06 session state — 2026-08-11
+
+The read-only status check before capture showed both GKE node pools with no
+nodes and the evidence VM `TERMINATED`. `make gcp-up` then opened one primary
+node and the evidence VM for the live MCP notebook capture; both MCP services,
+Redis and PostgreSQL became ready, and the two notebook calls returned real
+feature/RAG and drift results. `make gcp-down` was invoked immediately after
+capture: the evidence VM is `TERMINATED`, while the primary-pool resize was
+still `RECONCILING` at the time of this record. Verify both pools report zero
+nodes before any later session. The GCP CLI does not expose the billing-credit
+delta, so no dollar amount is inferred here; the billing-console balance and
+trial-account status remain submission-owner checks.
+
 ## Session — 2026-08-10 (Phase 5 live evidence capture)
 
 - `make gcp-up` restored primary-pool (1 node) + evidence VM.
