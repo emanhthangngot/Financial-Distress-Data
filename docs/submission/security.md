@@ -11,7 +11,10 @@ mesh-free design (Istio dropped, see phase-03 Scope Changes).
 - NetworkPolicy addon (Calico) enabled on the GKE cluster.
 - No service-account key JSON anywhere; Workload Identity for in-cluster
   GCP access, `gcloud auth application-default login` for Terraform.
-- Restricted-PSS sandbox namespace: **TBD phase-06** (agent sandbox row).
+- Restricted-PSS sandbox namespace: executed evidence is recorded in the
+  canonical agent sandbox rows under `docs/phase2/evidence/llm/`.
 
-Status: platform-level controls live; app-level enforcement pending
-phase-06/07.
+Status: the security rows are executed. Gateway authentication and viewer
+routes are a separate live-evidence gap and remain design-only in the matrix;
+they are tracked in `docs/submission/README.md` rather than being implied by
+the sandbox proof.

@@ -1236,16 +1236,13 @@ class TestPhase2PromotionHardening:
         assert "accepted final cut" not in result.stdout
 
     def test_final_promotion_requires_documented_cuts_and_frozen_base(self) -> None:
-        import csv
         import subprocess
         import sys
 
-        rows = list(csv.DictReader(MATRIX_CSV.read_text(encoding="utf-8").splitlines()))
-        pending = next(
-            row["rubric_id"]
-            for row in rows
-            if row["track"] == "LLM" and row["evidence_type"] == "design_only"
-        )
+        # All real final cuts are documented in the submission README. Use a
+        # synthetic ID here so this test exercises the undocumented-cut guard
+        # without depending on a currently unclaimed rubric row.
+        pending = "LLM-test-undocumented-cut"
         result = subprocess.run(
             [
                 sys.executable,

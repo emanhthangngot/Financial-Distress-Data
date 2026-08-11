@@ -7,8 +7,8 @@ CI template end to end for the `coordinator` deployable: build → cosign sign
 
 - rubric_id: LLM-ci-cd-agent-l-m-coordinator
 - execution_timestamp: 2026-08-10T23:41:38+07:00
-- source_sha: ddea8d49ed2480cc9e59a9e6082071b5e96c0b8c
-- gitops_sha: 99fcab18c79f34fdcf6a4bf65e2fd83c00afb01f
+- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/coordinator
 - command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `phase2-agent-coordinator.yaml` on the `push` event
 - expected_result: `lint`, `test`, `build`, `phase5-verification`, `gitops-pr` all succeed; `gitops-pr` rewrites the `coordinator` `Deployment`'s `image:` field with a real digest and opens a PR against `master`

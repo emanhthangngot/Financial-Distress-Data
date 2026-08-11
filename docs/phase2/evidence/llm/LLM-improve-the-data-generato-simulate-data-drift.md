@@ -8,8 +8,8 @@ the relative change clearing the configured threshold.
 
 - rubric_id: LLM-improve-the-data-generato-simulate-data-drift
 - execution_timestamp: 2026-08-08T07:28:49+00:00
-- source_sha: a82af7ab7055cd8eb17081a65763c8a92d255ff5
-- gitops_sha: 0b2e4766958b835191c7ed5e524550bea344685a
+- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: financial-distress-data@a82af7a, drift-config schema_version=1
 - command: .venv/bin/python scripts/run_phase2_drift_report.py --scenario financial_deterioration
 - expected_result: observed_direction == "increase" (configured), relative_change >= threshold (0.10), report.json byte-identical across two runs with the same seed

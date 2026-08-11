@@ -9,8 +9,8 @@ publishes — so it joins to `company_financial_features`/
 
 - rubric_id: LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la
 - execution_timestamp: 2026-08-08T07:32:59+00:00
-- source_sha: a82af7ab7055cd8eb17081a65763c8a92d255ff5
-- gitops_sha: 0b2e4766958b835191c7ed5e524550bea344685a
+- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: financial-distress-data@a82af7a, label_version=altman-z-v1
 - command: .venv/bin/python -c "from pathlib import Path; from src.generator.config import load_generator_config; from src.generator.offline import generate_offline_data; from src.ml.label_pipeline import build_labels, LABEL_VERSION, LABEL_SOURCE; cfg = load_generator_config(Path('configs/generator-config.yaml'), profile='ci'); offline = generate_offline_data(cfg); labels = build_labels(offline.financial_statements); print(f'label_version={LABEL_VERSION}'); print(f'label_source={LABEL_SOURCE}'); print(f'financial_statement_rows={len(offline.financial_statements)}'); print(f'label_rows={len(labels)}'); [print(f\"{r['ticker']} | {r['event_timestamp']} | {r['label']} | {r['training_eligible']}\") for r in labels[:8]]"
 - expected_result: one label row per financial_statement row, schema {ticker, event_timestamp, label, label_version, created_ts, training_eligible, label_source}, `ticker`+`label` project cleanly as the id/label pair the rubric asks for

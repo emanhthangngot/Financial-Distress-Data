@@ -6,8 +6,13 @@ Human-facing index into `docs/phase2/evidence/llm/` — not a relocation.
 canonical location, they don't hold the evidence itself. See
 `docs/phase2/evidence-contract.md` for what counts as proof.
 
-Status: **skeletons** (phase-03 day 0). Filled in during phase-08 once each
-row moves from `design_only` to `executed`.
+Status: **Phase 06 runtime capture complete; evidence materialization and SHA
+stamping pending commit approval**. The LLM track has 42 previously materialized
+executed rows; five more artifacts were captured live and the matrix now marks
+47 rows executed, but the final audit cannot accept those five until their
+canonical evidence files and commits exist. Six
+observability rows and seven gateway rows remain design-only because their
+live routes/viewers have not been captured. Those 13 rows are not claimed.
 
 | Page | Rubric sections | Rows |
 |---|---|---|
@@ -18,6 +23,45 @@ row moves from `design_only` to `executed`.
 | [ci_cd.md](./ci_cd.md) | CI/CD | LLM-AC-12 |
 | [validation_verification.md](./validation_verification.md) | Validation & Verification | LLM-AC-10 |
 | [cost.md](./cost.md) | Cost (doubles as the row-67 IaC cost deliverable) | LLM-AC-14 |
+
+## Phase 06 owned artifacts
+
+| Rubric row | Executed artifact | Canonical evidence |
+|---|---|---|
+| `LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a` | [`notebooks/agent-understanding-demo.ipynb`](../../notebooks/agent-understanding-demo.ipynb) | [evidence](../phase2/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a.md) |
+| `LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra` | [`notebooks/agent-mcp-demo.ipynb`](../../notebooks/agent-mcp-demo.ipynb) | [evidence](../phase2/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra.md) |
+| `LLM-novel-ideas-idea-1` | [`src/llm/embedding_registry.py`](../../src/llm/embedding_registry.py) | [evidence](../phase2/evidence/llm/LLM-novel-ideas-idea-1.md) |
+| `LLM-novel-ideas-idea-2` | [`src/llm/citation_guard.py`](../../src/llm/citation_guard.py) | [evidence](../phase2/evidence/llm/LLM-novel-ideas-idea-2.md) |
+| `LLM-documentation-low-level-ml-design` | [`docs/phase2/low-level-design.md`](../phase2/low-level-design.md) | [evidence](../phase2/evidence/llm/LLM-documentation-low-level-ml-design.md) |
+
+## Explicitly unearned live-evidence rows
+
+The following exact rows remain `design_only` and must be passed to the final
+audit as named cuts if the gateway/viewer capture is not completed. Static
+manifests and local telemetry tests do not substitute for the required routed
+runtime evidence.
+
+```text
+LLM-observability-agent-tool-call-metrics
+LLM-observability-collect-v-visualize-metrics-v-
+LLM-observability-m-b-o-t-nh-t-c-c-metrics
+LLM-observability-t-ng-t-cho-logs
+LLM-observability-t-ng-t-cho-traces
+LLM-observability-web-api-metrics
+LLM-routing-gateway-authentication-cho-ui-test-age
+LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-
+LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-
+LLM-routing-gateway-service-coi-log
+LLM-routing-gateway-service-coi-trace
+LLM-routing-gateway-ui-cho-agent-registry
+LLM-routing-gateway-ui-test-agent
+```
+
+The GitOps repository remains private because it contains infrastructure state
+and inventory metadata. Before grading, grant the reviewer read access to the
+private `financial-distress-gitops` repository and verify that at least one
+`gitops_sha` evidence link resolves for that account; no token or private
+credential is stored in this repository.
 
 Sections without a dedicated page here (inference, model config, registry,
 RAG, feature/RAG API, drift/MCP, agent understanding, coordinator, warm-up,

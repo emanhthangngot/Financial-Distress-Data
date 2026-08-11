@@ -18,10 +18,9 @@ Argo CD reconciles the merged revision. Pushing a tag alone never deploys.
   job and before any image build. Their local reproduction commands are in
   [Validation & Verification](./validation_verification.md).
 
-## Live evidence outstanding
+## Evidence status
 
-No cluster is running for this work. There is no executed signed release, GitOps
-pull request or merge, Argo CD rollout, or runtime A/B result. The static
-workflow and manifest-target checks are implementation evidence only; no
-`design_only` rubric row may be marked `executed` until those live artifacts
-are captured.
+The CI/CD rows are executed. The Phase 05 evidence package records signed
+digest releases, GitOps digest updates, and the validation gates for the RAG
+pipeline and three agents. The separate gateway and observability rows remain
+design-only until their routed runtime captures exist.

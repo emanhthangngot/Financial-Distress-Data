@@ -6,19 +6,20 @@
 2. [Business Domain](#business-domain)
 3. [Overall System Architecture](#overall-system-architecture)
 4. [System Deployment Diagram](#system-deployment-diagram)
-5. [Runtime Evidence Snapshot](#runtime-evidence-snapshot)
-6. [Schema Evidence](#schema-evidence)
-7. [API Surface](#api-surface)
-8. [Project Structure](#project-structure)
-9. [Documentation](#documentation)
-10. [Naming Convention](#naming-convention)
-11. [Local Setup](#local-setup)
-12. [Running in Docker](#running-in-docker)
-13. [Service URLs](#service-urls)
-14. [Run Stage 1 Evidence](#run-stage-1-evidence)
-15. [Validation Commands](#validation-commands)
-16. [Useful Inspection Queries](#useful-inspection-queries)
-17. [Stop Services](#stop-services)
+5. [Phase 2 Deployment and Evidence](#phase-2-deployment-and-evidence)
+6. [Runtime Evidence Snapshot](#runtime-evidence-snapshot)
+7. [Schema Evidence](#schema-evidence)
+8. [API Surface](#api-surface)
+9. [Project Structure](#project-structure)
+10. [Documentation](#documentation)
+11. [Naming Convention](#naming-convention)
+12. [Local Setup](#local-setup)
+13. [Running in Docker](#running-in-docker)
+14. [Service URLs](#service-urls)
+15. [Run Stage 1 Evidence](#run-stage-1-evidence)
+16. [Validation Commands](#validation-commands)
+17. [Useful Inspection Queries](#useful-inspection-queries)
+18. [Stop Services](#stop-services)
 
 ## Introduction
 
@@ -26,13 +27,13 @@ This project is a local-first data engineering foundation for Financial Distress
 
 The current Stage 1 pipeline uses deterministic fixture-backed collectors, then materializes Bronze, Silver, Gold, Data Quality, Metadata, and Evidence outputs locally.
 
-Phase 2 (accepted, explicit) builds a two-plane AI system on top of this
-foundation: a persistent **product plane** (Next.js + Supabase) and a
-disposable, cost-bounded **evidence plane** (ephemeral EKS with KServe 0.18,
-Kubeflow, Feast, MLflow, and agents), orchestrated through a separate GitOps
-repository. It targets all 100 ML + 100 LLM rubric points without keeping EKS
-running continuously. See [docs/phase2/architecture.md](docs/phase2/architecture.md)
-and [docs/coursework.md](docs/coursework.md).
+Phase 2 (accepted, explicit) adds a persistent **product plane** (Next.js +
+Supabase) and a disposable, cost-bounded **GKE evidence plane** running the
+LLM/MCP/agent path. The submitted scope is the 60-row LLM track; the 57 ML
+rows remain visible as an honest deferred retrofit. Desired state lives in the
+private `financial-distress-gitops` repository. See
+[docs/phase2/architecture.md](docs/phase2/architecture.md) and
+[docs/coursework.md](docs/coursework.md).
 
 ## Business Domain
 
@@ -73,6 +74,42 @@ so the diagram stays editable. Re-render after edits with:
 dot -Tpng images/architecture/system_deployment_diagram.dot \
     -o images/architecture/system_deployment_diagram.png
 ```
+
+## Phase 2 Deployment and Evidence
+
+Phase 2 keeps the source monorepo and the private GitOps control repository
+separate. The numbered flow below names every deployable in the submitted LLM
+path; the evidence auditor and reviewer index are the source of truth for what
+has actually been executed.
+
+```mermaid
+flowchart LR
+    A["1. Source CI"] -->|"immutable image digest"| B["2. GitOps PR"]
+    B -->|"merged desired state"| C["3. Argo CD"]
+    C --> D["4. F5 NGINX Ingress"]
+    D --> E["5. Next.js product UI"]
+    D --> F["6. Coordinator Agent"]
+    F --> G["7. Feature Agent"]
+    F --> H["8. Drift Agent"]
+    G --> I["9. Feature/RAG MCP"]
+    H --> J["10. Drift MCP"]
+    I --> K["11. Feast online store + PGVector RAG"]
+    J --> L["12. Drift API"]
+    G --> M["13. OpenAI-compatible model server"]
+    H --> M
+    F --> M
+    I --> N["14. Prometheus/Loki/Jaeger/OTel"]
+    J --> N
+    F --> N
+```
+
+Flow legend: source CI builds/tests/scans/signs; GitOps owns deployment
+configuration; Argo CD reconciles only the merged revision; NGINX is the only
+external entry point; agents call MCP tools; MCP wrappers call the feature/RAG
+and drift services; telemetry is redaction-safe and trace-correlated. The
+Phase 06 notebooks demonstrate the feature/RAG and drift MCP calls. Six
+observability rows and seven gateway rows remain design-only until their live
+viewer and routed-request captures are available.
 
 ## Runtime Evidence Snapshot
 
@@ -116,27 +153,10 @@ the local pipeline when needed.
 
 ## API Surface
 
-There is no REST/FastAPI service in Phase 1. This mini-coursework focuses on
-local data engineering evidence: collectors, Kafka contracts, Bronze/Silver/Gold
-lakehouse transforms, PostgreSQL metadata, DQ, and DuckDB/DBeaver inspection.
-API serving is documented only as a Phase 2 or optional extension in
-`docs/coursework.md`, so OpenAPI/Swagger docs are not part of the current
-submission scope.
-
-# Table of Contents
-
-1. [Runtime Evidence Snapshot](#runtime-evidence-snapshot)
-2. [Schema Evidence](#schema-evidence)
-3. [API Surface](#api-surface)
-4. [Project Structure](#project-structure)
-5. [Documentation](#documentation)
-6. [Local Setup](#local-setup)
-7. [Running in Docker](#running-in-docker)
-8. [Service URLs](#service-urls)
-9. [Run Stage 1 Evidence](#run-stage-1-evidence)
-10. [Validation Commands](#validation-commands)
-11. [Useful Inspection Queries](#useful-inspection-queries)
-12. [Stop Services](#stop-services)
+There is no REST/FastAPI service in Phase 1. The Phase 2 LLM track adds
+FastAPI-backed MCP services and agents under `apps/`, `src/agents/`, and
+`src/llm/`; those are additive and do not change the Stage 1 pipeline
+contracts.
 
 ## Project Structure
 
@@ -152,9 +172,9 @@ submission scope.
 │   ├── io/                - MinIO and local IO helpers
 │   ├── jobs/              - Runtime evidence job wrappers
 │   ├── ml/                - Phase 2 ML class contracts and adapters (isolated)
-│   ├── drift/             - Phase 2 drift/quality adapters (planned, Phase 2)
-│   ├── llm/               - Phase 2 LLM class contracts and adapters (isolated)
-│   └── agents/            - Phase 2 agent orchestration (planned, Phase 2)
+│   ├── drift/             - Phase 2 drift/quality adapters
+│   ├── llm/               - Phase 2 LLM contracts, RAG, and safety adapters
+│   └── agents/            - Phase 2 MCP-backed agent orchestration
 ├── configs/               - Collector, Spark, source, and DQ config files
 ├── sql/                   - PostgreSQL metadata DDL and DuckDB SQL views
 ├── tests/                 - PyTest unit, contract, and runtime smoke tests
@@ -200,7 +220,7 @@ The README only summarizes the project. Detailed design notes, contracts, and ru
 - [Phase 2 rubric matrix](docs/phase2/rubric-matrix.csv) — machine-readable 200-point evidence contract (ML 100 + LLM 100).
 - [Phase 2 evidence contract](docs/phase2/evidence-contract.md) — evidence format and linter rules.
 - [Phase 2 ADRs](docs/phase2/adr/) — architecture decision records 001..008.
-- [Phase 2 novel ideas](docs/phase2/novel-ideas.md) — two per track with proof paths.
+- [Phase 2 novel ideas](docs/phase2/novel-ideas.md) — two per track with executable proof paths.
 - [Novel idea 1: dbt-style SQL contracts](docs/09_novel_idea_1.md) — DuckDB macro + Python mirror for naming contracts.
 - [Novel idea 2: Airbyte-style ingestion manifest](docs/10_novel_idea_2.md) — declarative source manifest + dispatcher.
 - [Novel idea evidence manifests](docs/novel-idea-evidence-manifest.md) and [PIT leakage guard](docs/novel-idea-pit-leakage-guard.md) — evidence integrity and point-in-time correctness proofs.

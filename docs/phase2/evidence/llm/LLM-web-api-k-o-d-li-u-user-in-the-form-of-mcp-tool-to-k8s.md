@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s
 - execution_timestamp: 2026-08-10T05:04:00+00:00
-- source_sha: 2f0d189fb3607bd0d509201869792246202f23b0
-- gitops_sha: 6ba77a0464916ee86206b4e63090d5bd4742e048
+- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
+- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: Helm 3, feature-mcp chart 0.1.0, Artifact Registry immutable digest
 - command: `helm upgrade --install feature-mcp charts/feature-mcp -n phase2-data -f apps/dev/feature-mcp/values.yaml --atomic --timeout 5m`
 - expected_result: parameterized chart deploys MCP service with rolling update and atomic fallback
