@@ -738,6 +738,21 @@ EVIDENCE_SECRET_DENYLIST = (
             r"[A-Za-z_][A-Za-z0-9_-]*@)"
         ),
     ),
+    (
+        "curl basic-auth flag",
+        re.compile(r"(?im)\bcurl\b(?:\s+-[A-Za-z]+(?:\s+\S+)*)*\s+(?:-u\b|--user\b)"),
+    ),
+    (
+        "userinfo credential in URL",
+        # Scoped to http(s) so a captured gateway curl (the leak this guards
+        # against) trips it, while a local dev DSN like
+        # postgresql://phase2:phase2@localhost:5433 does not.
+        re.compile(r"(?i)\bhttps?://[^\s/@]+:[^\s/@]+@"),
+    ),
+    (
+        "bcrypt htpasswd hash",
+        re.compile(r"\$2[aby]\$\d{2}\$[A-Za-z0-9./]{53}"),
+    ),
 )
 
 

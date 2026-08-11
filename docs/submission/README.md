@@ -6,13 +6,13 @@ Human-facing index into `docs/phase2/evidence/llm/` — not a relocation.
 canonical location, they don't hold the evidence itself. See
 `docs/phase2/evidence-contract.md` for what counts as proof.
 
-Status: **Phase 06 runtime capture complete; evidence materialization and SHA
-stamping pending commit approval**. The LLM track has 42 previously materialized
-executed rows; five more artifacts were captured live and the matrix now marks
-47 rows executed, but the final audit cannot accept those five until their
-canonical evidence files and commits exist. Six
-observability rows and seven gateway rows remain design-only because their
-live routes/viewers have not been captured. Those 13 rows are not claimed.
+Status (2026-08-11): **47 of 60 LLM rows executed and stamped (79/100 points)**,
+passing the strict two-repo gate with `--accept-design-only` for the 13 rows
+below. Six observability rows and seven Routing & Gateway rows remain
+`design_only` because their live routes/viewers have not been captured against
+a running cluster — see
+`plans/260811-1627-close-llm-rubric-to-100/` for the closeout sequencing.
+Those 13 rows are not claimed until captured.
 
 | Page | Rubric sections | Rows |
 |---|---|---|
@@ -57,11 +57,13 @@ LLM-routing-gateway-ui-cho-agent-registry
 LLM-routing-gateway-ui-test-agent
 ```
 
-The GitOps repository remains private because it contains infrastructure state
-and inventory metadata. Before grading, grant the reviewer read access to the
-private `financial-distress-gitops` repository and verify that at least one
-`gitops_sha` evidence link resolves for that account; no token or private
-credential is stored in this repository.
+The GitOps repository (`financial-distress-gitops`) stays private — it carries
+a committed `terraform.tfstate` and `ansible/inventory.ini`, which the
+auditor's own denylist treats as leaks. The grader instead gets a scrubbed
+public read-only mirror containing only `platform/`, `apps/`, `charts/`,
+`argocd/` at the frozen `gitops_sha`; its URL is recorded in
+`plans/260811-1627-close-llm-rubric-to-100/phase-06-freeze-submission.md`
+once published. No token or private credential is stored in this repository.
 
 Sections without a dedicated page here (inference, model config, registry,
 RAG, feature/RAG API, drift/MCP, agent understanding, coordinator, warm-up,

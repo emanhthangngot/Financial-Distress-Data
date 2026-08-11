@@ -38,6 +38,16 @@ explains what its images prove. No orphan screenshot dumps.
 - **Executed** — a run happened and produced output.
 - **Passed** — an automated gate verified the output.
 
+## Frozen Phase 1 Base
+
+`PHASE1_BASE_SHA=ddbcbe7bd41ae4883954b8a247efdc67c7329078`
+(`fix(generators): resolve generator package collision`). This is the commit
+the strict linter diffs the current source `HEAD` against to prove no Phase 1
+protected path moved; it is frozen because it is the last commit before Phase 2
+work started touching `src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`,
+`apps/`, and `dags/phase2/`, and it empirically passes the protected-path diff
+in every strict run recorded in `plans/260811-1627-close-llm-rubric-to-100/`.
+
 ## Linter Checks
 
 ```bash
@@ -59,9 +69,12 @@ evidence file is missing at phase-08.
 
 At phase-08 the linter also fails when an executed row's `artifact_path` is
 absent from disk (executed proof requires a real implementation), or when any
-evidence `source_sha`/`gitops_sha` is not an existing commit or does not equal
-the current source/GitOps checkout `HEAD`, or when the protected Phase 1 diff
-cannot be verified against the frozen 40-hex `$PHASE1_BASE_SHA`, or when any
+evidence `source_sha`/`gitops_sha` is not an existing commit or is not a
+reachable ancestor of (or equal to) the current source/GitOps checkout `HEAD`
+— any commit after an evidence SHA must touch only that evidence file's own
+SHA lines under `docs/phase2/evidence/`, or the ancestor rule fails the row —
+or when the protected Phase 1 diff cannot be verified against the frozen
+40-hex `$PHASE1_BASE_SHA`, or when any
 evidence metadata key is present with a blank value or a value that cannot be
 real: `execution_timestamp` must parse as ISO-8601, and `source_sha` plus
 `gitops_sha` must each be an exact 40-hex commit. A key line with no value is

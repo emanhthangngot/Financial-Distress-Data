@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Align the contract, the repos and the audit mechanics"
-status: pending
+status: complete
 priority: P1
 effort: "0.75d (no cluster)"
 dependencies: []
