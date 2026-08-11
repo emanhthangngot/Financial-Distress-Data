@@ -81,15 +81,44 @@ selfHeal reverted a manual fix back to the stale desired state.
 | `/v1/features/by-id` | 401 | **405** (GET on a POST-only route — endpoint reached, method rejected, correct) | feature-mcp |
 | `/loki/api/v1/label(s)` | 401 | **404** | Loki — **not resolved this window** |
 
-4 of 5 protected routes fully verified end-to-end. The Loki API path is
-the one open item: `/loki/ready` returns 200 (proves the ingress path,
-auth, and network policy all work), but `/loki/api/v1/label` 404s **even
-tested directly against the Loki pod, bypassing the ingress entirely** —
-this is Loki's own routing under `http_path_prefix`, not a gateway/network
-issue. Not chased further this window given how long the session already
-ran; Grafana Explore (already proven reachable via `/grafana`) is the
-plan's own documented fallback for the logs row if this isn't resolved
-before phase 5's capture.
+4 of 5 protected routes fully verified end-to-end.
+
+### Loki API path — root-caused, fix correct in git, blocked by Argo on the live cluster
+
+`/loki/ready` returns 200 (proves the ingress path, auth, and network
+policy all work); `/loki/api/v1/label` 404s **even tested directly against
+the Loki pod, bypassing the ingress entirely**. Root-caused precisely:
+Loki's query API already carries a hardcoded `/loki/api/v1/*` prefix in
+the binary; `server.http_path_prefix: /loki` additionally prefixes
+*everything*, so the API only actually resolved at the doubled
+`/loki/loki/api/v1/*` (confirmed directly: that exact path returns 200).
+Fix committed to `master` (`64a4f09`): remove `http_path_prefix` entirely
+— Loki's own built-in prefix already matches what `routes-viewers.yaml`
+routes, no manifest change needed there.
+
+**The fix does not take effect on the live cluster.** `platform-observability`'s
+`status.sync.revisions` correctly shows `64a4f09` (the fix commit) at every
+check, yet re-applying the ConfigMap/StatefulSet via direct `kubectl patch`
+gets silently reverted back to the pre-fix content within ~15-20s, every
+time, across five separate attempts — including after restarting both
+`argocd-repo-server` and `argocd-redis` (full manifest-cache wipe) and an
+`argocd.argoproj.io/refresh: hard` annotation. Not root-caused further:
+suspected multi-source `$values` skew (the loki chart source's
+`valueFiles` reference is a separate git-checkout source from the chart
+source itself in this Application's 5-source definition) but not
+confirmed. Disabling `spec.syncPolicy.automated.selfHeal` to stop the
+revert loop needs ArgoCD UI/CLI access this session doesn't have (`gh`
+never recovered; no argocd auth token).
+
+**User decision, 2026-08-11**: accept the plan's own documented fallback
+— capture the two logs rows (`LLM-routing-gateway-service-coi-log`,
+`LLM-observability-t-ng-t-cho-logs`) through Grafana Explore (`/grafana`,
+already verified reachable, 302) instead of the direct Loki API route.
+Live cluster stabilized back to the last known-good combination
+(`http_path_prefix: /loki` present, probe path `/loki/ready`) rather than
+left in the broken half-applied state. The git fix stays on `master` as
+the correct manifest — future sessions with ArgoCD UI/CLI access can
+re-apply and let it stick.
 
 ## Cluster state at end of this log entry
 
@@ -133,8 +162,9 @@ cache is ever evicted or a fresh node joins the pool.
 - Step 9: exercise the UI sign-in path through the gateway (browser-driven,
   not curl — the RSC server-action protocol isn't curl-scriptable, noted
   already in the phase-3 report).
-- Resolve the Loki API path issue, or formally accept the Grafana-Explore
-  fallback for the two logs rows.
+- ~~Resolve the Loki API path issue, or formally accept the Grafana-Explore
+  fallback for the two logs rows.~~ Decided: Grafana Explore fallback
+  accepted (2026-08-11) — see the Loki section above.
 - Confirm GHCR visibility change and `platform-security`'s Degraded status.
 
 These are phase 5's capture-script work, not additional phase-4 deploy
