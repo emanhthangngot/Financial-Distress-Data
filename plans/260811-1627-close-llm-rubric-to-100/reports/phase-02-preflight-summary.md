@@ -168,12 +168,58 @@ into *evidence* files; the README entry itself is the intended, deliberate
 disclosure — added at phase 6 stamp time, not before (so it isn't
 invalidated by a later commit).
 
+## Steps 1-3, closed out (`gh` never recovered — worked around it)
+
+`gh auth login`/`gh auth status` hung (timeout, not "invalid token") across
+every retry this session — a credential-helper/keyring block specific to the
+`gh` binary, since `curl` and `git` over SSH both worked the whole time.
+Worked around entirely with `git`/`curl` against the public API and manual
+PR merges on the GitHub web UI:
+
+1. Pushed `feat/w-phase2-web-ci-caller` (just the new workflow file) off
+   `dev`, user merged it (PR #69). **Found in the process**: the caller's
+   own path (`.github/workflows/phase2-web.yaml`) wasn't in its own trigger
+   filter, so the merge — which touched nothing else under `apps/web/**` —
+   produced no `workflow_run` at all. GitHub Actions' workflow list/dispatch
+   UI also only recognizes workflows that exist on the **default branch**
+   (`main`), not `dev`, so `workflow_dispatch` wasn't reachable from the UI
+   either. Fixed by adding the workflow's own path to its filter
+   (`fix/w-phase2-web-ci-trigger`, PR #70) — a push whose diff includes that
+   file now self-triggers correctly.
+2. First real run (`31505269192`, `success`) opened
+   `digest-bump/web-3cff7dc4d08d` on GitOps — but
+   `DISTRESSLENS_SOURCE_SHA`/`DISTRESSLENS_GITOPS_SHA` stayed at
+   `PENDING_FIRST_DIGEST_BUMP`. **Second bug found**: the provenance-SHA
+   rewrite (phase 3's step 6) had only ever landed on
+   `codex/phase06-llm-submission`, never on `dev` — the reusable
+   `phase2-ci.yaml` that actually ran was the pre-rewrite version. Ported it
+   to `dev` in the same commit as another `phase2-web.yaml` path bump (so
+   the push would self-trigger again) — `fix/w-phase2-ci-provenance-sha`,
+   PR #71.
+3. Second run (`31506624237`, `success`) opened
+   `digest-bump/web-e2ba4ce71b10` with **real** values:
+   `repository: ghcr.io/emanhthangngot/financial-distress-data/web`,
+   `digest: sha256:564426d0…`, `DISTRESSLENS_SOURCE_SHA:
+   e2ba4ce71b10755788db0e11d58e5c49ecbee8e3` (source `dev` HEAD),
+   `DISTRESSLENS_GITOPS_SHA: 390379229230cdfa3fec21c602d61189711e02d9`
+   (verified `git merge-base --is-ancestor … origin/master` before merging —
+   the same ancestor rule the auditor uses).
+4. Fast-forward merged that branch onto GitOps `master`
+   (`3903792..8e7e251`), pushed, deleted both digest-bump branches.
+   `helm template` against `master`'s current `apps/dev/web/values.yaml`
+   confirms the rendered pod spec: real `imagePullSecrets`, the pinned
+   digest in the container `image:`, and both provenance SHA env vars —
+   the full chain (CI build → sign → digest handoff → GitOps rewrite →
+   rendered manifest) is proven, not assumed.
+
+Pull-path proof (success criterion 3) is the `imagePullSecrets` rendering
+above — the chosen option was declarative `imagePullSecrets`, not a public
+GHCR package, so there is no unauthenticated-pull step to demonstrate; the
+secret itself still needs sealing against the live cluster's key (phase 4).
+
 ## Outstanding for this phase
 
-- [ ] Steps 1-3: open+merge the web CI caller PR to `dev`, verify `gitops-pr`
-      ran, confirm `apps/dev/web/values.yaml` carries a GHCR repository +
-      digest on GitOps `master`. **Blocked on `gh auth login`.**
-- [ ] Seal `ghcr-pull-secret` and `gateway-basic-auth` (×2) and
+- [ ] Seal `ghcr-pull-secret`, `gateway-basic-auth` (×2), and
       `grafana-admin-credentials` out of band — deferred to phase 4 (needs
       the cluster's `sealed-secrets` controller public key, which is
       controller-instance-specific).
