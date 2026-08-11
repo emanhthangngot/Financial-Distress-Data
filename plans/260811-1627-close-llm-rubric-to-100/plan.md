@@ -146,7 +146,7 @@ Copy each ID from `docs/phase2/rubric-matrix.csv`; they truncate silently.
 | # | Phase | Points | Effort | Status |
 |---|-------|-------:|--------|--------|
 | 1 | [Align the contract, the repos and the audit mechanics](./phase-01-align-contract-and-audit-mechanics.md) | 0 | 0.75d (no cluster) | Complete |
-| 2 | [Release inputs and platform preflight](./phase-02-release-inputs-and-platform-preflight.md) | 0 | 0.75d (no cluster) | Pending |
+| 2 | [Release inputs and platform preflight](./phase-02-release-inputs-and-platform-preflight.md) | 0 | 0.75d (no cluster) | Complete |
 | 3 | [Build the web auth plane so the UI rows are real](./phase-03-build-web-auth-plane.md) | 0 | 1d (no cluster) | Pending |
 | 4 | [Deploy the edge, data and observability planes live via GitOps](./phase-04-deploy-live-via-gitops.md) | 0 | 0.5d (cluster up) | Pending |
 | 5 | [Capture the 13 live evidence artifacts](./phase-05-capture-live-evidence.md) | 21 | 0.75d (cluster up) | Pending |

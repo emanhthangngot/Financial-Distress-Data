@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Release inputs and platform preflight"
-status: in_progress
+status: complete
 priority: P1
 effort: "0.75d (no cluster)"
 dependencies: [1]
