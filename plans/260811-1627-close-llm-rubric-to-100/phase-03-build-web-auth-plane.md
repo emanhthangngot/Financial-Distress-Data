@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Build the web auth plane so the UI rows are real"
-status: pending
+status: in_progress
 priority: P1
 effort: "1d (no cluster)"
 dependencies: [2]

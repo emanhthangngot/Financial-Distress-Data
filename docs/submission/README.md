@@ -34,6 +34,18 @@ Those 13 rows are not claimed until captured.
 | `LLM-novel-ideas-idea-2` | [`src/llm/citation_guard.py`](../../src/llm/citation_guard.py) | [evidence](../phase2/evidence/llm/LLM-novel-ideas-idea-2.md) |
 | `LLM-documentation-low-level-ml-design` | [`docs/phase2/low-level-design.md`](../phase2/low-level-design.md) | [evidence](../phase2/evidence/llm/LLM-documentation-low-level-ml-design.md) |
 
+## Grader demo account
+
+One Supabase auth account, analyst role, no elevated privileges — created
+2026-08-11 for phase 3 of `plans/260811-1627-close-llm-rubric-to-100/`. This
+is a coursework submission, not a production system with real users, so the
+credential is disclosed here directly rather than through a separate
+out-of-band channel (2026-08-11 decision). No sign-up, no password reset —
+this is the only account.
+
+- email: `distresslens.grader@gmail.com`
+- password: `VjBG4w8QpeXW4EMYfCII`
+
 ## Explicitly unearned live-evidence rows
 
 The following exact rows remain `design_only` and must be passed to the final
