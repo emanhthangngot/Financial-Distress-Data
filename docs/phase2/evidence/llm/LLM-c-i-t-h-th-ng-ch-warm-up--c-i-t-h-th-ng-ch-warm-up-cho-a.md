@@ -7,7 +7,7 @@ measures a real cold-vs-warm startup and TTFT delta against the live
 
 - rubric_id: LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a
 - execution_timestamp: 2026-08-10T23:24:00+07:00
-- source_sha: 81aa31f087110f19ed7415f3976c6eb3d3563fbb
+- source_sha: f09d391bb7bd8f51561477b619ae4b1c5a88011c
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: feature-agent@sha256:6bfb99fc834bf9a2cac78b9c59c5de259f9738cd9c61dcfe626e2da6e6cfd510, kubectl v1.35, GKE v1.35.6-gke.1250000
 - command: `python scripts/run_phase5_warmup_measurement.py --warm-replicas 2 --output docs/phase2/evidence/llm/warmup.json`

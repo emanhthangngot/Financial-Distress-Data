@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra
 - execution_timestamp: 2026-08-11T08:52:37Z
-- source_sha: 81aa31f087110f19ed7415f3976c6eb3d3563fbb
+- source_sha: f09d391bb7bd8f51561477b619ae4b1c5a88011c
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: Python 3.11; mcp streamable-http client; feature-mcp and drift-mcp images deployed from the recorded GitOps revision
 - command: Port-forward `feature-mcp` and `drift-mcp` and run the code cells in `notebooks/agent-mcp-demo.ipynb` with feature scope `financial-distress:read` and drift scope `financial-distress:drift`

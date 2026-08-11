@@ -7,7 +7,7 @@ CI template end to end for the `coordinator` deployable: build → cosign sign
 
 - rubric_id: LLM-ci-cd-agent-l-m-coordinator
 - execution_timestamp: 2026-08-10T23:41:38+07:00
-- source_sha: 81aa31f087110f19ed7415f3976c6eb3d3563fbb
+- source_sha: f09d391bb7bd8f51561477b619ae4b1c5a88011c
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/coordinator
 - command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `phase2-agent-coordinator.yaml` on the `push` event

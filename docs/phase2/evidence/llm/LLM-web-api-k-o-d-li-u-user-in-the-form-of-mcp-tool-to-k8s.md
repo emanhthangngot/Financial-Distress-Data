@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s
 - execution_timestamp: 2026-08-10T05:04:00+00:00
-- source_sha: 81aa31f087110f19ed7415f3976c6eb3d3563fbb
+- source_sha: f09d391bb7bd8f51561477b619ae4b1c5a88011c
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: Helm 3, feature-mcp chart 0.1.0, Artifact Registry immutable digest
 - command: `helm upgrade --install feature-mcp charts/feature-mcp -n phase2-data -f apps/dev/feature-mcp/values.yaml --atomic --timeout 5m`

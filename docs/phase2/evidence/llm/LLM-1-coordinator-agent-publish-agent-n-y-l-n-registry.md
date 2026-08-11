@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry
 - execution_timestamp: 2026-08-10T05:16:00+00:00
-- source_sha: 81aa31f087110f19ed7415f3976c6eb3d3563fbb
+- source_sha: f09d391bb7bd8f51561477b619ae4b1c5a88011c
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: agentregistry API 1.0.0, registry.fd.dev/v1alpha1
 - command: `kubectl exec -n kagent deploy/agentregistry -- python -c "urllib.request.urlopen('http://127.0.0.1:8000/v1/agents/coordinator')"`
