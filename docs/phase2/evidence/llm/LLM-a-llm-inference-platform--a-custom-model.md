@@ -9,7 +9,7 @@ evidence row.
 
 - rubric_id: LLM-a-llm-inference-platform--a-custom-model
 - execution_timestamp: 2026-08-10T01:41:42+00:00
-- source_sha: 758722c52ef3035a7e3f9464dc03c5a39e50a74e
+- source_sha: 81aa31f087110f19ed7415f3976c6eb3d3563fbb
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: Python 3.11, llama.cpp server (Qwen2.5-0.5B-Instruct GGUF, Q8_0 baseline / Q4_K_M optimized)
 - command: `.venv-phase2/bin/python3 -c "from src.llm.model_server import call_chat_completion; print(call_chat_completion('http://localhost:18080', [{'role':'user','content':'Say hi in 2 words.'}], max_tokens=16))"` (port-forwarded to the live `fd-chat-model-predictor-00001-private` Service)

@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a
 - execution_timestamp: 2026-08-11T08:52:37Z
-- source_sha: 758722c52ef3035a7e3f9464dc03c5a39e50a74e
+- source_sha: 81aa31f087110f19ed7415f3976c6eb3d3563fbb
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: Python 3.11; mcp streamable-http client; feature-mcp image deployed from the recorded GitOps revision
 - command: Port-forward `feature-mcp` and run the code cells in `notebooks/agent-understanding-demo.ipynb` with `DEMO_USER_ID=VNM`, `DEMO_CHUNK_ID=phase3-chunk`, and `DEMO_SCOPE=financial-distress:read`
