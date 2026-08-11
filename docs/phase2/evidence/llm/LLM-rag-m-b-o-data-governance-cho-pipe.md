@@ -8,7 +8,7 @@ quarantine path end to end.
 
 - rubric_id: LLM-rag-m-b-o-data-governance-cho-pipe
 - execution_timestamp: 2026-08-08T09:40:20+00:00
-- source_sha: f09d391bb7bd8f51561477b619ae4b1c5a88011c
+- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: financial-distress-data@5a5a40a, pgvector/pgvector:pg16
 - command: `.venv/bin/python -m pytest tests/phase2/pipelines/test_data_governance.py -q` then a live probe against `phase2-postgres` inserting one chunk with a disallowed license (`unlicensed_scrape`) through `RagIngestionPipeline.enforce_licensing_and_metadata`, followed by `SELECT * FROM ml_metadata.rag_quarantine;`

@@ -6,7 +6,7 @@ waits for readiness, and shifts only a canary share of traffic.
 
 - rubric_id: LLM-a-b-testing-when-you-deploy-a-new-model
 - execution_timestamp: 2026-08-11T00:31+07:00
-- source_sha: f09d391bb7bd8f51561477b619ae4b1c5a88011c
+- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
 - gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
 - versions: v1 (`fd-chat-model-v1-config-ab`) and v2 (`fd-chat-model-ab-v2-clone`); pod `MODEL_VERSION` values `v1`/`v2`
 - command: live Kubernetes inspection of the GitOps Application, PR-backed revisions, model-weight PVC/PV bindings, revision readiness/node placement, Knative route conditions/traffic, probes, and agent `ModelConfig` resources
