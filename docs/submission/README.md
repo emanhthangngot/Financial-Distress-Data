@@ -46,6 +46,16 @@ this is the only account.
 - email: `distresslens.grader@gmail.com`
 - password: `VjBG4w8QpeXW4EMYfCII`
 
+## Gateway credentials
+
+Basic-auth in front of all five protected routes (https://distresslens.duckdns.org),
+and Grafana's own admin login behind it. Coursework demo, disclosed directly
+here per the 2026-08-11 decision (same reasoning as the grader Supabase
+account above).
+
+- gateway basic-auth: user `grader`, password `qMwgNhqAOaJqcQwNNZ0Om0Nq`
+- Grafana admin (after the gateway): user `grader`, password `zoyrVNjLTQYNJOOGlpVxCnou`
+
 ## Explicitly unearned live-evidence rows
 
 The following exact rows remain `design_only` and must be passed to the final
