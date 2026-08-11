@@ -131,6 +131,8 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a": (
         "yaml_mapping_contains:evidenceWindow"
     ),
+    "LLM-a-b-testing-perform-a-b-test-for-different": "yaml_mapping_contains:canary",
+    "LLM-a-b-testing-when-you-deploy-a-new-model": "yaml_mapping_contains:revisionName",
 }
 
 
@@ -1166,6 +1168,8 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-validation-verification-load-test-the-web-api",
     "LLM-repository-design-clean-code-clean-repo-demonstr",
     "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a",
+    "LLM-a-b-testing-perform-a-b-test-for-different",
+    "LLM-a-b-testing-when-you-deploy-a-new-model",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:

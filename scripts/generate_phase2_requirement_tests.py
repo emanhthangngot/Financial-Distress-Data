@@ -321,14 +321,20 @@ def assert_behavioral_contract(path: Path, assertion: str) -> None:
                 meaningful_cells.append(source)
         assert meaningful_cells, f"notebook has no executable non-placeholder code cell: {path}"
     elif kind == "yaml_mapping_contains":
-        document = yaml.safe_load(text)
-        assert isinstance(document, dict) and document, f"YAML artifact is not a mapping: {path}"
-        assert not _placeholder_only_yaml(document), f"YAML artifact is placeholder-only: {path}"
-        if {"apiVersion", "kind", "metadata"} <= set(document):
-            substantive_keys = {"spec", "data", "stringData", "binaryData", "rules"}
-            assert substantive_keys & set(document), (
-                f"Kubernetes YAML artifact has metadata only and no substantive payload: {path}"
+        documents = [document for document in yaml.safe_load_all(text) if document is not None]
+        assert documents, f"YAML artifact has no documents: {path}"
+        for document in documents:
+            assert isinstance(document, dict) and document, (
+                f"YAML document is not a mapping: {path}"
             )
+            assert not _placeholder_only_yaml(document), (
+                f"YAML artifact is placeholder-only: {path}"
+            )
+            if {"apiVersion", "kind", "metadata"} <= set(document):
+                substantive_keys = {"spec", "data", "stringData", "binaryData", "rules"}
+                assert substantive_keys & set(document), (
+                    f"Kubernetes YAML artifact has metadata only and no substantive payload: {path}"
+                )
     elif kind != "text_contains":
         raise AssertionError(f"unsupported behavioral_assertion kind: {kind!r}")
     else:
