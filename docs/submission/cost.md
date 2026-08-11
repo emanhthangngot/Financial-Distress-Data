@@ -16,6 +16,31 @@ Doubles as the row-67 (IaC) cost deliverable. GCP free-trial credit only —
 
 Status: cost levers implemented; actual spend report pending phase-08.
 
+## Session — 2026-08-11 (phase 4/5 closeout window, opening state)
+
+Window opened `2026-08-11T15:42:07Z`. Pre-window `make gcp-status`: both
+node pools 0 nodes, evidence VM `TERMINATED` — clean baseline, matches the
+hibernation invariant. `gcloud billing accounts describe` confirms the
+account is `open: true`; the CLI has no field for "still on the free
+trial" (that's a console-only banner), consistent with the note in the
+2026-08-10 session below — trial-account status stays a submission-owner
+check, not machine-verified here.
+
+**Quota re-verified live** (`gcloud compute regions describe
+asia-southeast1`): `CPUS_ALL_REGIONS=12`, regional `CPUS=32`,
+**`E2_CPUS=8`** — same three numbers phase 2 found
+(`plans/260811-1627-close-llm-rubric-to-100/reports/phase-02-preflight-summary.md`).
+Note this contradicts the 2026-08-10 entry below, which ran `primary-pool`
+(8 vCPU e2-standard-8) + `secondary-pool` (4 vCPU e2-standard-4) = 12 E2
+vCPU simultaneously without a quota error — either the E2-family quota was
+higher then and has since been reduced (GCP trial quotas do this
+automatically), or that session's node-pool resize silently degraded
+without provisioning what it asked for. Not investigated further; what
+matters for this window is the quota **today**, which caps this window to
+`primary-pool` alone (8 vCPU, exactly at `E2_CPUS`) — the evidence VM and
+`secondary-pool` both stay down this window (2026-08-11 user decision,
+phase 2).
+
 ## Phase 06 session state — 2026-08-11
 
 The read-only status check before capture showed both GKE node pools with no
