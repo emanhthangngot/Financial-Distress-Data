@@ -7,7 +7,7 @@ run against the same host reports zero changes.
 
 - rubric_id: LLM-iac-d-ng-ansible-configure-v-deplo
 - execution_timestamp: 2026-08-10T00:46:00+00:00
-- source_sha: 29f6a7ce00a2a6ff2ac42604983e814b1eeffe06
+- source_sha: 84c612de87d289de768c5a67439817c6df520b9a
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: ansible-core@2.21, Debian (Container-Optimized OS host), docker-ce (apt), google-cloud-cli, kubectl
 - command: `cd ansible && ansible-playbook playbooks/vast-evidence-worker.yml` run twice in a row against `fsds-evidence-worker` over an IAP SSH tunnel

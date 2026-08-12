@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-routing-gateway-authentication-cho-ui-test-age
 - execution_timestamp: 2026-08-12T01:05:30+00:00
-- source_sha: 29f6a7ce00a2a6ff2ac42604983e814b1eeffe06
+- source_sha: 84c612de87d289de768c5a67439817c6df520b9a
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: nginx/nginx-ingress 5.5.4 (F5 NGINX Ingress Controller), cert-manager v1.16.2
 - command: `curl -sS -i https://distresslens.duckdns.org/` (unauthenticated), then the same request with the gateway basic-auth credential supplied out of band (dropped from the command shown per redaction_status)
