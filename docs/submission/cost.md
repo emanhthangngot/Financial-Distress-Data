@@ -54,6 +54,31 @@ nodes before any later session. The GCP CLI does not expose the billing-credit
 delta, so no dollar amount is inferred here; the billing-console balance and
 trial-account status remain submission-owner checks.
 
+## Phase 5 close — 2026-08-12 (routing/observability live capture)
+
+Window opened with both pools at 0 / VM `TERMINATED`. `make gcp-up` opened
+primary-pool (1 node) + evidence VM for the capture; 11 of 13 Routing &
+Gateway / Observability rows were captured live (5 infrastructure bugs found
+and fixed in the same window — see `routing_gateway.md` / `observability.md`
+for the list).
+
+Hibernation at close took longer than usual: `make gcp-down` stopped the
+evidence VM immediately, but the primary-pool resize-to-0 stalled
+`RECONCILING` for over 30 minutes. Root cause — an unmanaged bare Pod
+(`sandbox-negative-probe`, left over from this window's NetworkPolicy
+testing) and three Deployments sitting behind `PodDisruptionBudget`s with
+`ALLOWED DISRUPTIONS: 0` (`activator-pdb`, `webhook-pdb`,
+`3scale-kourier-gateway-pdb`, all pre-existing Knative/Kourier defaults, not
+introduced this window) — blocked the node drain the resize depends on.
+Force-deleted the bare pod and the three single-replica pods (their
+Deployments have nowhere to reschedule anyway with both pools at 0); the
+resize then completed normally.
+
+Closing state verified: `kubectl get nodes` → empty, `primary-pool` and
+`secondary-pool` both `RUNNING` status with 0 nodes, evidence VM
+`TERMINATED`. GCP CLI still exposes no billing-credit delta; balance and
+trial-account status remain a submission-owner console check.
+
 ## Session — 2026-08-10 (Phase 5 live evidence capture)
 
 - `make gcp-up` restored primary-pool (1 node) + evidence VM.
