@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-documentation-low-level-ml-design
 - execution_timestamp: 2026-08-11T08:52:37Z
-- source_sha: 84c612de87d289de768c5a67439817c6df520b9a
+- source_sha: 3c99fb7fcdbae3e94840ebb1ed1b69b690da7785
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: Markdown source at the recorded source revision; generated Phase 2 requirement test
 - command: `.venv-phase2/bin/python -m pytest -q tests/phase2/requirements/test_llm_ac_19_documentation.py -k LLM-documentation-low-level-ml-design`
