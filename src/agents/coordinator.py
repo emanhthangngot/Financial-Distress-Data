@@ -46,7 +46,7 @@ class Coordinator:
     drift_agent: Specialist
     max_hops: int = 2
     max_parallel: int = 2
-    timeout_seconds: float = 10.0
+    timeout_seconds: float = 50.0
     telemetry: Telemetry | None = None
 
     async def coordinate(

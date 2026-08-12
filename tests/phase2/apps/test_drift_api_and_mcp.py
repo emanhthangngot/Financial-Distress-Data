@@ -4,6 +4,8 @@ from typing import Any
 
 import httpx
 import pytest
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 
 from .conftest import load_app_module
 
@@ -101,3 +103,70 @@ async def test_drift_mcp_rejects_unauthorized_request_without_api_call() -> None
     )
     assert result.error == "forbidden"
     assert api.calls == 0
+
+
+@pytest.mark.asyncio
+async def test_drift_mcp_uses_in_process_client_for_loopback_default(monkeypatch) -> None:
+    monkeypatch.delenv("DRIFT_API_BASE_URL", raising=False)
+    monkeypatch.setenv("MCP_AUTH_GRANTS", '{"drift-agent":["financial-distress:drift"]}')
+    module = load_app_module("drift-mcp", "mcp_server")
+    runtime = module.create_mcp_runtime()
+
+    assert isinstance(runtime.api, module.InProcessDriftApiClient)
+    service = module.DriftMcpService(
+        api=runtime.api,
+        grants={"drift-agent": {"financial-distress:drift"}},
+        trace_sink=Trace(),
+    )
+    result = await service.invoke(
+        {
+            "agent_identity": "drift-agent",
+            "scope": "financial-distress:drift",
+            **request_payload(),
+        }
+    )
+
+    assert result.ok is True
+    assert result.data is not None
+    assert result.data["report"]["passed"] is True
+
+
+@pytest.mark.asyncio
+async def test_mounted_drift_mcp_report_uses_in_process_client(monkeypatch) -> None:
+    monkeypatch.delenv("DRIFT_API_BASE_URL", raising=False)
+    monkeypatch.setenv("MCP_AUTH_GRANTS", '{"drift-agent":["financial-distress:drift"]}')
+    module = load_app_module("drift-mcp", "main")
+    application = module.create_app(mount_mcp=True)
+    payload = {
+        "request": {
+            "agent_identity": "drift-agent",
+            "scope": "financial-distress:drift",
+            **request_payload(),
+        }
+    }
+
+    async with application.router.lifespan_context(application):
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application),
+            base_url="http://127.0.0.1:8000",
+        ) as client:
+            async with streamable_http_client("http://127.0.0.1:8000/mcp/", http_client=client) as (
+                read,
+                write,
+                _,
+            ):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    result = await session.call_tool("build_realtime_drift_report", payload)
+
+    assert result.structuredContent["ok"] is True
+    assert result.structuredContent["data"]["report"]["passed"] is True
+
+
+def test_drift_mcp_keeps_http_client_for_split_deployment(monkeypatch) -> None:
+    monkeypatch.setenv("DRIFT_API_BASE_URL", "http://drift-api:8000")
+    module = load_app_module("drift-mcp", "mcp_server")
+
+    runtime = module.create_mcp_runtime()
+
+    assert isinstance(runtime.api, module.HttpxDriftApiClient)

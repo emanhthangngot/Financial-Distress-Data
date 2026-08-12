@@ -7,7 +7,7 @@ effort: "9 focused days (re-budgeted after the 2026-08-09 red team)"
 branch: dev
 tags: [phase2, llm, kubernetes, gitops, evidence, coursework]
 blockedBy: [260802-1037-unified-phase2-ml-llm-gitops]
-blocks: []
+blocks: [260811-1627-close-llm-rubric-to-100]
 created: 2026-08-09
 ---
 
@@ -140,6 +140,14 @@ Dependencies are linear: 1 → 2 → 3 → 4, phase 5 needs 3 and 4, phase 6 nee
 - Project manager -> keeps Phase 06 in progress -> canonical evidence,
   separate SHA commits, strict audit, mock-grade, and final hibernation
   verification remain open -> no phase is marked complete.
+
+## Closeout successor — 2026-08-11
+
+Phases 1-3 and 5 are done; 79 of 100 LLM points are executed and pass the strict
+two-repo gate. The remaining 21 points (phase 4's 13 rows) plus the phase-6
+freeze steps are sequenced in
+`plans/260811-1627-close-llm-rubric-to-100/`. That plan owns sequencing from
+here; this plan stays the architecture and evidence-contract authority.
 
 ## Cut Ladder
 

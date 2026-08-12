@@ -16,6 +16,31 @@ Doubles as the row-67 (IaC) cost deliverable. GCP free-trial credit only —
 
 Status: cost levers implemented; actual spend report pending phase-08.
 
+## Session — 2026-08-11 (phase 4/5 closeout window, opening state)
+
+Window opened `2026-08-11T15:42:07Z`. Pre-window `make gcp-status`: both
+node pools 0 nodes, evidence VM `TERMINATED` — clean baseline, matches the
+hibernation invariant. `gcloud billing accounts describe` confirms the
+account is `open: true`; the CLI has no field for "still on the free
+trial" (that's a console-only banner), consistent with the note in the
+2026-08-10 session below — trial-account status stays a submission-owner
+check, not machine-verified here.
+
+**Quota re-verified live** (`gcloud compute regions describe
+asia-southeast1`): `CPUS_ALL_REGIONS=12`, regional `CPUS=32`,
+**`E2_CPUS=8`** — same three numbers phase 2 found
+(`plans/260811-1627-close-llm-rubric-to-100/reports/phase-02-preflight-summary.md`).
+Note this contradicts the 2026-08-10 entry below, which ran `primary-pool`
+(8 vCPU e2-standard-8) + `secondary-pool` (4 vCPU e2-standard-4) = 12 E2
+vCPU simultaneously without a quota error — either the E2-family quota was
+higher then and has since been reduced (GCP trial quotas do this
+automatically), or that session's node-pool resize silently degraded
+without provisioning what it asked for. Not investigated further; what
+matters for this window is the quota **today**, which caps this window to
+`primary-pool` alone (8 vCPU, exactly at `E2_CPUS`) — the evidence VM and
+`secondary-pool` both stay down this window (2026-08-11 user decision,
+phase 2).
+
 ## Phase 06 session state — 2026-08-11
 
 The read-only status check before capture showed both GKE node pools with no
@@ -28,6 +53,31 @@ still `RECONCILING` at the time of this record. Verify both pools report zero
 nodes before any later session. The GCP CLI does not expose the billing-credit
 delta, so no dollar amount is inferred here; the billing-console balance and
 trial-account status remain submission-owner checks.
+
+## Phase 5 close — 2026-08-12 (routing/observability live capture)
+
+Window opened with both pools at 0 / VM `TERMINATED`. `make gcp-up` opened
+primary-pool (1 node) + evidence VM for the capture; 11 of 13 Routing &
+Gateway / Observability rows were captured live (5 infrastructure bugs found
+and fixed in the same window — see `routing_gateway.md` / `observability.md`
+for the list).
+
+Hibernation at close took longer than usual: `make gcp-down` stopped the
+evidence VM immediately, but the primary-pool resize-to-0 stalled
+`RECONCILING` for over 30 minutes. Root cause — an unmanaged bare Pod
+(`sandbox-negative-probe`, left over from this window's NetworkPolicy
+testing) and three Deployments sitting behind `PodDisruptionBudget`s with
+`ALLOWED DISRUPTIONS: 0` (`activator-pdb`, `webhook-pdb`,
+`3scale-kourier-gateway-pdb`, all pre-existing Knative/Kourier defaults, not
+introduced this window) — blocked the node drain the resize depends on.
+Force-deleted the bare pod and the three single-replica pods (their
+Deployments have nowhere to reschedule anyway with both pools at 0); the
+resize then completed normally.
+
+Closing state verified: `kubectl get nodes` → empty, `primary-pool` and
+`secondary-pool` both `RUNNING` status with 0 nodes, evidence VM
+`TERMINATED`. GCP CLI still exposes no billing-credit delta; balance and
+trial-account status remain a submission-owner console check.
 
 ## Session — 2026-08-10 (Phase 5 live evidence capture)
 
