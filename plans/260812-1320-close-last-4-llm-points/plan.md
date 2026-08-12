@@ -185,8 +185,7 @@ abandoned, not extended, if any of these had held:
 On abandonment, the fallback would have been to revert nothing that already
 passed CI, keep the two rows in
 `--accept-design-only`, record the reason in `docs/submission/README.md`, and go
-straight to `260811-1627` phase 6 at 96/100. A submitted 96 beats an unsubmitted
-100.
+straight to `260811-1627` phase 6 at 96/100; that fallback was not taken.
 
 ## Success Criteria
 
