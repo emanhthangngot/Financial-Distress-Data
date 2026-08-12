@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-routing-gateway-service-coi-log
 - execution_timestamp: 2026-08-12T01:31:51+00:00
-- source_sha: 6b92785b9b26ec4cb1b37319d351f43c1c6a09ed
-- gitops_sha: 03507a20b0ce8dc2e6568a8c560569a27dbe5b00
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: Grafana (bundled Loki datasource), Loki 3.6.11, otel-collector-contrib 0.132.0
 - command: `curl -sS -G https://distresslens.duckdns.org/loki/api/v1/query_range --data-urlencode 'query={service_name="unknown_service"} |= "features/by-id"' ...` through the gateway (basic-auth flag/credential supplied out of band); Grafana Explore is the intended viewer surface, this is the same query executed non-interactively
 - expected_result: real application log lines are queryable through the gateway/Grafana path, correlated to a specific live request

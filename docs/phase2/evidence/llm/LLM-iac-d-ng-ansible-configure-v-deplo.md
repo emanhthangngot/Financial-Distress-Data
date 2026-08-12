@@ -7,8 +7,8 @@ run against the same host reports zero changes.
 
 - rubric_id: LLM-iac-d-ng-ansible-configure-v-deplo
 - execution_timestamp: 2026-08-10T00:46:00+00:00
-- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
-- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: ansible-core@2.21, Debian (Container-Optimized OS host), docker-ce (apt), google-cloud-cli, kubectl
 - command: `cd ansible && ansible-playbook playbooks/vast-evidence-worker.yml` run twice in a row against `fsds-evidence-worker` over an IAP SSH tunnel
 - expected_result: run 1 configures the VM (Docker installed/enabled, GCP apt repo + `google-cloud-cli`/`kubectl` installed, benchmark-client venv + Locustfile deployed) with `changed>0`; run 2 against the same host reports `changed=0`, proving idempotency

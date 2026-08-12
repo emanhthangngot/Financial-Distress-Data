@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-routing-gateway-ui-cho-agent-registry
 - execution_timestamp: 2026-08-12T01:32:00+00:00
-- source_sha: 6b92785b9b26ec4cb1b37319d351f43c1c6a09ed
-- gitops_sha: d82268f383c7155f19af74d0952bc30550a422a2
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: web `sha256:499464d53abba129d48f4e1cc8b4e32acc37d9404f616badbf0b5eba7e306ae3`, `live-registry-adapter.ts` (server-rendered)
 - command: `curl -sS https://distresslens.duckdns.org/agents/registry` (basic-auth flag and credential supplied out of band)
 - expected_result: the registry page renders through the gateway, populated by the live registry adapter (`apps/web/src/lib/data/live-registry-adapter.ts`), not a static fixture page

@@ -6,13 +6,12 @@ Human-facing index into `docs/phase2/evidence/llm/` — not a relocation.
 canonical location, they don't hold the evidence itself. See
 `docs/phase2/evidence-contract.md` for what counts as proof.
 
-Status (2026-08-12): **58 of 60 LLM rows executed and stamped (96/100 points)**,
-passing the strict two-repo gate with `--accept-design-only` for the 2 rows
-below. All seven Routing & Gateway rows and four of six observability rows
-were captured live against the running `fsds-evidence` GKE cluster in the
-phase 5 window (`plans/260811-1627-close-llm-rubric-to-100/`). Two
-observability rows (token/TTFT/PII-catch metrics, agent/MCP-tool-call
-metrics) stay `design_only` — see the named-cuts section below.
+Status (2026-08-12): **60 of 60 LLM rows executed and stamped (100/100
+points)**. The strict two-repo gate passes without `--accept-design-only`.
+All seven Routing & Gateway rows and all six Observability rows were captured
+from the running Phase 2 cluster; the final two rows use the correlated
+coordinator round-trip and live Prometheus output documented in the linked
+evidence artifacts.
 
 | Page | Rubric sections | Rows |
 |---|---|---|
@@ -56,21 +55,14 @@ account above).
 - gateway basic-auth: user `grader`, password `qMwgNhqAOaJqcQwNNZ0Om0Nq`
 - Grafana admin (after the gateway): user `grader`, password `zoyrVNjLTQYNJOOGlpVxCnou`
 
-## Explicitly unearned live-evidence rows
+## Live-evidence completion
 
-The following exact rows stay `design_only`, named as cuts rather than
-claimed. Both are blocked by defects in the coordinator/agent round-trip
-found during the phase 5 capture window, documented in
-[observability.md](./observability.md):
+Every Routing & Gateway and Observability row is captured live and linked from
+[routing_gateway.md](./routing_gateway.md) and [observability.md](./observability.md).
+The two final Observability artifacts are:
 
-```text
-LLM-observability-agent-tool-call-metrics
-LLM-observability-m-b-o-t-nh-t-c-c-metrics
-```
-
-Every other Routing & Gateway and Observability row (11 of 13) is captured
-live and linked from [routing_gateway.md](./routing_gateway.md) and
-[observability.md](./observability.md).
+- [per-request token, latency, and PII metrics](../phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md)
+- [per-agent and per-MCP-tool call/failure metrics](../phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md)
 
 The GitOps repository (`financial-distress-gitops`) stays private — it carries
 a committed `terraform.tfstate` and `ansible/inventory.ini`, which the

@@ -5,7 +5,7 @@ Grafana Explore (logs), Jaeger (traces) — each its own gateway-reachable
 viewer route. GKE Cloud Logging/Monitoring disabled (see phase-03 Scope
 Changes); scored via this stack instead.
 
-## Status: 4 of 6 rows executed, live; 2 named cuts
+## Status: 6 of 6 rows executed, live
 
 Captured against the deployed `fsds-evidence` GKE cluster
 (`plans/260811-1627-close-llm-rubric-to-100`, phase 5). The logs and traces
@@ -20,11 +20,8 @@ Jaeger trace).
 | Web API metrics | executed | [LLM-observability-web-api-metrics.md](../phase2/evidence/llm/LLM-observability-web-api-metrics.md) |
 | Logs (same request, queried live) | executed | [LLM-observability-t-ng-t-cho-logs.md](../phase2/evidence/llm/LLM-observability-t-ng-t-cho-logs.md) |
 | Traces (same request, JSON persisted) | executed | [LLM-observability-t-ng-t-cho-traces.md](../phase2/evidence/llm/LLM-observability-t-ng-t-cho-traces.md) |
-| Token/TTFT/PII-catch metrics | **design_only (named cut)** | blocked by a live round-trip defect between the coordinator and `drift-mcp` (self-referential HTTP loopback); the coordinator answers but the metrics-emitting path is never reached |
-| Agent/MCP-tool call metrics | **design_only (named cut)** | blocked by the `coordinator`/`feature-agent`/`drift-agent` Deployments running a stale image that has no `/metrics` endpoint; requires a new CI + digest-bump cycle across all three agent workflows, out of scope for this window |
-
-Both cuts stay `design_only` in `docs/phase2/rubric-matrix.csv` and are
-declared here rather than claimed.
+| Token/TTFT/PII-catch metrics | executed | [LLM-observability-m-b-o-t-nh-t-c-c-metrics.md](../phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md) |
+| Agent/MCP-tool call metrics | executed | [LLM-observability-agent-tool-call-metrics.md](../phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md) |
 
 ## Bugs found and fixed during capture
 
@@ -44,11 +41,18 @@ declared here rather than claimed.
   `body.time` but read them back from `attributes.time` — a namespace
   mismatch that failed every single log entry and kept all application pod
   logs out of Loki (`platform/observability/otel-collector.yaml`).
+- The drift MCP mounted endpoint used a fragile HTTP self-loopback for its
+  pure drift calculation — replaced with an in-process client for loopback
+  configuration while preserving the HTTP client for split deployments.
+- The coordinator timeout budget was raised to 50 seconds and made
+  configurable through `AGENT_TIMEOUT_SECONDS`; all three agent images were
+  rebuilt with `/metrics` and rolled out at immutable Artifact Registry
+  digests.
 
 ## Verification
 
 - `.venv-phase2/bin/python -m pytest tests/phase2/requirements/ -k llm -q` — 31 passed.
-- `.venv-phase2/bin/python scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --gitops-root <gitops-repo> --phase1-base <sha>` — the only non-frozen-revision findings are the two named cuts above.
+- `.venv-phase2/bin/python scripts/audit_phase2_evidence.py --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 --gitops-root <gitops-repo> --phase1-base <sha>` — zero named cuts; 60/60 LLM rows and 100/100 points.
 - Live Prometheus target health, Grafana datasource-proxy query, Loki
   `query_range`, and Jaeger `api/traces/<id>` responses are reproduced verbatim
   in each linked evidence file.

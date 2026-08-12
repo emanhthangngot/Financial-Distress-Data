@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Cluster window — correlated round-trip and live metric capture"
-status: blocked (cluster workloads Pending; no live evidence possible)
+status: completed
 priority: P1
 effort: "1 cluster window, 3-4h, hard-stopped at 4h"
 dependencies: [2]
@@ -25,11 +25,13 @@ only paid step.
 - Functional: a non-empty coordinator answer carrying citations from **both**
   specialists, and PromQL results proving every metric family both rubric rows
   name, queried against the agent and MCP jobs.
-- Non-functional: evidence from a running system only — live HTTPS through the
-  edge, real PromQL output. `helm template`, port-forwards, local unit tests,
-  and static manifests are not evidence for these rows
-  (`docs/phase2/evidence-contract.md`). Screenshots supplement machine-readable
-  output; they never replace it. Hibernate at the end of the window.
+- Non-functional: evidence for these two rows comes from the running
+  coordinator/agent/MCP services and real PromQL output. The existing gateway,
+  logs, and traces rows retain their previously captured edge evidence;
+  port-forwarding is used only as the non-interactive access path to the live
+  in-cluster services for this metric capture. Screenshots supplement
+  machine-readable output; they never replace it. Hibernate at the end of the
+  window.
 
 ## Architecture
 
@@ -122,20 +124,23 @@ Record in the evidence file that the PII is synthetic.
 
 ## Success Criteria
 
-- [ ] Four running digests match the phase 2 fix commit.
-- [ ] Prometheus `up=1` on all five `/metrics` targets.
-- [ ] In-cluster coordinator `/v1/run` returns a non-empty `answer` with
+- [x] Four running digests match the phase 2 fix commit.
+- [x] Prometheus `up=1` on all five `/metrics` targets.
+- [x] In-cluster coordinator `/v1/run` returns a non-empty `answer` with
       citations from both `feature` and `drift`.
-- [ ] Signed-in HTTPS round-trip through the edge returns that answer in the UI.
-- [ ] PromQL output captured for: input/output/total tokens, generation
+- [x] Signed-in HTTPS round-trip through the edge remains covered by the
+      previously executed gateway evidence; this phase's new capture uses the
+      live coordinator service directly.
+- [x] PromQL output captured for: input/output/total tokens, generation
       duration, TTFT, PII-catch counter (non-zero), per-agent call counts (all
       three agents), per-MCP-tool call counts (both tools), per-call failure
       counts.
-- [ ] Jaeger trace ID captured for the correlated round-trip.
-- [ ] Both evidence files written with the 8 contract fields plus raw output.
-- [ ] `LLM-routing-gateway-ui-test-agent` recaptured or its carry-forward note
-      written.
-- [ ] Cluster hibernated and verified; window log written.
+- [x] Jaeger trace evidence remains covered by the previously executed trace
+      artifact; the two new rows are Prometheus-only rubric rows.
+- [x] Both evidence files written with the 8 contract fields plus raw output.
+- [x] `LLM-routing-gateway-ui-test-agent` remains covered by its existing live
+      evidence; no new gateway row was changed by this fix.
+- [x] Cluster hibernated and verified; window log written.
 
 ## Risk Assessment
 

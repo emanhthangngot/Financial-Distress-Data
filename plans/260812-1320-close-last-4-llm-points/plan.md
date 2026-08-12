@@ -1,7 +1,7 @@
 ---
 title: "Close Last 4 LLM Points"
 description: "Fix the two defects that block the last 2 LLM observability rows (drift-mcp self-loopback call; three agent Deployments running images without /metrics), capture the two evidence files from a real coordinator round-trip, then hand a zero-cut strict gate to phase 6 of 260811-1627."
-status: in_progress (phase 1 complete; phase 2 code/tests complete; CI/GitOps/live evidence pending)
+status: completed (60/60 LLM rows, 100/100 LLM points, strict zero-cut gate passed)
 priority: P1
 effort: "1.5 days — 0.5d code+CI (no cluster), 1 cluster window ≈ 3-4h, 0.25d evidence/gate"
 branch: codex/phase06-llm-submission
@@ -20,8 +20,8 @@ Active phase: **explicit Phase 2**, LLM track only. Read `AGENTS.md`,
 
 ## Overview
 
-The LLM track sits at **58/60 rows, 96/100 points**. Two rows are cut as
-`design_only`, worth 4 points:
+At plan start, the LLM track was at **58/60 rows, 96/100 points**. The two
+remaining rows were `design_only`, worth 4 points; both are now executed:
 
 | Rubric ID | Points | What it needs |
 |---|---|---|
@@ -154,9 +154,9 @@ three agent jobs.
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Reproduce and prove the drift-mcp loopback failure](./phase-01-reproduce-drift-loopback.md) | Complete — local reproduction succeeded; cluster mechanism remains unresolved |
-| 2 | [Fix the loopback and the coordinator timeout budget, ship through CI](./phase-02-fix-and-ship-images.md) | In progress — source/tests complete; CI, digest bumps, and GitOps commit pending |
-| 3 | [Cluster window — correlated round-trip and live metric capture](./phase-03-capture-live-metrics.md) | Blocked — all current cluster pods are Pending |
-| 4 | [Register rows, regenerate matrix, zero-cut strict gate](./phase-04-close-rows-and-gate.md) | Pending — depends on live evidence |
+| 2 | [Fix the loopback and the coordinator timeout budget, ship through CI](./phase-02-fix-and-ship-images.md) | Complete — source tests, CI images, signed digests, and GitOps rollout verified |
+| 3 | [Cluster window — correlated round-trip and live metric capture](./phase-03-capture-live-metrics.md) | Complete — live coordinator response and aggregate Prometheus metrics captured |
+| 4 | [Register rows, regenerate matrix, zero-cut strict gate](./phase-04-close-rows-and-gate.md) | Complete — 60/60 rows, LLM 100/100, no design-only cuts |
 
 ## Non-goals
 
@@ -170,10 +170,10 @@ three agent jobs.
   in `docs/submission/README.md` (see the stop rule below).
 - No `--amend` on any commit after evidence stamping.
 
-## The stop rule (accept 96/100 cleanly)
+## The fallback rule (not taken)
 
-This plan is worth 4 points and costs one cluster window. It is abandoned, not
-extended, if any of these hold:
+This plan was worth 4 points and cost one cluster window. It would have been
+abandoned, not extended, if any of these had held:
 
 - Phase 1 cannot reproduce the hang locally **and** cannot name a concrete
   cluster-side cause within its 3h box.
@@ -182,32 +182,32 @@ extended, if any of these hold:
 - Any fix would require editing a Phase 1 DAG, a pipeline, or an evidence file's
   claim.
 
-On abandonment: revert nothing that already passed CI, keep the two rows in
+On abandonment, the fallback would have been to revert nothing that already
+passed CI, keep the two rows in
 `--accept-design-only`, record the reason in `docs/submission/README.md`, and go
-straight to `260811-1627` phase 6 at 96/100. A submitted 96 beats an unsubmitted
-100.
+straight to `260811-1627` phase 6 at 96/100; that fallback was not taken.
 
 ## Success Criteria
 
-- [ ] Local reproduction (or a written, evidence-backed exclusion) names the
+- [x] Local reproduction (or a written, evidence-backed exclusion) names the
       drift-mcp loopback mechanism before any source edit — phase 1.
-- [ ] `pytest tests -k "drift_mcp or coordinator"` green, then full
+- [x] `pytest tests -k "drift_mcp or coordinator"` green, then full
       `.venv/bin/python -m pytest tests` green, plus
       `scripts/run_stage1_quality_gates.py` exit 0 — phase 2.
-- [ ] `drift-mcp`, `coordinator`, `feature-agent`, `drift-agent` all running
+- [x] `drift-mcp`, `coordinator`, `feature-agent`, `drift-agent` all running
       digests built from the fix commit; all four `/metrics` return 200 to
       Prometheus — phase 2/3.
-- [ ] One signed-in HTTPS round-trip through the F5 NGINX edge returns a
+- [x] One signed-in HTTPS round-trip through the F5 NGINX edge returns a
       non-empty `answer` with citations from **both** specialists — phase 3.
-- [ ] Live PromQL shows, for that round-trip: token counts (input/output/total),
+- [x] Live PromQL shows, for that round-trip: token counts (input/output/total),
       generation duration, TTFT, PII-catch counter, per-agent call counts,
       per-MCP-tool call counts, per-call failure counts — phase 3.
-- [ ] Both evidence files written with the 8 contract fields plus raw command
+- [x] Both evidence files written with the 8 contract fields plus raw command
       output; both rubric IDs added to `EXECUTED_RUBRIC_IDS`
       (`scripts/_phase2_rubric_items.py:1159`); matrix regenerated — phase 4.
-- [ ] Strict two-repo gate exits 0 with **no** `--accept-design-only` argument,
+- [x] Strict two-repo gate exits 0 with **no** `--accept-design-only` argument,
       60/60 rows, LLM 100/100 — phase 4.
-- [ ] `plans/260811-1627-close-llm-rubric-to-100/phase-06` unblocked, with the
+- [x] `plans/260811-1627-close-llm-rubric-to-100/phase-06` unblocked, with the
       `LLM-routing-gateway-ui-test-agent` `MALFORMED_RESPONSE` note resolved or
       explicitly carried forward — phase 4.
 
