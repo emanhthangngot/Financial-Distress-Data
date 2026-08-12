@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "Build the web auth plane so the UI rows are real"
-status: in_progress
+status: complete
 priority: P1
 effort: "1d (no cluster)"
 dependencies: [2]
@@ -116,12 +116,12 @@ of that is a rubric row.
 
 ## Success Criteria
 
-- [ ] Developer -> runs the built image locally with runtime env -> `/` renders, the sign-in route sets `sb-access-token`, and a signed-in session reports a non-null role.
-- [ ] Developer -> loads `/agents/registry` in that container -> entries come from the live registry adapter, and removing the registry URL makes it fail closed rather than silently showing fixtures.
-- [ ] Developer -> posts to `/api/assistant/stream` in that container -> a generation completes, `consume_ai_quota` and `record_audit_event` succeed, and no service-role key is present in the container environment.
-- [ ] Reviewer -> greps the image and both repos -> the Supabase service-role key appears nowhere; only anon/publishable values are used.
-- [ ] Maintainer -> inspects the pod spec rendered from `master` -> `web-runtime-config` is produced by a SealedSecret manifest in the repo, and both provenance SHA env vars are set.
-- [ ] Maintainer -> runs the web typecheck, vitest and build, plus `.venv/bin/python scripts/run_stage1_quality_gates.py` -> all pass.
+- [x] Developer -> runs the built image locally with runtime env -> `/` renders, the sign-in route sets `sb-access-token`, and a signed-in session reports a non-null role.
+- [x] Developer -> loads `/agents/registry` in that container -> entries come from the live registry adapter, and removing the registry URL makes it fail closed rather than silently showing fixtures.
+- [x] Developer -> posts to `/api/assistant/stream` in that container -> a generation completes, `consume_ai_quota` and `record_audit_event` succeed, and no service-role key is present in the container environment.
+- [x] Reviewer -> greps the image and both repos -> the Supabase service-role key appears nowhere; only anon/publishable values are used.
+- [x] Maintainer -> inspects the pod spec rendered from `master` -> `web-runtime-config` is produced by a SealedSecret manifest in the repo, and both provenance SHA env vars are set.
+- [x] Maintainer -> runs the web typecheck, vitest and build, plus `.venv/bin/python scripts/run_stage1_quality_gates.py` -> all pass.
 
 ## Risk Assessment
 

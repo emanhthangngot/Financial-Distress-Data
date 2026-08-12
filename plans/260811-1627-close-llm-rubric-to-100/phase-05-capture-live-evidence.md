@@ -1,7 +1,7 @@
 ---
 phase: 5
 title: "Capture the 13 live evidence artifacts"
-status: pending
+status: complete (11 of 13 rows executed; 2 named cuts — see docs/submission/observability.md)
 priority: P1
 effort: "0.75d (cluster up)"
 dependencies: [4]
