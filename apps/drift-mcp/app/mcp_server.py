@@ -8,6 +8,7 @@ import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Protocol
+from urllib.parse import urlsplit
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
@@ -68,6 +69,28 @@ class HttpxDriftApiClient:
         )
         response.raise_for_status()
         return dict(response.json())
+
+
+class InProcessDriftApiClient:
+    """Call the drift domain function directly when MCP is co-located."""
+
+    async def __aenter__(self) -> InProcessDriftApiClient:
+        return self
+
+    async def __aexit__(self, *_exc: Any) -> None:
+        return None
+
+    async def report(self, payload: dict[str, Any]) -> dict[str, Any]:
+        # Keep this import lazy: main.py mounts the MCP application while it is
+        # being imported, so an eager reverse import would create a cycle.
+        from .main import DriftRequest, _calculate_drift
+
+        try:
+            request = DriftRequest.model_validate(payload)
+        except ValueError as exc:
+            raise httpx.HTTPError("drift API validation failed") from exc
+        response = await asyncio.to_thread(_calculate_drift, request)
+        return response.model_dump()
 
 
 class ToolRequest(BaseModel):
@@ -185,13 +208,23 @@ def _grants_from_env() -> dict[str, set[str]]:
 @dataclass(frozen=True)
 class McpRuntime:
     application: Any
-    api: HttpxDriftApiClient
+    api: HttpxDriftApiClient | InProcessDriftApiClient
+
+
+def _is_loopback_url(base_url: str | None) -> bool:
+    if not base_url:
+        return True
+    try:
+        host = urlsplit(base_url).hostname
+    except ValueError:
+        return False
+    return host in {"127.0.0.1", "localhost", "::1"}
 
 
 def create_mcp_runtime(telemetry: Telemetry | None = None) -> McpRuntime:
     """Assemble transport dependencies without opening sockets or sessions."""
-    base_url = os.getenv("DRIFT_API_BASE_URL", "http://127.0.0.1:8000")
-    api = HttpxDriftApiClient(base_url)
+    base_url = os.getenv("DRIFT_API_BASE_URL")
+    api = InProcessDriftApiClient() if _is_loopback_url(base_url) else HttpxDriftApiClient(base_url)
     service = DriftMcpService(
         api=api,
         grants=_grants_from_env(),
