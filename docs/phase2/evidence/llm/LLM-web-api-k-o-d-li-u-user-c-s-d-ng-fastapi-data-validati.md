@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati
 - execution_timestamp: 2026-08-10T05:02:00+00:00
-- source_sha: 52dc00c17e69cdc46403f377ae83f00a5406fac5
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: FastAPI 0.141.1, Pydantic 2.13.4, Feast 0.65.0, Redis 7.4.1
 - command: `kubectl exec sandbox-negative-probe -n agents-sandbox -- curl -fsS http://feature-mcp.phase2-data.svc.cluster.local/healthz` and the live feature-agent request

@@ -6,7 +6,7 @@ needed to evaluate the split.
 
 - rubric_id: LLM-a-b-testing-perform-a-b-test-for-different
 - execution_timestamp: 2026-08-11T00:31+07:00
-- source_sha: 52dc00c17e69cdc46403f377ae83f00a5406fac5
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: v1 (`fd-chat-model-v1-config-ab`) and v2 (`fd-chat-model-ab-v2-clone`); Knative Service `fd-chat-model-ab`
 - command: live Kubernetes inspection of `platform-llm`, the two model revisions/PVCs, the Knative Service traffic split, both DNS routes (`/health` and `/v1/models`), and the dashboard/model-config resources

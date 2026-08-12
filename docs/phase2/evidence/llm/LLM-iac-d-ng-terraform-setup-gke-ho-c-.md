@@ -7,7 +7,7 @@ and that the live cluster matches the committed configuration exactly.
 
 - rubric_id: LLM-iac-d-ng-terraform-setup-gke-ho-c-
 - execution_timestamp: 2026-08-10T02:00:00+00:00
-- source_sha: 52dc00c17e69cdc46403f377ae83f00a5406fac5
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: terraform@1.15, hashicorp/google@6.50.0, GKE 1.35.6-gke.1250000
 - command: `cd terraform/envs/evidence && terraform init -input=false && terraform plan -input=false -no-color -var-file=../../gcp/terraform.tfvars`

@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-observability-web-api-metrics
 - execution_timestamp: 2026-08-12T01:32:59+00:00
-- source_sha: 52dc00c17e69cdc46403f377ae83f00a5406fac5
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: prometheus-client 0.24.1, `src/observability/telemetry.py` canonical metric families
 - command: `curl http://127.0.0.1:19090/api/v1/query?query=fd_web_api_requests_total{service="feature-mcp"}` via `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus`
