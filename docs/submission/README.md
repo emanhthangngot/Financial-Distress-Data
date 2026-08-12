@@ -6,13 +6,13 @@ Human-facing index into `docs/phase2/evidence/llm/` — not a relocation.
 canonical location, they don't hold the evidence itself. See
 `docs/phase2/evidence-contract.md` for what counts as proof.
 
-Status (2026-08-11): **47 of 60 LLM rows executed and stamped (79/100 points)**,
-passing the strict two-repo gate with `--accept-design-only` for the 13 rows
-below. Six observability rows and seven Routing & Gateway rows remain
-`design_only` because their live routes/viewers have not been captured against
-a running cluster — see
-`plans/260811-1627-close-llm-rubric-to-100/` for the closeout sequencing.
-Those 13 rows are not claimed until captured.
+Status (2026-08-12): **58 of 60 LLM rows executed and stamped (96/100 points)**,
+passing the strict two-repo gate with `--accept-design-only` for the 2 rows
+below. All seven Routing & Gateway rows and four of six observability rows
+were captured live against the running `fsds-evidence` GKE cluster in the
+phase 5 window (`plans/260811-1627-close-llm-rubric-to-100/`). Two
+observability rows (token/TTFT/PII-catch metrics, agent/MCP-tool-call
+metrics) stay `design_only` — see the named-cuts section below.
 
 | Page | Rubric sections | Rows |
 |---|---|---|
@@ -58,26 +58,19 @@ account above).
 
 ## Explicitly unearned live-evidence rows
 
-The following exact rows remain `design_only` and must be passed to the final
-audit as named cuts if the gateway/viewer capture is not completed. Static
-manifests and local telemetry tests do not substitute for the required routed
-runtime evidence.
+The following exact rows stay `design_only`, named as cuts rather than
+claimed. Both are blocked by defects in the coordinator/agent round-trip
+found during the phase 5 capture window, documented in
+[observability.md](./observability.md):
 
 ```text
 LLM-observability-agent-tool-call-metrics
-LLM-observability-collect-v-visualize-metrics-v-
 LLM-observability-m-b-o-t-nh-t-c-c-metrics
-LLM-observability-t-ng-t-cho-logs
-LLM-observability-t-ng-t-cho-traces
-LLM-observability-web-api-metrics
-LLM-routing-gateway-authentication-cho-ui-test-age
-LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-
-LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-
-LLM-routing-gateway-service-coi-log
-LLM-routing-gateway-service-coi-trace
-LLM-routing-gateway-ui-cho-agent-registry
-LLM-routing-gateway-ui-test-agent
 ```
+
+Every other Routing & Gateway and Observability row (11 of 13) is captured
+live and linked from [routing_gateway.md](./routing_gateway.md) and
+[observability.md](./observability.md).
 
 The GitOps repository (`financial-distress-gitops`) stays private — it carries
 a committed `terraform.tfstate` and `ansible/inventory.ini`, which the
