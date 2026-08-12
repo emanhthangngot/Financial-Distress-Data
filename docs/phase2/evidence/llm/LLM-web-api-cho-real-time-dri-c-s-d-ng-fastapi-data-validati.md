@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati
 - execution_timestamp: 2026-08-10T05:08:00+00:00
-- source_sha: 3c99fb7fcdbae3e94840ebb1ed1b69b690da7785
+- source_sha: 52dc00c17e69cdc46403f377ae83f00a5406fac5
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: FastAPI 0.141.1, Pydantic 2.13.4, drift generator Phase 2
 - command: `.venv-phase2/bin/python -m pytest tests/phase2/apps/test_drift_api_and_mcp.py -q` and live `/healthz`
