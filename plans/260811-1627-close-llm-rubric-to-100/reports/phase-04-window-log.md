@@ -176,6 +176,30 @@ per-action confirmation before the one destructive step (scaling
    routes, sign-in, hide-services, auth, and the Prometheus/Grafana row
    are all independent of this specific call chain.
 
+## Prometheus never existed — missing CRDs, pre-dating this window
+
+10. **`prometheuses.monitoring.coreos.com` (and 5 sibling CRDs:
+    `alertmanagers`, `alertmanagerconfigs`, `prometheusagents`,
+    `scrapeconfigs`, `thanosrulers`) were never installed.** Only 4 of the
+    kube-prometheus-stack chart's 10 CRDs existed
+    (`kubectl get crd` timestamps: all identical, `2026-08-09T18:59:08Z` —
+    pre-dates this window, not something broken by any sync/prune this
+    session did). Without the `Prometheus` CRD, `kubectl get prometheus`
+    errors `the server doesn't have a resource type` and the operator can
+    never create the StatefulSet — the entire `LLM-observability-*` metrics
+    surface has been unreachable since the observability stack's original
+    bootstrap, not just this session. Fixed live:
+    `helm show crds prometheus-community/kube-prometheus-stack --version
+    88.2.0 | kubectl apply --server-side`, then a pod restart on
+    `monitoring-kube-prometheus-operator` (its CRD watch/informer had
+    failed at startup, before the CRDs existed, and doesn't self-heal —
+    needs a restart to re-establish once the CRD appears). Verified:
+    `prometheus-monitoring-kube-prometheus-prometheus-0` `2/2 Running`.
+    Not committed as a values.yaml change — Argo's Helm source type
+    installs a chart's bundled CRDs on sync already; the live `kubectl
+    apply` mirrors what the next full sync should also do, and CRDs are
+    cluster-scoped so they persist independent of Application state.
+
 ## Cluster state at end of this log entry
 
 Cluster is **still up** (primary-pool 1 node) — phase 5 capture has not
