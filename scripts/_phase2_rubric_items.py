@@ -1204,6 +1204,22 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-novel-ideas-idea-1",
     "LLM-novel-ideas-idea-2",
     "LLM-documentation-low-level-ml-design",
+    # Phase 5 (plans/260811-1627-close-llm-rubric-to-100) live capture window.
+    # Cut, not registered here: LLM-observability-m-b-o-t-nh-t-c-c-metrics
+    # (token/TTFT/PII-catch metrics — blocked by the coordinator/drift-mcp
+    # round-trip defect) and LLM-observability-agent-tool-call-metrics
+    # (blocked by the agent Deployments' stale image lacking /metrics).
+    "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-",
+    "LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-",
+    "LLM-routing-gateway-ui-test-agent",
+    "LLM-routing-gateway-ui-cho-agent-registry",
+    "LLM-routing-gateway-authentication-cho-ui-test-age",
+    "LLM-routing-gateway-service-coi-log",
+    "LLM-routing-gateway-service-coi-trace",
+    "LLM-observability-collect-v-visualize-metrics-v-",
+    "LLM-observability-web-api-metrics",
+    "LLM-observability-t-ng-t-cho-logs",
+    "LLM-observability-t-ng-t-cho-traces",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:
