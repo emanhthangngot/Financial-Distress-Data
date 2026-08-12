@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Fix the loopback and the coordinator timeout budget, ship through CI"
-status: in_progress
+status: completed
 priority: P1
 effort: "0.5d code + 1 CI round"
 dependencies: [1]
@@ -125,18 +125,18 @@ the diagnosis.
 
 ## Success Criteria
 
-- [ ] New drift-mcp test fails before the fix and passes after.
-- [ ] Split-deployment HTTP path still covered and green.
-- [ ] Coordinator returns a response for a specialist slower than 10s.
-- [ ] `AgentFailure.error` appears in coordinator logs at WARNING.
-- [ ] `.venv/bin/python -m pytest tests` green, zero skips beyond the documented
+- [x] New drift-mcp test fails before the fix and passes after.
+- [x] Split-deployment HTTP path still covered and green.
+- [x] Coordinator returns a response for a specialist slower than 10s.
+- [x] `AgentFailure.error` appears in coordinator logs at WARNING.
+- [x] `.venv/bin/python -m pytest tests` green, zero skips beyond the documented
       Docker/Postgres-gated ones.
-- [ ] `scripts/run_stage1_quality_gates.py` exit 0, `status: pass`.
-- [ ] Four images built and signed; four digests bumped on GitOps `master`:
+- [x] `scripts/run_stage1_quality_gates.py` exit 0, `status: pass`.
+- [x] Four images built and signed; four digests bumped on GitOps `master`:
       `drift-mcp`, `coordinator`, `feature-agent`, `drift-agent`.
-- [ ] `AGENT_TIMEOUT_SECONDS` present on the coordinator Deployment; the web
+- [x] `AGENT_TIMEOUT_SECONDS` present on the coordinator Deployment; the web
       edge deadline is greater than it.
-- [ ] No Phase 1 file and no existing test expectation modified.
+- [x] No Phase 1 file and no existing test expectation modified.
 
 ## Risk Assessment
 

@@ -1,7 +1,7 @@
 ---
 title: "Close Last 4 LLM Points"
 description: "Fix the two defects that block the last 2 LLM observability rows (drift-mcp self-loopback call; three agent Deployments running images without /metrics), capture the two evidence files from a real coordinator round-trip, then hand a zero-cut strict gate to phase 6 of 260811-1627."
-status: in_progress (phase 1 complete; phase 2 code/tests complete; CI/GitOps/live evidence pending)
+status: completed (60/60 LLM rows, 100/100 LLM points, strict zero-cut gate passed)
 priority: P1
 effort: "1.5 days — 0.5d code+CI (no cluster), 1 cluster window ≈ 3-4h, 0.25d evidence/gate"
 branch: codex/phase06-llm-submission
@@ -154,9 +154,9 @@ three agent jobs.
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Reproduce and prove the drift-mcp loopback failure](./phase-01-reproduce-drift-loopback.md) | Complete — local reproduction succeeded; cluster mechanism remains unresolved |
-| 2 | [Fix the loopback and the coordinator timeout budget, ship through CI](./phase-02-fix-and-ship-images.md) | In progress — source/tests complete; CI, digest bumps, and GitOps commit pending |
-| 3 | [Cluster window — correlated round-trip and live metric capture](./phase-03-capture-live-metrics.md) | Blocked — all current cluster pods are Pending |
-| 4 | [Register rows, regenerate matrix, zero-cut strict gate](./phase-04-close-rows-and-gate.md) | Pending — depends on live evidence |
+| 2 | [Fix the loopback and the coordinator timeout budget, ship through CI](./phase-02-fix-and-ship-images.md) | Complete — source tests, CI images, signed digests, and GitOps rollout verified |
+| 3 | [Cluster window — correlated round-trip and live metric capture](./phase-03-capture-live-metrics.md) | Complete — live coordinator response and aggregate Prometheus metrics captured |
+| 4 | [Register rows, regenerate matrix, zero-cut strict gate](./phase-04-close-rows-and-gate.md) | Complete — 60/60 rows, LLM 100/100, no design-only cuts |
 
 ## Non-goals
 
