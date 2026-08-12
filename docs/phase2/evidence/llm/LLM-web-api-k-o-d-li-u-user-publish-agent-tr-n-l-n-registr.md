@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr
 - execution_timestamp: 2026-08-10T05:07:00+00:00
-- source_sha: 3e08cdfc9be520056b3fd32214dc73f8dbbe0b1c
+- source_sha: 29f6a7ce00a2a6ff2ac42604983e814b1eeffe06
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: registry.fd.dev/v1alpha1, agentregistry API 1.0.0
 - command: `kubectl exec -n kagent deploy/agentregistry -- python -c "urllib.request.urlopen('http://127.0.0.1:8000/v1/agents')"`
