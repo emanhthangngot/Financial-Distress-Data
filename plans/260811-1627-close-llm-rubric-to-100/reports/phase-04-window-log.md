@@ -120,6 +120,62 @@ left in the broken half-applied state. The git fix stays on `master` as
 the correct manifest — future sessions with ArgoCD UI/CLI access can
 re-apply and let it stick.
 
+## Real generation round-trip — codex-rescue + direct debugging, 3 more real bugs found
+
+User authorized "tự fix cho tôi đi" (just fix it) after the model plane
+turned out broken from before this window (`fd-chat-model-predictor`
+stuck `RevisionFailed`/`Initial scale was never achieved` since
+2026-08-10). Spawned `codex:codex-rescue` for a second-opinion diagnosis;
+its prompt was flagged by the security classifier for pre-authorizing
+scaling down another workload without a named user confirmation — it
+never produced a result (stayed at "Starting Codex task thread" for the
+whole window), so root-caused directly instead, with an explicit
+per-action confirmation before the one destructive step (scaling
+`fd-chat-model-ab-v2-clone-deployment`).
+
+7. **CPU starvation from a stale A/B clone.** Live `FailedScheduling`
+   event: `0/1 nodes are available: 1 Insufficient cpu`.
+   `fd-chat-model-ab-v2-clone-deployment` (a leftover A/B-testing canary,
+   `minScale/maxScale: 1`, reserves 2 CPU permanently) left no room for
+   the primary chat model's own 2 CPU request. **User-confirmed fix**:
+   `platform/llm/ab-testing.yaml` — `minScale: "0"` on the canary
+   (`master` commit `7075f75`). The model server came up for real:
+   `fd-chat-model-predictor-00008` reached `Ready`, and a direct
+   `POST /v1/chat/completions` against it returned a genuine llama.cpp
+   completion (verified in-cluster).
+8. **`coordinatorBody()` sent the wrong `scope`.** `feature_request.scope`
+   / `drift_request.scope` were `request.context?.scope` (the UI's
+   portfolio-vs-company selector) — every real coordinator call failed
+   `ToolInvocationRegistry.authorize()` with `forbidden`, because no
+   deployed `MCP_AUTH_GRANTS` entry lists a UI scope value. Read the real
+   grants off the live pods
+   (`feature-mcp: {"feature-agent":["financial-distress:read"]}`,
+   `drift-mcp: {"drift-agent":["financial-distress:drift"]}`) and fixed
+   `apps/web/src/app/api/assistant/stream/route.ts` to send those exact
+   constants instead (source commit `68a6f52`, via PR #72 to `dev`,
+   digest-bumped to gitops `master` `93a64e6`). Confirmed live: the
+   `forbidden` error is gone; a manually-constructed request with the
+   correct scopes now passes MCP authorization.
+9. **`drift-mcp` self-loopback HTTP call, suspected event-loop deadlock.**
+   `HttpxDriftApiClient` (used by the MCP tool handler) calls back into
+   `http://127.0.0.1:8000/v1/drift/report` — the **same** FastAPI process,
+   same port, that is currently handling the inbound MCP request
+   (`apps/drift-mcp/app/main.py`'s `create_app(mount_mcp=True)` serves
+   both the MCP endpoint and the REST route in one `uvicorn` worker). The
+   self-call never reaches the route handler (no access-log line for it)
+   and times out after 5s, surfacing as `api_error`. **Not fixed this
+   window** — a real code change (call `_calculate_drift()` directly
+   instead of over HTTP, or run multiple workers) is needed, and the user
+   decided to stop here and capture what already works rather than
+   extend this specific chain further. This blocks the full agent
+   round-trip (and therefore the token/agent-tool-call metrics rows,
+   `LLM-observability-m-b-o-t-nh-t-c-c-metrics` and
+   `LLM-observability-agent-tool-call-metrics` — 4 points, exactly the
+   cut ladder's "model/data plane cannot run alongside the agents"
+   branch) but does **not** block anything else: the 4 verified gateway
+   routes, sign-in, hide-services, auth, and the Prometheus/Grafana row
+   are all independent of this specific call chain.
+
 ## Cluster state at end of this log entry
 
 Cluster is **still up** (primary-pool 1 node) — phase 5 capture has not
