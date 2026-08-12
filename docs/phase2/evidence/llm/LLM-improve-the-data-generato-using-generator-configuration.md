@@ -9,7 +9,7 @@ configuration, not a hardcoded scenario.
 
 - rubric_id: LLM-improve-the-data-generato-using-generator-configuration
 - execution_timestamp: 2026-08-08T07:28:57+00:00
-- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: financial-distress-data@a82af7a, generator-config schema_version=1 profile=ci, drift-config schema_version=1
 - command: .venv/bin/python scripts/run_phase2_drift_report.py --scenario market_stress

@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o
 - execution_timestamp: 2026-08-10T05:06:00+00:00
-- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: GKE Calico NetworkPolicy, restricted Pod Security, tokenless ServiceAccount
 - command: `kubectl exec sandbox-negative-probe -n agents-sandbox -- sh -c 'test -f /var/run/secrets/kubernetes.io/serviceaccount/token'` plus metadata/DNS/direct-model/filesystem negatives

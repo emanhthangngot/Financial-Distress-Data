@@ -8,7 +8,7 @@ than exposed directly.
 
 - rubric_id: LLM-a-llm-inference-platform--llm-inference-platform-setup-c
 - execution_timestamp: 2026-08-10T01:41:42+00:00
-- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: KServe v0.14.1, Knative Serving, llama.cpp server (`ghcr.io/ggml-org/llama.cpp:server`), agentgateway v1.4.1, Gateway API v1.6.0
 - command: `kubectl exec curl-test2 -n default -- curl -sS -X POST http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"qwen2.5-0.5b-instruct","messages":[{"role":"user","content":"Say hello in exactly 3 words."}],"max_tokens":32,"temperature":0}'`

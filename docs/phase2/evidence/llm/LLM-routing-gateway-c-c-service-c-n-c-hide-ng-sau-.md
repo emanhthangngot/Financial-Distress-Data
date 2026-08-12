@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-
 - execution_timestamp: 2026-08-12T01:29:39+00:00
-- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: nginx/nginx-ingress 5.5.4, GKE `fsds-evidence` cluster (asia-southeast1-b)
 - command: `timeout 8 curl -sS -o /dev/null -w "%{http_code}\n" http://<INGRESS_IP>:80/` against the node's external address on the plain HTTP node port (no `nginx.org/*` Ingress path involved), contrasted with the same-service request through the gateway host

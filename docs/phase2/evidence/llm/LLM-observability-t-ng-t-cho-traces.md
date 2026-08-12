@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-observability-t-ng-t-cho-traces
 - execution_timestamp: 2026-08-12T01:31:51+00:00
-- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: Jaeger v2.20.0, feature-mcp `sha256:e2218e6d337b1dc1ec04a9a1e132969e9aa91c6adf034e91548a0d4e3d05b440`
 - command: `curl -sS https://distresslens.duckdns.org/jaeger/api/traces/9f891d3e6d560baaad90e2e76b821c24` (basic-auth flag/credential supplied out of band) — same trace as `LLM-routing-gateway-service-coi-trace`, persisted here again as the observability-track pairing with the logs row above
