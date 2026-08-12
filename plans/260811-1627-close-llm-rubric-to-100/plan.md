@@ -1,7 +1,7 @@
 ---
 title: "Close LLM Rubric To 100"
 description: "Close the last 21 LLM rubric points (7 Routing & Gateway rows, 6 Observability rows) with real live-cluster evidence, then freeze the submission: frozen PHASE1_BASE_SHA, SHA stamp, strict audit with zero cuts, row-by-row mock grade, finalized cost ledger, hibernation."
-status: pending
+status: in_progress (phases 1-5 complete; 96/100 LLM points, 2 named cuts; phase 6 freeze pending)
 priority: P1
 effort: "4.5 focused days (1 cluster window ≈ 6-8h), re-budgeted after the 2026-08-11 red team"
 branch: codex/phase06-llm-submission
