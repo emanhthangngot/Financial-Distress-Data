@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a
 - execution_timestamp: 2026-08-11T08:52:37Z
-- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
-- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
+- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: Python 3.11; mcp streamable-http client; feature-mcp image deployed from the recorded GitOps revision
 - command: Port-forward `feature-mcp` and run the code cells in `notebooks/agent-understanding-demo.ipynb` with `DEMO_USER_ID=VNM`, `DEMO_CHUNK_ID=phase3-chunk`, and `DEMO_SCOPE=financial-distress:read`
 - expected_result: the specialist agent calls the governed MCP tool and receives structured feature and RAG context without connecting directly to Redis or PostgreSQL

@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr
 - execution_timestamp: 2026-08-10T05:07:00+00:00
-- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
-- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
+- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: registry.fd.dev/v1alpha1, agentregistry API 1.0.0
 - command: `kubectl exec -n kagent deploy/agentregistry -- python -c "urllib.request.urlopen('http://127.0.0.1:8000/v1/agents')"`
 - expected_result: registry exposes feature-agent with version, active status, replica ceiling, model config, sandbox policy and MCP tool

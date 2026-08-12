@@ -9,8 +9,8 @@ future sandboxed agent's NetworkPolicy can allow egress to
 
 - rubric_id: LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen
 - execution_timestamp: 2026-08-10T01:59:00+00:00
-- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
-- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
+- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: kagent 0.9.12 (kagent-crds + kagent Helm charts, kmcp disabled)
 - command: `kubectl get modelconfig fd-global-model-config -n kagent -o jsonpath='{.spec}'`
 - expected_result: one `ModelConfig` resource, provider `OpenAI`, model `qwen2.5-0.5b-instruct`, `openAI.baseUrl` pointing at `agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1` — the same endpoint proven reachable in the inference-platform-deployment evidence row

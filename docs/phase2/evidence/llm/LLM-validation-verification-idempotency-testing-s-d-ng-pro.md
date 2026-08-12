@@ -6,8 +6,8 @@ invocation are idempotent (same input yields the same result on retry).
 
 - rubric_id: LLM-validation-verification-idempotency-testing-s-d-ng-pro
 - execution_timestamp: 2026-08-10T13:00:00+07:00
-- source_sha: 6dc70ba62f2a664aaeba484a34c23604246e0017
-- gitops_sha: 921bdc1075ef8335e0f509747bd64db2d525f73e
+- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: hypothesis 6.165.2, pytest 9.1.1
 - command: `pytest tests/phase2/verification/test_idempotency.py -v`
 - expected_result: Hypothesis-generated cases all pass, proving idempotent retrieval/tool-call behavior

@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-routing-gateway-service-coi-trace
 - execution_timestamp: 2026-08-12T01:31:51+00:00
-- source_sha: 6b92785b9b26ec4cb1b37319d351f43c1c6a09ed
-- gitops_sha: d82268f383c7155f19af74d0952bc30550a422a2
+- source_sha: 6c13197663dd6e2a11981167a19bd3ca21ce44ea
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: Jaeger v2.20.0, feature-mcp `sha256:e2218e6d337b1dc1ec04a9a1e132969e9aa91c6adf034e91548a0d4e3d05b440`, opentelemetry-sdk 1.44.0
 - command: `curl -sS https://distresslens.duckdns.org/jaeger/api/traces/<trace-id>` through the gateway (basic-auth flag/credential supplied out of band); trace ID obtained from Jaeger's own `/api/traces?service=feature-mcp` search
 - expected_result: a real distributed trace with spans is retrievable through the gateway for a live request, not a synthetic fixture
