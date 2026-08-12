@@ -141,8 +141,15 @@ window, does not block traffic since the healthy replicas serve it.
 `nginx-ingress`, `platform-agentgateway` — OutOfSync/Healthy (drift, not
 unhealthy).
 
-\* `platform-security`'s Degraded flip during this window was not
-investigated — flagged for the next check-in.
+\* `platform-security`'s Degraded status root-caused: the `ghcr-pull-secret`
+SealedSecret template (still `REPLACE_WITH_KUBESEAL_OUTPUT`, never sealed
+since it turned out unneeded — see GHCR section below) has
+`status.conditions[].Synced=False` (`illegal base64 data`). Cosmetic only —
+`web`'s `imagePullSecrets` reference to a non-materializing Secret is
+silently ignored by the kubelet since the image pulls fine without it.
+Deleting the broken SealedSecret object (not its file — it stays as the
+template for whenever a real PAT is sealed) was blocked by this sandbox's
+destructive-action classifier; left as-is.
 
 ## GHCR package visibility
 
