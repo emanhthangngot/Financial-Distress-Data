@@ -20,8 +20,8 @@ Active phase: **explicit Phase 2**, LLM track only. Read `AGENTS.md`,
 
 ## Overview
 
-The LLM track sits at **58/60 rows, 96/100 points**. Two rows are cut as
-`design_only`, worth 4 points:
+At plan start, the LLM track was at **58/60 rows, 96/100 points**. The two
+remaining rows were `design_only`, worth 4 points; both are now executed:
 
 | Rubric ID | Points | What it needs |
 |---|---|---|
@@ -170,10 +170,10 @@ three agent jobs.
   in `docs/submission/README.md` (see the stop rule below).
 - No `--amend` on any commit after evidence stamping.
 
-## The stop rule (accept 96/100 cleanly)
+## The fallback rule (not taken)
 
-This plan is worth 4 points and costs one cluster window. It is abandoned, not
-extended, if any of these hold:
+This plan was worth 4 points and cost one cluster window. It would have been
+abandoned, not extended, if any of these had held:
 
 - Phase 1 cannot reproduce the hang locally **and** cannot name a concrete
   cluster-side cause within its 3h box.
@@ -182,7 +182,8 @@ extended, if any of these hold:
 - Any fix would require editing a Phase 1 DAG, a pipeline, or an evidence file's
   claim.
 
-On abandonment: revert nothing that already passed CI, keep the two rows in
+On abandonment, the fallback would have been to revert nothing that already
+passed CI, keep the two rows in
 `--accept-design-only`, record the reason in `docs/submission/README.md`, and go
 straight to `260811-1627` phase 6 at 96/100. A submitted 96 beats an unsubmitted
 100.
