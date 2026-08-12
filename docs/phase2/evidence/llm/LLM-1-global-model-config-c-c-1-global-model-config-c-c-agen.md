@@ -9,7 +9,7 @@ future sandboxed agent's NetworkPolicy can allow egress to
 
 - rubric_id: LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen
 - execution_timestamp: 2026-08-10T01:59:00+00:00
-- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
+- source_sha: 3e08cdfc9be520056b3fd32214dc73f8dbbe0b1c
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: kagent 0.9.12 (kagent-crds + kagent Helm charts, kmcp disabled)
 - command: `kubectl get modelconfig fd-global-model-config -n kagent -o jsonpath='{.spec}'`

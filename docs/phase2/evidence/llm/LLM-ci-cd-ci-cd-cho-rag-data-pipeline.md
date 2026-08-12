@@ -8,7 +8,7 @@ real `platform/data/pipeline-deployments.yaml` CronJob manifest (not the old
 
 - rubric_id: LLM-ci-cd-ci-cd-cho-rag-data-pipeline
 - execution_timestamp: 2026-08-10T22:48:51+07:00
-- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
+- source_sha: 3e08cdfc9be520056b3fd32214dc73f8dbbe0b1c
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: sigstore/cosign-installer@v3.7.0, docker/build-push-action@v5, financial-distress-data@ddea8d4
 - command: `git push origin dev` (merge of PR #61/#62 into `dev`, then `dev`→`main` merge PR #63) triggering `phase2-rag-pipeline.yaml`; watched via `gh run list --branch dev` and `gh run view <id> --json jobs`

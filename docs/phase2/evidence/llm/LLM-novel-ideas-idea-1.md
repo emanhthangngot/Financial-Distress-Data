@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-novel-ideas-idea-1
 - execution_timestamp: 2026-08-11T08:52:37Z
-- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
+- source_sha: 3e08cdfc9be520056b3fd32214dc73f8dbbe0b1c
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: Python 3.11; `EmbeddingVersionRegistry`; pytest
 - command: `.venv-phase2/bin/python -m pytest -q tests/phase2/verification/test_llm_novel_ideas.py -k embedding_registry`

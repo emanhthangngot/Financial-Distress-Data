@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-routing-gateway-ui-test-agent
 - execution_timestamp: 2026-08-12T01:31:20+00:00
-- source_sha: 1b38709b4ef1b28e7a1bb7f12a49b68cbfe1c049
+- source_sha: 3e08cdfc9be520056b3fd32214dc73f8dbbe0b1c
 - gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: web `sha256:499464d53abba129d48f4e1cc8b4e32acc37d9404f616badbf0b5eba7e306ae3`, Supabase Auth (password grant), coordinator agent runtime
 - command: (1) `POST https://<supabase-project>.supabase.co/auth/v1/token?grant_type=password` with the grader demo account to obtain a real session `access_token`; (2) that token set as the `sb-access-token` cookie against `POST https://distresslens.duckdns.org/api/assistant/stream` (basic-auth flag/credential and the Supabase URL/anon key supplied out of band)
