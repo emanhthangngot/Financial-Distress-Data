@@ -189,25 +189,25 @@ straight to `260811-1627` phase 6 at 96/100. A submitted 96 beats an unsubmitted
 
 ## Success Criteria
 
-- [ ] Local reproduction (or a written, evidence-backed exclusion) names the
+- [x] Local reproduction (or a written, evidence-backed exclusion) names the
       drift-mcp loopback mechanism before any source edit — phase 1.
-- [ ] `pytest tests -k "drift_mcp or coordinator"` green, then full
+- [x] `pytest tests -k "drift_mcp or coordinator"` green, then full
       `.venv/bin/python -m pytest tests` green, plus
       `scripts/run_stage1_quality_gates.py` exit 0 — phase 2.
-- [ ] `drift-mcp`, `coordinator`, `feature-agent`, `drift-agent` all running
+- [x] `drift-mcp`, `coordinator`, `feature-agent`, `drift-agent` all running
       digests built from the fix commit; all four `/metrics` return 200 to
       Prometheus — phase 2/3.
-- [ ] One signed-in HTTPS round-trip through the F5 NGINX edge returns a
+- [x] One signed-in HTTPS round-trip through the F5 NGINX edge returns a
       non-empty `answer` with citations from **both** specialists — phase 3.
-- [ ] Live PromQL shows, for that round-trip: token counts (input/output/total),
+- [x] Live PromQL shows, for that round-trip: token counts (input/output/total),
       generation duration, TTFT, PII-catch counter, per-agent call counts,
       per-MCP-tool call counts, per-call failure counts — phase 3.
-- [ ] Both evidence files written with the 8 contract fields plus raw command
+- [x] Both evidence files written with the 8 contract fields plus raw command
       output; both rubric IDs added to `EXECUTED_RUBRIC_IDS`
       (`scripts/_phase2_rubric_items.py:1159`); matrix regenerated — phase 4.
-- [ ] Strict two-repo gate exits 0 with **no** `--accept-design-only` argument,
+- [x] Strict two-repo gate exits 0 with **no** `--accept-design-only` argument,
       60/60 rows, LLM 100/100 — phase 4.
-- [ ] `plans/260811-1627-close-llm-rubric-to-100/phase-06` unblocked, with the
+- [x] `plans/260811-1627-close-llm-rubric-to-100/phase-06` unblocked, with the
       `LLM-routing-gateway-ui-test-agent` `MALFORMED_RESPONSE` note resolved or
       explicitly carried forward — phase 4.
 

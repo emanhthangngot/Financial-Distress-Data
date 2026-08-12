@@ -140,7 +140,7 @@ Record in the evidence file that the PII is synthetic.
 - [x] Both evidence files written with the 8 contract fields plus raw output.
 - [x] `LLM-routing-gateway-ui-test-agent` remains covered by its existing live
       evidence; no new gateway row was changed by this fix.
-- [ ] Cluster hibernated and verified; window log written.
+- [x] Cluster hibernated and verified; window log written.
 
 ## Risk Assessment
 
