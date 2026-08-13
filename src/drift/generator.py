@@ -38,7 +38,9 @@ OUTPUT_ROOT = Path("outputs/phase2/drift")
 # config bug that should fail at import time, not deep inside a run).
 _DERIVED_METRICS: dict[str, Any] = {
     "debt_to_asset": lambda row: (
-        row["total_liabilities"] / row["total_assets"] if row.get("total_assets") else None
+        row["debt_to_asset"]
+        if row.get("debt_to_asset") is not None
+        else (row["total_liabilities"] / row["total_assets"] if row.get("total_assets") else None)
     ),
     "close_price": lambda row: row.get("close_price"),
 }

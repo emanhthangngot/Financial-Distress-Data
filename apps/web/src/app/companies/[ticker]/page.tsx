@@ -11,7 +11,10 @@ import { DisclaimerBanner } from "@/components/shell/disclaimer-banner";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatePanel } from "@/components/ui/state-panel";
-import type { AssistantContext } from "@/lib/assistant/assistant-context";
+import {
+  latestDebtToAssetDriftRows,
+  type AssistantContext,
+} from "@/lib/assistant/assistant-context";
 import { getDataPort } from "@/lib/data";
 import { LIVE_FIXTURE_PROVENANCE } from "@/lib/data/fixtures/provenance-fixtures";
 import { resolveSession } from "@/lib/server/session";
@@ -57,6 +60,9 @@ export default async function CompanyDetailPage({
     filters: [],
     dataVersion: provenance.dataVersion,
     modelVersion: provenance.modelVersion,
+    driftRows: detail === null
+      ? undefined
+      : latestDebtToAssetDriftRows(detail.company.ticker, detail.indicators),
   };
 
   return (
