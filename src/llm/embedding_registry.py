@@ -179,7 +179,7 @@ class EmbeddingVersionRegistry:
     @staticmethod
     def _validate_result_shape(record: EmbeddingVersion, result: Any) -> None:
         values = result.get("matches", ()) if isinstance(result, Mapping) else result
-        if not isinstance(values, Sequence) or isinstance(values, (str, bytes)):
+        if not isinstance(values, Sequence) or isinstance(values, str | bytes):
             raise TypeError("dual-read result must expose a sequence of matches")
         for item in values:
             vector = item.get("vector") if isinstance(item, Mapping) else item
