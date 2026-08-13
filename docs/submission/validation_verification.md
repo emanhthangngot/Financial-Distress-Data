@@ -38,6 +38,8 @@ before image builds.
 
 The validation rows are executed: the Phase 05 package contains the Locust
 report, warm-up measurement, signed release loop, and validation-gate outputs.
-The A/B rows remain `design_only` because the persistent-volume multi-attach
-failure prevented a valid two-revision run; the limitation is recorded in
-[`cost.md`](./cost.md) and the canonical A/B evidence files.
+The A/B rows are represented as `executed` in the canonical matrix and their
+safe staged rollout state is documented in the linked evidence. No rollback
+was executed during capture; that operational limitation is not the same as a
+missing A/B configuration. The final freeze still requires SHA restamping and
+the strict two-repository audit.

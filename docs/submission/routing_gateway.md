@@ -3,14 +3,14 @@
 Row: `LLM-AC-13-ROUTING`. F5 NGINX Ingress Controller OSS is the only
 externally reachable object; every backend Service is `ClusterIP`.
 
-## Status: 6 of 7 rows executed, live
+## Status: 7 of 7 rows captured, freeze pending
 
 Captured against the deployed `fsds-evidence` GKE cluster
 (`plans/260811-1627-close-llm-rubric-to-100`, phase 5). Each evidence file
-below carries the 8-field contract, raw command output, and — for the six
-routing rows below — is cross-anchored to the TLS certificate serial
-`06BA2F629A81F5F38D53A74F3D035D8394F3` and, for the log/trace pair, a shared
-Jaeger trace ID.
+below carries the 8-field contract and raw command output. The log/trace pair
+is cross-anchored to a shared Jaeger trace ID. The rows are represented as
+`executed` in the canonical matrix; the final two-repository freeze still
+depends on post-commit source/GitOps SHA restamping.
 
 | Row | Evidence |
 |---|---|
@@ -22,7 +22,8 @@ Jaeger trace ID.
 | Log viewer through the gateway | [LLM-routing-gateway-service-coi-log.md](../phase2/evidence/llm/LLM-routing-gateway-service-coi-log.md) |
 | Trace viewer through the gateway | [LLM-routing-gateway-service-coi-trace.md](../phase2/evidence/llm/LLM-routing-gateway-service-coi-trace.md) |
 
-All seven rows are captured; none is cut on this track.
+All seven rows are captured; none is cut on this track. This page is a
+reviewer index, not the final freeze seal.
 
 ## Bugs found and fixed during capture
 
@@ -41,4 +42,4 @@ All seven rows are captured; none is cut on this track.
 ## Verification
 
 - `.venv-phase2/bin/python -m pytest tests/phase2/requirements/ -k llm -q` — 31 passed.
-- `.venv-phase2/bin/python scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --gitops-root <gitops-repo> --phase1-base <sha>` — zero artifact/assertion/denylist failures; only the expected pre-freeze frozen-revision notices and the two named observability cuts remain (see [observability.md](./observability.md)).
+- `.venv-phase2/bin/python scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --gitops-root <gitops-repo> --phase1-base <sha>` — rerun after SHA restamping; the strict final freeze gate must report zero findings without acceptance cuts.

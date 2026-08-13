@@ -1,197 +1,199 @@
-# Phase 2 Architecture — Two Planes, One Evidence Contract
+# Phase 2 Architecture — Product and Evidence Planes
 
-## Overview
+## 1. Current decision and status
 
-Phase 2 uses two planes:
+Phase 2 is an additive AI/product layer over the verified Phase 1 local-first
+lakehouse. The accepted coursework submission is the LLM track: 60 rubric rows
+and 100 points. The ML track remains a documented, post-deadline retrofit and
+is not claimed as delivered.
 
-- **Product plane (persistent, low cost):** Next.js on Vercel Hobby +
-  Supabase Auth/Postgres on Free. Always available. Shows persisted reports
-  and an honest evidence-plane state machine.
-- **Evidence plane (disposable, bounded budget):** EKS in `ap-southeast-1`,
-  6-hour default / 8-hour hard TTL, ≤ 3 sessions/month, ≤ USD 25/session,
-  ≤ USD 10/month persistent. Provisioned and destroyed through GitOps.
+| Area | Current state |
+|---|---|
+| Product plane | Implemented: Next.js, Supabase Auth/Postgres/RLS, analyst/report/registry/chat/evidence-session surfaces |
+| Evidence plane | Live-verified on Terraform-provisioned GKE Standard in `asia-southeast1-b` |
+| Delivery | Source CI -> immutable image digest -> private GitOps PR -> Argo CD reconcile |
+| LLM runtime | agentgateway -> KServe/Knative CPU OpenAI-compatible model server |
+| LLM evidence | 60/60 rows and 100/100 logical coverage captured; final freeze pending |
+| Submission freeze | Pending source/GitOps SHA restamp and final strict two-repository audit |
+| ML runtime | Deferred; rows remain `design_only` |
 
-Four traffic layers are normative: **F5 NGINX Ingress Controller OSS**
-(`nginx/kubernetes-ingress`, public TLS edge), **Istio** (east-west
-mTLS/authorization), **agentgateway** (MCP/A2A/AI-backend routing), and
-**Envoy Gateway + Envoy AI Gateway** (KServe `LLMInferenceService`). The
-retired community `kubernetes/ingress-nginx` project is forbidden.
+ADR-010 is the current platform decision. It supersedes earlier AWS/EKS,
+Istio, Envoy Gateway/AI Gateway, ECK/Kibana, Vault, and Kustomize proposals
+for this submission. It does not remove KServe/Knative from the submitted LLM
+serving path: the CPU model server is still reached through agentgateway.
 
-Two repositories: source (`Financial-Distress-Data`) owns code/tests/schemas/
-Dockerfiles/evidence; GitOps (`financial-distress-gitops`) owns Terraform/
-Ansible/Helm/Kustomize/Argo CD/policies.
+## 2. Repository ownership
 
-## Deployable Units
+The project has one source repository and one deployment repository:
 
-| Plane | Deployable unit | Owner repo |
+| Repository | Owns | Does not own |
 |---|---|---|
-| Product | Next.js web app (`apps/web`) | source |
-| Product | Admin UI (session provisioning/teardown control) | source |
-| Product | Supabase (Auth + Postgres RLS) | source (migrations) |
-| Product | Evidence-session worker (outbox consumer) | source |
-| Evidence | EventBridge Scheduler (hard-TTL teardown trigger) | gitops |
-| Evidence | CodeBuild (teardown/inventory/cost jobs) | gitops |
-| Evidence | Promotion bot (source CI job; opens GitOps PRs) | source |
-| Evidence | EKS cluster + node groups (Spot) | gitops |
-| Evidence | Terraform modules (S3, ECR, RDS+PGVector, Valkey, Route 53, ACM) | gitops |
-| Evidence | Argo CD (projects, ApplicationSets, sync waves) | gitops |
-| Evidence | F5 NGINX Ingress Controller OSS, cert-manager | gitops |
-| Evidence | Istio service mesh | gitops |
-| Evidence | Knative Serving/Eventing | gitops |
-| Evidence | KServe 0.18 (`InferenceService` + `LLMInferenceService`) | gitops |
-| Evidence | Kubeflow Pipelines + Kubeflow Trainer | gitops |
-| Evidence | MLflow (owned Helm chart, RDS backend, S3 artifacts) | gitops |
-| Evidence | Feast (offline store S3; online store Valkey / PGVector) | gitops |
-| Evidence | feature-api, drift-api (FastAPI) | source → gitops image |
-| Evidence | MCP servers (Feast/RAG + drift) | source → gitops image |
-| Evidence | Agents (feature analyst, drift analyst, coordinator) | source → gitops image |
-| Evidence | Prometheus/Grafana, ECK/Kibana, OpenTelemetry/Jaeger | gitops |
-| Evidence | Vault (or equivalent secret manager) | gitops |
-| Local control | Airflow `dags/phase2/phase2_drift_monitoring.py` thin wrapper | source |
-| External bounded | Vast.ai CPU OpenAI/llm-d Locust benchmark client | source image → GitOps Ansible role |
+| `Financial-Distress-Data` | Phase 1 code/contracts, Phase 2 Python/TypeScript code, product migrations, tests, canonical evidence, runbooks | Live cluster desired state and cloud bootstrap |
+| `financial-distress-gitops` | Terraform/GKE bootstrap, Helm values/charts, Argo applications, policies, image digests, ingress, agents, model serving, observability | Application business logic and canonical coursework evidence |
 
-## Numbered Data Flows
+The GitOps repository is private because its working tree contains operational
+state that is not suitable for this public source tree. A scrubbed read-only
+mirror is a final submission packaging step, not a reason to copy state into
+this repository.
 
-Every node below is a deployable unit from the table above, an actor
-(Analyst/Operator), or a durable artifact/process produced by one (an
-immutable image digest in ECR, a GitOps PR, an outbox). Classes such as
-`TrainingDataService` are implementation contracts inside a deployable unit,
-never nodes themselves. Every edge is numbered in execution order.
+## 3. Product plane
 
-### Flow 1 — Analyst (product plane, EKS off)
+The product plane is persistent and intentionally independent of GKE uptime:
 
-```
-Analyst --(1) request--> Next.js web app --(2) RLS query--> Supabase
-Supabase --(3) persisted report--> Next.js web app
-Next.js web app --(4) state query--> Supabase (evidence-plane state = OFF)
-Next.js web app --(5) "live AI unavailable" notice--> Analyst
+- Next.js App Router renders the authenticated analyst, reports, agent
+  registry, agent chat, and evidence-session surfaces.
+- Supabase Auth provides identity; Postgres and RLS persist user-scoped
+  reports, AI usage/audit records, and evidence-session/outbox state.
+- The UI displays an explicit evidence-plane state machine. A stopped or
+  hibernated GKE cluster is not represented as a successful run.
+- The product calls only declared routed interfaces. It does not embed model
+  credentials or bypass the evidence-plane security boundary.
+
+Product checks are run from the source repository:
+
+```bash
+pnpm --dir apps/web test
+pnpm --dir apps/web typecheck
+pnpm --dir apps/web lint
+pnpm --dir apps/web e2e:live
+pnpm --dir apps/web e2e:assistant
 ```
 
-Deployable units: Next.js web app, Supabase. The state machine is a capability
-of Next.js + Supabase, not a separate server.
+## 4. Evidence plane
 
-### Flow 2 — Training (ML)
+The evidence plane is disposable, cost-bounded, and reconciled from the
+separate GitOps repository. The current live topology is:
 
-```
-Feast --(1) snapshot pull (offline store)--> Kubeflow Pipelines
-Kubeflow Pipelines --(2) start job--> Kubeflow Trainer
-Kubeflow Trainer --(3) distributed XGBoost run--> MLflow
-MLflow --(4) register model + data versions--> MLflow (model registry)
-MLflow --(5) promotion candidate--> GitOps repo PR (immutable model URI + image digest)
-GitOps repo PR --(6) merge--> Argo CD --(7) sync desired state--> KServe
-```
+| Layer | Deployables | Contract |
+|---|---|---|
+| Bootstrap | Terraform, GKE Standard zonal cluster, Argo CD | Reproducible cluster and desired-state bootstrap |
+| Edge | cert-manager, F5 NGINX Ingress OSS | TLS and only external entry point |
+| Control | kagent CRDs, `ModelConfig`, coordinator/specialist Agents | Typed agent ownership and model routing |
+| Tools | feature-MCP, drift-MCP, feature/RAG API, drift API | Governed retrieval and drift operations |
+| Serving | agentgateway, KServe/Knative CPU model server | OpenAI-compatible chat/inference path |
+| State | Redis, PostgreSQL/PGVector, MinIO, Feast definitions | Online/offline feature and RAG state |
+| Observability | OpenTelemetry, Jaeger, Prometheus, Grafana, Loki | Trace, metric, dashboard, and log evidence |
 
-The `TrainingDataService`/`PointInTimeSplitService`/`ModelPromotionService`
-contracts live inside the Kubeflow Pipelines and GitOps repo deployable units.
+Every internal service is `ClusterIP` behind NetworkPolicy. Agents run in the
+restricted `agents-sandbox` namespace with tokenless ServiceAccounts,
+read-only roots, and a limited egress policy.
 
-### Flow 3 — Inference (ML)
+## 5. Eight numbered flows
 
-```
-Analyst --(1) request--> NGINX --(2) TLS termination (public cert)--> Istio
-Istio --(3) mTLS authorize--> feature-api --(4) feature lookup--> Feast (online store)
-feature-api --(5) scored request--> KServe InferenceService --(6) prediction--> feature-api
-feature-api --(7) result--> Analyst
-```
+### Flow 1 — Analyst request
 
-KEDA/HPA autoscale the feature-api and KServe as deployable units; they are
-not separate flow nodes.
-
-### Flow 4 — Agent + RAG (LLM)
-
-```
-Analyst --(1) prompt--> agent chat UI --(2) authenticated route--> agentgateway
-agentgateway --(3) A2A route--> kagent coordinator Agent
-kagent coordinator Agent --(4) delegate through agentgateway A2A route--> kagent specialist Agents
-kagent specialist Agents --(5) MCP route through agentgateway--> MCP Feast/RAG tool --(6) retrieval--> Feast (RAG vectors)
-kagent specialist Agents --(7) MCP route through agentgateway--> MCP drift tool --(8) query--> drift-api
-kagent coordinator Agent --(9) resolve--> kagent ModelConfig --(10) upstream/base URL--> agentgateway AI backend
-agentgateway AI backend --(11) forward--> Envoy AI Gateway --(12) route--> KServe LLMInferenceService/llm-d
-KServe LLMInferenceService/llm-d --(13) generated answer--> kagent coordinator Agent
-kagent coordinator Agent --(14) cited answer--> agent chat UI --(15) answer--> Analyst
+```text
+browser -> Next.js product -> Supabase Auth/Postgres/RLS
+                         -> evidence-session state/outbox when live execution is requested
 ```
 
-The coordinator agent orchestrates the specialist agents (feature analyst,
-drift analyst): it delegates sub-tasks and, once the specialists have gathered
-evidence through the MCP tools, resolves the kagent-owned global `ModelConfig`
-and drives generation through its agentgateway AI backend. Neither coordinator
-nor specialist calls Envoy/KServe directly. Specialist A2A and MCP calls also
-traverse declared agentgateway routes; tools read Feast/drift-api, never the
-reverse.
+The product persists the request and renders the real plane state. It does not
+claim a successful live answer before the evidence plane returns one.
 
-### Flow 5 — Platform operator
+### Flow 2 — Phase 1 data foundation
 
-```
-Operator --(1) provision request--> admin UI --(2) enqueue--> outbox (durable artifact)
-outbox --(3) action--> evidence-session worker --(4) Terraform modules plan/apply--> EKS
-evidence-session worker --(5) create--> EventBridge Scheduler --(6) schedule--> CodeBuild (teardown, hard TTL 8h)
+```text
+collectors -> Kafka -> Airflow/Spark -> MinIO Bronze/Silver/Gold
+                         -> PostgreSQL metadata/DQ -> DuckDB/DBeaver evidence
 ```
 
-Cost preflight and budget guard run inside the evidence-session worker before
-step 4.
+Flink is opt-in for event-time streaming and is not part of the default Docker
+startup. Phase 2 consumes the Gold/feature contracts without changing them.
 
-### Flow 6 — CI/GitOps
+### Flow 3 — RAG ingestion and governance
 
-```
-Source CI --(1) test/build/scan/sign--> immutable image digest
-Source CI --(2) push image--> ECR (immutable digest stored)
-promotion bot --(3) open GitOps PR (bump image digest)--> GitOps repo
-GitOps repo --(4) merge PR--> Argo CD --(5) reconcile + rollout--> evidence plane
-Argo CD --(6) launch verification job--> evidence exporter
-evidence exporter --(7) immutable bundle--> S3 evidence bucket
-source evidence CI/bot --(8) fetch + verify bundle--> source evidence PR
+```text
+approved sources -> normalize/hash/chunk -> versioned embeddings
+                -> PGVector/MinIO/Feast metadata -> governed retrieval tools
 ```
 
-No in-cluster principal receives source-repository write credentials. Evidence
-returns through an immutable S3 bundle and a source-side bot/CI PR.
+Each chunk carries source, license/access class, parser/embedding version, and
+lineage metadata required by the evidence contract.
+
+### Flow 4 — Live agent and RAG round-trip
+
+```text
+Next.js -> NGINX -> coordinator Agent
+                    -> feature Agent -> feature-MCP -> Feast/PGVector/Redis
+                    -> drift Agent -> drift-MCP -> drift API
+                    -> ModelConfig -> agentgateway -> KServe/Knative model server
+coordinator -> citation/PII guard -> Next.js report/chat response
+```
+
+Agents use the declared MCP/A2A/model routes. A negative proof prevents a
+specialist from bypassing the model boundary and calling the model server
+directly.
+
+### Flow 5 — Evidence-session state
+
+```text
+product action -> Supabase session/outbox -> worker -> GKE status/verification
+              <- persisted honest state, citations, trace IDs, and report data
+```
+
+This is the durable hand-off between the persistent product plane and the
+disposable evidence plane.
+
+### Flow 6 — CI and GitOps promotion
+
+```text
+source commit -> test/build/scan/sign -> immutable image digest
+             -> GitOps pull request -> Argo CD -> GKE workloads
+```
+
+Only the merged GitOps desired revision is reconciled. Runtime evidence records
+both source and GitOps SHAs so a reviewer can reproduce the exact pair.
 
 ### Flow 7 — Observability
 
-```
-Service --(1) emit--> OpenTelemetry collector --(2) traces--> Jaeger
-OpenTelemetry collector --(3) metrics--> Prometheus --(4) visualize--> Grafana
-OpenTelemetry collector --(5) logs--> ECK/Kibana
-Grafana --(6) dashboards--> feature/drift/LLM/agent A/B views
-Airflow phase2 drift DAG --(7) pull--> Feast offline store
-Airflow phase2 drift DAG --(8) join reference/proxy + compute--> Evidently report
-Airflow phase2 drift DAG --(9) publish--> Prometheus Pushgateway --(10) scrape--> Prometheus/Grafana
-Airflow phase2 drift DAG --(11a below threshold) persist skip--> ml_metadata
-Airflow phase2 drift DAG --(11b above threshold) create run--> Kubeflow Pipelines API
-Kubeflow Pipelines API --(12) run ID/status--> ml_metadata
+```text
+agents/tools/model -> OpenTelemetry -> Jaeger traces
+                  -> Prometheus metrics -> Grafana dashboards
+                  -> Loki redaction-safe logs
 ```
 
-The evidence run executes both branch 11a and 11b. A recommendation without an
-actual Kubeflow API run ID does not satisfy the retraining requirement.
+Trace IDs connect coordinator decisions, specialist calls, MCP calls, token and
+latency metrics, and the resulting citation evidence.
 
-### Flow 8 — Teardown
+### Flow 8 — Teardown and freeze
 
+```text
+capture complete -> make gcp-down / hibernate -> preserve approved artifacts
+                 -> restamp source+GitOps SHAs -> strict two-repo audit -> submit
 ```
-EventBridge Scheduler --(1) fire (hard TTL)--> CodeBuild --(2) destroy job--> Terraform modules
-Terraform modules --(3) destroy--> EKS (resources released)
-CodeBuild --(4) inventory + cost report--> evidence-session worker --(5) state OFF--> Supabase
-```
 
-## Cost Envelope
+The cluster is not treated as a permanent production environment. Cost and
+credential boundaries are part of the acceptance contract.
 
-- Provisioning blocked when projected spend > USD 85 minus USD 15 reserve.
-- Default TTL 6 hours; hard TTL 8 hours; ≤ 3 sessions/month.
-- Target ≤ USD 25/session and ≤ USD 10/month persistent resources.
-- Vast.ai CPU worker is mandatory for Ansible evidence, aggregate hard cap USD
-  10. It runs bounded OpenAI-compatible load/TTFT benchmarks against the llm-d
-  public test route and never joins the
-  AWS GPU KServe/llm-d inference pool; AWS Spot remains primary for inference.
+## 6. Verification and residuals
 
-## Version Compatibility Gate
+The live verification snapshot on **2026-08-13** recorded:
 
-Before Phase 3 installation, record exact chart versions and image digests for
-EKS/Kubernetes, F5 NGINX OSS, cert-manager, Istio, Knative, KServe 0.18,
-Envoy Gateway/AI Gateway, llm-d/GIE, KFP/Trainer, Argo CD, kagent, kmcp,
-agentgateway, agentregistry, Agent Sandbox, Feast, and MLflow. The starting
-F5 NGINX OSS candidate is controller 5.5.4 / chart 2.6.4; it becomes normative
-only after the compatibility spike passes render, install, smoke, upgrade, and
-rollback checks.
+- 13/13 Argo CD applications `Synced` and `Healthy`;
+- established kagent CRDs and 10 `Ready` agents;
+- accepted/reconciled Grafana MCP registration;
+- model warm-up and coordinator HTTP 200 with feature and drift citations;
+- healthy Prometheus targets and discoverable Jaeger services.
 
-## Phase 1 Non-Mutation
+The repository evidence package represents 60/60 LLM rows and 100/100 logical
+points. The final submission freeze is still pending because the latest source
+and GitOps commits must be restamped into the evidence rows and the strict
+two-repository audit must pass without acceptance cuts. A private GHCR image is
+also a known operational residual for cold-node startup; the package-read
+credential must be supplied through sealed out-of-band deployment state.
 
-Phase 2 adapters live under `src/ml/`, `src/drift/`, `src/llm/`,
-`src/agents/` and never alter Phase 1 collectors, Gold writers, DQ semantics,
-or local evidence behavior. Phase 1 continues to run with identical outputs.
+## 7. Phase 1 non-mutation rule
+
+Phase 2 code is additive under `src/ml/`, `src/drift/`, `src/llm/`,
+`src/agents/`, `apps/`, `packages/`, `supabase/`, and `dags/phase2/`. Existing
+Phase 1 DAG IDs, task chains, Bronze append-only semantics, Silver/Gold
+partition behavior, and `project_metadata` contracts remain unchanged.
+
+## 8. Source references
+
+- [Accepted coursework](../coursework.md)
+- [System-wide architecture](../system-architecture.md)
+- [ADR-010](adr/adr-010-llm-only-scope-and-platform-simplification.md)
+- [Phase 2 requirements](requirements.md)
+- [Evidence contract](evidence-contract.md)
+- [Submission reviewer index](../submission/README.md)

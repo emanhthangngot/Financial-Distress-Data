@@ -22,5 +22,7 @@ Argo CD reconciles the merged revision. Pushing a tag alone never deploys.
 
 The CI/CD rows are executed. The Phase 05 evidence package records signed
 digest releases, GitOps digest updates, and the validation gates for the RAG
-pipeline and three agents. The separate gateway and observability rows remain
-design-only until their routed runtime captures exist.
+pipeline and three agents. Routing and observability are separate rubric
+sections with their own linked runtime captures; they do not change the CI/CD
+status. Final submission freeze still requires SHA restamping and the strict
+two-repository audit.

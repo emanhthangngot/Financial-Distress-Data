@@ -6,12 +6,18 @@ Human-facing index into `docs/phase2/evidence/llm/` — not a relocation.
 canonical location, they don't hold the evidence itself. See
 `docs/phase2/evidence-contract.md` for what counts as proof.
 
-Status (2026-08-12): **60 of 60 LLM rows executed and stamped (100/100
-points)**. The strict two-repo gate passes without `--accept-design-only`.
-All seven Routing & Gateway rows and all six Observability rows were captured
-from the running Phase 2 cluster; the final two rows use the correlated
-coordinator round-trip and live Prometheus output documented in the linked
-evidence artifacts.
+Status (2026-08-13): **60 of 60 LLM rows are logically covered (100/100
+points)** and the live runtime has been verified. The final submission freeze
+is pending: source and GitOps SHA stamps must be regenerated after the latest
+commits, then the strict two-repository gate must pass without
+`--accept-design-only`. This page must not be treated as a frozen submission
+until that gate is green.
+
+The live snapshot recorded 13/13 Argo applications as `Synced` and `Healthy`,
+10 kagent agents as `Ready`, a successful coordinator round-trip with feature
+and drift citations, healthy Prometheus targets, and discoverable Jaeger
+services. These are runtime checks; canonical evidence files remain the rubric
+source of truth.
 
 | Page | Rubric sections | Rows |
 |---|---|---|
@@ -33,27 +39,14 @@ evidence artifacts.
 | `LLM-novel-ideas-idea-2` | [`src/llm/citation_guard.py`](../../src/llm/citation_guard.py) | [evidence](../phase2/evidence/llm/LLM-novel-ideas-idea-2.md) |
 | `LLM-documentation-low-level-ml-design` | [`docs/phase2/low-level-design.md`](../phase2/low-level-design.md) | [evidence](../phase2/evidence/llm/LLM-documentation-low-level-ml-design.md) |
 
-## Grader demo account
+## Grader and operator access
 
-One Supabase auth account, analyst role, no elevated privileges — created
-2026-08-11 for phase 3 of `plans/260811-1627-close-llm-rubric-to-100/`. This
-is a coursework submission, not a production system with real users, so the
-credential is disclosed here directly rather than through a separate
-out-of-band channel (2026-08-11 decision). No sign-up, no password reset —
-this is the only account.
-
-- email: `distresslens.grader@gmail.com`
-- password: `VjBG4w8QpeXW4EMYfCII`
-
-## Gateway credentials
-
-Basic-auth in front of all five protected routes (https://distresslens.duckdns.org),
-and Grafana's own admin login behind it. Coursework demo, disclosed directly
-here per the 2026-08-11 decision (same reasoning as the grader Supabase
-account above).
-
-- gateway basic-auth: user `grader`, password `qMwgNhqAOaJqcQwNNZ0Om0Nq`
-- Grafana admin (after the gateway): user `grader`, password `zoyrVNjLTQYNJOOGlpVxCnou`
+Demo accounts, gateway basic-auth, Grafana credentials, package-registry
+tokens, and temporary cloud access are delivered through the private
+submission/operator channel. They are intentionally not stored in this
+repository. The reviewer should request the current out-of-band handoff if a
+credentialed browser or Grafana session is required; the evidence links here
+remain usable without exposing those secrets.
 
 ## Live-evidence completion
 
@@ -64,13 +57,24 @@ The two final Observability artifacts are:
 - [per-request token, latency, and PII metrics](../phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md)
 - [per-agent and per-MCP-tool call/failure metrics](../phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md)
 
-The GitOps repository (`financial-distress-gitops`) stays private — it carries
-a committed `terraform.tfstate` and `ansible/inventory.ini`, which the
-auditor's own denylist treats as leaks. The grader instead gets a scrubbed
-public read-only mirror containing only `platform/`, `apps/`, `charts/`,
-`argocd/` at the frozen `gitops_sha`; its URL is recorded in
-`plans/260811-1627-close-llm-rubric-to-100/phase-06-freeze-submission.md`
-once published. No token or private credential is stored in this repository.
+The GitOps repository (`financial-distress-gitops`) stays private because its
+working tree carries operational state that must not be published. A scrubbed
+public read-only mirror containing only the approved deployment paths is a
+pending final packaging step and must be created at the frozen `gitops_sha`.
+Its URL belongs in the freeze report once published. No token or private
+credential is stored in this repository.
+
+## Remaining freeze checklist
+
+- Restamp every canonical LLM evidence row with the final source SHA and
+  matching GitOps SHA.
+- Run the strict two-repository audit with `--require-executed
+  --run-validations --track LLM` and confirm zero findings.
+- Publish the scrubbed GitOps mirror at the same frozen GitOps SHA.
+- Re-run the product/live checks from the final commit pair and attach only
+  redacted, reproducible evidence.
+- Deliver demo credentials out of band and hibernate or tear down the GKE
+  evidence plane after capture.
 
 Sections without a dedicated page here (inference, model config, registry,
 RAG, feature/RAG API, drift/MCP, agent understanding, coordinator, warm-up,

@@ -14,27 +14,32 @@ to catch.
 
 | Path | Owner | Plane | Generated? | What lives here |
 |---|---|---|---|---|
+| `.dockerignore` | platform_operator | shared tooling | No | Docker build context exclusions |
 | `AGENTS.md` | data_engineer | shared tooling | No | Process rules — HOW-TO-BEHAVE for AI and human contributors |
 | `.claude/` | platform_operator | shared tooling | No | Claude Code project settings (`settings.json`) |
 | `CLAUDE.md` | data_engineer | shared tooling | No | Claude Code skill-routing pointer to `AGENTS.md` |
-| `README.md` | data_engineer | documentation | No | Project overview, setup, project tree |
+| `README.md` | data_engineer | documentation | No | Complete project overview, architecture, setup, product/evidence boundaries, and project tree |
 | `apps/` | product_engineer | Phase 2 product | No | Phase 2 web app(s) (pnpm workspace member) |
 | `packages/` | product_engineer | Phase 2 product | No | Shared TypeScript packages (pnpm workspace member) |
 | `configs/` | data_engineer | Phase 1 local lakehouse | No | Collector, Spark, source, and DQ config YAMLs |
 | `dags/` | data_engineer | Phase 1 local lakehouse | No | Airflow DAGs; `dags/phase2/` holds additive Phase 2 wrappers |
 | `docker-compose.yml` | platform_operator | shared tooling | No | Local platform service definitions (Postgres, Kafka, MinIO, Airflow, Flink) |
 | `docs/` | data_engineer | documentation | Partial — `docs/evidence/**` is generated | Specs, ADRs, runbooks, and captured runtime evidence |
+| `feature_repo/` | ml_engineer | Phase 2 feature/RAG | No | Feast structured/RAG feature definitions and materialization configuration |
 | `.env.example` | platform_operator | shared tooling | No | Local environment variable template |
 | `flink/` | data_engineer | Phase 1 local lakehouse | No | PyFlink job source for the opt-in Flink profile |
 | `.github/` | platform_operator | shared tooling | No | CI workflow definitions |
 | `.gitignore` | platform_operator | shared tooling | No | Git ignore patterns |
 | `images/` | data_engineer | documentation | No | Architecture diagrams referenced from docs |
 | `infra/` | platform_operator | shared tooling | No | Container build/bootstrap assets: `airflow/` (image build context), `flink/` (image build context), `kafka/` (topic init script) |
+| `mutants/` | data_engineer | generated test output | Generated | Mutation-testing workspace/output; regenerate with the Phase 2 mutation gate |
+| `notebooks/` | llm_engineer | Phase 2 evidence | No | Agent/MCP demonstration notebooks used by the LLM evidence track |
 | `package.json` | product_engineer | Phase 2 product | No | pnpm workspace root manifest |
 | `plans/` | data_engineer | documentation | No | Implementation plans, phase files, and reports |
 | `pnpm-lock.yaml` | product_engineer | Phase 2 product | Generated (lockfile) | pnpm dependency lock |
 | `pnpm-workspace.yaml` | product_engineer | Phase 2 product | No | pnpm workspace member list |
 | `pyproject.toml` | data_engineer | shared tooling | No | Python package and tooling config (pytest, ruff, black) |
+| `requirements-phase2.txt` | platform_operator | Phase 2 shared tooling | No | Phase 2 runtime/test dependency pins |
 | `requirements.txt` | data_engineer | shared tooling | No | Python dependency pins |
 | `scripts/` | data_engineer | shared tooling | No | Local E2E, DQ-failure-probe, and evidence-audit runners |
 | `sql/` | data_engineer | Phase 1 local lakehouse | No | PostgreSQL metadata DDL and DuckDB SQL views |
@@ -57,6 +62,17 @@ has one owner:
 `src/generators/` no longer exists — its two modules were split into
 `src/collectors/fixture_config.py` and `src/streaming/problem_factory.py`
 (they never had one owner; each belonged to what it configured).
+
+## Separate deployment repository
+
+`financial-distress-gitops` is intentionally not a top-level entry in this
+source repository. It owns Terraform/GKE bootstrap, Helm-rendered platform
+manifests, Argo CD applications, image digests, ingress, security policies,
+model serving, agents, and observability desired state. This repository owns
+the application code, contracts, tests, product migrations, runbooks, and
+canonical evidence. The two repositories are joined by the source SHA +
+GitOps SHA recorded in Phase 2 evidence; the final submission freeze requires
+those stamps to be regenerated after the latest commits.
 
 ## Python package boundary
 
