@@ -16,6 +16,21 @@
 export const ASSISTANT_SCOPES = ["portfolio", "company", "comparison", "report"] as const;
 export type AssistantScope = (typeof ASSISTANT_SCOPES)[number];
 
+/**
+ * A row the drift specialist can observe. The ticker identifies the entity;
+ * every other field is a finite numeric observation supplied by the visible
+ * analyst surface.
+ */
+export type AssistantDriftRow = Readonly<{
+  ticker: string;
+  [metric: string]: string | number;
+}>;
+
+export interface AssistantFinancialIndicator {
+  name: string;
+  values: readonly (number | null)[];
+}
+
 export interface AssistantContext {
   /** Which product surface the analyst is on. Selects the quick actions. */
   scope: AssistantScope;
@@ -34,6 +49,61 @@ export interface AssistantContext {
   /** Data version and model version the visible numbers came from. */
   dataVersion: string;
   modelVersion: string | null;
+  /** Optional real observations from the visible surface for drift analysis. */
+  driftRows?: readonly AssistantDriftRow[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Validates the optional JSON boundary without coercing strings or inventing
+ * missing observations. An invalid list is treated as absent so callers keep
+ * the pre-existing ticker-only compatibility row.
+ */
+export function validateAssistantDriftRows(
+  value: unknown,
+): readonly AssistantDriftRow[] | undefined {
+  if (!Array.isArray(value) || value.length === 0) return undefined;
+
+  const rows: AssistantDriftRow[] = [];
+  for (const candidate of value) {
+    if (!isRecord(candidate) || typeof candidate.ticker !== "string" || candidate.ticker.trim() === "") {
+      return undefined;
+    }
+    const observations = Object.entries(candidate).filter(([key]) => key !== "ticker");
+    if (
+      observations.length === 0 ||
+      observations.some(([, observation]) => typeof observation !== "number" || !Number.isFinite(observation))
+    ) {
+      return undefined;
+    }
+    rows.push(candidate as AssistantDriftRow);
+  }
+  return rows;
+}
+
+/**
+ * Builds the company-detail observation from the same indicator values shown
+ * in the table. A missing/null latest value returns no rows rather than a
+ * guessed value.
+ */
+export function latestDebtToAssetDriftRows(
+  ticker: string | null | undefined,
+  indicators: readonly AssistantFinancialIndicator[],
+): readonly AssistantDriftRow[] | undefined {
+  const normalizedTicker = typeof ticker === "string" ? ticker.trim() : "";
+  if (normalizedTicker === "") return undefined;
+
+  const debtToAsset = indicators.find((indicator) => {
+    const normalizedName = indicator.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    return normalizedName === "debt_asset" || normalizedName === "debt_to_asset";
+  });
+  const latest = debtToAsset?.values[debtToAsset.values.length - 1];
+  if (typeof latest !== "number" || !Number.isFinite(latest)) return undefined;
+
+  return [{ ticker: normalizedTicker, debt_to_asset: latest }];
 }
 
 /**

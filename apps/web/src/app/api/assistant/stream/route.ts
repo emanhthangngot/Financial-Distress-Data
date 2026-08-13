@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { encodeSseFrame, type AssistantFrame } from "@distresslens/contracts";
 import {
   assistantThreadKey,
+  validateAssistantDriftRows,
   type AssistantContext,
 } from "@/lib/assistant/assistant-context";
 import type { AssistantTurn } from "@/lib/assistant/assistant-transport";
@@ -360,6 +361,7 @@ function coordinatorBody(request: AssistantRequestBody): Record<string, unknown>
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+  const driftRows = validateAssistantDriftRows(request.context?.driftRows) ?? [{ ticker }];
   return {
     question: request.question,
     feature_request: {
@@ -368,7 +370,7 @@ function coordinatorBody(request: AssistantRequestBody): Record<string, unknown>
       scope: FEATURE_MCP_AUTHORIZED_SCOPE,
     },
     drift_request: {
-      rows: [{ ticker }],
+      rows: driftRows,
       scenario: coordinatorScenario(env["DISTRESSLENS_" + "COORDINATOR_DRIFT_SCENARIO"]),
       scope: DRIFT_MCP_AUTHORIZED_SCOPE,
     },
