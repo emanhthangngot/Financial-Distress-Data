@@ -128,6 +128,30 @@ def test_financial_deterioration_observed_direction_matches_configured() -> None
     assert report["psi"] > 0
 
 
+def test_derived_debt_to_asset_observation_is_supported_for_ui_rows() -> None:
+    scenario = DriftScenario(
+        name="financial_deterioration",
+        seed=4001,
+        start_quarter=1,
+        affected_fraction=1.0,
+        feature_shifts={
+            "debt_to_asset": ShiftSpec(mode="multiplicative", magnitude=0.6),
+        },
+        target_metric="debt_to_asset",
+        observed_stat="mean",
+        expected_direction="increase",
+        threshold=0.1,
+    )
+    rows = [{"ticker": "NVL", "debt_to_asset": 0.79}]
+
+    drifted = apply_drift(rows, scenario)
+    report = build_drift_report(rows, drifted.rows, scenario)
+
+    assert report["before"]["count"] == 1
+    assert report["after"]["count"] == 1
+    assert report["passed"] is True
+
+
 def test_market_stress_observed_direction_matches_configured() -> None:
     rows = _price_rows()
     drifted = apply_drift(rows, MARKET_STRESS)

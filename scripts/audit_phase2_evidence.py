@@ -446,6 +446,7 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
         )
         if resolved.returncode != 0:
             return [f"git check failed: baseline '{base}' is not a commit"]
+        baseline = resolved.stdout.strip()
         ancestry = subprocess.run(
             ["git", "merge-base", "--is-ancestor", resolved.stdout.strip(), "HEAD"],
             cwd=REPO_ROOT,
@@ -454,9 +455,22 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
             timeout=30,
         )
         if ancestry.returncode != 0:
-            return [f"git check failed: baseline '{base}' is not an ancestor of source HEAD"]
+            # Feature branches commonly diverge from the remote tracking ref
+            # after it advances. Compare the working tree with the resolved
+            # common ancestor so the protected-path diff still includes every
+            # local change; an unresolvable merge base remains a hard failure.
+            merge_base = subprocess.run(
+                ["git", "merge-base", baseline, "HEAD"],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if merge_base.returncode != 0 or not merge_base.stdout.strip():
+                return [f"git check failed: baseline '{base}' has no resolvable merge base"]
+            baseline = merge_base.stdout.strip()
         diff = subprocess.run(
-            ["git", "diff", "--name-only", base],
+            ["git", "diff", "--name-only", baseline],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
@@ -723,6 +737,21 @@ EVIDENCE_SECRET_DENYLIST = (
             r"[A-Za-z_][A-Za-z0-9_-]*\b|\bssh(?:\s+-[A-Za-z]+(?:\s+\S+)*)*\s+"
             r"[A-Za-z_][A-Za-z0-9_-]*@)"
         ),
+    ),
+    (
+        "curl basic-auth flag",
+        re.compile(r"(?im)\bcurl\b(?:\s+-[A-Za-z]+(?:\s+\S+)*)*\s+(?:-u\b|--user\b)"),
+    ),
+    (
+        "userinfo credential in URL",
+        # Scoped to http(s) so a captured gateway curl (the leak this guards
+        # against) trips it, while a local dev DSN like
+        # postgresql://phase2:phase2@localhost:5433 does not.
+        re.compile(r"(?i)\bhttps?://[^\s/@]+:[^\s/@]+@"),
+    ),
+    (
+        "bcrypt htpasswd hash",
+        re.compile(r"\$2[aby]\$\d{2}\$[A-Za-z0-9./]{53}"),
     ),
 )
 

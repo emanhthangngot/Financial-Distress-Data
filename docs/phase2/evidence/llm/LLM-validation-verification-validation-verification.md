@@ -5,8 +5,8 @@ coverage gate, with visible fixture and mock usage.
 
 - rubric_id: LLM-validation-verification-validation-verification
 - execution_timestamp: 2026-08-10T13:00:00+07:00
-- source_sha: ddea8d49ed2480cc9e59a9e6082071b5e96c0b8c
-- gitops_sha: 99fcab18c79f34fdcf6a4bf65e2fd83c00afb01f
+- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
+- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
 - versions: coverage 7.15.4, pytest 9.1.1, unittest.mock (stdlib)
 - command: `python scripts/run_phase5_web_gate.py`
 - expected_result: coverage above 90% lines/branches on the Phase 2 LLM Web API code, with fixture and mock usage visible in the test source

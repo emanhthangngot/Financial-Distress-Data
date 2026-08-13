@@ -286,6 +286,8 @@ describe("assistant stream route", () => {
       "http://coordinator.test/v1/run",
       expect.objectContaining({ method: "POST" }),
     );
+    const coordinatorRequest = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body));
+    expect(coordinatorRequest.drift_request.rows).toEqual([{ ticker: "NVL" }]);
     expect(frames).toEqual([
       { type: "state", state: "streaming", reason: null },
       expect.objectContaining({ type: "tool", entry: expect.objectContaining({ toolName: "feature" }) }),
@@ -294,6 +296,112 @@ describe("assistant stream route", () => {
       { type: "done", agentVersion: "coordinator-hop-1", modelVersion: null },
     ]);
     expect(AUDITS.map((event) => event.outcome)).toEqual(["ALLOWED"]);
+  });
+
+  it("forwards validated numeric drift observations from the assistant context", async () => {
+    clearAudits();
+    process["env"]["DISTRESSLENS_COORDINATOR_URL"] = "http://coordinator.test/v1/run";
+    process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"] = JSON.stringify({
+      name: "financial_deterioration",
+      seed: 4001,
+      start_quarter: 2,
+      affected_fraction: 0.5,
+      feature_shifts: { total_liabilities: { mode: "multiplicative", magnitude: 0.6 } },
+      target_metric: "debt_to_asset",
+      observed_stat: "mean",
+      expected_direction: "increase",
+      threshold: 0.1,
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          answer: "NVL đang có tín hiệu rủi ro.",
+          specialists: [],
+          citations: [{ source_uri: "drift://scenario/financial_deterioration", label: "drift" }],
+          hops_used: 1,
+        }),
+        { status: 200 },
+      ),
+    );
+    const { deps } = harness({
+      readConfig: () => ({ url: null, token: null, timeoutMs: 55_000, isConfigured: false }),
+      fetchImpl,
+    });
+
+    await handleAssistantStream(
+      request({
+        context: {
+          scope: "company",
+          route: "/companies/NVL",
+          surfaceLabel: "NVL",
+          ticker: "NVL",
+          selectedTickers: [],
+          periodLabel: null,
+          filters: [],
+          dataVersion: "gold-2025-05-22",
+          modelVersion: "DL-Score v2.1",
+          driftRows: [{ ticker: "NVL", debt_to_asset: 0.79 }],
+        },
+      }),
+      deps,
+    );
+
+    const coordinatorRequest = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body));
+    expect(coordinatorRequest.drift_request.rows).toEqual([
+      { ticker: "NVL", debt_to_asset: 0.79 },
+    ]);
+  });
+
+  it("falls back to the ticker row when drift observations fail validation", async () => {
+    clearAudits();
+    process["env"]["DISTRESSLENS_COORDINATOR_URL"] = "http://coordinator.test/v1/run";
+    process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"] = JSON.stringify({
+      name: "financial_deterioration",
+      seed: 4001,
+      start_quarter: 2,
+      affected_fraction: 0.5,
+      feature_shifts: { total_liabilities: { mode: "multiplicative", magnitude: 0.6 } },
+      target_metric: "debt_to_asset",
+      observed_stat: "mean",
+      expected_direction: "increase",
+      threshold: 0.1,
+    });
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          answer: "NVL đang có tín hiệu rủi ro.",
+          specialists: [],
+          citations: [{ source_uri: "drift://scenario/financial_deterioration", label: "drift" }],
+          hops_used: 1,
+        }),
+        { status: 200 },
+      ),
+    );
+    const { deps } = harness({
+      readConfig: () => ({ url: null, token: null, timeoutMs: 55_000, isConfigured: false }),
+      fetchImpl,
+    });
+
+    await handleAssistantStream(
+      request({
+        context: {
+          scope: "company",
+          route: "/companies/NVL",
+          surfaceLabel: "NVL",
+          ticker: "NVL",
+          selectedTickers: [],
+          periodLabel: null,
+          filters: [],
+          dataVersion: "gold-2025-05-22",
+          modelVersion: "DL-Score v2.1",
+          driftRows: [{ ticker: "NVL", debt_to_asset: "0.79" }],
+        },
+      }),
+      deps,
+    );
+
+    const coordinatorRequest = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body));
+    expect(coordinatorRequest.drift_request.rows).toEqual([{ ticker: "NVL" }]);
   });
 
   it("audits FAILED and streams an error frame when the upstream request fails", async () => {

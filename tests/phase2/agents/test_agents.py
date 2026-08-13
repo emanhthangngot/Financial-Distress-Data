@@ -123,6 +123,16 @@ class UnavailableSpecialist:
         raise OSError("connection refused")
 
 
+class SlowSpecialist(Specialist):
+    def __init__(self, name: str, uri: str, delay_seconds: float) -> None:
+        super().__init__(name, uri)
+        self.delay_seconds = delay_seconds
+
+    async def run(self, request: dict[str, Any]) -> SpecialistResponse:
+        await asyncio.sleep(self.delay_seconds)
+        return await super().run(request)
+
+
 @pytest.mark.asyncio
 async def test_coordinator_maps_transport_failure_to_bounded_failure() -> None:
     result = await Coordinator(
@@ -131,3 +141,32 @@ async def test_coordinator_maps_transport_failure_to_bounded_failure() -> None:
     assert result.status == "failed"
     assert result.decision == "stop"
     assert result.error == "connection refused"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_default_budget_exceeds_specialist_http_budget() -> None:
+    coordinator = Coordinator(
+        SlowSpecialist("feature", "feature://user/u1", 0.01),
+        SlowSpecialist("drift", "drift://scenario/stress", 0.01),
+    )
+
+    result = await coordinator.coordinate(
+        {"question": "q", "feature_request": {}, "drift_request": {}}
+    )
+
+    assert coordinator.timeout_seconds > 45.0
+    assert result.status == "ok"
+
+
+@pytest.mark.asyncio
+async def test_coordinator_returns_response_after_old_ten_second_budget() -> None:
+    coordinator = Coordinator(
+        SlowSpecialist("feature", "feature://user/u1", 10.01),
+        SlowSpecialist("drift", "drift://scenario/stress", 10.01),
+    )
+
+    result = await coordinator.coordinate(
+        {"question": "q", "feature_request": {}, "drift_request": {}}
+    )
+
+    assert result.status == "ok"

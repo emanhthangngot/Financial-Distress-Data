@@ -12,8 +12,6 @@ from pathlib import Path
 
 import pytest
 
-pytest.importorskip("feast")
-
 pytestmark = pytest.mark.slow
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -57,6 +55,7 @@ entity_key_serialization_version: 3
 
 
 def test_structured_definitions_parse_and_register(tmp_path: Path) -> None:
+    pytest.importorskip("feast")
     result = _feast_plan(
         FEATURE_REPO / "structured", FEATURE_REPO / "structured" / "definitions.py", tmp_path
     )
@@ -72,6 +71,7 @@ def test_structured_definitions_parse_and_register(tmp_path: Path) -> None:
 
 
 def test_rag_definitions_parse_and_register(tmp_path: Path) -> None:
+    pytest.importorskip("feast")
     result = _feast_plan(FEATURE_REPO / "rag", FEATURE_REPO / "rag" / "definitions.py", tmp_path)
     assert result.returncode == 0, result.stdout + result.stderr
     assert "Created entity chunk_id" in result.stdout

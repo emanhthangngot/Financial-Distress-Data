@@ -70,7 +70,9 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 | 🟡 Phase 2 additive | ML, drift, RAG, Feast, product web app và contracts được thêm vào; không được nói là thay đổi Phase 1. |
 | 🧪 Fixture-backed | `vnstock_adapter.py` hiện re-export fixture adapter; không nói là live production API nếu chưa có runtime proof. |
 | 📦 Generated | `docs/evidence/**`, `outputs/**`, `warehouse.db` và report artifacts được tạo lại bằng script; không sửa tay. |
-| ⚠️ Separate repo | AWS/EKS/GitOps platform của Phase 2 nằm ở control repo riêng; repo này chỉ có wrappers/evidence cần thiết. |
+| ✅ Phase 2 live-verified | Product plane và LLM evidence plane đã được chạy kiểm tra; snapshot runtime hiện tại là 13/13 Argo apps healthy, 28/28 live E2E checks passed. |
+| ⏳ Submission freeze pending | 60/60 LLM rows và 100/100 logical points đã có; source/GitOps SHA cần restamp và strict two-repo audit cần pass trước khi gọi là final. |
+| ⚠️ Separate repo | GKE/Terraform/Helm/Argo GitOps platform của Phase 2 nằm ở control repo riêng; repo này giữ code, contracts, product, tests và canonical evidence. |
 
 ## 3. Tra cứu nhanh theo câu hỏi
 
@@ -112,7 +114,7 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 |---|---|---|
 | `AGENTS.md` | Quy tắc bất biến, phase boundary, data contract và quality gate. | Source of truth cho cách làm |
 | `CLAUDE.md` | Pointer/routing cho Claude Code skills. | Tooling |
-| `README.md` | Setup, architecture, evidence snapshot, validation commands. | Entry point cho repo |
+| `README.md` | Complete Phase 1 + Phase 2 scope, architecture, product/evidence boundaries, setup and validation commands. | Entry point cho repo |
 | `environment template` | Mẫu biến môi trường local. | Không chứa secret thật |
 | `.github/workflows/` | CI Phase 1 và Phase 2. | Automation |
 | `configs/` | YAML contracts cho collector, DQ, Spark, Flink, generator, RAG, governance. | Config |
@@ -267,7 +269,10 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 | `src/llm/rag/chunking.py` | Normalize, hash, chunk và parser version. |
 | `src/llm/rag/embedding.py` | Embedding backend protocol/HTTP adapter boundary. |
 | `src/llm/rag/pgvector_store.py` | Vector storage/version/idempotency boundary. |
-| `src/agents/` | Chưa có package source trong checkout hiện tại; agent behavior nằm ở Phase 2 contracts/evidence/product scope. |
+| `src/agents/coordinator.py` | Coordinator runtime: routes specialist/tool/model calls and assembles traceable responses. |
+| `src/agents/feature_agent.py` | Feature/RAG specialist contract and tool invocation boundary. |
+| `src/agents/drift_agent.py` | Drift specialist contract and real-time drift tool boundary. |
+| `src/agents/models.py`, `registry.py`, `runtime.py` | Agent model/config contracts, registry metadata, and runtime helpers. |
 
 ## 7. Airflow DAG map
 
@@ -503,7 +508,7 @@ git ls-files 'tests/**' | sort
 | `docs/phase2/evidence-contract.md` | Evidence file contract. |
 | `docs/phase2/rubric-matrix.md` | Rubric mapping. |
 | `docs/phase2/security/rbac.md` | RBAC/RLS rules. |
-| `docs/phase2/adr/adr-001`…`adr-010` | Architecture decisions: gateways, repos, EKS, KServe, Feast, MLflow, Helm/Kustomize, degradation, Nginx, LLM-only scope. |
+| `docs/phase2/adr/adr-001`…`adr-010` | Architecture decisions: agentgateway, repository split, GKE/KServe, Feast, security, Helm, degradation, NGINX, and LLM-only scope. ADR-010 is current. |
 | `docs/phase2/evidence/llm/` | LLM implementation/evidence notes. |
 | `docs/phase2/evidence/product/` | UI/accessibility/product evidence. |
 
@@ -538,6 +543,7 @@ git ls-files 'docs/phase2/evidence/**' | sort
 | `plans/260805-0800-phase2-stage2-completion/` | Quota, assistant path, outbox, coverage, accessibility. |
 | `plans/260806-2234-architecture-hygiene-before-phase-3/` | Dọn architecture/package/container/test markers. |
 | `plans/260809-2039-complete-phase2-llm-submission/` | Hoàn thiện submission LLM. |
+| `plans/260813-1519-project-wide-readme-docs/` | Đồng bộ README, architecture, maps và submission index với hệ thống hoàn chỉnh. |
 | `plans/reports/` | Báo cáo/research độc lập, không phải current source of truth. |
 
 Plan là lịch sử quyết định và execution context. Khi có conflict, ưu tiên

@@ -34,10 +34,12 @@ installed:
 The reusable Phase 2 workflow executes both gates after its test job and
 before image builds.
 
-## Live evidence outstanding
+## Evidence status
 
-No Locust HTML, cold/warm measurement, signed release, GitOps rollout, or live
-A/B result exists while the cluster is unavailable. The A/B model path is not
-yet proven connected to the live agentgateway path, and warm-pool scale-down
-still needs an evidence-window/HPA control design. Keep the associated rubric
-rows `design_only` until runtime evidence exists.
+The validation rows are executed: the Phase 05 package contains the Locust
+report, warm-up measurement, signed release loop, and validation-gate outputs.
+The A/B rows are represented as `executed` in the canonical matrix and their
+safe staged rollout state is documented in the linked evidence. No rollback
+was executed during capture; that operational limitation is not the same as a
+missing A/B configuration. The final freeze still requires SHA restamping and
+the strict two-repository audit.

@@ -185,19 +185,26 @@ jobs:
           GITOPS_TARGET_SELECTOR: ${{ matrix.deployable.gitops_target_selector }}
         run: |
           cd gitops
+          # Captured before the branch/commit exist: the commit this digest
+          # bump forks from. A standard (non-squash) merge keeps it an
+          # ancestor of master, satisfying the same ancestor rule
+          # audit_phase2_evidence.py already uses for evidence SHAs — so a
+          # values.yaml provenance line pinned to this commit stays valid
+          # after merge without needing the not-yet-created merge SHA.
+          gitops_base_sha="$(git rev-parse HEAD)"
           branch="digest-bump/${DEPLOYABLE_NAME}-${GITHUB_SHA::12}"
           git checkout -b "$branch"
           test -f "$GITOPS_PATH"
           repository="$(cat "../digest/${DEPLOYABLE_NAME}/repository")"
           digest="$(cat "../digest/${DEPLOYABLE_NAME}/digest")"
           test "${digest#sha256:}" != "$digest"
-          python - "$GITOPS_PATH" "$GITOPS_TARGET_TYPE" "$GITOPS_TARGET_KIND" "$GITOPS_TARGET_SELECTOR" "$repository" "$digest" <<'PY'
+          python - "$GITOPS_PATH" "$GITOPS_TARGET_TYPE" "$GITOPS_TARGET_KIND" "$GITOPS_TARGET_SELECTOR" "$repository" "$digest" "$GITHUB_SHA" "$gitops_base_sha" <<'PY'
           from pathlib import Path
           import re
           import sys
 
           path = Path(sys.argv[1])
-          target_type, kind, selector, repository, digest = sys.argv[2:]
+          target_type, kind, selector, repository, digest, source_sha, gitops_base_sha = sys.argv[2:]
           text = path.read_text(encoding="utf-8")
           image = f"{repository}@{digest}"
           if target_type == "values":
@@ -217,6 +224,23 @@ jobs:
               )
               if count != 1:
                   raise SystemExit(f"{path}: expected one image.digest key")
+              # Optional: only apps/dev/web/values.yaml carries these env var
+              # lines today (live-registry-adapter.ts fails closed without a
+              # valid 7-40-hex SHA in each). Substituted in place so they
+              # cannot drift from the digest bump landing in the same commit;
+              # a no-op (count 0) for every other "values" deployable.
+              updated, _ = re.subn(
+                  r"(?m)^(\s*-\s*\{name:\s*DISTRESSLENS_SOURCE_SHA,\s*value:\s*).*?(\})\s*$",
+                  rf"\g<1>{source_sha}\g<2>",
+                  updated,
+                  count=1,
+              )
+              updated, _ = re.subn(
+                  r"(?m)^(\s*-\s*\{name:\s*DISTRESSLENS_GITOPS_SHA,\s*value:\s*).*?(\})\s*$",
+                  rf"\g<1>{gitops_base_sha}\g<2>",
+                  updated,
+                  count=1,
+              )
           elif target_type == "manifest":
               documents = text.split("\n---\n")
               matches = [

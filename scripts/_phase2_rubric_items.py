@@ -131,6 +131,37 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a": (
         "yaml_mapping_contains:evidenceWindow"
     ),
+    "LLM-a-b-testing-perform-a-b-test-for-different": "yaml_mapping_contains:canary",
+    "LLM-a-b-testing-when-you-deploy-a-new-model": "yaml_mapping_contains:revisionName",
+    "LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a": (
+        "notebook_code_contains:understanding"
+    ),
+    "LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra": (
+        "notebook_code_contains:agent"
+    ),
+    "LLM-novel-ideas-idea-1": "python_ast_contains:embedding",
+    "LLM-novel-ideas-idea-2": "python_ast_contains:citation",
+    "LLM-documentation-low-level-ml-design": "text_contains:design",
+    # Phase 1 of plans/260811-1627-close-llm-rubric-to-100: 8 of these 13 rows
+    # were re-pointed off collided artifact_path values (all 7 gateway rows
+    # shared f5-nginx-values.yaml; the traces row shared a Loki file with no
+    # Jaeger content). Every token below is verified present in its target
+    # file today (a manifest fact); capture in phase 5 proves it live.
+    "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
+        "text_contains:nginxorguseclusteriptrue"
+    ),
+    "LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-": "text_contains:namefeaturemcp",
+    "LLM-routing-gateway-ui-test-agent": "text_contains:gatewayuichat",
+    "LLM-routing-gateway-ui-cho-agent-registry": "text_contains:gatewayuiregistry",
+    "LLM-routing-gateway-authentication-cho-ui-test-age": "text_contains:nginxorghtpasswd",
+    "LLM-routing-gateway-service-coi-log": "text_contains:nameloki",
+    "LLM-routing-gateway-service-coi-trace": "text_contains:namejaeger",
+    "LLM-observability-collect-v-visualize-metrics-v-": "yaml_path:grafana.enabled",
+    "LLM-observability-m-b-o-t-nh-t-c-c-metrics": ("text_contains:llmsafetypiipromptcatchestotal"),
+    "LLM-observability-agent-tool-call-metrics": "text_contains:mcptoolcallstotalrate5m",
+    "LLM-observability-web-api-metrics": "text_contains:webapirequestdurationsecondsp95",
+    "LLM-observability-t-ng-t-cho-logs": "yaml_path:loki.limits_config",
+    "LLM-observability-t-ng-t-cho-traces": "text_contains:jaegerstorageexporter",
 }
 
 
@@ -714,37 +745,37 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
         "platform_operator",
         "gitops",
-        "platform/ingress/f5-nginx-values.yaml",
+        "platform/ingress/routes-ui.yaml",
     ),
     "LLM-routing-gateway-service-coi-log": (
         "platform_operator",
         "gitops",
-        "platform/ingress/f5-nginx-values.yaml",
+        "platform/ingress/routes-viewers.yaml",
     ),
     "LLM-routing-gateway-service-coi-trace": (
         "platform_operator",
         "gitops",
-        "platform/ingress/f5-nginx-values.yaml",
+        "platform/ingress/routes-viewers.yaml",
     ),
     "LLM-routing-gateway-ui-test-agent": (
         "platform_operator",
         "gitops",
-        "platform/ingress/f5-nginx-values.yaml",
+        "platform/ingress/routes-ui.yaml",
     ),
     "LLM-routing-gateway-ui-cho-agent-registry": (
         "platform_operator",
         "gitops",
-        "platform/ingress/f5-nginx-values.yaml",
+        "platform/ingress/routes-ui.yaml",
     ),
     "LLM-routing-gateway-authentication-cho-ui-test-age": (
         "platform_operator",
         "gitops",
-        "platform/ingress/f5-nginx-values.yaml",
+        "platform/ingress/basic-auth-sealed-secret.yaml",
     ),
     "LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-": (
         "platform_operator",
         "gitops",
-        "platform/ingress/f5-nginx-values.yaml",
+        "platform/ingress/routes-ui.yaml",
     ),
     "LLM-iac-d-ng-terraform-setup-gke-ho-c-": (
         "platform_operator",
@@ -774,7 +805,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-observability-t-ng-t-cho-traces": (
         "platform_operator",
         "gitops",
-        "platform/observability/loki-otel-values.yaml",
+        "platform/observability/jaeger.yaml",
     ),
     "LLM-observability-m-b-o-t-nh-t-c-c-metrics": (
         "platform_operator",
@@ -1166,6 +1197,27 @@ EXECUTED_RUBRIC_IDS = {
     "LLM-validation-verification-load-test-the-web-api",
     "LLM-repository-design-clean-code-clean-repo-demonstr",
     "LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a",
+    "LLM-a-b-testing-perform-a-b-test-for-different",
+    "LLM-a-b-testing-when-you-deploy-a-new-model",
+    "LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a",
+    "LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra",
+    "LLM-novel-ideas-idea-1",
+    "LLM-novel-ideas-idea-2",
+    "LLM-documentation-low-level-ml-design",
+    # Phase 5 (plans/260811-1627-close-llm-rubric-to-100) live capture window.
+    "LLM-observability-m-b-o-t-nh-t-c-c-metrics",
+    "LLM-observability-agent-tool-call-metrics",
+    "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-",
+    "LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-",
+    "LLM-routing-gateway-ui-test-agent",
+    "LLM-routing-gateway-ui-cho-agent-registry",
+    "LLM-routing-gateway-authentication-cho-ui-test-age",
+    "LLM-routing-gateway-service-coi-log",
+    "LLM-routing-gateway-service-coi-trace",
+    "LLM-observability-collect-v-visualize-metrics-v-",
+    "LLM-observability-web-api-metrics",
+    "LLM-observability-t-ng-t-cho-logs",
+    "LLM-observability-t-ng-t-cho-traces",
 }
 for row in _deduped:
     if row["rubric_id"] in EXECUTED_RUBRIC_IDS:

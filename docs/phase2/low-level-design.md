@@ -3,6 +3,9 @@
 This document locks the five ML and five LLM named classes before
 implementation. Each class lists its design pattern, responsibility, key
 methods (signature contract), and the rubric-matrix ID that will consume it.
+The LLM classes are implemented as dependency-injected Python ports; the
+Phase 06 evidence links below point to the executable source and its focused
+verification tests.
 
 Design patterns used across the contracts: **Strategy** (swappable baseline
 training/evaluation), **Facade** (unified feature/tool access), **Factory**
@@ -72,6 +75,10 @@ rolled back). The pattern is enforced by the `src/ml/contracts.py` and
   embedding-version hot swap.
 - Key methods: `register_version`, `hot_swap`, `resolve_active`,
   `compatibility_check`.
+- Executable slice: [`src/llm/embedding_registry.py`](../../src/llm/embedding_registry.py)
+  performs dual-read shape validation before changing the active alias under a
+  lock. `tests/phase2/verification/test_llm_novel_ideas.py` proves the old and
+  candidate namespaces are read before the swap and rejects mixed dimensions.
 
 ### 3. McpToolService
 
@@ -93,6 +100,26 @@ rolled back). The pattern is enforced by the `src/ml/contracts.py` and
 - Responsibility: register, canary, warm, promote and roll back agent/model
   configurations through GitOps.
 - Key methods: `register`, `canary`, `warm_up`, `promote_or_rollback`.
+
+### Executed safety extensions
+
+The two Phase 06 novel ideas are concrete extensions at the LLM boundary, not
+prose-only designs:
+
+- [`src/llm/embedding_registry.py`](../../src/llm/embedding_registry.py)
+  implements version records, compatibility checks, dual-read validation, and
+  an atomic alias change. A reader callback is injected so the same contract
+  can use the live vector store or a deterministic local adapter.
+- [`src/llm/citation_guard.py`](../../src/llm/citation_guard.py) validates
+  retrievable citations, blocks unsupported claims, rewrites detected PII,
+  and emits a decision carrying both an OTel trace ID and evidence-manifest
+  reference. It never stores matched sensitive values in the decision record.
+
+The focused proof command is:
+
+```bash
+.venv-phase2/bin/python -m pytest -q tests/phase2/verification/test_llm_novel_ideas.py
+```
 
 ## Contract Enforcement
 

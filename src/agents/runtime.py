@@ -8,6 +8,7 @@ domain modules.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from contextlib import nullcontext
@@ -31,6 +32,8 @@ from src.observability.telemetry import (
     metadata_from_headers,
     pii_finding_types,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 class RunRequest(BaseModel):
@@ -327,6 +330,7 @@ def create_app() -> FastAPI:
         HttpSpecialistClient(os.getenv("FEATURE_AGENT_URL", "http://feature-agent"), telemetry),
         HttpSpecialistClient(os.getenv("DRIFT_AGENT_URL", "http://drift-agent"), telemetry),
         max_hops=int(os.getenv("MAX_AGENT_HOPS", "2")),
+        timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0")),
         telemetry=telemetry,
     )
     application = FastAPI(title=f"{role}-agent", version="1.0.0")
@@ -386,6 +390,8 @@ def create_app() -> FastAPI:
             result = await drift.run(payload)
         elif role == "coordinator":
             result = await coordinator.coordinate(payload)
+            if isinstance(result, AgentFailure):
+                LOGGER.warning("coordinator agent failure: %s", result.error)
         else:
             result = AgentFailure(error=f"unsupported agent role: {role}")
         return result.model_dump()

@@ -1,0 +1,49 @@
+name: Phase 2 — web
+
+# apps/web is a Next.js app, not a Python service: phase2-ci.yaml's lint/test
+# jobs only run ruff/black/pytest, so they cannot meaningfully gate it (an
+# empty selector would lint/test the whole repo instead of nothing). The
+# real gate for apps/web already exists and runs on every push/PR to
+# main/dev: ci.yml's `contracts` job (`pnpm typecheck`, `pnpm test`,
+# Playwright a11y). lint_paths/test_selector below cover the one Python
+# artifact that touches the web deployable — the API-adapter contract test —
+# so this caller's lint/test jobs do real, if narrow, work instead of a
+# silent no-op. Decision recorded 2026-08-11
+# (plans/260811-1627-close-llm-rubric-to-100/phase-02). Retrigger note:
+# bumped alongside phase2-ci.yaml's provenance-SHA rewrite so this file's
+# own path match re-runs the digest bump with the fix included.
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "apps/web/**"
+      - "packages/contracts/**"
+      - "tests/phase2/verification/test_web_api_adapters.py"
+      - ".github/workflows/phase2-web.yaml"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "apps/web/**"
+      - "packages/contracts/**"
+      - "tests/phase2/verification/test_web_api_adapters.py"
+      - ".github/workflows/phase2-web.yaml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/phase2-ci.yaml
+    with:
+      deployables: >-
+        [{"name":"web","image_context":".","dockerfile":"apps/web/Dockerfile",
+        "test_selector":"tests/phase2/verification -k 'web_api_adapters'",
+        "lint_paths":"tests/phase2/verification/test_web_api_adapters.py",
+        "gitops_path":"apps/dev/web/values.yaml","gitops_target_type":"values","gitops_target_kind":"","gitops_target_selector":""}]
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

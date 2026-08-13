@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { encodeSseFrame, type AssistantFrame } from "@distresslens/contracts";
 import {
   assistantThreadKey,
+  validateAssistantDriftRows,
   type AssistantContext,
 } from "@/lib/assistant/assistant-context";
 import type { AssistantTurn } from "@/lib/assistant/assistant-transport";
@@ -339,6 +340,19 @@ function upstreamBody(request: AssistantRequestBody): Record<string, unknown> {
   return { stream: true, messages };
 }
 
+/**
+ * The scope each MCP tool's ToolInvocationRegistry authorizes for its
+ * calling agent — `MCP_AUTH_GRANTS` on feature-mcp/drift-mcp is
+ * `{"<agent-identity>": ["<this-exact-string>"]}`. This is a fixed
+ * authorization contract between the coordinator's specialists and the
+ * tools they call, unrelated to `request.context.scope` (the UI's
+ * portfolio-vs-company view selector) — sending the UI scope here always
+ * failed the grant check with `forbidden`, since no deployed grant ever
+ * lists "portfolio" (or any UI scope value) as an authorized scope.
+ */
+const FEATURE_MCP_AUTHORIZED_SCOPE = "financial-distress:read";
+const DRIFT_MCP_AUTHORIZED_SCOPE = "financial-distress:drift";
+
 function coordinatorBody(request: AssistantRequestBody): Record<string, unknown> {
   const env = process["env"];
   const ticker = request.context?.ticker ?? request.context?.selectedTickers[0] ?? "portfolio";
@@ -347,17 +361,18 @@ function coordinatorBody(request: AssistantRequestBody): Record<string, unknown>
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+  const driftRows = validateAssistantDriftRows(request.context?.driftRows) ?? [{ ticker }];
   return {
     question: request.question,
     feature_request: {
       user_id: ticker,
       feature_names: featureNames,
-      scope: request.context?.scope ?? "portfolio",
+      scope: FEATURE_MCP_AUTHORIZED_SCOPE,
     },
     drift_request: {
-      rows: [{ ticker }],
+      rows: driftRows,
       scenario: coordinatorScenario(env["DISTRESSLENS_" + "COORDINATOR_DRIFT_SCENARIO"]),
-      scope: request.context?.scope ?? "portfolio",
+      scope: DRIFT_MCP_AUTHORIZED_SCOPE,
     },
   };
 }

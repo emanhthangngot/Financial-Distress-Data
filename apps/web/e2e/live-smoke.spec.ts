@@ -48,6 +48,15 @@ async function signInAsOperator(page: import("@playwright/test").Page) {
   return token;
 }
 
+async function signInThroughForm(page: import("@playwright/test").Page) {
+  await page.goto("/sign-in");
+  await expect(page.getByRole("heading", { name: "Đăng nhập DistressLens" })).toBeVisible();
+  await page.getByLabel("Email").fill(OPERATOR_EMAIL);
+  await page.getByLabel("Mật khẩu").fill(OPERATOR_PASSWORD);
+  await page.getByRole("button", { name: "Đăng nhập" }).click();
+  await expect(page).toHaveURL(/\/$/);
+}
+
 test.describe.configure({ mode: "serial" });
 
 test.beforeAll(async () => {
@@ -125,4 +134,33 @@ test("no live surface leaks a secret", async ({ page }) => {
   for (const pattern of FORBIDDEN_PATTERNS) {
     expect(body, `leaked ${pattern}`).not.toMatch(pattern);
   }
+});
+
+test("the sign-in form rejects invalid credentials without leaving the page", async ({ page }) => {
+  await page.goto("/sign-in");
+  await page.getByLabel("Email").fill(OPERATOR_EMAIL);
+  await page.getByLabel("Mật khẩu").fill("definitely-not-the-password");
+  await page.getByRole("button", { name: "Đăng nhập" }).click();
+
+  await expect(page).toHaveURL(/\/sign-in$/);
+  await expect(page.locator("form").getByRole("alert")).toHaveText("Invalid login credentials");
+});
+
+test("the supported login and logout flow clears the session", async ({ page }) => {
+  await signInThroughForm(page);
+
+  await page.locator("details").filter({ has: page.getByText("Smoke Operator") }).locator("summary").click();
+  await page.locator("details").getByRole("link", { name: "Đăng xuất" }).click();
+
+  await expect(page).toHaveURL(/\/sign-in$/);
+  await expect(page.getByRole("heading", { name: "Đăng nhập DistressLens" })).toBeVisible();
+  expect((await page.context().cookies()).some((cookie) => cookie.name === "sb-access-token")).toBe(false);
+});
+
+test("registration is intentionally not exposed", async ({ page }) => {
+  const response = await page.request.get("/sign-up");
+  expect(response.status()).toBe(404);
+
+  await page.goto("/sign-in");
+  await expect(page.getByRole("link", { name: /đăng ký|sign up|register/i })).toHaveCount(0);
 });

@@ -3,36 +3,65 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
-2. [Business Domain](#business-domain)
-3. [Overall System Architecture](#overall-system-architecture)
-4. [System Deployment Diagram](#system-deployment-diagram)
-5. [Runtime Evidence Snapshot](#runtime-evidence-snapshot)
-6. [Schema Evidence](#schema-evidence)
-7. [API Surface](#api-surface)
-8. [Project Structure](#project-structure)
-9. [Documentation](#documentation)
-10. [Naming Convention](#naming-convention)
-11. [Local Setup](#local-setup)
-12. [Running in Docker](#running-in-docker)
-13. [Service URLs](#service-urls)
-14. [Run Stage 1 Evidence](#run-stage-1-evidence)
-15. [Validation Commands](#validation-commands)
-16. [Useful Inspection Queries](#useful-inspection-queries)
-17. [Stop Services](#stop-services)
+2. [Project Status](#project-status)
+3. [Business Domain](#business-domain)
+4. [Overall System Architecture](#overall-system-architecture)
+5. [System Deployment Diagram](#system-deployment-diagram)
+6. [Phase 2 Deployment and Evidence](#phase-2-deployment-and-evidence)
+7. [Runtime Evidence Snapshot](#runtime-evidence-snapshot)
+8. [Schema Evidence](#schema-evidence)
+9. [API Surface](#api-surface)
+10. [Project Structure](#project-structure)
+11. [Documentation](#documentation)
+12. [Naming Convention](#naming-convention)
+13. [Local Setup](#local-setup)
+14. [Running in Docker](#running-in-docker)
+15. [Product and Phase 2 Checks](#product-and-phase-2-checks)
+16. [Service URLs](#service-urls)
+17. [Run Stage 1 Evidence](#run-stage-1-evidence)
+18. [Validation Commands](#validation-commands)
+19. [Useful Inspection Queries](#useful-inspection-queries)
+20. [Stop Services](#stop-services)
 
 ## Introduction
 
-This project is a local-first data engineering foundation for Financial Distress analytics. It runs a small lakehouse stack with Airflow, Kafka, MinIO, PostgreSQL, DuckDB, and PyTest-based validation. Apache Flink is wired in as an **opt-in** streaming runtime (DAG 04) for W20/W17 evidence; it is not started by `docker compose up` and requires `--profile flink`.
+This repository contains the complete Financial Distress Data + AI Engineering
+coursework system: a verified local-first lakehouse foundation, an additive
+Phase 2 LLM/agent product, and the evidence/runtime contracts that connect
+them. Phase 1 remains the data foundation; Phase 2 consumes its Gold outputs
+without changing Phase 1 semantics.
 
-The current Stage 1 pipeline uses deterministic fixture-backed collectors, then materializes Bronze, Silver, Gold, Data Quality, Metadata, and Evidence outputs locally.
+The project has two deployment boundaries:
 
-Phase 2 (accepted, explicit) builds a two-plane AI system on top of this
-foundation: a persistent **product plane** (Next.js + Supabase) and a
-disposable, cost-bounded **evidence plane** (ephemeral EKS with KServe 0.18,
-Kubeflow, Feast, MLflow, and agents), orchestrated through a separate GitOps
-repository. It targets all 100 ML + 100 LLM rubric points without keeping EKS
-running continuously. See [docs/phase2/architecture.md](docs/phase2/architecture.md)
-and [docs/coursework.md](docs/coursework.md).
+- **Source monorepo:** Python lakehouse, Phase 2 contracts/services, Next.js
+  product app, Supabase migrations, tests, evidence contracts, and runbooks.
+- **Private GitOps control repo:** Helm-rendered GKE desired state, Argo CD
+  applications, immutable image references, ingress, agents, model serving,
+  and observability manifests. It is maintained separately as
+  `financial-distress-gitops`.
+
+The accepted coursework scope is the **LLM track: 60 rows / 100 points**. The
+57 ML rows remain explicitly deferred/design-only. The LLM evidence has been
+captured and the live runtime has passed; the final submission freeze still
+requires convergent evidence SHA stamping and the remaining Phase 6 packaging
+steps. See [Project Status](#project-status),
+[docs/coursework.md](docs/coursework.md), and the
+[submission reviewer index](docs/submission/README.md).
+
+Apache Flink is an **opt-in** streaming runtime for the local Phase 1 path. It
+is not started by `docker compose up` and requires `--profile flink` plus
+`ENABLE_FLINK=1`.
+
+## Project Status
+
+| Area | State | Meaning |
+|---|---|---|
+| Phase 1 lakehouse | Verified | Collectors, Kafka, Bronze/Silver/Gold, DQ, metadata, DuckDB, MinIO and local evidence are implemented and gated. |
+| Phase 2 LLM track | Logical coverage captured; freeze pending | 60/60 LLM rows and 100/100 logical rubric points are represented by canonical evidence files; SHA restamping and the strict freeze audit remain. ML rows remain deferred. |
+| Product plane | Implemented and tested | Next.js web app, Supabase auth/RLS, analyst surfaces, agent registry/chat and evidence-plane state handling are covered by product tests and browser checks. |
+| GKE evidence plane | Live-verified | Argo applications, agents, MCP services, model gateway, KServe, telemetry and coordinator round-trip were live-tested. |
+| Submission freeze | Pending | Evidence SHAs must be restamped after the final docs/runtime commits; strict gate must pass before submission. |
+| Known operational residual | GHCR cold-node pull | The current web image is private; cached nodes run it, but a cold node needs an out-of-band sealed `read:packages` credential. |
 
 ## Business Domain
 
@@ -48,7 +77,17 @@ Why it matters: a missed early warning on a stressed issuer costs downstream cap
 
 ## Overall System Architecture
 
-Each node in the diagram below is a **deployable unit**: Airflow, Kafka, Flink (opt-in), PySpark (local mode), MinIO, PostgreSQL, DuckDB, and DBeaver run as separate processes or containers. Arrows follow the data flow direction; solid arrows are the primary Stage 1 paths, dashed arrows mark optional or profile-gated flows (for example the Flink streaming path, which is started with `--profile flink`).
+The complete system is layered rather than a single runtime. The local lakehouse
+provides durable Bronze/Silver/Gold data and evidence; the Phase 2 product plane
+provides persistent user-facing state; and the disposable GKE evidence plane
+executes the LLM/agent path for live proof. Each layer has an explicit owner and
+contract. Phase 2 is additive and never silently rewrites the Phase 1 DAG or
+storage semantics.
+
+For the local lakehouse diagram, each node is a **deployable unit**: Airflow,
+Kafka, Flink (opt-in), PySpark (local mode), MinIO, PostgreSQL, DuckDB, and
+DBeaver run as separate processes or containers. Arrows follow data flow;
+solid arrows are the default Phase 1 path and dashed arrows are profile-gated.
 
 DuckDB is used only as a local, single-node SQL inspection engine for DBeaver and reviewer evidence over MinIO Parquet. It is not a horizontally scalable serving layer, and pipeline correctness does not depend on DuckDB; governance records are stored in PostgreSQL `project_metadata` with MinIO Parquet evidence mirrors.
 
@@ -56,12 +95,10 @@ DuckDB is used only as a local, single-node SQL inspection engine for DBeaver an
 
 ## System Deployment Diagram
 
-The diagram below is the W22 unified deployment view: every cluster is a
-deployable unit (process or container) and every edge is a real data flow
-that exists in the Stage 1 pipeline. The Flink cluster and its two edges
-are drawn with dashed borders to signal the opt-in profile
-(`docker compose --profile flink up`); all other edges are the primary
-Stage 1 path.
+The diagram below is the local Phase 1 deployment view: every cluster is a
+deployable unit (process or container) and every edge is a real data flow in the
+local pipeline. The complete Phase 2 deployment flow is documented separately
+below and in [docs/phase2/architecture.md](docs/phase2/architecture.md).
 
 ![Stage 1 system deployment diagram — Airflow, Kafka, Flink opt-in, MinIO, PySpark, PostgreSQL, DuckDB, DBeaver](images/architecture/system_deployment_diagram.png)
 
@@ -73,6 +110,48 @@ so the diagram stays editable. Re-render after edits with:
 dot -Tpng images/architecture/system_deployment_diagram.dot \
     -o images/architecture/system_deployment_diagram.png
 ```
+
+## Phase 2 Deployment and Evidence
+
+Phase 2 keeps the source monorepo and the private GitOps control repository
+separate. The numbered flow below names the principal deployables in the
+submitted LLM path; the evidence auditor and reviewer index are the source of
+truth for what has actually been executed.
+
+```mermaid
+flowchart LR
+    A["1. Source CI"] -->|"immutable image digest"| B["2. GitOps PR"]
+    B -->|"merged desired state"| C["3. Argo CD"]
+    C --> D["4. F5 NGINX Ingress"]
+    D --> E["5. Next.js product UI"]
+    E --> P["6. Supabase Auth/Postgres + RLS"]
+    D --> F["7. Coordinator Agent"]
+    F --> G["8. Feature Agent"]
+    F --> H["9. Drift Agent"]
+    G --> I["10. Feature/RAG MCP"]
+    H --> J["11. Drift MCP"]
+    I --> K["12. Feast/PGVector RAG stores"]
+    J --> L["13. Drift API"]
+    G --> M["14. Agentgateway model route"]
+    H --> M
+    F --> M
+    M --> N["15. CPU OpenAI-compatible model server"]
+    I --> O["16. Prometheus/Grafana/Loki/Jaeger/OTel"]
+    J --> O
+    F --> O
+    G --> O
+    H --> O
+```
+
+Flow legend: source CI builds/tests/scans/signs; GitOps owns deployment
+configuration; Argo CD reconciles only the merged revision; NGINX is the only
+external entry point; agents call MCP tools; MCP wrappers call the feature/RAG
+and drift services; telemetry is redaction-safe and trace-correlated. The
+product plane persists user/session/report state in Supabase while the evidence
+plane remains disposable. The live coordinator path has been verified with
+model warm-up, specialist calls, citations, Prometheus targets and Jaeger
+services. The canonical evidence files, rather than this diagram, determine
+rubric execution status.
 
 ## Runtime Evidence Snapshot
 
@@ -116,27 +195,13 @@ the local pipeline when needed.
 
 ## API Surface
 
-There is no REST/FastAPI service in Phase 1. This mini-coursework focuses on
-local data engineering evidence: collectors, Kafka contracts, Bronze/Silver/Gold
-lakehouse transforms, PostgreSQL metadata, DQ, and DuckDB/DBeaver inspection.
-API serving is documented only as a Phase 2 or optional extension in
-`docs/coursework.md`, so OpenAPI/Swagger docs are not part of the current
-submission scope.
-
-# Table of Contents
-
-1. [Runtime Evidence Snapshot](#runtime-evidence-snapshot)
-2. [Schema Evidence](#schema-evidence)
-3. [API Surface](#api-surface)
-4. [Project Structure](#project-structure)
-5. [Documentation](#documentation)
-6. [Local Setup](#local-setup)
-7. [Running in Docker](#running-in-docker)
-8. [Service URLs](#service-urls)
-9. [Run Stage 1 Evidence](#run-stage-1-evidence)
-10. [Validation Commands](#validation-commands)
-11. [Useful Inspection Queries](#useful-inspection-queries)
-12. [Stop Services](#stop-services)
+There is no REST/FastAPI service in Phase 1. The Phase 2 LLM track adds
+FastAPI-backed MCP services and agents under `apps/`, `src/agents/`, and
+`src/llm/`. The Next.js product exposes authenticated analyst, agent registry,
+chat, report, and evidence-session surfaces; the GKE evidence plane exposes
+only the routed ingress/MCP/model endpoints needed by the product and live
+evidence checks. These are additive and do not change the Phase 1 pipeline
+contracts.
 
 ## Project Structure
 
@@ -152,9 +217,9 @@ submission scope.
 │   ├── io/                - MinIO and local IO helpers
 │   ├── jobs/              - Runtime evidence job wrappers
 │   ├── ml/                - Phase 2 ML class contracts and adapters (isolated)
-│   ├── drift/             - Phase 2 drift/quality adapters (planned, Phase 2)
-│   ├── llm/               - Phase 2 LLM class contracts and adapters (isolated)
-│   └── agents/            - Phase 2 agent orchestration (planned, Phase 2)
+│   ├── drift/             - Phase 2 drift/quality adapters
+│   ├── llm/               - Phase 2 LLM contracts, RAG, and safety adapters
+│   └── agents/            - Phase 2 MCP-backed agent orchestration
 ├── configs/               - Collector, Spark, source, and DQ config files
 ├── sql/                   - PostgreSQL metadata DDL and DuckDB SQL views
 ├── tests/                 - PyTest unit, contract, and runtime smoke tests
@@ -165,6 +230,10 @@ submission scope.
 │   ├── flink/              - Flink jobmanager/taskmanager image build context
 │   └── kafka/              - Kafka topic init script
 ├── scripts/               - Local E2E, DQ failure, and evidence audit runners
+├── apps/                  - Phase 2 Next.js product app
+├── packages/              - Shared TypeScript contracts and UI helpers
+├── supabase/              - Phase 2 migrations, RLS, and outbox schema
+├── feature_repo/          - Feast structured/RAG feature definitions
 ├── docker-compose.yml     - Local platform services
 ├── pyproject.toml         - Python package and tooling config
 └── README.md              - This README file
@@ -172,6 +241,12 @@ submission scope.
 
 Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is
 isolated and never mutates Phase 1 pipeline behavior.
+
+The GKE deployment manifests are intentionally **not** in this repository. The
+separate private control repository
+[`financial-distress-gitops`](docs/architecture/repository-map.md#separate-deployment-repository)
+owns Terraform, Helm values, Argo CD applications, image digests, policies,
+ingress, model serving, agents, and observability desired state.
 
 The Python package boundary (`pip install -e .`, the `src`-as-package-name
 decision, and which dependency manifest is authoritative for which consumer)
@@ -199,8 +274,8 @@ The README only summarizes the project. Detailed design notes, contracts, and ru
 - [Phase 2 low-level design](docs/phase2/low-level-design.md) — ML and LLM class contracts.
 - [Phase 2 rubric matrix](docs/phase2/rubric-matrix.csv) — machine-readable 200-point evidence contract (ML 100 + LLM 100).
 - [Phase 2 evidence contract](docs/phase2/evidence-contract.md) — evidence format and linter rules.
-- [Phase 2 ADRs](docs/phase2/adr/) — architecture decision records 001..008.
-- [Phase 2 novel ideas](docs/phase2/novel-ideas.md) — two per track with proof paths.
+- [Phase 2 ADRs](docs/phase2/adr/) — architecture decision records 001..010; ADR-010 is the current LLM-only platform decision.
+- [Phase 2 novel ideas](docs/phase2/novel-ideas.md) — two per track with executable proof paths.
 - [Novel idea 1: dbt-style SQL contracts](docs/09_novel_idea_1.md) — DuckDB macro + Python mirror for naming contracts.
 - [Novel idea 2: Airbyte-style ingestion manifest](docs/10_novel_idea_2.md) — declarative source manifest + dispatcher.
 - [Novel idea evidence manifests](docs/novel-idea-evidence-manifest.md) and [PIT leakage guard](docs/novel-idea-pit-leakage-guard.md) — evidence integrity and point-in-time correctness proofs.
@@ -305,14 +380,93 @@ Create Kafka topics manually if needed.
 docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 ```
 
+## Product and Phase 2 Checks
+
+The local Docker commands above validate the Phase 1 lakehouse. The product
+and evidence-plane checks are separate because the product is a pnpm/Next.js
+workspace and the live LLM runtime is owned by the private GitOps repository.
+
+Run the product checks from the repository root:
+
+```bash
+pnpm --dir apps/web test
+pnpm --dir apps/web typecheck
+pnpm --dir apps/web lint
+pnpm --dir apps/web e2e:live
+pnpm --dir apps/web e2e:assistant
+```
+
+The browser checks require the configured product URL and test session
+environment. They exercise authentication, analyst/report surfaces, agent
+registry, chat, and evidence-session state; they do not replace the canonical
+rubric evidence audit.
+
+Run the live GKE coordinator and telemetry smoke test when the evidence plane
+is up:
+
+```bash
+.venv/bin/python scripts/run_phase2_e2e.py --json --timeout 120
+```
+
+The current live contract covers 28 checks: Argo/workload and service
+readiness, model warm-up, coordinator round-trip with feature/drift citations,
+Prometheus targets, and Jaeger service discovery. The equivalent operator
+entrypoint is `make phase2-e2e` in the separate
+`financial-distress-gitops` repository.
+
+Run Phase 2 source and contract tests locally:
+
+```bash
+.venv/bin/python -m pytest tests/phase2 -q
+```
+
+The final submission gate is a two-repository audit. Use the project-local
+Phase 2 environment and the checked-out GitOps repository:
+
+```bash
+PATH="$PWD/.venv-phase2/bin:$PATH" \
+.venv-phase2/bin/python scripts/audit_phase2_evidence.py \
+  --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 \
+  --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 \
+  --gitops-root "${GITOPS_ROOT:-../financial-distress-gitops}"
+```
+
+Set `GITOPS_ROOT` to the local checkout path when the control repository is
+not beside this source repository.
+
+As of this documentation refresh, the 60 LLM rows are logically covered but
+the final freeze is still pending: evidence source/GitOps SHA stamps must be
+restamped after the latest repository commits and this strict command must
+pass before the submission is called frozen.
+
+## Runtime Evidence Snapshot — Phase 2
+
+The following is a live verification snapshot from **2026-08-13**, not a claim
+that the final evidence freeze has passed:
+
+| Check | Result |
+|---|---|
+| Argo CD applications | 13/13 Synced and Healthy |
+| kagent control plane | CRDs Established; 10 Agents Ready |
+| MCP registration | Grafana MCP accepted/reconciled; controller registered tools |
+| Model path | Agentgateway -> KServe/Knative CPU OpenAI-compatible model server |
+| Coordinator E2E | HTTP 200 with feature and drift citations |
+| Telemetry | Prometheus targets healthy; Jaeger services discoverable |
+| Submission freeze | Pending SHA restamp and strict two-repository audit |
+
+The live plane is disposable and cost-bounded. The current operational
+residual is GHCR cold-node image pull: cached nodes run the private web image,
+while a cold node needs the sealed package-read credential supplied out of
+band. No credential belongs in this repository.
+
 ## Service URLs
 
 | Service | URL / Connection | Notes |
 |---|---|---|
-| Airflow | `http://localhost:8080` | Username/password: `airflow` / `airflow` |
-| MinIO Console | `http://localhost:9001` | Username/password: `minioadmin` / `minioadmin` |
+| Airflow | `http://localhost:8080` | Credentials come from local environment configuration |
+| MinIO Console | `http://localhost:9001` | Credentials come from local environment configuration |
 | MinIO API | `http://localhost:9000` | Bucket: `financial-distress-lake` |
-| PostgreSQL | `localhost:55432` | DB: `financial_distress`, user/password: `airflow` / `airflow` |
+| PostgreSQL | `localhost:55432` | DB/user credentials come from local environment configuration |
 | Kafka host listener | `localhost:9094` | Host-side access |
 | Kafka Docker listener | `kafka:9092` | Container-side access |
 | Flink jobmanager (opt-in) | `http://localhost:8081` | Start with `docker compose --profile flink up -d`; gated by `ENABLE_FLINK=1` |

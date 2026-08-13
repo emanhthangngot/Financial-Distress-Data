@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { assistantThreadKey, quickActionsFor, type AssistantContext } from "./assistant-context";
+import {
+  assistantThreadKey,
+  latestDebtToAssetDriftRows,
+  quickActionsFor,
+  validateAssistantDriftRows,
+  type AssistantContext,
+} from "./assistant-context";
 
 function context(overrides: Partial<AssistantContext> = {}): AssistantContext {
   return {
@@ -36,5 +42,27 @@ describe("quickActionsFor", () => {
     expect(portfolio.length).toBeGreaterThan(0);
     expect(comparison.length).toBeGreaterThan(0);
     expect(portfolio).not.toEqual(comparison);
+  });
+});
+
+describe("assistant drift rows", () => {
+  it("derives the latest visible Debt/Asset value without coercing or inventing data", () => {
+    expect(
+      latestDebtToAssetDriftRows("NVL", [
+        { name: "Debt/Asset", values: [0.72, 0.76, 0.79] },
+        { name: "ROA", values: [-1.8, -2.6, -3.1] },
+      ]),
+    ).toEqual([{ ticker: "NVL", debt_to_asset: 0.79 }]);
+    expect(
+      latestDebtToAssetDriftRows("NVL", [{ name: "Debt/Asset", values: [0.72, null] }]),
+    ).toBeUndefined();
+  });
+
+  it("accepts finite numeric observations and rejects malformed rows", () => {
+    expect(validateAssistantDriftRows([{ ticker: "NVL", debt_to_asset: 0.79 }])).toEqual([
+      { ticker: "NVL", debt_to_asset: 0.79 },
+    ]);
+    expect(validateAssistantDriftRows([{ ticker: "NVL", debt_to_asset: "0.79" }])).toBeUndefined();
+    expect(validateAssistantDriftRows([{ ticker: "NVL" }])).toBeUndefined();
   });
 });

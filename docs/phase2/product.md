@@ -112,6 +112,17 @@ to match pixels.
   red/amber/green risk semantics and non-color labels/icons so color is never
   the only signal.
 
+### Authentication boundary
+
+- Supabase password sign-in is the only supported account flow; accounts are
+  provisioned out of band. The product intentionally exposes no sign-up,
+  password-reset or account-management routes or controls.
+- Sign out is a same-origin `GET /sign-out` link for client-bundle-independent
+  shell operation. It deletes the `sb-access-token` cookie and redirects to
+  `/sign-in`; this clears the browser session cookie but does not by itself
+  revoke the upstream Supabase token. A future POST-based logout must add CSRF
+  protection and define an explicit revocation contract.
+
 ### Company and AI analysis components
 
 - Company header: breadcrumb, ticker/name/market metadata and watchlist action.

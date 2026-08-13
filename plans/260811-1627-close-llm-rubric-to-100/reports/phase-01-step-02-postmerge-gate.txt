@@ -1,0 +1,110 @@
+WARNING: LLM-observability-agent-tool-call-metrics: accepted final cut; no rubric points claimed
+WARNING: LLM-observability-collect-v-visualize-metrics-v-: accepted final cut; no rubric points claimed
+WARNING: LLM-observability-m-b-o-t-nh-t-c-c-metrics: accepted final cut; no rubric points claimed
+WARNING: LLM-observability-t-ng-t-cho-logs: accepted final cut; no rubric points claimed
+WARNING: LLM-observability-t-ng-t-cho-traces: accepted final cut; no rubric points claimed
+WARNING: LLM-observability-web-api-metrics: accepted final cut; no rubric points claimed
+WARNING: LLM-routing-gateway-authentication-cho-ui-test-age: accepted final cut; no rubric points claimed
+WARNING: LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-: accepted final cut; no rubric points claimed
+WARNING: LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-: accepted final cut; no rubric points claimed
+WARNING: LLM-routing-gateway-service-coi-log: accepted final cut; no rubric points claimed
+WARNING: LLM-routing-gateway-service-coi-trace: accepted final cut; no rubric points claimed
+WARNING: LLM-routing-gateway-ui-cho-agent-registry: accepted final cut; no rubric points claimed
+WARNING: LLM-routing-gateway-ui-test-agent: accepted final cut; no rubric points claimed
+source checkout is not clean; commit evidence and implementation files before promotion
+LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-a-b-testing-perform-a-b-test-for-different: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-a-b-testing-perform-a-b-test-for-different: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-a-b-testing-when-you-deploy-a-new-model: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-a-b-testing-when-you-deploy-a-new-model: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-a-llm-inference-platform--a-custom-model: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-a-llm-inference-platform--a-custom-model: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-a-llm-inference-platform--benchmark-model-server-and-opt: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-a-llm-inference-platform--benchmark-model-server-and-opt: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-a-llm-inference-platform--llm-inference-platform-setup-c: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-a-llm-inference-platform--llm-inference-platform-setup-c: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-ci-cd-agent-drift-detection: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-ci-cd-agent-drift-detection: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-ci-cd-agent-k-o-d-li-u: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-ci-cd-agent-k-o-d-li-u: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-ci-cd-agent-l-m-coordinator: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-ci-cd-agent-l-m-coordinator: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-ci-cd-ci-cd-cho-rag-data-pipeline: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-ci-cd-ci-cd-cho-rag-data-pipeline: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-ci-cd-job-1: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-ci-cd-job-1: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-ci-cd-job-2: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-ci-cd-job-2: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-documentation-low-level-ml-design: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-documentation-low-level-ml-design: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-iac-d-ng-ansible-configure-v-deplo: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-iac-d-ng-ansible-configure-v-deplo: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-iac-d-ng-terraform-setup-gke-ho-c-: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-iac-d-ng-terraform-setup-gke-ho-c-: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-improve-the-data-generato-simulate-data-drift: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-improve-the-data-generato-simulate-data-drift: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-improve-the-data-generato-using-generator-configuration: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-improve-the-data-generato-using-generator-configuration: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-novel-ideas-idea-1: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-novel-ideas-idea-1: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-novel-ideas-idea-2: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-novel-ideas-idea-2: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-rag-m-b-o-data-governance-cho-pipe: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-rag-m-b-o-data-governance-cho-pipe: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-rag-rag-data-pipeline: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-rag-rag-data-pipeline: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-repository-design-clean-code-clean-repo-demonstr: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-repository-design-clean-code-clean-repo-demonstr: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-security-centralize-secret-management: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-security-centralize-secret-management: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-validation-verification-idempotency-testing-s-d-ng-pro: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-validation-verification-idempotency-testing-s-d-ng-pro: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-validation-verification-load-test-the-web-api: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-validation-verification-load-test-the-web-api: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-validation-verification-validation-verification: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-validation-verification-validation-verification: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-s-d-ng-async: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-cho-real-time-dri-s-d-ng-async: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-s-d-ng-async: changes after source_sha=6dc70ba62f2a664aaeba484a34c23604246e0017 are not limited to SHA lines in evidence files
+LLM-web-api-k-o-d-li-u-user-s-d-ng-async: changes after gitops_sha=921bdc1075ef8335e0f509747bd64db2d525f73e are not limited to SHA lines in evidence files
+
+95 finding(s) — FAIL

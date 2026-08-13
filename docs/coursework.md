@@ -9,16 +9,19 @@ extensions." Phase 2 is explicit, planned, and rubric-scored.
 
 Phase 1 remains the verified local lakehouse foundation; its contracts are
 linked, not duplicated, here. Phase 2 builds an AI system on top of it with a
-disposable Kubernetes evidence plane and a persistent product plane.
+disposable GKE evidence plane and a persistent product plane.
 
-> **Submission scope — 2026-08-07
+> **Submission scope — 2026-08-13
 > ([ADR-010](./phase2/adr/adr-010-llm-only-scope-and-platform-simplification.md)).**
 > The coursework accepts delivery of one of the two tracks. This submission
 > delivers the **LLM track: 60 rows / 100 points**. The 57 ML rows remain in
 > `docs/phase2/rubric-matrix.csv` and in the acceptance catalog as a deferred,
 > post-deadline retrofit (`plans/260802-1037-unified-phase2-ml-llm-gitops/phase-05-deliver-ml-track.md`);
-> they are not claimed as delivered. Evidence runs on a rented single-node
-> `k3d` cluster, not on EKS, and every evidence artifact says so.
+> they are not claimed as delivered. Evidence runs on the cost-bounded GKE
+> cluster owned by the private `financial-distress-gitops` repository. The
+> runtime is live-verified and the 60 rows are logically covered; the final
+> submission freeze remains pending until the post-commit source/GitOps SHA
+> restamp and strict two-repository audit pass.
 
 ## 2. Normative Documents
 
@@ -42,11 +45,12 @@ disposable Kubernetes evidence plane and a persistent product plane.
 ## 3. One-Sentence Summary
 
 Phase 2 delivers a two-plane AI system: a **persistent product plane**
-(Next.js on Vercel Hobby + Supabase Auth/Postgres) and a **disposable evidence
-plane** (single-node `k3d` on a rented host, running NGINX Ingress OSS, Argo CD,
-a CPU model server, agentgateway, kagent agents, MCP tools, Feast/PGVector and
-the observability stack), orchestrated by GitOps through a separate repository,
-that proves the 100 LLM rubric points within a strict cost envelope.
+(Next.js + Supabase Auth/Postgres) and a **disposable evidence plane** (GKE,
+F5 NGINX, Argo CD, agentgateway, a KServe/Knative CPU model server, agents,
+MCP tools, Feast/PGVector and the observability stack), orchestrated by GitOps
+through a separate private repository. This submission targets the 100-point
+LLM track; the ML track remains a documented retrofit. Live runtime checks have
+passed; final evidence freeze is pending SHA convergence.
 
 ## 4. Scope
 
@@ -66,13 +70,13 @@ that proves the 100 LLM rubric points within a strict cost envelope.
 - **Feature/data foundation:** Feast structured and RAG stores (ADR-005 as
   amended), point-in-time-correct offline definitions, both stream-feature
   jobs, the label table, and configured drift scenarios.
-- **Platform:** rented single-node `k3d` evidence cluster (ADR-003 as
-  superseded by ADR-010), one source monorepo plus a separate GitOps control
-  repo (ADR-002), Helm as the only render tool (ADR-007 as superseded), active
+- **Platform:** cost-bounded GKE evidence cluster, one source monorepo plus a
+  separate private GitOps control repo (ADR-002), Helm as the only render tool,
+  active
   F5 NGINX Ingress Controller OSS rather than the retired community
   ingress-nginx project (ADR-009), observability
-  (Prometheus/Grafana/Loki/OpenTelemetry/Jaeger), one timeboxed AWS session for
-  Terraform, TLS and cost evidence.
+  (Prometheus/Grafana/Loki/OpenTelemetry/Jaeger), and one timeboxed GCP session
+  for Terraform, TLS and cost evidence.
 - **Novel ideas:** two for the LLM track, recorded before implementation, each
   with a proof path (see `docs/phase2/novel-ideas.md`).
 
@@ -90,22 +94,24 @@ that proves the 100 LLM rubric points within a strict cost envelope.
 
 - AWS Glue/Athena/EMR/MSK/SageMaker as the primary pipeline; the system uses
   Kubernetes, Terraform, Helm, Argo CD and agentgateway.
-- Istio, KServe, Knative, llm-d, Envoy Gateway/AI Gateway, ECK/Kibana, Vault
-  and Kustomize — dropped per ADR-010; no LLM rubric row requires them.
+- Istio, Envoy Gateway/AI Gateway, ECK/Kibana, Vault, Kustomize, and the
+  ML-only KServe/Knative/MLflow training or retraining path remain deferred or
+  dropped per ADR-010. The submitted LLM serving path does use the restored
+  KServe/Knative CPU model server through agentgateway.
 - Changes to Phase 1 pipeline semantics; Phase 1 continues to run with
   identical outputs.
 - Anything not in the rubric matrix.
 
 ## 5. Design Constraints
 
-- Evidence plane budget: a rented single-node `k3d` host under USD 15 for the
-  week, plus one timeboxed three-hour AWS session; total infrastructure spend
-  under USD 40 (ADR-010, superseding the ADR-003 envelope). The teardown job is
-  created before any billable cloud resource.
-- The rented host is untrusted third-party hardware: no long-lived AWS
-  credential, private key, real `.env`, or production Supabase credential is
+- Evidence plane budget: GCP free-trial credit only, with node pools and the
+  evidence VM hibernated outside capture windows and a target under USD 100 of
+  the available credit. The teardown command is run at the end of every
+  capture session.
+- The evidence plane is disposable: no long-lived cloud credential, private
+  key, real `.env`, or production Supabase credential is
   placed on it, and any token there is short-lived and revoked at session end.
-- Local-first development remains; AWS is an explicit, deliberate deployment
+- Local-first development remains; GCP is an explicit, deliberate deployment
   target owned by the GitOps repo, not a Phase 1 mutation.
 - One resource has one owner. Helm is the only render tool, so this holds by
   construction (ADR-007 as superseded by ADR-010).
@@ -135,18 +141,38 @@ that proves the 100 LLM rubric points within a strict cost envelope.
   egress allow-list. Proof is three negative demonstrations from inside an agent
   pod.
 - Ansible is mandatory, not a stretch item: a role-based playbook configures the
-  rented evidence host (Docker, `k3d`, kubeconfig, benchmark client), proves
+  disposable evidence VM used to administer the GKE evidence plane, proves
   health, and reports `changed=0` on a second run.
 - The ML drift-to-retraining closure path (Airflow -> Feast offline ->
   Evidently -> Pushgateway -> threshold -> Kubeflow Pipelines API run) is
   deferred with the ML track and is not claimed in this submission.
+
+## 7.2 Current implementation and submission state
+
+The complete product/evidence path is implemented and has been live-verified
+on the GKE evidence plane as of 2026-08-13:
+
+- 13/13 Argo CD applications are `Synced` and `Healthy`.
+- kagent CRDs are established and 10 agents report `Ready`.
+- The feature/drift MCP path, agentgateway model route, and
+  KServe/Knative CPU model server respond through the declared boundaries.
+- The coordinator round-trip returns HTTP 200 with feature and drift
+  citations; Prometheus targets are healthy and Jaeger services are visible.
+- The product plane has authenticated analyst/report, registry, chat, and
+  evidence-session surfaces covered by product/browser checks.
+
+This is a runtime verification snapshot, not the final submission seal. The
+canonical Phase 2 evidence package represents 60/60 LLM rows and 100/100
+logical points, but source and GitOps SHA stamps must be regenerated after the
+latest commits and the strict two-repository audit must pass without an
+acceptance cut before submission.
 
 ## 7. Implementation Model
 
 ```text
 Phase 2 code -> source CI (test/build/scan/sign) -> immutable image digest
   -> GitOps repo PR (desired digest) -> Argo CD reconcile -> evidence plane
-Product plane <-> Supabase <-> evidence-session worker <-> outbox <-> k3d cluster
+Product plane <-> Supabase <-> evidence-session worker <-> outbox <-> GKE cluster
 ```
 
 Full step-by-step execution is in
@@ -164,8 +190,11 @@ at specification time and, with `--require-executed --run-validations
 
 ## 9. Exit Criteria
 
-- All 100 ML + 100 LLM rubric points have machine-checked evidence (linter
-  `--require-executed` passes, phase-08).
+- The submitted LLM rows have machine-checked evidence and the final strict
+  two-repository linter (`--require-executed --run-validations --track LLM`)
+  passes without `--accept-design-only`; the 57 ML rows remain visibly
+  `design_only`. At this documentation refresh, this freeze criterion is
+  still pending SHA restamping.
 - Phase 1 regression suite stays green; `docs/mini_coursework.md` semantics
   unchanged.
 - Two-plane architecture runs within the cost envelope.
