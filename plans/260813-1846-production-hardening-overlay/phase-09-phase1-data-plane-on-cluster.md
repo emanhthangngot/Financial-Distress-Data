@@ -7,7 +7,7 @@ effort: "2d"
 dependencies: [6, 7]
 ---
 
-> **CANCELLED 2026-08-14 (user decision, ML track dropped).** No LLM rubric row requires Phase 1 containerised onto the shared cluster (measured 2026-08-14). Closed only ML rows (~6 pts). `infra/phase1-cluster/` (untracked, never wired into any active workflow) is archived as-is.
+> **CANCELLED 2026-08-14 (user decision, ML track dropped).** No LLM rubric row requires Phase 1 containerised onto the shared cluster (measured 2026-08-14). Closed only ML rows (~6 pts). `infra/phase1-cluster/` (was untracked, never wired into any active workflow) is now committed as-is in the ML-scaffolding archive commit.
 > Body below is kept as the historical record of what was planned/built; nothing further is executed against it. See `plan.md` Overview.
 
 # Phase 9: Phase 1 data plane onto the cluster

@@ -103,9 +103,9 @@ make validate
 ## Success Criteria
 
 - [x] `validate-gitops.sh` -> run on the current GitOps `main` -> exits 0
-- [ ] `validate-gitops.sh` -> given a manifest with a tag-based image reference -> fails naming the file and the reference
-- [ ] `validate-gitops.sh` -> given a staged private key -> fails on the secret pattern
-- [ ] GitOps CI workflow -> opened PR -> runs and blocks merge on failure
+- [ ] `validate-gitops.sh` -> given a manifest with a tag-based image reference -> fails naming the file and the reference — digest-pin check logic exists (`scripts/validate-gitops.sh:162-177`) but not exercised against a crafted bad manifest this session
+- [ ] `validate-gitops.sh` -> given a staged private key -> fails on the secret pattern — secret-shaped grep exists (`scripts/validate-gitops.sh:188-213`) but not exercised against a crafted secret this session
+- [ ] GitOps CI workflow -> opened PR -> runs and blocks merge on failure — `.github/workflows/validate-gitops.yml` committed and passes locally; no PR was opened to prove it blocks on failure
 - [x] `run_phase2_quality_gates.py --gitops-root ...` -> single command -> covers both repos
 - [x] Strict `--track LLM` gate -> unchanged PASS 100/100
 

@@ -370,12 +370,12 @@ grep -rn 'phase2' src configs infra docker-compose.yml .github/workflows   # exp
 
 ## Success Criteria
 
-- [ ] `baseline.md` records three green gate outputs and both repo HEAD SHAs
-- [ ] `PHASE1_PROTECTED` -> extended with the six Phase 1 packages plus two file-level exceptions -> gate re-run, current diff still clean
-- [ ] Pre-commit hook -> given a staged edit to `src/security/` -> refuses the commit
+- [x] `baseline.md` records three green gate outputs and both repo HEAD SHAs (records six: matrix, fast loop, compose, stage-1 evidence audit, ruff, black; both HEAD SHAs present)
+- [x] `PHASE1_PROTECTED` -> extended with the six Phase 1 packages plus two file-level exceptions -> gate re-run, current diff still clean (`scripts/audit_phase2_evidence.py:61-103` lists all six packages plus five file-level exceptions, more than the originally scoped two — `src/lakehouse/{catalog,tables,snapshots}.py` added for the additive lakehouse contracts; strict `--track LLM` gate passes clean on the current tree)
+- [x] Pre-commit hook -> given a staged edit to `src/security/` -> refuses the commit (live-tested 2026-08-14: staged edit to `src/security/secrets.py`, `bash .githooks/pre-commit` exits 1 with `staged edit touches Phase 1 protected path`; edit discarded, not committed. No automated test file covers it — hook behaviour, not Python)
 - [x] `--check-artifacts` -> run against both repos -> FAILs on `executed` gaps, WARNs on `design_only`, lists exactly the missing set
 - [x] `--matrix-only --strict` -> run after the path fix -> passes, digests unchanged
-- [ ] `src/generators/` -> deleted -> `pytest tests` unchanged
+- [ ] `src/generators/` -> deleted -> `pytest tests` unchanged — no tracked `.py` source under `src/generators/` (was already untracked), but stale `__pycache__/*.pyc` entries still exist on disk; not confirmed as an intentional deletion action this pass
 - [x] `infra/phase2/{rag-pipeline,stream-feature-offline,stream-feature-online}` -> flattened to `infra/*` -> `docker compose config` valid, `configs/phase2-deployables.yaml` dockerfile paths updated
 - [ ] Tier 1 renames -> completed -> `grep -rn 'phase2' src configs infra docker-compose.yml .github/workflows` returns nothing
 - [ ] `pyproject.toml` -> declares the real runtime deps plus `ml`/`dev` extras -> `pip install -e ".[dev,ml]"` in a clean environment imports `src.ml.contracts` successfully

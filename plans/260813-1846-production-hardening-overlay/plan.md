@@ -123,7 +123,7 @@ No cloud quota needed for anything still in scope.
 | # | Phase | Effort | Depends on | Status |
 |---|-------|--------|-----------|--------|
 | 1 | [Repo unification, guardrails and baseline](./phase-01-start.md) | 3.5d | — | In progress — guardrails/artifact audit complete; infra flatten done this pass; remaining Tier 1 renames and dependency consolidation pending |
-| 2 | [GitOps repo validation gate](./phase-02-gitops-validation-gate.md) | 1.5d | 1 | In progress — validator and source wrapper complete; CI integration review pending |
+| 2 | [GitOps repo validation gate](./phase-02-gitops-validation-gate.md) | 1.5d | 1 | In progress — validator, source wrapper and `validate-gitops.yml` CI workflow committed and passing locally; live PR-blocking proof (tag-based image, staged secret) still pending |
 | 3 | ~~Supply chain: sign, attest, SBOM~~ | — | — | **Cancelled 2026-08-14 — ML-scoped, 0 LLM rubric hits.** See phase file |
 | 4 | ~~Quota raise and capacity gate~~ | — | — | **Cancelled 2026-08-14 — was only needed for phases 5-12.** See phase file |
 | 5 | ~~Kyverno admission and runtime policy~~ | — | — | **Cancelled 2026-08-14 — ML-scoped, 0 LLM rubric hits.** See phase file |
@@ -206,12 +206,12 @@ before and after any revert.
 
 ## Success Criteria
 
-- [ ] Strict two-repository auditor passes `--track LLM` at 100/100 on a committed, clean tree with correctly stamped `source_sha`/`gitops_sha` — a real run, not a projected one
-- [ ] `scripts/capture_phase2_evidence.py` regenerates the full LLM evidence set in one command
-- [ ] GitOps repo CI is green and blocks a tag-based (non-digest-pinned) image reference and a secret-bearing change
-- [ ] Zero `artifact_path` entries missing from disk for LLM rows
-- [ ] `infra/` has no `phase2` or `phase1-cluster` naming left in the paths still actively used by CI (flattened this pass)
-- [ ] ML-scoped artifacts (apps, DAGs, ADRs, GitOps manifests) are committed for reference, excluded from the deployable catalog and active CI, and do not appear in any strict-gate failure
+- [x] Strict two-repository auditor passes `--track LLM` at 100/100 on a committed, clean tree with correctly stamped `source_sha`/`gitops_sha` — a real run, not a projected one (`scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 --gitops-root ../financial-distress-gitops --ml 100 --llm 100` -> exit 0, "Phase 2 rubric matrix is complete and consistent"; both trees confirmed clean via `git status --porcelain=v1 --untracked-files=all`)
+- [ ] `scripts/capture_phase2_evidence.py` regenerates the full LLM evidence set in one command — script exists and its config was trimmed to LLM-only sections this pass, but a full regeneration run has not been executed/verified in this session
+- [ ] GitOps repo CI is green and blocks a tag-based (non-digest-pinned) image reference and a secret-bearing change — `validate-gitops.yml` and the digest/secret checks in `validate-gitops.sh` exist and pass on current `main`, but no PR was opened to prove the negative case blocks a merge
+- [x] Zero `artifact_path` entries missing from disk for LLM rows (`--check-artifacts` PASS, zero missing; confirmed again by the 100/100 strict run above)
+- [ ] `infra/` has no `phase2` or `phase1-cluster` naming left in the paths still actively used by CI — partially true: the three service directories were flattened (`infra/rag-pipeline/`, `infra/stream-feature-{online,offline}/`), but `docker-compose.yml` still declares `phase2-redis`/`phase2-postgres`/`phase2-pgdata` (Tier 1 rename step 10, not yet done) and `infra/phase1-cluster/` still exists as the archived, un-flattened ML directory — `grep -rn 'phase2' infra docker-compose.yml` still returns hits
+- [x] ML-scoped artifacts (apps, DAGs, ADRs, GitOps manifests) are committed for reference, excluded from the deployable catalog and active CI, and do not appear in any strict-gate failure (`configs/phase2-deployables.yaml` has no `feature-api`/`drift-api` entries; the 9 dangling ML rubric rows are `design_only` warnings, never errors, per code-reviewer report and the passing strict LLM run)
 
 ## Open questions
 
