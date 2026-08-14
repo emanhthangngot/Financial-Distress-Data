@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { AnalystShell } from "@/components/shell/analyst-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { DenialAction } from "@/components/ui/denial-action";
 import { RiskBadge } from "@/components/ui/risk-badge";
 import { EmptyState, StatePanel } from "@/components/ui/state-panel";
 import type { AssistantContext } from "@/lib/assistant/assistant-context";
@@ -64,11 +65,7 @@ export default async function ReportsPage() {
           <StatePanel
             copy={copy ?? LOADING_COPY.report}
             tone={isFailureState(result) ? "critical" : "neutral"}
-            action={
-              <ButtonLink href="/companies" variant="secondary">
-                Về danh sách doanh nghiệp
-              </ButtonLink>
-            }
+            action={<DenialAction state={result.state} context={context} reloadHref="/companies" />}
           />
         ) : (
           <Card>

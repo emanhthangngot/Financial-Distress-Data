@@ -19,7 +19,7 @@ const baseURL = `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: /live-smoke\.spec\.ts/,
+  testMatch: /(live-smoke|auth-lifecycle)\.spec\.ts/,
   outputDir: "./e2e/.artifacts",
   retries: 0,
   reporter: [["list"]],

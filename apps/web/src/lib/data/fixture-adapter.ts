@@ -21,6 +21,7 @@ import {
 } from "@distresslens/contracts";
 import {
   ASSISTANT_STATE_COPY,
+  ROUTE_FORBIDDEN_GUEST_COPY,
   ROUTE_STATE_COPY,
   type ProductRoute,
 } from "../states/route-states";
@@ -88,8 +89,15 @@ export function assistantCopyFor(state: keyof typeof ASSISTANT_STATE_COPY) {
   return copy;
 }
 
-export function denied<T>(route: ProductRoute): ViewState<T> {
-  return { state: "forbidden", copy: copyFor(route, "forbidden"), data: null };
+/**
+ * `guestUserId` distinguishes an anonymous caller from a signed-in caller
+ * whose role does not permit the action -- the two get different copy (see
+ * `ROUTE_FORBIDDEN_GUEST_COPY`), because only one of them is actually
+ * forbidden; the other has simply not signed in yet.
+ */
+export function denied<T>(route: ProductRoute, guestUserId?: string | null): ViewState<T> {
+  const copy = guestUserId === null ? (ROUTE_FORBIDDEN_GUEST_COPY[route] ?? copyFor(route, "forbidden")) : copyFor(route, "forbidden");
+  return { state: "forbidden", copy, data: null };
 }
 
 export function guard<T>(
@@ -99,7 +107,7 @@ export function guard<T>(
 ): ViewState<T> | null {
   return authorize({ role: context.role, aal: context.aal }, action).allowed
     ? null
-    : denied<T>(route);
+    : denied<T>(route, context.userId);
 }
 
 function fixtureSession(planeReady: boolean): EvidenceSessionView {

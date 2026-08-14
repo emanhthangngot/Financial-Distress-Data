@@ -1,8 +1,8 @@
 import type { AgentRegistryView } from "@distresslens/contracts";
 import { AgentRegistryList } from "@/components/ops/agent-registry-list";
 import { AdminShell } from "@/components/shell/admin-shell";
-import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { DenialAction } from "@/components/ui/denial-action";
 import { StatePanel } from "@/components/ui/state-panel";
 import { getDataPort } from "@/lib/data";
 import { resolveSession } from "@/lib/server/session";
@@ -59,11 +59,7 @@ export default async function AgentRegistryPage() {
           <StatePanel
             copy={copy ?? LOADING_COPY.registry}
             tone={isFailureState(result) ? "critical" : "neutral"}
-            action={
-              <ButtonLink href="/ops/evidence" variant="secondary">
-                Về trung tâm vận hành
-              </ButtonLink>
-            }
+            action={<DenialAction state={result.state} context={context} reloadHref="/ops/evidence" />}
           />
         ) : (
           <>

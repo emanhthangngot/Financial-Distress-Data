@@ -14,8 +14,8 @@ import { SessionStateTimeline } from "@/components/ops/session-state-timeline";
 import { AdminShell } from "@/components/shell/admin-shell";
 import { ExternalLinkIcon } from "@/components/shell/icons";
 import { PlaneStatusRow } from "@/components/shell/plane-status";
-import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { DenialAction } from "@/components/ui/denial-action";
 import { StatePanel } from "@/components/ui/state-panel";
 import { getDataPort } from "@/lib/data";
 import { LIVE_FIXTURE_PROVENANCE } from "@/lib/data/fixtures/provenance-fixtures";
@@ -107,11 +107,7 @@ export default async function OpsEvidencePage() {
           <StatePanel
             copy={copy ?? LOADING_COPY.ops}
             tone={isFailureState(result) ? "critical" : "neutral"}
-            action={
-              <ButtonLink href="/ops/evidence" variant="secondary">
-                Tải lại bảng điều khiển
-              </ButtonLink>
-            }
+            action={<DenialAction state={result.state} context={context} reloadHref="/ops/evidence" />}
           />
         ) : (
           <>

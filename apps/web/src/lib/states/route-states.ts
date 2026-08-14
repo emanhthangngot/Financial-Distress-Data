@@ -171,6 +171,54 @@ export const ROUTE_STATE_COPY: RouteStateCatalog = {
 };
 
 /**
+ * Guest-specific override of a route's "forbidden" copy.
+ *
+ * A signed-out visitor is not forbidden, they are anonymous -- denying them
+ * with the same "not permitted" copy shown to a signed-in user with the wrong
+ * role reads as a permanent wall instead of an invitation to sign in. Only
+ * routes that a guest can reach at all need an entry here: `/` already writes
+ * guest-oriented copy directly into its `forbidden` state (a guest is the only
+ * caller `/` ever denies), so it has no override.
+ */
+export const ROUTE_FORBIDDEN_GUEST_COPY: Partial<Record<ProductRoute, StateCopy>> = {
+  "/companies": {
+    unavailable: "Đăng nhập để tra cứu doanh nghiệp.",
+    lastKnown: null,
+    nextAction: "Đăng nhập bằng tài khoản phân tích để xem danh mục rủi ro.",
+  },
+  "/companies/[ticker]": {
+    unavailable: "Đăng nhập để xem hồ sơ rủi ro của doanh nghiệp này.",
+    lastKnown: null,
+    nextAction: "Đăng nhập bằng tài khoản phân tích để xem chi tiết.",
+  },
+  "/compare": {
+    unavailable: "Đăng nhập để so sánh phiên bản mô hình.",
+    lastKnown: null,
+    nextAction: "Đăng nhập bằng tài khoản phân tích để xem so sánh.",
+  },
+  "/reports": {
+    unavailable: "Đăng nhập để xem báo cáo đã lưu.",
+    lastKnown: null,
+    nextAction: "Đăng nhập bằng tài khoản phân tích để xem báo cáo của bạn.",
+  },
+  "/reports/[id]": {
+    unavailable: "Đăng nhập để mở báo cáo này.",
+    lastKnown: null,
+    nextAction: "Đăng nhập bằng tài khoản phân tích để tiếp tục.",
+  },
+  "/agents/registry": {
+    unavailable: "Đăng nhập để xem sổ đăng ký agent.",
+    lastKnown: null,
+    nextAction: "Đăng nhập bằng tài khoản vai trò nền tảng để tiếp tục.",
+  },
+  "/ops/evidence": {
+    unavailable: "Đăng nhập để vào trung tâm vận hành.",
+    lastKnown: null,
+    nextAction: "Đăng nhập bằng tài khoản vai trò nền tảng để tiếp tục.",
+  },
+};
+
+/**
  * The analysis assistant is a floating surface available on every route rather
  * than a destination of its own, so its states live outside the route catalog.
  * It still owes the reader the same three answers as any route state.

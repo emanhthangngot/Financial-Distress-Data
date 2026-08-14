@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/dashboard/page-header";
 import { AnalystShell } from "@/components/shell/analyst-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { DenialAction } from "@/components/ui/denial-action";
 import { StatePanel } from "@/components/ui/state-panel";
 import type { AssistantContext } from "@/lib/assistant/assistant-context";
 import { getDataPort } from "@/lib/data";
@@ -76,11 +77,7 @@ export default async function CompaniesPage({
           <StatePanel
             copy={copy ?? LOADING_COPY.companies}
             tone={isFailureState(result) ? "critical" : "neutral"}
-            action={
-              <ButtonLink href="/companies" variant="secondary">
-                Tải lại danh sách
-              </ButtonLink>
-            }
+            action={<DenialAction state={result.state} context={context} reloadHref="/companies" />}
           />
         ) : (
           <>

@@ -102,9 +102,11 @@ to match pixels.
 
 - Left navigation: Overview, Companies, Watchlist, AI Analysis, Reports,
   Settings and Sign out; the active item is visibly selected and keyboard
-  reachable.
+  reachable. A guest sees only Overview -- every other destination denies an
+  unauthenticated caller, so the rail does not offer a dead click.
 - Header: DistressLens identity, global company/ticker search, last-data or
-  freshness timestamp, plane status, notifications and authenticated user menu.
+  freshness timestamp, plane status, notifications and the authenticated user
+  menu -- or, for a guest, a sign-in/sign-up control pair in its place.
 - Content: one clear page title, one primary action, cards/tables/charts with
   explicit units, source/freshness labels and a persistent educational
   non-investment disclaimer.
@@ -114,14 +116,39 @@ to match pixels.
 
 ### Authentication boundary
 
-- Supabase password sign-in is the only supported account flow; accounts are
-  provisioned out of band. The product intentionally exposes no sign-up,
-  password-reset or account-management routes or controls.
-- Sign out is a same-origin `GET /sign-out` link for client-bundle-independent
-  shell operation. It deletes the `sb-access-token` cookie and redirects to
-  `/sign-in`; this clears the browser session cookie but does not by itself
-  revoke the upstream Supabase token. A future POST-based logout must add CSRF
-  protection and define an explicit revocation contract.
+- Sign-up is open (`/sign-up`); a new account always gets the `analyst` role
+  through `handle_new_user()`
+  (`supabase/migrations/20260814200000_phase2_profile_identity.sql`), never
+  a client-supplied value. Password reset and OAuth providers remain out of
+  scope. The configured Supabase project requires email confirmation before
+  a new account can sign in (`GET /auth/v1/settings` ->
+  `mailer_autoconfirm: false`); `/sign-up` shows a "check your email" state
+  in that case instead of redirecting in.
+- A signed-in session survives access-token expiry: `middleware.ts` rotates
+  the access/refresh cookie pair ahead of page render and fails open to the
+  guest state on any rotation error, so a rotation bug degrades to
+  "signed out," never a site-wide 500.
+- A guest (`role === null`) is rendered as a guest everywhere -- no analyst
+  chrome, no fabricated role -- and every denial a guest hits offers a
+  sign-in call to action instead of a bare "not permitted" message
+  (`ROUTE_FORBIDDEN_GUEST_COPY` in `apps/web/src/lib/states/route-states.ts`).
+- Profile switching is a real sign-out followed by a real sign-in to a
+  different account, listed from `DISTRESSLENS_DEMO_ACCOUNTS`
+  (`apps/web/src/lib/server/demo-accounts.ts`) -- there is no impersonation
+  path and no client ever holds another account's credential.
+- Sign out (`GET /sign-out`) clears both session cookies and calls
+  `auth.signOut()` with the caller's token, revoking the refresh token
+  upstream rather than only forgetting it in the browser. It accepts a
+  same-origin-validated `?next=` so the profile switcher can land back on
+  `/sign-in` with the next account's email prefilled.
+- The rail's sign-out link is rendered with `prefetch={false}`
+  (`components/shell/nav-rail.tsx`). `GET /sign-out` has a side effect, and
+  `next/link` prefetches every link it renders by default; prefetching it
+  would have signed a visitor out the moment the link scrolled into view,
+  never on an actual click.
+- A signed-in user can rename themselves (`display_name` only); `role` is not
+  reachable through that write path (owner-only column grant, see
+  `docs/phase2/security/rbac.md`).
 
 ### Company and AI analysis components
 

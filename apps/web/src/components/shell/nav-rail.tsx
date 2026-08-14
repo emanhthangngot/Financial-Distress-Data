@@ -69,6 +69,13 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   return (
     <Link
       href={item.href}
+      // `/sign-out` is a GET route with a side effect (it clears both
+      // session cookies and revokes the Supabase session). next/link
+      // prefetches every link it renders by default, and a prefetch to a
+      // route handler actually invokes its GET -- prefetching this one would
+      // silently sign the visitor out the moment the rail renders it into
+      // view, never on an actual click. No other item here has that hazard.
+      prefetch={item.href === "/sign-out" ? false : undefined}
       aria-current={active ? "page" : undefined}
       className={[
         "tap-target relative flex items-center gap-3 rounded-md px-3 py-2 text-[14px]",

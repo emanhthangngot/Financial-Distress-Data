@@ -35,6 +35,18 @@ export type AuthorizationDecision =
  */
 const AAL2_EXEMPT_ACTIONS: readonly SessionAction[] = ["session.read", "analyst.query"];
 
+/**
+ * Demo-environment downgrade: this deployment has no MFA enrollment path, so
+ * step-up cannot be satisfied and gating on it only locks operators out.
+ * Mirrors `meets_step_up()` in
+ * `supabase/migrations/20260814200100_phase2_step_up_relaxation.sql` -- the
+ * two must flip together or the app and the database disagree about who is
+ * privileged. `AAL2_REQUIRED` stays in the denial union: the code path is
+ * dormant, not deleted, so restoring real step-up is a one-line revert here
+ * plus the DB migration's rollback.
+ */
+export const STEP_UP_REQUIRED = false;
+
 export function authorize(
   context: AuthorizationContext,
   action: SessionAction,
@@ -58,6 +70,7 @@ export function authorize(
   }
 
   if (
+    STEP_UP_REQUIRED &&
     isPrivilegedRole(context.role) &&
     !AAL2_EXEMPT_ACTIONS.includes(action) &&
     context.aal !== "aal2"

@@ -34,10 +34,12 @@ describe("authorize", () => {
     });
   });
 
-  it("denies a permitted mutation when the privileged session is only AAL1", () => {
+  it("allows a permitted mutation at AAL1 under the demo-environment step-up relaxation", () => {
+    // STEP_UP_REQUIRED = false mirrors meets_step_up() in the database: this
+    // deployment has no MFA enrollment path, so gating on AAL2 would only
+    // lock every privileged role out. See authorization.ts for the revert.
     const decision = authorize({ role: "platform_operator", aal: "aal1" }, "session.provision");
-    expect(decision.allowed).toBe(false);
-    expect(decision.allowed === false && decision.denial).toBe("AAL2_REQUIRED");
+    expect(decision.allowed).toBe(true);
   });
 
   it("allows privileged reads at AAL1 so the control room stays inspectable", () => {

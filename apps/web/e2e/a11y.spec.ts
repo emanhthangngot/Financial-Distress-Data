@@ -17,6 +17,8 @@ import { expect, test } from "@playwright/test";
 
 const ROUTES = [
   "/",
+  "/sign-in",
+  "/sign-up",
   "/companies",
   "/companies/NVL",
   "/compare?ticker=NVL",
