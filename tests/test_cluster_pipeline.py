@@ -9,6 +9,22 @@ import pytest
 from scripts import run_cluster_pipeline
 
 
+def test_gold_event_timestamp_is_written_as_timezone_aware_parquet_type() -> None:
+    import pyarrow.parquet as pq
+
+    import src.io.minio_writer as minio_writer
+
+    table = pq.read_table(
+        __import__("io").BytesIO(
+            minio_writer.rows_to_parquet_bytes(
+                [{"ticker": "NVL", "event_timestamp": "2026-01-01T00:00:00+00:00"}]
+            )
+        )
+    )
+
+    assert str(table.schema.field("event_timestamp").type) == "timestamp[us, tz=UTC]"
+
+
 def test_produce_gold_uses_configured_phase1_adapter_and_canonical_writer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
