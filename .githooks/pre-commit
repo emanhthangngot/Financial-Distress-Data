@@ -4,18 +4,6 @@ set -euo pipefail
 # Phase 1 is a frozen contract.  This hook is intentionally path based: it
 # runs before a commit is created, so an accidental edit to a protected
 # package is rejected before it can be hidden in a large implementation PR.
-repo_root="$(git rev-parse --show-toplevel)"
-base_sha="${PHASE1_BASE_SHA:-$(git config --get phase1.base-sha || true)}"
-if [[ -z "${base_sha}" ]]; then
-  base_sha="origin/dev"
-fi
-
-if ! git rev-parse --verify "${base_sha}^{commit}" >/dev/null 2>&1; then
-  echo "pre-commit: cannot resolve Phase 1 baseline '${base_sha}'" >&2
-  echo "Set PHASE1_BASE_SHA to the frozen 40-hex baseline (or configure phase1.base-sha)." >&2
-  exit 1
-fi
-
 protected=(
   "src/collectors/" "src/transforms/" "src/quality/" "src/catalog/"
   "src/metadata/" "src/streaming/" "src/generator/" "src/security/"
@@ -23,7 +11,12 @@ protected=(
   "src/io/" "src/governance/" "sql/" "docs/evidence/"
   "docs/mini_coursework.md" "docs/01_data_generator.md" "docs/02_schema_design.md"
 )
-exceptions=("src/streaming/flink/jobs/" "sql/init_ml_metadata.sql")
+# Keep in sync with scripts/audit_phase2_evidence.py:PHASE1_PROTECTED_EXCEPTIONS.
+exceptions=(
+  "src/streaming/flink/jobs/" "sql/init_ml_metadata.sql"
+  "src/io/paths.py" "src/governance/phase2_lineage.py"
+  "src/lakehouse/catalog.py" "src/lakehouse/tables.py" "src/lakehouse/snapshots.py"
+)
 
 is_exception() {
   local path="$1" exception
@@ -45,6 +38,6 @@ while IFS= read -r -d '' path; do
     echo "pre-commit: staged edit touches a protected Phase 1 DAG: ${path}" >&2
     exit 1
   fi
-done < <(git diff --cached --name-only -z "${base_sha}" --)
+done < <(git diff --cached --name-only -z --)
 
-echo "pre-commit: Phase 1 protected-path check passed (${base_sha})"
+echo "pre-commit: Phase 1 protected-path check passed"

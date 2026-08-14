@@ -79,16 +79,18 @@ def build_digest_bump_patch(
     digest = validate_digest(digest)
     image = f"{repository}@{digest}"
     if target_type == "values":
-        updated, repo_count = re.subn(
-            r"(?m)^(\s*repository:\s*).*$", rf"\g<1>{repository}", text, count=1
-        )
-        updated, digest_count = re.subn(
-            r"(?m)^(\s*digest:\s*).*$", rf"\g<1>{digest}", updated, count=1
-        )
-        if repo_count != 1 or digest_count != 1:
+        repository_pattern = r"(?m)^(\s*repository:\s*).*$"
+        digest_pattern = r"(?m)^(\s*digest:\s*).*$"
+        repo_matches = len(re.findall(repository_pattern, text))
+        digest_matches = len(re.findall(digest_pattern, text))
+        if repo_matches != 1 or digest_matches != 1:
             raise GitOpsPathError(
-                "values target must contain one image.repository and one image.digest"
+                "values target must contain exactly one image.repository and one "
+                f"image.digest (found {repo_matches} repository line(s), "
+                f"{digest_matches} digest line(s))"
             )
+        updated = re.sub(repository_pattern, rf"\g<1>{repository}", text, count=1)
+        updated = re.sub(digest_pattern, rf"\g<1>{digest}", updated, count=1)
         return updated
     if target_type != "manifest":
         raise GitOpsPathError(f"unsupported GitOps target type: {target_type!r}")
