@@ -63,7 +63,7 @@ Also still reachable, not absorbed by a narrative doc: [`docs/idea.md`](../../id
 ## Related
 
 - [Docs style contract](../../docs-style-contract.md)
-- LLM-track submission index: `docs/submission/rubric-final-coursework-(final-llm)/README.md` (not linked — directory name contains parentheses that break the doc-gate's link regex)
+- [LLM-track submission index](<../rubric-final-coursework-(final-llm)/README.md>)
 - [ML-track deferred index](../ml-track-deferred.md)
 - [Mini-coursework spec (authority)](../../mini_coursework.md)
-- Rubric points sheet: `docs/Coursework Tracking (Public) - rubic (mini-coursework).csv` (not linked — filename contains parentheses/spaces that break the doc-gate's link regex)
+- [Rubric points sheet](<../../Coursework Tracking (Public) - rubic (mini-coursework).csv>)

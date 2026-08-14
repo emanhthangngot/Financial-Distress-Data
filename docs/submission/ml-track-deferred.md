@@ -7,10 +7,8 @@ status: active
 # ML Track: an accepted scope decision, not a shortfall
 
 This submission's accepted scope is the **LLM track — 60 rubric rows, 100
-points, fully covered** (see
-`docs/submission/rubric-final-coursework-(final-llm)/README.md` — not linked
-here, its directory name contains parentheses that break the doc-gate's link
-regex).
+points, fully covered** (see the
+[LLM-track submission index](<rubric-final-coursework-(final-llm)/README.md>)).
 The ML track (57 rows across 18 sections, also summing to 100 points in
 `docs/phase2/rubric-matrix.csv`) is **deferred by decision**, not by
 oversight: every ML row's `evidence_type` in the rubric matrix is
@@ -62,5 +60,5 @@ a scope this plan does not claim.
 ## References
 
 - [ADR-010: LLM-only scope and platform simplification](../phase2/adr/adr-010-llm-only-scope-and-platform-simplification.md)
-- LLM-track submission index: `docs/submission/rubric-final-coursework-(final-llm)/README.md` (not linked — same regex limitation)
+- [LLM-track submission index](<rubric-final-coursework-(final-llm)/README.md>)
 - [Rubric matrix (machine-readable source of truth)](../phase2/rubric-matrix.csv)

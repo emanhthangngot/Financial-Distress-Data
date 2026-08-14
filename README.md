@@ -87,49 +87,47 @@ Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is add
 
 Three reviewer index tables, each row linking to a full narrative doc with real code quotes, image proofs, and honest limitations (skeleton fixed in [`docs/docs-style-contract.md`](docs/docs-style-contract.md)):
 
-**LLM track — 60/60 rows, 100/100 points, full index at `docs/submission/rubric-final-coursework-(final-llm)/README.md`:**
+**LLM track — 60/60 rows, 100/100 points, full index at [`rubric-final-coursework-(final-llm)/README.md`](<docs/submission/rubric-final-coursework-(final-llm)/README.md>):**
 
 | Area | Doc |
 |---|---|
-| LLM inference platform | `llm_inference_platform.md` |
-| Global model config | `global_model_config.md` |
-| Agent registry | `agent_registry.md` |
-| RAG | `rag.md` |
-| Web API — feature pull | `web_api_user_data.md` |
-| Web API — drift detection | `web_api_drift_detection.md` |
-| Agent understanding | `agent_understanding.md` |
-| Coordinator agent | `coordinator_agent.md` |
-| Agent warm-up | `agent_warm_up.md` |
-| CI/CD | `ci_cd.md` |
-| Routing & gateway | `routing_gateway.md` |
-| IaC | `iac.md` |
-| Observability | `observability.md` |
-| A/B testing | `ab_testing.md` |
-| Security | `security.md` |
-| Validation & verification | `validation_verification.md` |
-| Improve the data generator | `improve_data_generator.md` |
-| Repository design | `repository_design.md` |
-| Low-level design | `low_level_design.md` |
-| Novel ideas | `novel_ideas.md` |
-| Cost | `cost.md` |
+| LLM inference platform | [`llm_inference_platform.md`](<docs/submission/rubric-final-coursework-(final-llm)/llm_inference_platform.md>) |
+| Global model config | [`global_model_config.md`](<docs/submission/rubric-final-coursework-(final-llm)/global_model_config.md>) |
+| Agent registry | [`agent_registry.md`](<docs/submission/rubric-final-coursework-(final-llm)/agent_registry.md>) |
+| RAG | [`rag.md`](<docs/submission/rubric-final-coursework-(final-llm)/rag.md>) |
+| Web API — feature pull | [`web_api_user_data.md`](<docs/submission/rubric-final-coursework-(final-llm)/web_api_user_data.md>) |
+| Web API — drift detection | [`web_api_drift_detection.md`](<docs/submission/rubric-final-coursework-(final-llm)/web_api_drift_detection.md>) |
+| Agent understanding | [`agent_understanding.md`](<docs/submission/rubric-final-coursework-(final-llm)/agent_understanding.md>) |
+| Coordinator agent | [`coordinator_agent.md`](<docs/submission/rubric-final-coursework-(final-llm)/coordinator_agent.md>) |
+| Agent warm-up | [`agent_warm_up.md`](<docs/submission/rubric-final-coursework-(final-llm)/agent_warm_up.md>) |
+| CI/CD | [`ci_cd.md`](<docs/submission/rubric-final-coursework-(final-llm)/ci_cd.md>) |
+| Routing & gateway | [`routing_gateway.md`](<docs/submission/rubric-final-coursework-(final-llm)/routing_gateway.md>) |
+| IaC | [`iac.md`](<docs/submission/rubric-final-coursework-(final-llm)/iac.md>) |
+| Observability | [`observability.md`](<docs/submission/rubric-final-coursework-(final-llm)/observability.md>) |
+| A/B testing | [`ab_testing.md`](<docs/submission/rubric-final-coursework-(final-llm)/ab_testing.md>) |
+| Security | [`security.md`](<docs/submission/rubric-final-coursework-(final-llm)/security.md>) |
+| Validation & verification | [`validation_verification.md`](<docs/submission/rubric-final-coursework-(final-llm)/validation_verification.md>) |
+| Improve the data generator | [`improve_data_generator.md`](<docs/submission/rubric-final-coursework-(final-llm)/improve_data_generator.md>) |
+| Repository design | [`repository_design.md`](<docs/submission/rubric-final-coursework-(final-llm)/repository_design.md>) |
+| Low-level design | [`low_level_design.md`](<docs/submission/rubric-final-coursework-(final-llm)/low_level_design.md>) |
+| Novel ideas | [`novel_ideas.md`](<docs/submission/rubric-final-coursework-(final-llm)/novel_ideas.md>) |
+| Cost | [`cost.md`](<docs/submission/rubric-final-coursework-(final-llm)/cost.md>) |
 
-**Mini-coursework (Phase 1) — full index at `docs/submission/rubric-(mini-coursework)/README.md`:**
+**Mini-coursework (Phase 1) — full index at [`rubric-(mini-coursework)/README.md`](<docs/submission/rubric-(mini-coursework)/README.md>):**
 
 | Area | Doc |
 |---|---|
-| README business domain | `readme_business_domain.md` |
-| Engineering fundamentals | `engineering_fundamentals.md` |
-| Data generator | `data_generator.md` |
-| Processing jobs | `processing_jobs.md` |
-| Data storage | `data_storage.md` |
-| Data pipeline orchestration | `data_pipeline_orchestration.md` |
-| Data governance | `data_governance.md` |
-| Schema design | `schema_design.md` |
-| Novel ideas | `novel_ideas.md` |
+| README business domain | [`readme_business_domain.md`](<docs/submission/rubric-(mini-coursework)/readme_business_domain.md>) |
+| Engineering fundamentals | [`engineering_fundamentals.md`](<docs/submission/rubric-(mini-coursework)/engineering_fundamentals.md>) |
+| Data generator | [`data_generator.md`](<docs/submission/rubric-(mini-coursework)/data_generator.md>) |
+| Processing jobs | [`processing_jobs.md`](<docs/submission/rubric-(mini-coursework)/processing_jobs.md>) |
+| Data storage | [`data_storage.md`](<docs/submission/rubric-(mini-coursework)/data_storage.md>) |
+| Data pipeline orchestration | [`data_pipeline_orchestration.md`](<docs/submission/rubric-(mini-coursework)/data_pipeline_orchestration.md>) |
+| Data governance | [`data_governance.md`](<docs/submission/rubric-(mini-coursework)/data_governance.md>) |
+| Schema design | [`schema_design.md`](<docs/submission/rubric-(mini-coursework)/schema_design.md>) |
+| Novel ideas | [`novel_ideas.md`](<docs/submission/rubric-(mini-coursework)/novel_ideas.md>) |
 
-**ML track — deferred by accepted decision, full reasoning at `docs/submission/ml-track-deferred.md`:** 18 sections, 57 rows, 100 points, every row `design_only` with a concrete reason and a pointer to the nearest LLM-track equivalent where one exists.
-
-Directory names above contain parentheses and are intentionally not hyperlinked from this table — `check_documentation.py`'s link-gate regex breaks on `(...)` inside a path; open them directly from the tree.
+**ML track — deferred by accepted decision, full reasoning at [`ml-track-deferred.md`](docs/submission/ml-track-deferred.md):** 18 sections, 57 rows, 100 points, every row `design_only` with a concrete reason and a pointer to the nearest LLM-track equivalent where one exists.
 
 ## 🚀 Quickstart
 

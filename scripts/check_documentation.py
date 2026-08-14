@@ -8,7 +8,18 @@ import ast
 import re
 from pathlib import Path
 
-LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+# A link destination wrapped in angle brackets (CommonMark's escape for
+# spaces/parentheses in a path, e.g. `[x](<docs/a (b).md>)`) is matched by
+# the `angle` group; a bare destination falls back to `bare`, which stops at
+# the first `)` and therefore cannot itself contain unescaped parentheses.
+LINK_PATTERN = re.compile(r"\[[^\]]*\]\((?:<(?P<angle>[^>]+)>|(?P<bare>[^)]+))\)")
+
+
+def _iter_link_targets(text: str):
+    for match in LINK_PATTERN.finditer(text):
+        yield match.group("angle") or match.group("bare")
+
+
 SOURCE_SPEC_EXCEPTIONS = {"coursework.md", "mini_coursework.md"}
 DOCSTRING_ROOTS = (
     Path("src/evidence"),
@@ -27,14 +38,14 @@ def check_documentation(root: Path, max_lines: int) -> list[str]:
         line_count = len(path.read_text(encoding="utf-8").splitlines())
         if line_count > max_lines and path.name not in SOURCE_SPEC_EXCEPTIONS:
             errors.append(f"{relative}: exceeds {max_lines} lines ({line_count})")
-        for target in LINK_PATTERN.findall(path.read_text(encoding="utf-8")):
+        for target in _iter_link_targets(path.read_text(encoding="utf-8")):
             target = target.split("#", 1)[0]
             if not target or "://" in target or target.startswith("#"):
                 continue
             if not (path.parent / target).resolve().exists():
                 errors.append(f"{relative}: broken link {target}")
     for path in [root / "README.md"]:
-        for target in LINK_PATTERN.findall(path.read_text(encoding="utf-8")):
+        for target in _iter_link_targets(path.read_text(encoding="utf-8")):
             target = target.split("#", 1)[0]
             if target and not target.startswith("#") and "://" not in target:
                 if not (path.parent / target).resolve().exists():

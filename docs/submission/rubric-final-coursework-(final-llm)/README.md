@@ -99,7 +99,7 @@ accumulates before the docs that assume it:
 ## Related
 
 - [Docs style contract](../../docs-style-contract.md)
-- Mini-coursework rubric index: `docs/submission/rubric-(mini-coursework)/README.md` (not linked — directory name contains parentheses that break the doc-gate's link regex)
+- [Mini-coursework rubric index](<../rubric-(mini-coursework)/README.md>)
 - [ML-track deferred index](../ml-track-deferred.md)
 - [Canonical LLM evidence rows](../../phase2/evidence/llm/)
 - [Rubric matrix](../../phase2/rubric-matrix.csv)
