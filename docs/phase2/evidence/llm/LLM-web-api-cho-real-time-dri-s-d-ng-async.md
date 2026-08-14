@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-cho-real-time-dri-s-d-ng-async
 - execution_timestamp: 2026-08-10T05:09:00+00:00
-- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: FastAPI 0.141.1, httpx 0.28.1, Uvicorn 0.34.0
 - command: `.venv-phase2/bin/python -m pytest tests/phase2/apps/test_drift_api_and_mcp.py -q`

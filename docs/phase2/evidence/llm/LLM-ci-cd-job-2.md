@@ -8,7 +8,7 @@ a real push to `dev`, deploying `src/ml/feast/online_job.py`
 
 - rubric_id: LLM-ci-cd-job-2
 - execution_timestamp: 2026-08-09T06:41:12+00:00
-- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: financial-distress-data@94774e5, docker/build-push-action@v5, docker/login-action@v3, ghcr.io/emanhthangngot/financial-distress-data/stream-feature-online
 - command: `git push origin dev` (merge of PR #54) triggering `phase2-stream-feature-online.yaml` on the `push` event; workflow run watched via `gh run list --branch dev` and `gh run view <id> --json jobs`

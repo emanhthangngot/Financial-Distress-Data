@@ -7,7 +7,7 @@ separation (source repo for code/CI, private GitOps repo for deployed state).
 
 - rubric_id: LLM-repository-design-clean-code-clean-repo-demonstr
 - execution_timestamp: 2026-08-10T13:10:00+07:00
-- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: python 3.11
 - command: `pytest tests/phase2/verification/test_contract_implementations.py -v`

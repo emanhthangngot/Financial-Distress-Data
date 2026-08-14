@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-routing-gateway-service-coi-trace
 - execution_timestamp: 2026-08-12T01:31:51+00:00
-- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: Jaeger v2.20.0, feature-mcp `sha256:e2218e6d337b1dc1ec04a9a1e132969e9aa91c6adf034e91548a0d4e3d05b440`, opentelemetry-sdk 1.44.0
 - command: `curl -sS https://distresslens.duckdns.org/jaeger/api/traces/<trace-id>` through the gateway (basic-auth flag/credential supplied out of band); trace ID obtained from Jaeger's own `/api/traces?service=feature-mcp` search
