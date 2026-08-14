@@ -97,4 +97,3 @@ index-table diff (README vs Phase 4/5 indexes)   0 drift
   docs so retirement becomes possible? That edit is out of this plan's
   scope as written and touches Phase 1 spec authority — needs an explicit
   user decision, not an agent judgment call.
-</content>

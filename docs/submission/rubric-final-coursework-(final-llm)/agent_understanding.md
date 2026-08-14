@@ -62,4 +62,3 @@ honestly rather than swapped for a fixture value that would look better.
 ## References
 
 - MCP (Model Context Protocol): https://modelcontextprotocol.io/
-</content>

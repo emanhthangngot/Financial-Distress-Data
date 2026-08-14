@@ -86,4 +86,3 @@ property being proven, not a claim of exhaustive red-team coverage.
 
 - None external — both mechanisms are original to this codebase, built on
   standard dual-read/blue-green patterns.
-</content>

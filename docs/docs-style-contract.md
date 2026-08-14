@@ -165,4 +165,3 @@ with status `Programmed=True` and target `model-gateway-svc:8080`. This proves
 the route is live and accepted by the control plane. It does not prove any
 request actually completed successfully — see §6 for the round-trip capture.
 ```
-</content>

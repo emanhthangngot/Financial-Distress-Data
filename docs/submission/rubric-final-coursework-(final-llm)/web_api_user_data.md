@@ -129,4 +129,3 @@ here.
 
 - FastAPI: https://fastapi.tiangolo.com/
 - Feast: https://feast.dev/
-</content>

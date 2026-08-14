@@ -131,4 +131,3 @@ this gate blocks the commit, not a formality.
 2. Any checklist row still unresolved after this campaign is left as an
    explicit `gap` in this table, never invented.
 3. Commit: `docs(evidence): capture live tool screenshots for narrative docs`.
-</content>

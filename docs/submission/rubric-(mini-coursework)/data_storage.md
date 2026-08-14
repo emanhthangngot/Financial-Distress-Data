@@ -66,4 +66,3 @@ correctly, not a production-scale performance guarantee at billions of rows.
 ## References
 
 - DuckDB ART indexes: https://duckdb.org/docs/sql/indexes.html
-</content>

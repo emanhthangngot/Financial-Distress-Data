@@ -73,4 +73,3 @@ capacity constraint documented in `cost.md`, not a hidden operational detail.
 
 - Terraform Google provider: https://registry.terraform.io/providers/hashicorp/google/latest/docs
 - Ansible: https://docs.ansible.com/
-</content>

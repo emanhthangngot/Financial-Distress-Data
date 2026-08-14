@@ -65,4 +65,3 @@ data volume.
 ## References
 
 - Kimball SCD Type 2: standard dimensional-modeling technique
-</content>

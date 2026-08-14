@@ -117,4 +117,3 @@ scope boundary for this submission, not an undiscovered limit.
 ## References
 
 - OpenTelemetry Python: https://opentelemetry.io/docs/languages/python/
-</content>

@@ -50,4 +50,3 @@ full class-by-class design content.
 ## References
 
 - Canonical design document: `docs/phase2/low-level-design.md`
-</content>

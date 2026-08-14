@@ -90,4 +90,3 @@ per-replica-hour estimate, not a reconciled billing number.
 ## References
 
 - Kubernetes HPA and readiness probes: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/
-</content>

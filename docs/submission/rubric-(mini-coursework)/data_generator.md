@@ -103,4 +103,3 @@ reproducibility that doesn't hold across environments.
 ## References
 
 - None external — the generator is original to this codebase.
-</content>

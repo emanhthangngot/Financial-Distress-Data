@@ -189,4 +189,3 @@ see `ab_testing.md` for the separate, dedicated A/B testing capability.
 - llama.cpp server: https://github.com/ggml-org/llama.cpp
 - KServe: https://kserve.github.io/website/
 - agentgateway: https://agentgateway.dev/
-</content>

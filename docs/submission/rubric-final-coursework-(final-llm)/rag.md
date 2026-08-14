@@ -98,4 +98,3 @@ emit path itself is separately exercised against a fake client in
 ## References
 
 - pgvector: https://github.com/pgvector/pgvector
-</content>

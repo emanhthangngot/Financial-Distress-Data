@@ -64,4 +64,3 @@ a scope this plan does not claim.
 - [ADR-010: LLM-only scope and platform simplification](../phase2/adr/adr-010-llm-only-scope-and-platform-simplification.md)
 - LLM-track submission index: `docs/submission/rubric-final-coursework-(final-llm)/README.md` (not linked — same regex limitation)
 - [Rubric matrix (machine-readable source of truth)](../phase2/rubric-matrix.csv)
-</content>

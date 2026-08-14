@@ -69,4 +69,3 @@ constraint, not hidden from this doc.
 ## References
 
 - DataHub: https://datahubproject.io/docs/
-</content>

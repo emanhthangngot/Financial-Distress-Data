@@ -67,4 +67,3 @@ module in the repository follows an identical abstract-base-class pattern.
 ## References
 
 - Python `abc` module: https://docs.python.org/3/library/abc.html
-</content>

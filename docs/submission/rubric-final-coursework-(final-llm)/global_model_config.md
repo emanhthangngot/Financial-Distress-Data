@@ -58,4 +58,3 @@ would need real secret rotation, which this submission does not exercise.
 ## References
 
 - kagent ModelConfig CRD: https://kagent.dev/docs
-</content>

@@ -126,4 +126,3 @@ performance guarantee.
 
 - Apache Spark AQE: https://spark.apache.org/docs/latest/sql-performance-tuning.html
 - Apache Flink savepoints: https://nightlies.apache.org/flink/flink-docs-stable/docs/ops/state/savepoints/
-</content>

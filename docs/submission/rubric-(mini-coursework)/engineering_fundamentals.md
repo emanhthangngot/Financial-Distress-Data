@@ -63,4 +63,3 @@ disclosed as a known, deliberate boundary rather than an oversight.
 ## References
 
 - Docker multi-stage builds: https://docs.docker.com/build/building/multi-stage/
-</content>

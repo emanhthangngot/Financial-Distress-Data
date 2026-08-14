@@ -105,4 +105,3 @@ simulation mechanism itself.
 
 - FastAPI: https://fastapi.tiangolo.com/
 - Kubernetes HPA: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
-</content>

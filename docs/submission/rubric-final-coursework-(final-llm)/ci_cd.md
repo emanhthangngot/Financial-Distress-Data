@@ -39,8 +39,13 @@ $ git show origin/master:platform/agents/agent-deployments.yaml | grep drift-age
 image: ghcr.io/emanhthangngot/financial-distress-data/drift-agent@sha256:b29bdbf2c7859d28c3c8eea7fcda6df8a262014f37a664f077dfbc93e4ca7b47
 ```
 
-Full evidence: each row links to its own file under
-[`docs/phase2/evidence/llm/LLM-ci-cd-*.md`](../../phase2/evidence/llm/).
+Full evidence, one file per deployable:
+[`LLM-ci-cd-agent-l-m-coordinator.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-l-m-coordinator.md) (coordinator),
+[`LLM-ci-cd-agent-k-o-d-li-u.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-k-o-d-li-u.md) (feature-agent),
+[`LLM-ci-cd-agent-drift-detection.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-drift-detection.md) (drift-agent),
+[`LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md`](../../phase2/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md) (RAG pipeline),
+[`LLM-ci-cd-job-1.md`](../../phase2/evidence/llm/LLM-ci-cd-job-1.md) (stream-feature-offline),
+[`LLM-ci-cd-job-2.md`](../../phase2/evidence/llm/LLM-ci-cd-job-2.md) (stream-feature-online).
 
 ## Part II — Real bugs found and fixed while building the reusable template
 
@@ -83,4 +88,3 @@ hidden.
 
 - cosign: https://docs.sigstore.dev/cosign/overview/
 - GitHub Actions reusable workflows: https://docs.github.com/en/actions/using-workflows/reusing-workflows
-</content>

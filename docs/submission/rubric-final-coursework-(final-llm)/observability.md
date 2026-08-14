@@ -158,4 +158,3 @@ this evidence set.
 - Prometheus: https://prometheus.io/docs/
 - Jaeger: https://www.jaegertracing.io/docs/
 - Grafana Loki: https://grafana.com/docs/loki/
-</content>

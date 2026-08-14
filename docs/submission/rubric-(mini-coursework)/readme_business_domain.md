@@ -78,4 +78,3 @@ authoritative text.
 ## References
 
 - Mermaid flowchart syntax: https://mermaid.js.org/syntax/flowchart.html
-</content>

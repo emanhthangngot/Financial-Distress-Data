@@ -136,4 +136,3 @@ route. Both are named explicitly in their evidence rows.
 ## References
 
 - NGINX Ingress Controller: https://kubernetes.github.io/ingress-nginx/
-</content>

@@ -67,4 +67,3 @@ rollout state only, not a rollback drill.
 ## References
 
 - Knative traffic splitting: https://knative.dev/docs/serving/traffic-management/
-</content>

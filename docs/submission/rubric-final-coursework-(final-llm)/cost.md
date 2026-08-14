@@ -129,4 +129,3 @@ Kubernetes-request table is an explicit lower bound, not a live
 ## References
 
 - GCP free trial: https://cloud.google.com/free
-</content>

@@ -57,4 +57,3 @@ Recorded honestly rather than claimed as Vault-equivalent.
 ## References
 
 - Bitnami sealed-secrets: https://github.com/bitnami-labs/sealed-secrets
-</content>

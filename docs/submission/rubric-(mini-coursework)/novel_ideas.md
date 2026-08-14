@@ -97,4 +97,3 @@ correctly, not a live fetch through either handler.
 
 - Airbyte connector spec: https://docs.airbyte.com/connector-spec/
 - Singer taps: https://www.singer.io/
-</content>
