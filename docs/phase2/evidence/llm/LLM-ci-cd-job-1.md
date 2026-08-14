@@ -8,7 +8,7 @@ a real push to `dev`, deploying `src/ml/feast/offline_job.py`
 
 - rubric_id: LLM-ci-cd-job-1
 - execution_timestamp: 2026-08-09T06:41:12+00:00
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: financial-distress-data@94774e5, docker/build-push-action@v5, docker/login-action@v3, ghcr.io/emanhthangngot/financial-distress-data/stream-feature-offline
 - command: `git push origin dev` (merge of PR #54) triggering `phase2-stream-feature-offline.yaml` on the `push` event; workflow run watched via `gh run list --branch dev` and `gh run view <id> --json jobs`

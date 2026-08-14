@@ -7,7 +7,7 @@ Git, rather than the earlier five-line placeholder comment.
 
 - rubric_id: LLM-security-centralize-secret-management
 - execution_timestamp: 2026-08-10T00:52:33+00:00
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sealed-secrets-controller (Helm chart, `platform-security` Argo app), kubeseal-compatible encryption, GKE 1.35.6-gke.1250000
 - command: `kubectl apply -f platform/security/phase1-proof-sealed-secret.yaml` then `kubectl get secret phase1-sealed-secret-proof -n default -o jsonpath='{.data.proof-token}' | base64 -d`

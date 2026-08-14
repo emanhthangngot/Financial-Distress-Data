@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-novel-ideas-idea-2
 - execution_timestamp: 2026-08-11T08:52:37Z
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: Python 3.11; `CitationGuard`; pytest
 - command: `.venv-phase2/bin/python -m pytest -q tests/phase2/verification/test_llm_novel_ideas.py -k citation_guard`

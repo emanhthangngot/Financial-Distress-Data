@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-
 - execution_timestamp: 2026-08-12T01:31:51+00:00
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: feature-mcp `sha256:e2218e6d337b1dc1ec04a9a1e132969e9aa91c6adf034e91548a0d4e3d05b440`, Feast 0.65.0, nginx/nginx-ingress 5.5.4
 - command: `curl -sS -X POST https://distresslens.duckdns.org/v1/features/by-id -H "Content-Type: application/json" -d '{"user_id":"VNM","feature_names":["stream_market_features:last_price","stream_market_features:event_count_1h"]}'` (basic-auth flag and credential supplied out of band)

@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v
 - execution_timestamp: 2026-08-10T05:11:00+00:00
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: drift-agent runtime 1.0.0, MCP 1.29.0, HPA min 2 max 3
 - command: `kubectl exec sandbox-negative-probe -n agents-sandbox -- curl -fsS http://drift-agent.agents-sandbox.svc.cluster.local/readyz` and coordinator fan-out smoke

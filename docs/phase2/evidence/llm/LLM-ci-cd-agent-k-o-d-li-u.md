@@ -7,7 +7,7 @@ template end to end for the `feature-agent` deployable: build → cosign sign
 
 - rubric_id: LLM-ci-cd-agent-k-o-d-li-u
 - execution_timestamp: 2026-08-10T23:41:37+07:00
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/feature-agent
 - command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `phase2-agent-feature.yaml` on the `push` event (the merge diff touched `apps/feature-mcp/**`/`src/agents/**`, matching the workflow's path filter)

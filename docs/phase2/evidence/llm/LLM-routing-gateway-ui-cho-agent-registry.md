@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-routing-gateway-ui-cho-agent-registry
 - execution_timestamp: 2026-08-12T01:32:00+00:00
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: web `sha256:499464d53abba129d48f4e1cc8b4e32acc37d9404f616badbf0b5eba7e306ae3`, `live-registry-adapter.ts` (server-rendered)
 - command: `curl -sS https://distresslens.duckdns.org/agents/registry` (basic-auth flag and credential supplied out of band)

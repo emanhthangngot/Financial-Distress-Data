@@ -7,7 +7,7 @@ optimization — and produces a real before/after table.
 
 - rubric_id: LLM-a-llm-inference-platform--benchmark-model-server-and-opt
 - execution_timestamp: 2026-08-10T01:55:00+00:00
-- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
+- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: llama.cpp server b10331-7ba604f1c, Qwen2.5-0.5B-Instruct-GGUF (Q8_0 676MB / Q4_K_M 491MB)
 - command: `.venv-phase2/bin/python3 -c "from src.llm.benchmark import benchmark_model_server; benchmark_model_server('http://localhost:PORT', LABEL, concurrency=1, max_tokens=64)"` run against each revision's `-private` Service, port-forwarded in turn; `kubectl top pod --containers` captured server-side memory after each run
