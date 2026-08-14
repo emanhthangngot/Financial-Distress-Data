@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n
 - execution_timestamp: 2026-08-10T05:15:00+00:00
-- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: coordinator runtime 1.0.0, MAX_AGENT_HOPS=2, Qwen2.5 0.5B Q4_K_M
 - command: `kubectl exec sandbox-negative-probe -n agents-sandbox -- curl -fsS -X POST http://coordinator.agents-sandbox.svc.cluster.local/v1/run ...`

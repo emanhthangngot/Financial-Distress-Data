@@ -6,7 +6,7 @@ timestamp edges, API limits) against the Web API request/response contracts.
 
 - rubric_id: LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p
 - execution_timestamp: 2026-08-10T13:00:00+07:00
-- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: pytest 9.1.1, pydantic (repo-pinned)
 - command: `pytest tests/phase2/verification/test_equivalence_boundary.py -v`

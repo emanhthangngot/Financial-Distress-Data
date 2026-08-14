@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-observability-m-b-o-t-nh-t-c-c-metrics
 - execution_timestamp: 2026-08-12T08:34:08+00:00
-- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: coordinator/feature-agent/drift-agent and MCP images from the Phase 2 Artifact Registry digests; model=qwen2.5-0.5b-instruct; data=stream_market_features:last_price with synthetic market_stress rows AAA/BBB; embedding=not-used-by-this-runtime-path
 - command: start `kubectl -n agents-sandbox port-forward svc/coordinator 18080:80` and `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 19090:9090`; POST the nested `feature_request`/`drift_request` payload below to `http://127.0.0.1:18080/v1/run`, then query the listed PromQL expressions at `http://127.0.0.1:19090/api/v1/query`

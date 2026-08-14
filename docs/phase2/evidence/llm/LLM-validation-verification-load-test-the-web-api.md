@@ -7,7 +7,7 @@ p95 latency, throughput, error rate and concurrency.
 
 - rubric_id: LLM-validation-verification-load-test-the-web-api
 - execution_timestamp: 2026-08-10T23:19:36+07:00
-- source_sha: 08ed63b454a857dd355cb9f34f80c049209a396b
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: locust 2.46.3, nginx/nginx-ingress:5.5.4, feature-mcp@sha256:6bfb99fc834bf9a2cac78b9c59c5de259f9738cd9c61dcfe626e2da6e6cfd510
 - command: `locust -f tests/load/locustfile.py --headless --users 20 --spawn-rate 5 --run-time 90s --host https://distresslens.duckdns.org --html docs/phase2/evidence/llm/locust-report.html --csv docs/phase2/evidence/llm/locust`
