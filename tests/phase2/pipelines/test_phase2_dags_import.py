@@ -102,7 +102,7 @@ def test_every_phase2_dag_id_is_unique() -> None:
     assert len(ids) == len(set(ids))
 
 
-def test_expected_five_dag_files_present() -> None:
+def test_expected_phase2_dag_files_present() -> None:
     stems = {p.stem for p in PHASE2_DAG_FILES}
     assert stems == {
         "phase2_rag_ingest",
@@ -110,4 +110,6 @@ def test_expected_five_dag_files_present() -> None:
         "phase2_stream_feature_offline",
         "phase2_stream_feature_online",
         "phase2_label_drift_build",
+        "phase2_cdc_reconciliation",
+        "phase2_drift_monitoring",
     }
