@@ -6,7 +6,7 @@ canonical rubric CSV.
 
 - rubric_id: LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g
 - execution_timestamp: 2026-08-10T13:05:00+07:00
-- source_sha: 8adb668c68941be821cae879fac15db60853d96e
+- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: mutmut 3.3.1, pytest 9.1.1
 - command: `python scripts/run_phase5_mutation_gate.py`

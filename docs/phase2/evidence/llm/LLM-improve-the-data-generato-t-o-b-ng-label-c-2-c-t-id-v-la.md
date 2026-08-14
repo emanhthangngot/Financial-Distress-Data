@@ -9,7 +9,7 @@ publishes — so it joins to `company_financial_features`/
 
 - rubric_id: LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la
 - execution_timestamp: 2026-08-08T07:32:59+00:00
-- source_sha: 8adb668c68941be821cae879fac15db60853d96e
+- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: financial-distress-data@a82af7a, label_version=altman-z-v1
 - command: .venv/bin/python -c "from pathlib import Path; from src.generator.config import load_generator_config; from src.generator.offline import generate_offline_data; from src.ml.label_pipeline import build_labels, LABEL_VERSION, LABEL_SOURCE; cfg = load_generator_config(Path('configs/generator-config.yaml'), profile='ci'); offline = generate_offline_data(cfg); labels = build_labels(offline.financial_statements); print(f'label_version={LABEL_VERSION}'); print(f'label_source={LABEL_SOURCE}'); print(f'financial_statement_rows={len(offline.financial_statements)}'); print(f'label_rows={len(labels)}'); [print(f\"{r['ticker']} | {r['event_timestamp']} | {r['label']} | {r['training_eligible']}\") for r in labels[:8]]"

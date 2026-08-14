@@ -5,7 +5,7 @@ coverage gate, with visible fixture and mock usage.
 
 - rubric_id: LLM-validation-verification-validation-verification
 - execution_timestamp: 2026-08-10T13:00:00+07:00
-- source_sha: 8adb668c68941be821cae879fac15db60853d96e
+- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: coverage 7.15.4, pytest 9.1.1, unittest.mock (stdlib)
 - command: `python scripts/run_phase5_web_gate.py`

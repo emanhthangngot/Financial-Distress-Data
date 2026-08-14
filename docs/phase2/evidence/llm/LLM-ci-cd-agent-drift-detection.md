@@ -7,7 +7,7 @@ push immutable GHCR digest → open a GitOps PR rewriting the real
 
 - rubric_id: LLM-ci-cd-agent-drift-detection
 - execution_timestamp: 2026-08-10T23:41:40+07:00
-- source_sha: 8adb668c68941be821cae879fac15db60853d96e
+- source_sha: f59a5ef32c976eef88cb396f56f105305da4228f
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/drift-agent
 - command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `phase2-agent-drift.yaml` on the `push` event
