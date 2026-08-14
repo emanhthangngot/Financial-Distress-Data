@@ -1,0 +1,61 @@
+# Machine-readable capture contract.  Commands are argv-style strings and are
+# executed without a shell by scripts/capture_phase2_evidence.py.
+sections:
+  phase1:
+    claim: "Phase 1 protected-path and rubric contracts remain green."
+    command: "uv run --offline python scripts/audit_phase2_evidence.py --require-executed --track LLM --strict"
+    screenshot: false
+  phase2-tests:
+    claim: "The Phase 2 rubric-matrix contract tests pass in the local checkout."
+    command: "uv run --offline python -m pytest tests/phase2/test_rubric_matrix.py -q"
+    screenshot: false
+  phase2-matrix:
+    claim: "The canonical ML and LLM rubric matrix totals 100 points each."
+    command: "uv run --offline python scripts/audit_phase2_evidence.py --matrix-only --strict"
+    screenshot: false
+  phase2-quality-gates:
+    claim: "Source and GitOps Phase 2 quality gates pass with rendered manifests and tests."
+    command: "uv run --offline python scripts/run_phase2_quality_gates.py --gitops-root ../financial-distress-gitops"
+    screenshot: false
+  phase3-supply-chain:
+    claim: "Supply-chain verifier and immutable digest policy are available for registry runs."
+    command: "uv run --offline python scripts/verify_supply_chain.py --help"
+    screenshot: false
+  phase4-capacity:
+    claim: "Connected cluster capacity and node state are captured without mutation."
+    command: "kubectl get nodes -o wide"
+    screenshot: false
+  phase5-kyverno:
+    claim: "Kyverno policy reports and admission state are captured from the connected cluster."
+    command: "kubectl get clusterpolicy -A -o yaml"
+    screenshot: false
+  phase6-secrets-mesh:
+    claim: "External Secrets and Linkerd policy state are captured from the connected cluster."
+    command: "kubectl get externalsecret -A -o yaml"
+    screenshot: false
+  phase7-lakehouse:
+    claim: "Lakehouse catalog deployment state is captured from the connected cluster."
+    command: "kubectl get deployment lakekeeper -n phase2-data -o yaml"
+    screenshot: false
+  phase8-cdc:
+    claim: "CDC data-plane workload state is captured from the connected cluster."
+    command: "kubectl get pods -n phase1-data -o wide"
+    screenshot: false
+  phase9-phase1-plane:
+    claim: "Phase 1 data-plane resources and readiness are captured from the connected cluster."
+    command: "kubectl get all -n phase1-data"
+    screenshot: false
+  phase10-ml:
+    claim: "MLflow, training and drift workload state is captured from the connected cluster."
+    command: "kubectl get pods -n phase2-ml -o wide"
+    screenshot: false
+  phase11-rollouts:
+    claim: "Argo Rollouts and analysis resources are captured from the connected cluster."
+    command: "kubectl get rollouts,analysisruns -A -o yaml"
+    screenshot: true
+    screenshot_command: "uv run --offline python scripts/capture_rollout_evidence.py --rollout feature-api --namespace phase2-data --output {output_dir}/feature-api-rollout.json"
+  phase12-freeze:
+    claim: "Final evidence freeze captures all namespaces and declares the remaining live gaps."
+    command: "kubectl get pods -A -o wide"
+    screenshot: true
+    screenshot_command: "uv run --offline python scripts/capture_ui_screenshots.py --skip-airflow --skip-datahub --skip-flink --output {output_dir}/ui"
