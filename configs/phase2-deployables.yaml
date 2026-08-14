@@ -1,0 +1,114 @@
+# Source-of-truth metadata for the Phase 2 deployables.
+# The caller workflows remain compatible while they are migrated incrementally.
+#
+# ML-track entries (feature-api, drift-api) were removed 2026-08-14 — the LLM
+# submission does not need them and their zero-digest charts fail the strict
+# --require-real-digests gate with no GHCR write:packages token available.
+# Their source (apps/feature-api/, apps/drift-api/) is archived, not deleted;
+# see plans/260813-1846-production-hardening-overlay/plan.md Overview.
+version: 1
+deployables:
+  - name: stream-feature-offline
+    image_context: .
+    dockerfile: infra/stream-feature-offline/Dockerfile
+    test_selector: "tests/phase2/pipelines -k 'feast or ttl or stream'"
+    lint_paths:
+      - src/ml/feast/offline_job.py
+      - src/ml/feast/feature_definitions.py
+      - tests/phase2/pipelines/test_stream_feature_jobs.py
+    gitops_chart: charts/fastapi-service/Chart.yaml
+    gitops_values_path: platform/data/pipeline-deployments.yaml
+    gitops_target_type: manifest
+    gitops_target_kind: CronJob
+    gitops_target_selector: stream-feature-offline
+  - name: stream-feature-online
+    image_context: .
+    dockerfile: infra/stream-feature-online/Dockerfile
+    test_selector: "tests/phase2/pipelines -k 'feast or ttl or stream'"
+    lint_paths:
+      - src/ml/feast/online_job.py
+      - src/ml/feast/feature_definitions.py
+      - tests/phase2/pipelines/test_stream_feature_jobs.py
+    gitops_chart: charts/fastapi-service/Chart.yaml
+    gitops_values_path: platform/data/pipeline-deployments.yaml
+    gitops_target_type: manifest
+    gitops_target_kind: CronJob
+    gitops_target_selector: stream-feature-online
+  - name: rag-pipeline
+    image_context: .
+    dockerfile: infra/rag-pipeline/Dockerfile
+    test_selector: "tests/phase2/pipelines -k 'rag or governance'"
+    lint_paths:
+      - src/llm
+      - tests/phase2/pipelines/test_rag_chunking.py
+      - tests/phase2/pipelines/test_rag_dedup.py
+      - tests/phase2/pipelines/test_rag_metadata_contract.py
+      - tests/phase2/pipelines/test_data_governance.py
+    gitops_chart: charts/fastapi-service/Chart.yaml
+    gitops_values_path: platform/data/pipeline-deployments.yaml
+    gitops_target_type: manifest
+    gitops_target_kind: CronJob
+    gitops_target_selector: rag-pipeline
+  - name: feature-agent
+    image_context: .
+    dockerfile: apps/feature-mcp/Dockerfile
+    test_selector: "tests/phase2/agents tests/phase2/apps -k 'feature or agent'"
+    lint_paths:
+      - src/agents
+      - apps/feature-mcp/app
+      - tests/phase2/agents
+    gitops_chart: charts/feature-mcp/Chart.yaml
+    gitops_values_path: platform/agents/agent-deployments.yaml
+    gitops_target_type: manifest
+    gitops_target_kind: Deployment
+    gitops_target_selector: feature-agent
+  - name: drift-agent
+    image_context: .
+    dockerfile: apps/drift-mcp/Dockerfile
+    test_selector: "tests/phase2/agents tests/phase2/apps -k 'drift or agent'"
+    lint_paths:
+      - src/agents
+      - src/drift
+      - apps/drift-mcp/app
+      - tests/phase2/agents
+    gitops_chart: charts/drift-mcp/Chart.yaml
+    gitops_values_path: platform/agents/agent-deployments.yaml
+    gitops_target_type: manifest
+    gitops_target_kind: Deployment
+    gitops_target_selector: drift-agent
+  - name: coordinator
+    image_context: .
+    dockerfile: apps/feature-mcp/Dockerfile
+    test_selector: "tests/phase2/agents -k 'coordinator'"
+    lint_paths:
+      - src/agents
+      - tests/phase2/agents
+    gitops_chart: charts/feature-mcp/Chart.yaml
+    gitops_values_path: platform/agents/agent-deployments.yaml
+    gitops_target_type: manifest
+    gitops_target_kind: Deployment
+    gitops_target_selector: coordinator
+  - name: drift-mcp
+    image_context: .
+    dockerfile: apps/drift-mcp/Dockerfile
+    test_selector: "tests/phase2/apps -k 'drift_mcp'"
+    lint_paths:
+      - src/drift
+      - apps/drift-mcp/app
+      - tests/phase2/apps
+    gitops_chart: charts/drift-mcp/Chart.yaml
+    gitops_values_path: apps/dev/drift-mcp/values.yaml
+    gitops_target_type: values
+    gitops_target_kind: ""
+    gitops_target_selector: ""
+  - name: web
+    image_context: .
+    dockerfile: apps/web/Dockerfile
+    test_selector: "tests/phase2/verification -k 'web_api_adapters'"
+    lint_paths:
+      - tests/phase2/verification/test_web_api_adapters.py
+    gitops_chart: charts/web/Chart.yaml
+    gitops_values_path: apps/dev/web/values.yaml
+    gitops_target_type: values
+    gitops_target_kind: ""
+    gitops_target_selector: ""
