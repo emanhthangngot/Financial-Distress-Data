@@ -9,6 +9,22 @@ import pytest
 from scripts import run_cluster_pipeline
 
 
+def test_gold_event_timestamp_is_written_as_timezone_aware_parquet_type() -> None:
+    import pyarrow.parquet as pq
+
+    import src.io.minio_writer as minio_writer
+
+    table = pq.read_table(
+        __import__("io").BytesIO(
+            minio_writer.rows_to_parquet_bytes(
+                [{"ticker": "NVL", "event_timestamp": "2026-01-01T00:00:00+00:00"}]
+            )
+        )
+    )
+
+    assert str(table.schema.field("event_timestamp").type) == "timestamp[us, tz=UTC]"
+
+
 def test_produce_gold_uses_configured_phase1_adapter_and_canonical_writer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -96,6 +112,7 @@ def test_cluster_image_exposes_both_runtime_commands() -> None:
     assert 'CMD ["produce-gold"]' in dockerfile
     assert "COPY feature_repo ./feature_repo" in dockerfile
     assert "USER 65532:65532" in dockerfile
+    assert '"feast[aws,redis]==0.65.0"' in dockerfile
 
 
 def test_combined_command_materializes_only_after_gold_succeeds(
