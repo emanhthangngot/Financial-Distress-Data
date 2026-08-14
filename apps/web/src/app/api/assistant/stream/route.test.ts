@@ -262,7 +262,8 @@ describe("assistant stream route", () => {
       expected_direction: "increase",
       threshold: 0.1,
     });
-    process["env"]["DISTRESSLENS_COORDINATOR_FEATURE_NAMES"] = "company_features:risk_score";
+    process["env"]["DISTRESSLENS_COORDINATOR_FEATURE_NAMES"] =
+      "company_risk_features:z_score,company_risk_features:debt_to_asset";
     const fetchImpl = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -287,6 +288,10 @@ describe("assistant stream route", () => {
       expect.objectContaining({ method: "POST" }),
     );
     const coordinatorRequest = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body));
+    expect(coordinatorRequest.feature_request.feature_names).toEqual([
+      "company_risk_features:z_score",
+      "company_risk_features:debt_to_asset",
+    ]);
     expect(coordinatorRequest.drift_request.rows).toEqual([{ ticker: "NVL" }]);
     expect(frames).toEqual([
       { type: "state", state: "streaming", reason: null },
