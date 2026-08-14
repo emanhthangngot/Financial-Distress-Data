@@ -96,6 +96,7 @@ def test_cluster_image_exposes_both_runtime_commands() -> None:
     assert 'CMD ["produce-gold"]' in dockerfile
     assert "COPY feature_repo ./feature_repo" in dockerfile
     assert "USER 65532:65532" in dockerfile
+    assert '"feast[aws,redis]==0.65.0"' in dockerfile
 
 
 def test_combined_command_materializes_only_after_gold_succeeds(
