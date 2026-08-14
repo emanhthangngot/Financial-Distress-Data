@@ -24,7 +24,7 @@ jobs:
     uses: ./.github/workflows/phase2-ci.yaml
     with:
       deployables: >-
-        [{"name":"stream-feature-online","image_context":".","dockerfile":"infra/phase2/stream-feature-online/Dockerfile",
+        [{"name":"stream-feature-online","image_context":".","dockerfile":"infra/stream-feature-online/Dockerfile",
         "test_selector":"tests/phase2/pipelines -k 'feast or ttl or stream'",
         "lint_paths":"src/ml/feast/online_job.py src/ml/feast/feature_definitions.py tests/phase2/pipelines/test_stream_feature_jobs.py",
         "gitops_path":"platform/data/pipeline-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"CronJob","gitops_target_selector":"stream-feature-online"}]
