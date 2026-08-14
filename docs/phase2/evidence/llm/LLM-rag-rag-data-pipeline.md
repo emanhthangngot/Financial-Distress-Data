@@ -8,7 +8,7 @@ proving reprocessing an unchanged document writes zero new rows.
 
 - rubric_id: LLM-rag-rag-data-pipeline
 - execution_timestamp: 2026-08-08T09:38:46+00:00
-- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
+- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: financial-distress-data@5a5a40a, pgvector/pgvector:pg16, embedding_model=deterministic-hash-v1
 - command: `PHASE2_PG_DSN=postgresql://phase2:phase2@localhost:5433/ml_metadata .venv/bin/python -c "from src.llm.rag_pipeline import run_ingestion_task; print(run_ingestion_task())"` (run twice)
