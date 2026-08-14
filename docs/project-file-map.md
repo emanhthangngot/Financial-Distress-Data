@@ -670,3 +670,30 @@ Layer 3 entry point          README.md (rubric index tables -> Layer 2)
 
 **Chưa xoá file nào ở Phase 1** — bảng trên chỉ đánh dấu. Xoá thật diễn ra ở
 Phase 7 sau khi link được rewire và audit gate xanh lại.
+
+### Cập nhật Phase 7 (2026-08-14): retirement bị hoãn có chủ đích
+
+Inbound-link sweep cho thấy blast radius lớn hơn dự kiến ban đầu:
+
+- `docs/01_data_generator.md`, `docs/02_schema_design.md`, và các file
+  numbered khác được **`docs/mini_coursework.md` chính nó tham chiếu 5 lần**
+  — `mini_coursework.md` là Phase 1 spec authority, nằm trong "Don't Touch"
+  zone của `AGENTS.md`. Xoá các file này đòi hỏi sửa cả spec authority.
+- `docs/submission/{ci_cd,iac,observability,routing_gateway,security,
+  validation_verification,cost}.md` (bản flat cũ) vẫn được `docs/submission/
+  README.md` (index cũ, chưa động tới), `docs/system-architecture.md`, và
+  hàng chục file plan/report lịch sử tham chiếu.
+- Phần lớn inbound link còn lại nằm trong `plans/26072*/`, `plans/26080*/`,
+  `plans/26081*/` — các plan/report đã hoàn thành, là stateful history record
+  theo `~/.claude/rules/documentation-management.md` ("Plans, reports, and
+  audit results are stateful records. They do not become evergreen product
+  authority merely because a phase completed") — không nên rewrite lịch sử
+  chỉ để một retirement không bắt buộc đi qua.
+
+**Quyết định:** không xoá file nào trong phiên này. Layer 2 (docs mới dưới
+`docs/submission/rubric-*`) đã hoàn chỉnh, tự chứng minh, và không phụ thuộc
+vào các file cũ này — chúng chỉ còn dư thừa, không sai. Không có hại chức
+năng nào khi giữ lại (doc gate, evidence audit, quality gate đều xanh với
+chúng còn nguyên). Retirement thật sự cần một phiên riêng, phạm vi hẹp hơn:
+sửa `mini_coursework.md`'s reference trước (yêu cầu quyết định người dùng vì
+đây là spec authority), sau đó mới rewire phần còn lại.

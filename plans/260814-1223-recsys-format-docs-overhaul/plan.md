@@ -1,7 +1,7 @@
 ---
 title: "Reviewer-Facing Docs Overhaul in RecSys-MLops Format (LLM Track)"
 description: "Rebuild README, docs/ IA, architecture diagrams, and screenshot evidence in the itsmekhoathekid/RecSys-MLops presentation format, adapted to this repo's LLM track and improved beyond it."
-status: pending
+status: done-with-deferrals
 priority: P1
 effort: "5-7d"
 tags: [docs, evidence, phase2, llm, readme]
@@ -101,7 +101,7 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
 | 4 | [Phase 4: LLM-track narrative submission docs](./phase-04-llm-track-narrative-docs.md) | Done |
 | 5 | [Phase 5: Mini-coursework narrative docs and ML deferred index](./phase-05-mini-coursework-and-ml-index.md) | Done |
 | 6 | [Phase 6: Root README rebuild](./phase-06-root-readme-rebuild.md) | Done |
-| 7 | [Phase 7: Integrity gates, cleanup, and freeze](./phase-07-integrity-gates-and-cleanup.md) | Pending |
+| 7 | [Phase 7: Integrity gates, cleanup, and freeze](./phase-07-integrity-gates-and-cleanup.md) | Done, retirement deferred (see report) |
 
 Dependencies: 1 blocks all. 2 and 3 run in parallel after 1. 4 and 5 need 2+3.
 6 needs 3 (diagrams) and 4+5 (index tables it links). 7 needs everything.
