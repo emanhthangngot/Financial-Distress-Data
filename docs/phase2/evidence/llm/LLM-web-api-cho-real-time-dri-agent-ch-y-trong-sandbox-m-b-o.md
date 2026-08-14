@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o
 - execution_timestamp: 2026-08-10T05:12:00+00:00
-- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- source_sha: 8adb668c68941be821cae879fac15db60853d96e
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: restricted Pod Security, tokenless ServiceAccount, default-deny Calico policies
 - command: `kubectl get networkpolicy -n agents-sandbox` and the five negative commands executed from sandbox-negative-probe

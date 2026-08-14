@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v
 - execution_timestamp: 2026-08-10T05:05:00+00:00
-- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- source_sha: 8adb668c68941be821cae879fac15db60853d96e
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: feature-agent runtime 1.0.0, Qwen2.5 0.5B Q4_K_M, MCP 1.29.0
 - command: `kubectl exec sandbox-negative-probe -n agents-sandbox -- curl -fsS -X POST http://feature-agent.agents-sandbox.svc.cluster.local/v1/run ...`

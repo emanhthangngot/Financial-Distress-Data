@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-observability-collect-v-visualize-metrics-v-
 - execution_timestamp: 2026-08-12T01:32:57+00:00
-- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- source_sha: 8adb668c68941be821cae879fac15db60853d96e
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: kube-prometheus-stack 88.2.0 (Prometheus v3.13.2), Grafana (bundled), prometheus-client 0.24.1
 - command: (1) `curl http://127.0.0.1:19090/api/v1/targets` via `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus`; (2) Grafana login + its own datasource-proxy query for the same PromQL used by the `Phase 2 LLM observability` dashboard's "Web API request rate" panel

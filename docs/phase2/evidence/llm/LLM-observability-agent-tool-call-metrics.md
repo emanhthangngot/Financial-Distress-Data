@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-observability-agent-tool-call-metrics
 - execution_timestamp: 2026-08-12T08:34:08+00:00
-- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- source_sha: 8adb668c68941be821cae879fac15db60853d96e
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: coordinator/feature-agent/drift-agent and MCP images from the Phase 2 Artifact Registry digests; Prometheus recording rules from platform/observability; request path uses qwen2.5-0.5b-instruct
 - command: start `kubectl -n agents-sandbox port-forward svc/coordinator 18080:80` and `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 19090:9090`; POST the nested `feature_request`/`drift_request` payload in the companion token-metrics artifact, then query `phase2:agent_calls_total:rate5m`, `phase2:mcp_tool_calls_total:rate5m`, and `phase2:agent_invocation_failures_total:rate5m` through the Prometheus API

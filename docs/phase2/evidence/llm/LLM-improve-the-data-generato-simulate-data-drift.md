@@ -8,7 +8,7 @@ the relative change clearing the configured threshold.
 
 - rubric_id: LLM-improve-the-data-generato-simulate-data-drift
 - execution_timestamp: 2026-08-08T07:28:49+00:00
-- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- source_sha: 8adb668c68941be821cae879fac15db60853d96e
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: financial-distress-data@a82af7a, drift-config schema_version=1
 - command: .venv/bin/python scripts/run_phase2_drift_report.py --scenario financial_deterioration
