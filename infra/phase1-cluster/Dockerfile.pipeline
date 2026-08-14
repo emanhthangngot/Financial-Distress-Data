@@ -5,7 +5,8 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/opt/financial-distress-data
+    PYTHONPATH=/opt/financial-distress-data \
+    HOME=/tmp
 
 WORKDIR /opt/financial-distress-data
 COPY pyproject.toml uv.lock ./
@@ -26,5 +27,6 @@ RUN pip install --no-cache-dir --disable-pip-version-check \
 RUN pip install --no-cache-dir --disable-pip-version-check \
     "feast[redis]==0.65.0" "s3fs>=2024.6"
 
+USER 65532:65532
 ENTRYPOINT ["python", "-m", "scripts.run_cluster_pipeline"]
 CMD ["produce-gold"]
