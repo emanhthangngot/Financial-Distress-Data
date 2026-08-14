@@ -99,7 +99,7 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
 | 2 | [Phase 2: Live screenshot capture campaign](./phase-02-live-screenshot-capture.md) | Done (8 gaps, see runbook) |
 | 3 | [Phase 3: Two-level architecture diagram set](./phase-03-architecture-diagram-set.md) | Done |
 | 4 | [Phase 4: LLM-track narrative submission docs](./phase-04-llm-track-narrative-docs.md) | Done |
-| 5 | [Phase 5: Mini-coursework narrative docs and ML deferred index](./phase-05-mini-coursework-and-ml-index.md) | Pending |
+| 5 | [Phase 5: Mini-coursework narrative docs and ML deferred index](./phase-05-mini-coursework-and-ml-index.md) | Done |
 | 6 | [Phase 6: Root README rebuild](./phase-06-root-readme-rebuild.md) | Pending |
 | 7 | [Phase 7: Integrity gates, cleanup, and freeze](./phase-07-integrity-gates-and-cleanup.md) | Pending |
 

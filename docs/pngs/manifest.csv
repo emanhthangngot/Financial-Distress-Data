@@ -1,4 +1,5 @@
 image,subsystem,rubric_area,capture_command_or_source,captured_at,proves
+generator_profile_summary.png,lakehouse,data_generator,reuse-copy from docs/evidence/screenshots/generator-profile.png,2026-08-10,generator-evidence-v1 profile summary backing the measured skew/cardinality/duplicate/burst table
 validation_coverage_html_report.jpg,validation_verification,validation_verification,reuse-copy from docs/phase2/evidence/llm/validation-verification/screenshots/coverage-html-report.jpg,2026-08-10,coverage.py HTML report backing the 96.17%/93.48% line/branch coverage gate
 validation_locust_sla_report.jpg,validation_verification,validation_verification,reuse-copy from docs/phase2/evidence/llm/validation-verification/screenshots/locust-sla-report.jpg,2026-08-10,Locust SLA report backing the 1352-request zero-failure load test through the public gateway
 kagent_agents_ready.png,agent_plane,agent_registry,live capture: kagent-ui via kubectl -n kagent port-forward svc/kagent-ui,2026-08-14,10 kagent agents deployed and listed in the registry UI
