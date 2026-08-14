@@ -100,6 +100,7 @@ class FixtureGeneratorConfig:
 
     enabled: bool = False
     fixture_seed: int = 42
+    stressed_tickers: tuple[str, ...] = ("BBB",)
     skew: SkewConfig = field(default_factory=SkewConfig)
     cardinality: CardinalityConfig = field(default_factory=CardinalityConfig)
     evolution: EvolutionConfig = field(default_factory=EvolutionConfig)
@@ -223,6 +224,7 @@ def load_fixture_config(path: str | Path = DEFAULT_CONFIG_PATH) -> FixtureGenera
     return FixtureGeneratorConfig(
         enabled=bool(block.get("enabled", False)),
         fixture_seed=_coerce_int(block.get("fixture_seed"), 42),
+        stressed_tickers=_as_tuple(block.get("stressed_tickers", ("BBB",))),
         skew=_build_skew(block.get("skew")),
         cardinality=_build_cardinality(block.get("cardinality")),
         evolution=_build_evolution(block.get("evolution")),
