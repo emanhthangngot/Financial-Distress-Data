@@ -95,6 +95,7 @@ def test_cluster_image_exposes_both_runtime_commands() -> None:
     assert 'ENTRYPOINT ["python", "-m", "scripts.run_cluster_pipeline"]' in dockerfile
     assert 'CMD ["produce-gold"]' in dockerfile
     assert "COPY feature_repo ./feature_repo" in dockerfile
+    assert "USER 65532:65532" in dockerfile
 
 
 def test_combined_command_materializes_only_after_gold_succeeds(
