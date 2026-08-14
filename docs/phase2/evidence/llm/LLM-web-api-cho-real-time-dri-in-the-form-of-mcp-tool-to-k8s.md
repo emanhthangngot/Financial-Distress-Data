@@ -2,7 +2,7 @@
 
 - rubric_id: LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s
 - execution_timestamp: 2026-08-10T05:10:00+00:00
-- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
+- source_sha: 09640b7ede4848f47be9dd9a1cd11b4d041a7170
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: Helm 3, drift-mcp chart 0.1.0, Artifact Registry immutable digest
 - command: `helm upgrade --install drift-mcp charts/drift-mcp -n phase2-data -f apps/dev/drift-mcp/values.yaml --atomic --timeout 5m`
