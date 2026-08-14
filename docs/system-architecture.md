@@ -18,6 +18,49 @@ canonical coursework evidence. The private GitOps repository owns Terraform,
 Helm values, Argo applications, image digests, cluster policies, and desired
 state for the evidence plane.
 
+## Diagram index (recsys-format-docs-overhaul, Phase 3)
+
+Two-level diagram set: one small Mermaid diagram per subsystem, embedded in
+its owning narrative doc, plus one composed system diagram for the README
+hero. Color legend (fixed, identical across all diagrams — see
+`docs/docs-style-contract.md` §7): `edge` = client/ingress boundary,
+`service` = running deployable unit, `store` = persisted state, `model` =
+ML/LLM artifact or serving endpoint, `result` = observability/output surface.
+
+| # | Subsystem | Source | Owning narrative doc |
+|---|---|---|---|
+| 1 | Phase 1 lakehouse | `docs/architecture/subsystem-01-lakehouse.mmd` | `docs/submission/rubric-(mini-coursework)/data_pipeline_orchestration.md` |
+| 2 | LLM inference platform | `docs/architecture/subsystem-02-llm-inference-platform.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/llm_inference_platform.md` |
+| 3 | RAG pipeline | `docs/architecture/subsystem-03-rag-pipeline.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/rag.md` |
+| 4 | Agent plane | `docs/architecture/subsystem-04-agent-plane.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/coordinator_agent.md` |
+| 5 | Product plane | `docs/architecture/subsystem-05-product-plane.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/web_api_user_data.md` |
+| 6 | GitOps / CI-CD | `docs/architecture/subsystem-06-gitops-cicd.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/ci_cd.md` |
+| 7 | Observability + drift | `docs/architecture/subsystem-07-observability-drift.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/observability.md` |
+
+Composed system diagram (README hero):
+
+![System architecture overview — seven subsystems and their cross-boundary contracts](pngs/system_architecture_overview.png)
+
+Source: `docs/architecture/system-overview.mmd`. Regenerate with:
+
+```bash
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
+  npx -y @mermaid-js/mermaid-cli \
+  -i docs/architecture/system-overview.mmd \
+  -o docs/pngs/system_architecture_overview.png -b white -w 1400
+```
+
+**Hero image decision:** `images/architecture/architecture-stage-1.png` is
+**not retired** — `docs/mini_coursework.md` (Phase 1 spec, source-of-truth,
+line-cap exempt) names that exact path as a required deliverable artifact, so
+it stays untouched. `docs/pngs/system_architecture_overview.png` is the
+*additional* composed Phase 1+2 hero used by the reviewer-facing README and
+narrative docs. The two do not compete: `architecture-stage-1.png` answers the
+Phase 1 spec's own diagram requirement; `system_architecture_overview.png`
+answers this plan's cross-subsystem reviewer view.
+`images/architecture/system_deployment_diagram.png` (DOT-rendered) remains the
+detailed Phase 1-only deployment view referenced below.
+
 ## Phase 1 — verified local lakehouse
 
 ![Deployment architecture](../images/architecture/system_deployment_diagram.png)

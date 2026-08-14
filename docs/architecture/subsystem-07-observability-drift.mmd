@@ -1,0 +1,24 @@
+%% Subsystem 7 — observability + drift. Nodes trace to the monitoring
+%% namespace and src/drift/.
+flowchart LR
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    AGENTS["agents/tools/model calls"]:::service
+    OTEL["OpenTelemetry SDK"]:::service
+    JAEGER["Jaeger<br/>monitoring/jaeger"]:::result
+    PROM["Prometheus<br/>monitoring-kube-prometheus-prometheus"]:::store
+    GRAFANA["Grafana dashboards<br/>monitoring-grafana"]:::result
+    DRIFT["drift detector<br/>src/drift/"]:::model
+    ALERT["retrain / alert path"]:::result
+
+    AGENTS -->|"traces"| OTEL
+    AGENTS -->|"metrics: fd_agent_calls_total, fd_llm_tokens_total"| OTEL
+    OTEL -->|"spans"| JAEGER
+    OTEL -->|"scrape"| PROM
+    PROM -->|"queries"| GRAFANA
+    PROM -->|"drift signal metrics"| DRIFT
+    DRIFT -->|"threshold breach"| ALERT

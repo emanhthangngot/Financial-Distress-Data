@@ -1,0 +1,55 @@
+%% Composed system diagram — README hero image. Subgraph-level only; each
+%% subgraph corresponds to one subsystem-NN-*.mmd source. Cross-boundary
+%% contracts are the labeled edges between subgraphs.
+flowchart TB
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    subgraph L1["1. Phase 1 lakehouse (local, verified)"]
+        GOLD["Gold Parquet<br/>(features, labels, ratios)"]:::store
+    end
+
+    subgraph L5["5. Product plane (persistent)"]
+        NEXTJS["Next.js + Supabase"]:::service
+    end
+
+    subgraph L4["4. Agent plane"]
+        COORD["coordinator Agent"]:::service
+    end
+
+    subgraph L3["3. RAG pipeline"]
+        RAGSTORE["PGVector + Feast"]:::store
+    end
+
+    subgraph L2["2. LLM inference platform"]
+        GATEWAY["agentgateway -> KServe"]:::model
+    end
+
+    subgraph L6["6. GitOps / CI-CD (only path to cluster state)"]
+        ARGO["Argo CD reconcile"]:::service
+    end
+
+    subgraph L7["7. Observability + drift (evidence plane, disposable)"]
+        OBS["Prometheus / Jaeger / Grafana"]:::result
+    end
+
+    GOLD -->|"feature + RAG API"| RAGSTORE
+    NEXTJS -->|"live-execution request"| COORD
+    COORD -->|"tool calls"| RAGSTORE
+    COORD -->|"model calls"| GATEWAY
+    COORD -->|"traces + metrics"| OBS
+    ARGO -->|"reconciles desired state<br/>(only path to cluster)"| L4
+    ARGO -->|"reconciles desired state"| L2
+    ARGO -->|"reconciles desired state"| L7
+    OBS -.->|"drift signal"| COORD
+
+    style L1 fill:#f0fff4,stroke:#22543d
+    style L5 fill:#ebf8ff,stroke:#1a365d
+    style L4 fill:#f0fff4,stroke:#22543d
+    style L3 fill:#faf5ff,stroke:#44337a
+    style L2 fill:#fffff0,stroke:#744210
+    style L6 fill:#f0fff4,stroke:#22543d
+    style L7 fill:#fffaf0,stroke:#7b341e

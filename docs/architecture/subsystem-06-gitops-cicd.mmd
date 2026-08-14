@@ -1,0 +1,21 @@
+%% Subsystem 6 — GitOps/CI-CD. Nodes trace to .github/workflows/*,
+%% the private financial-distress-gitops repo, and the argocd namespace.
+flowchart LR
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    SRC["source commit<br/>Financial-Distress-Data"]:::edge
+    CI["GitHub Actions<br/>.github/workflows/ci.yml"]:::service
+    IMG["signed immutable image digest<br/>GHCR"]:::store
+    GITOPS["GitOps PR<br/>financial-distress-gitops (private)"]:::service
+    ARGO["Argo CD<br/>argocd namespace, 13 Applications"]:::service
+    GKE["GKE workloads<br/>reconciled desired state"]:::result
+
+    SRC -->|"push"| CI
+    CI -->|"test/build/scan/sign"| IMG
+    IMG -->|"digest reference"| GITOPS
+    GITOPS -->|"merged desired revision"| ARGO
+    ARGO -->|"Synced/Healthy"| GKE

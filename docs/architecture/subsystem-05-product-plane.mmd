@@ -1,0 +1,25 @@
+%% Subsystem 5 — product plane. Nodes trace to apps/web, supabase/, and the
+%% evidence-session outbox worker.
+flowchart LR
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    BROWSER["Browser"]:::edge
+    NEXTJS["Next.js App Router<br/>apps/web"]:::service
+    AUTH["Supabase Auth"]:::service
+    RLS["Postgres + RLS<br/>supabase/migrations"]:::store
+    OUTBOX["evidence-session outbox"]:::store
+    WORKER["outbox worker"]:::service
+    GKE["GKE evidence plane<br/>(disposable)"]:::model
+
+    BROWSER -->|"request"| NEXTJS
+    NEXTJS -->|"identity"| AUTH
+    NEXTJS -->|"user-scoped reads/writes"| RLS
+    NEXTJS -->|"live-execution request"| OUTBOX
+    OUTBOX -->|"dequeue"| WORKER
+    WORKER -->|"status/verification"| GKE
+    GKE -->|"citations, trace IDs, report"| WORKER
+    WORKER -->|"persisted honest state"| RLS

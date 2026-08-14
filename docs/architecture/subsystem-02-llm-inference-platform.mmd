@@ -1,0 +1,20 @@
+%% Subsystem 2 — LLM inference platform. Nodes trace to
+%% agentgateway-system/*, kagent ModelConfig CRD, kserve namespace.
+flowchart LR
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    CALLER["Agent caller<br/>coordinator / feature / drift Agent"]:::service
+    MODELCONFIG["kagent ModelConfig CRD"]:::service
+    GATEWAY["agentgateway-proxy<br/>agentgateway-system"]:::edge
+    KSERVE["KServe/Knative InferenceService<br/>fd-chat-model, fd-embeddings"]:::model
+    RESP["OpenAI-compatible response"]:::result
+
+    CALLER -->|"model call"| MODELCONFIG
+    MODELCONFIG -->|"resolved route"| GATEWAY
+    GATEWAY -->|"HTTPRoute fd-chat-model-route"| KSERVE
+    KSERVE -->|"completion + usage"| RESP
+    RESP -->|"tokens, latency"| CALLER
