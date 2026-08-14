@@ -96,7 +96,7 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Phase 1: Format contract and docs information architecture](./phase-01-format-contract-and-docs-ia.md) | Done |
-| 2 | [Phase 2: Live screenshot capture campaign](./phase-02-live-screenshot-capture.md) | Pending |
+| 2 | [Phase 2: Live screenshot capture campaign](./phase-02-live-screenshot-capture.md) | Done (8 gaps, see runbook) |
 | 3 | [Phase 3: Two-level architecture diagram set](./phase-03-architecture-diagram-set.md) | Pending |
 | 4 | [Phase 4: LLM-track narrative submission docs](./phase-04-llm-track-narrative-docs.md) | Pending |
 | 5 | [Phase 5: Mini-coursework narrative docs and ML deferred index](./phase-05-mini-coursework-and-ml-index.md) | Pending |

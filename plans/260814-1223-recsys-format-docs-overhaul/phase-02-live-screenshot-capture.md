@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Live screenshot capture campaign"
-status: pending
+status: done-with-gaps
 priority: P1
 effort: "1.5d"
 dependencies: [1]
