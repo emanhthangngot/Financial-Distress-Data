@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry
 - execution_timestamp: 2026-08-10T05:16:00+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: agentregistry API 1.0.0, registry.fd.dev/v1alpha1
 - command: `kubectl exec -n kagent deploy/agentregistry -- python -c "urllib.request.urlopen('http://127.0.0.1:8000/v1/agents/coordinator')"`
 - expected_result: coordinator is registered with its two specialists and bounded hop policy

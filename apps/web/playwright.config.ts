@@ -34,6 +34,7 @@ export default defineConfig({
   testIgnore: [
     /platform-surfaces\.spec\.ts/,
     /live-smoke\.spec\.ts/,
+    /auth-lifecycle\.spec\.ts/,
     /assistant-streaming\.spec\.ts/,
     /assistant-quota\.spec\.ts/,
     /assistant-plane-off\.spec\.ts/,

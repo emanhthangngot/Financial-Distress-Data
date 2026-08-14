@@ -293,8 +293,10 @@ def test_readme_has_toc() -> None:
 
 
 def test_readme_has_repo_structure() -> None:
+    # The recsys-format README overhaul renamed this section "Repository
+    # Structure" (see plans/260814-1223-recsys-format-docs-overhaul/).
     text = _read(README).lower()
-    assert "project structure" in text or "repo structure" in text
+    assert "project structure" in text or "repo structure" in text or "repository structure" in text
 
 
 def test_deployment_diagram_png_exists() -> None:

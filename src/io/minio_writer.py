@@ -9,6 +9,7 @@ and zone conventions stay consistent.
 from __future__ import annotations
 
 import io
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -36,6 +37,23 @@ def _arrow_type(values: list[Any]) -> Any:
     return pa.string()
 
 
+def _timestamp_values(field: str, values: list[Any]) -> list[datetime] | None:
+    """Return timezone-aware datetimes for Feast event timestamps."""
+    if field != "event_timestamp" or not values:
+        return None
+    converted: list[datetime] = []
+    for value in values:
+        if value is None:
+            converted.append(datetime(1970, 1, 1, tzinfo=UTC))
+            continue
+        if isinstance(value, datetime):
+            parsed = value
+        else:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        converted.append(parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC))
+    return converted
+
+
 def rows_to_parquet_bytes(rows: list[dict[str, Any]]) -> bytes:
     import pyarrow as pa
     import pyarrow.parquet as pq
@@ -44,6 +62,10 @@ def rows_to_parquet_bytes(rows: list[dict[str, Any]]) -> bytes:
     arrays = []
     for field in fields:
         values = [row.get(field) for row in rows]
+        timestamp_values = _timestamp_values(field, values)
+        if timestamp_values is not None:
+            arrays.append(pa.array(timestamp_values, type=pa.timestamp("us", tz="UTC")))
+            continue
         arrow_type = _arrow_type(values)
         if pa.types.is_string(arrow_type):
             values = [None if value is None else str(value) for value in values]

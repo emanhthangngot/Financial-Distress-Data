@@ -20,6 +20,8 @@ SQL_VIEWS = REPO_ROOT / "sql" / "duckdb_create_views.sql"
 JOB_FILE = REPO_ROOT / "src" / "jobs" / "stage1_spark_lakehouse_job.py"
 README_FILE = REPO_ROOT / "README.md"
 SCHEMA_DOC = REPO_ROOT / "docs" / "02_schema_design.md"
+OPERATOR_RUNBOOK = REPO_ROOT / "docs" / "operator-runbook.md"
+SYSTEM_ARCHITECTURE_DOC = REPO_ROOT / "docs" / "system-architecture.md"
 
 VIEW_NAME_RE = re.compile(
     r"^CREATE OR REPLACE VIEW\s+(?P<name>\w+)\s+AS\s*$",
@@ -116,14 +118,21 @@ def test_gold_layers_actually_used() -> None:
 
 
 def test_readme_documents_naming_convention() -> None:
-    """The README must have a Naming Convention section that lists the rules."""
-    text = _read(README_FILE)
+    """The Naming Convention section lives in docs/operator-runbook.md, linked
+    from README.md, since the recsys-format README overhaul moved operator
+    detail out of the reviewer-facing README (see
+    plans/260814-1223-recsys-format-docs-overhaul/phase-06-root-readme-rebuild.md)."""
+    readme_text = _read(README_FILE)
+    assert "docs/operator-runbook.md" in readme_text, "README must link to docs/operator-runbook.md"
+    text = _read(OPERATOR_RUNBOOK)
     assert re.search(
         r"^##\s+Naming Convention\s*$", text, re.MULTILINE
-    ), "README is missing the '## Naming Convention' section"
+    ), "docs/operator-runbook.md is missing the '## Naming Convention' section"
     section = _extract_section(text, "Naming Convention")
     for token in ("dim_", "fact_", "obt_", "feat_", "distress_labels"):
-        assert token in section, f"README '## Naming Convention' section does not mention {token!r}"
+        assert (
+            token in section
+        ), f"operator-runbook.md '## Naming Convention' section does not mention {token!r}"
 
 
 def test_schema_design_doc_documents_naming_convention() -> None:
@@ -151,15 +160,21 @@ def test_schema_design_doc_documents_bronze_silver_naming() -> None:
 
 
 def test_readme_documents_deployment_diagram() -> None:
-    """The README must reference the deployment diagram image by relative path."""
-    text = _read(README_FILE)
-    assert re.search(
-        r"^##\s+System Deployment Diagram\s*$", text, re.MULTILINE
-    ), "README is missing the '## System Deployment Diagram' section"
-    section = _extract_section(text, "System Deployment Diagram")
+    """The README embeds the Phase 1 architecture image directly and points to
+    docs/system-architecture.md, which is the diagram home (see
+    plans/260814-1223-recsys-format-docs-overhaul/phase-03-architecture-diagram-set.md)
+    and still embeds the DOT-rendered system_deployment_diagram.png."""
+    readme_text = _read(README_FILE)
     assert (
-        "images/architecture/system_deployment_diagram.png" in section
-    ), "README '## System Deployment Diagram' must embed the diagram PNG by relative path"
+        "images/architecture/architecture-stage-1.png" in readme_text
+    ), "README must embed the Phase 1 architecture-stage-1.png diagram"
+    assert (
+        "docs/system-architecture.md" in readme_text
+    ), "README must link to docs/system-architecture.md"
+    arch_text = _read(SYSTEM_ARCHITECTURE_DOC)
+    assert (
+        "images/architecture/system_deployment_diagram.png" in arch_text
+    ), "docs/system-architecture.md must embed the deployment diagram PNG by relative path"
 
 
 def _extract_section(text: str, heading: str) -> str:

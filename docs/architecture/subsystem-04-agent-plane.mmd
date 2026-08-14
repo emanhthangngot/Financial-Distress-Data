@@ -1,0 +1,25 @@
+%% Subsystem 4 — agent plane. Nodes trace to the kagent namespace and
+%% agents-sandbox namespace (coordinator, feature-agent, drift-agent pods).
+flowchart LR
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    REGISTRY["kagent-ui agent registry<br/>kagent namespace"]:::edge
+    COORD["coordinator Agent<br/>agents-sandbox/coordinator"]:::service
+    FEATURE["feature Agent<br/>agents-sandbox/feature-agent"]:::service
+    DRIFT["drift Agent<br/>agents-sandbox/drift-agent"]:::service
+    FMCP["feature-MCP"]:::service
+    DMCP["drift-MCP"]:::service
+    GUARD["citation / PII guard<br/>src/agents/"]:::result
+
+    REGISTRY -->|"agent spec"| COORD
+    COORD -->|"delegate"| FEATURE
+    COORD -->|"delegate"| DRIFT
+    FEATURE -->|"tool call"| FMCP
+    DRIFT -->|"tool call"| DMCP
+    FMCP -->|"citation"| COORD
+    DMCP -->|"citation"| COORD
+    COORD -->|"guarded response"| GUARD

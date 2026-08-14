@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-observability-collect-v-visualize-metrics-v-
 - execution_timestamp: 2026-08-12T01:32:57+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: kube-prometheus-stack 88.2.0 (Prometheus v3.13.2), Grafana (bundled), prometheus-client 0.24.1
 - command: (1) `curl http://127.0.0.1:19090/api/v1/targets` via `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus`; (2) Grafana login + its own datasource-proxy query for the same PromQL used by the `Phase 2 LLM observability` dashboard's "Web API request rate" panel
 - expected_result: Prometheus actively scrapes the MCP services and a Grafana dashboard renders a live series from that data

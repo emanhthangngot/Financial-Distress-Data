@@ -9,6 +9,7 @@ import { TrendChart } from "@/components/company/trend-chart";
 import { AnalystShell } from "@/components/shell/analyst-shell";
 import { DisclaimerBanner } from "@/components/shell/disclaimer-banner";
 import { ButtonLink } from "@/components/ui/button";
+import { DenialAction } from "@/components/ui/denial-action";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatePanel } from "@/components/ui/state-panel";
 import {
@@ -95,11 +96,7 @@ export default async function CompanyDetailPage({
           <StatePanel
             copy={copy ?? LOADING_COPY.companyDetail}
             tone={isFailureState(result) ? "critical" : "neutral"}
-            action={
-              <ButtonLink href="/companies" variant="secondary">
-                Về danh sách doanh nghiệp
-              </ButtonLink>
-            }
+            action={<DenialAction state={result.state} context={context} reloadHref="/companies" />}
           />
         ) : (
           <>

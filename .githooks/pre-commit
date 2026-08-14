@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Phase 1 is a frozen contract.  This hook is intentionally path based: it
+# runs before a commit is created, so an accidental edit to a protected
+# package is rejected before it can be hidden in a large implementation PR.
+protected=(
+  "src/collectors/" "src/transforms/" "src/quality/" "src/catalog/"
+  "src/metadata/" "src/streaming/" "src/generator/" "src/security/"
+  "src/evidence/" "src/lakehouse/" "src/jobs/" "src/orchestration/"
+  "src/io/" "src/governance/" "sql/" "docs/evidence/"
+  "docs/mini_coursework.md" "docs/01_data_generator.md" "docs/02_schema_design.md"
+)
+# Keep in sync with scripts/audit_phase2_evidence.py:PHASE1_PROTECTED_EXCEPTIONS.
+exceptions=(
+  "src/streaming/flink/jobs/" "sql/init_ml_metadata.sql"
+  "src/io/paths.py" "src/governance/phase2_lineage.py"
+  "src/lakehouse/catalog.py" "src/lakehouse/tables.py" "src/lakehouse/snapshots.py"
+)
+
+is_exception() {
+  local path="$1" exception
+  for exception in "${exceptions[@]}"; do
+    [[ "${path}" == "${exception}"* ]] && return 0
+  done
+  return 1
+}
+
+while IFS= read -r -d '' path; do
+  for prefix in "${protected[@]}"; do
+    if [[ "${path}" == "${prefix}"* ]] && ! is_exception "${path}"; then
+      echo "pre-commit: staged edit touches Phase 1 protected path: ${path}" >&2
+      echo "Use a reviewed Phase 1 hygiene change and update the frozen baseline." >&2
+      exit 1
+    fi
+  done
+  if [[ "${path}" == dags/* && "${path}" != dags/phase2/* ]]; then
+    echo "pre-commit: staged edit touches a protected Phase 1 DAG: ${path}" >&2
+    exit 1
+  fi
+done < <(git diff --cached --name-only -z --)
+
+echo "pre-commit: Phase 1 protected-path check passed"

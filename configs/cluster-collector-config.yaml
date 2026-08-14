@@ -1,0 +1,29 @@
+# Cluster fixture profile. It uses the same configurable Phase 1 source
+# adapter and transforms as local evidence, while ensuring the analyst demo
+# entity (NVL) is present in Gold and therefore materializable by Feast.
+generator:
+  enabled: true
+  fixture_seed: 42
+  stressed_tickers: [NVL]
+  skew:
+    top_company_ticker: NVL
+    top_company_share: 0.50
+    tail_tickers: [HPG]
+  cardinality:
+    industries_pool: [Real Estate, Materials]
+    sectors_pool: [Financials, Industrials]
+    companies_count: 2
+  evolution:
+    legacy_null_columns: [operating_cash_flow, retained_earnings]
+    legacy_partition_cutoff: 2025Q1
+  duplication:
+    offline_rate: 0.0
+    streaming_rate: 0.0
+  streaming:
+    burst:
+      enabled: false
+      window_seconds: 10
+      record_count: 0
+    late_arrival:
+      enabled: false
+      max_lag_seconds: 0

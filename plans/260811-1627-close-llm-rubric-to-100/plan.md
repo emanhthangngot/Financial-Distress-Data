@@ -6,7 +6,7 @@ priority: P1
 effort: "4.5 focused days (1 cluster window ≈ 6-8h), re-budgeted after the 2026-08-11 red team"
 branch: codex/phase06-llm-submission
 tags: [phase2, llm, evidence, gitops, gke, submission]
-blockedBy: []
+blockedBy: [260813-1846-production-hardening-overlay]
 blocks: []
 created: 2026-08-11
 ---

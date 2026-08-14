@@ -65,17 +65,16 @@ describe("guardRequest ordering", () => {
     }
   });
 
-  it("requires AAL2 for a privileged mutation", () => {
+  it("allows a privileged mutation at AAL1 under the demo-environment step-up relaxation", () => {
+    // STEP_UP_REQUIRED = false in @distresslens/contracts; see its doc comment
+    // for the revert path.
     const result = guardRequest({
       context: { ...operator, aal: "aal1" },
       action: "session.provision",
       mutating: true,
     });
 
-    expect(result.allowed).toBe(false);
-    if (!result.allowed) {
-      expect(result.denial.denial).toBe("AAL2_REQUIRED");
-    }
+    expect(result.allowed).toBe(true);
   });
 
   it("checks the origin on a mutation and skips it on a read", () => {

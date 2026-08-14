@@ -1,94 +1,133 @@
 # UI Screenshot Capture Runbook
 
-The rubric rows under "Data Pipeline Orchestration" and "Data Governance" ask
-for screenshots captured on the live Airflow, DataHub, Spark, and Flink UIs.
-The checked-in `reviewer_screenshots/` pack was generated from evidence HTML
-views. This runbook captures **genuine UI screenshots** from the running local
-stack so a strict reviewer sees real service screens, not rendered HTML.
+Reproduction steps and checklist for the Phase 2 capture campaign of
+`plans/260814-1223-recsys-format-docs-overhaul/`. GKE plane is captured first
+— it is the perishable resource. Local Docker stack and product plane follow.
+Every row below gets exactly one `docs/pngs/manifest.csv` entry once captured
+or reused.
 
-## What the script produces
+## Cluster context (captured at)
 
-`scripts/capture_ui_screenshots.py` drives a headless Chromium (Playwright)
-against the local Docker stack and writes into `docs/evidence/screenshots/`:
-
-| File | Source UI | Rubric row |
-|---|---|---|
-| `airflow-dp1.png` | Airflow DAG graph for `dp1_bronze_ingest` | DP1 ingest + validate stages |
-| `airflow-dp2.png` | Airflow DAG graph for `build_silver_gold` | DP2 ingest + validate stages |
-| `airflow-dp3.png` | Airflow DAG graph for `build_offline_features` | DP3 ingest + validate stages |
-| `datahub-dp1-lineage.png` | DataHub dataset page for `bronze.companies` | DP1 lineage + contract |
-| `datahub-dp2-lineage.png` | DataHub dataset page for `gold.fact_financial_statement` | DP2 lineage + contract |
-| `datahub-dp3-lineage.png` | DataHub dataset page for `gold.feat_company_unified` | DP3 lineage + contract |
-| `flink-ui-overview.png` | Flink UI overview | Flink runtime |
-| `flink-ui-job.png` | Flink UI job list | Flink job graph |
-
-## Prerequisites
-
-```bash
-uv sync --all-extras   # installs playwright (dev extra)
-.venv/bin/python -m playwright install chromium
+```text
+kubectl config current-context
+  gke_project-60655616-d84a-4883-867_asia-southeast1-b_fsds-evidence
 ```
 
-Start the stack with Flink enabled and load the DAGs:
+Most in-cluster UIs are `ClusterIP` only — reached via
+`kubectl -n <ns> port-forward svc/<name> <local>:<remote>` for the duration of
+the capture, then torn down. Public ingress host: `distresslens.duckdns.org`
+(nginx, `34.21.242.110`).
+
+## Checklist
+
+Status legend: `[ ]` not yet captured, `re-capture` = live capture needed this
+campaign, `reuse-copy` = existing PNG copied into `docs/pngs/` under a
+contract name (source path recorded in the manifest).
+
+### GKE evidence plane (capture first)
+
+| # | Subsystem | Target capture | Disposition | Outcome |
+|---|---|---|---|---|
+| 1 | Argo CD | 13 applications Synced/Healthy, list view | re-capture | **gap** — `kubectl -n argocd port-forward svc/argocd-server` fails with `connection reset by peer` at the node's CNI netns layer (pod shows `Running`, other services on the same node port-forward fine). Not a sandbox/auth issue — a live node-level networking fault on that pod. CLI status (`kubectl get applications -n argocd`) confirms 13/13 Synced/Healthy and is cited as text evidence instead. User to investigate/restart the pod; re-attempt UI capture then. |
+| 2 | Argo CD | one application detail view (e.g. `kagent`) | re-capture | **gap** — same blocker as row 1 |
+| 3 | kagent | 10 agents Ready, list view | re-capture | **done** — `kagent_agents_ready.png` |
+| 4 | kagent | one agent spec detail | re-capture | **done** — `kagent_agent_spec_detail.png` |
+| 5 | kagent | one agent run/conversation | re-capture | **done** — `kagent_agent_run_success.png` (successful round-trip, `promql-agent`) plus `kagent_agent_run_token_limit_error.png` (a real error from a different agent, kept as honest evidence of an actual context-window limit) |
+| 6 | Model gateway (agentgateway) | gateway programmed / route status via `kubectl` | re-capture | **done, CLI evidence** — `kubectl get gateway -A` shows `agentgateway-proxy` class `agentgateway` PROGRAMMED=True; `kubectl get httproute -A` shows `fd-chat-model-route`. Embedded as a code block in the narrative doc rather than a screenshot — no UI exists for this resource. |
+| 7 | KServe | inference service `Ready` status via `kubectl get isvc` | re-capture | **done, CLI evidence** — `kubectl get isvc -A` shows `fd-chat-model` and `fd-embeddings` both `READY=True` |
+| 8 | KServe | a real prediction round-trip (curl through gateway) | re-capture | **gap** — status conditions confirmed Ready via CLI (row 7); an actual inference round-trip curl was not run this campaign, left explicit |
+| 9 | MCP services | tool list via kagent UI or `kubectl` describe | re-capture | **partial** — kagent agent detail panel (`kagent_agent_spec_detail.png`) lists bound tools for one agent; a dedicated MCP-server tool listing was not captured separately |
+| 10 | MCP services | one tool call + response | re-capture | **done, indirect** — visible as `feature_mcp.http_request` / `drift_mcp.http_request` spans inside `jaeger_coordinator_trace_roundtrip.png` |
+| 11 | Coordinator agent | full round-trip with feature + drift citations | re-capture | **done** — `jaeger_coordinator_trace_roundtrip.png`: 5-span, 170ms trace, `coordinator-agent` → `feature-agent`/`feature-mcp` and → `drift-agent`/`drift-mcp` |
+| 12 | Prometheus | targets up page | re-capture | **done** — `prometheus_targets_up.png` (9/9 UP) |
+| 13 | Prometheus | agent/tool call + token/latency/PII metric query | re-capture | **done, partial** — `prometheus_llm_tokens_query.png` covers token metrics (`phase2:llm_request_total_tokens_total:sum`); latency and PII metric queries not separately captured this campaign |
+| 14 | Grafana | dashboard list / one dashboard per rubric claim | re-capture | **blocked** — Grafana requires login; entering credentials into any field is a prohibited action regardless of source, and reading the admin secret to do so was denied by policy. Capture needs the user to authenticate interactively, or an anonymous-viewer URL if one is configured. |
+| 15 | Jaeger | discoverable services list | re-capture | **done** — `jaeger_search_services.png` (6 services) |
+| 16 | Jaeger | one end-to-end trace | re-capture | **done** — `jaeger_coordinator_trace_roundtrip.png` (same image serves rows 11 and 16) |
+| 17 | Ingress/NGINX | routing + auth challenge on a hidden service | re-capture | **gap** — not attempted this campaign |
+
+### Local Phase 1 stack
+
+| # | Subsystem | Target capture | Disposition | Outcome |
+|---|---|---|---|---|
+| 18 | Airflow | DAG graph — `dp1_bronze_ingest`/`ingest_source_to_bronze` | reuse-copy | **done** — `airflow_dp1_bronze_ingest_dag.png` |
+| 19 | Airflow | DAG graph — `build_silver_gold` | reuse-copy | **done** — `airflow_dp2_silver_gold_dag.png` |
+| 20 | Airflow | DAG graph — `build_offline_features` | reuse-copy | **done** — `airflow_dp3_offline_features_dag.png` |
+| 21 | Airflow | successful task-tree run per DAG | reuse-copy | **done** — `airflow_dp2_dp3_successful_run.png` |
+| 22 | Kafka | topic offsets | gap | not captured — no existing capture; would need the local Docker stack brought up fresh |
+| 23 | MinIO | Bronze/Silver/Gold object paths | gap | not captured — same reason |
+| 24 | DuckDB/DBeaver | Gold views, schema, row counts | gap | not captured — same reason |
+| 25 | Flink | job overview | reuse-copy | **done** — `flink_job_overview.png` |
+| 26 | Flink | checkpoints, baseline vs optimized | reuse-copy | **done** — `flink_checkpoints_baseline.png` + `flink_checkpoints_optimized.png` |
+| 27 | Spark UI | baseline vs optimized stage timings | reuse-copy | **done** — `spark_stage_timings_baseline.png` + `spark_stage_timings_optimized.png` |
+
+### Product plane
+
+| # | Subsystem | Target capture | Disposition | Outcome |
+|---|---|---|---|---|
+| 28 | Web app | login | reuse-copy | **done** — `product_web_login_success.png` |
+| 29 | Web app | analyst surfaces (companies) | reuse-copy | **done** — `product_analyst_companies_surface.png` |
+| 30 | Web app | agent registry UI | reuse-copy | **done** — `product_agent_registry_ui.png` |
+| 31 | Web app | agent chat / assistant | gap | not captured — only a `root--assistant-unavailable` state exists in the source pool, no active-chat capture |
+| 32 | Supabase | RLS policies | gap | not captured — out of scope this campaign |
+| 33 | Supabase | auth users table (redacted) | gap | not captured — out of scope this campaign |
+
+**Campaign summary:** 20 images landed in `docs/pngs/` (9 live GKE captures, 11 reuse-copies). 8 rows remain explicit gaps (Argo CD UI x2, KServe round-trip curl, dedicated MCP tool list, Kafka/MinIO/DuckDB local captures, product chat, Supabase x2); Grafana is blocked on interactive login. None invented.
+
+## Capture — GKE plane
 
 ```bash
-POSTGRES_HOST_PORT=55432 docker compose up -d \
-  postgres minio minio-init kafka kafka-init \
-  airflow-init airflow-webserver airflow-scheduler
+# Argo CD (admin UI on 8080 -> svc 443)
+kubectl -n argocd port-forward svc/argocd-server 8081:443 &
+# open https://localhost:8081, applications list + one detail view
 
-docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
+# kagent UI
+kubectl -n kagent port-forward svc/kagent-ui 8082:8080 &
+# open http://localhost:8082, agents list + one spec + one run
 
-ENABLE_FLINK=1 docker compose --profile flink up -d flink-jobmanager flink-taskmanager
+# Grafana
+kubectl -n monitoring port-forward svc/monitoring-grafana 8083:80 &
+# open http://localhost:8083
+
+# Prometheus
+kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 8084:9090 &
+# open http://localhost:8084/targets, then a metric query
+
+# Jaeger
+kubectl -n monitoring port-forward svc/jaeger 8086:16686 &
+# open http://localhost:8086
+
+# KServe / gateway status (CLI, no UI — capture terminal output)
+kubectl get isvc -A
+kubectl -n agentgateway-system get pods,svc
 ```
 
-Each of the three DAGs must have at least one successful run so the Airflow
-grid and DataHub lineage pages have content:
+Kill every `port-forward` (`kill %1 %2 ...` or `pkill -f "kubectl.*port-forward"`
+scoped to this session's PIDs only) once the capture set for that service is
+done — do not leave forwards running past the campaign.
 
-```bash
-docker compose run --rm --no-deps airflow-scheduler airflow dags test \
-  ingest_source_to_bronze 2026-07-30T12:02:00+00:00
-docker compose run --rm --no-deps airflow-scheduler airflow dags test \
-  build_silver_gold 2026-07-30T12:02:00+00:00
-docker compose run --rm --no-deps airflow-scheduler airflow dags test \
-  build_offline_features 2026-07-30T12:02:00+00:00
-```
+## Capture — local Phase 1 stack
 
-For DataHub, start the quickstart and sync governance metadata so dataset
-pages, lineage, assertions, and contracts are populated:
+See `AGENTS.md` for the Flink opt-in flag. Existing captures already satisfy
+rows 18–21 and 25–27 (reuse-copy); rows 22–24 need the stack brought up fresh
+if a re-capture is chosen instead of leaving them as documented gaps.
 
-```bash
-uvx --python 3.12 --from acryl-datahub==1.6.0 datahub docker quickstart --version v1.6.0
-uv run --python 3.12 --with acryl-datahub==1.6.0 \
-  python scripts/sync_datahub_governance.py --emit --server http://localhost:8080 \
-  --run-id <run-id> --output docs/evidence/datahub/phase7-runtime.json
-```
+## Capture — product plane
 
-## Capture
+`scripts/capture_ui_screenshots.py` extended per Phase 2 requirements, or
+reuse existing `docs/phase2/evidence/product/*.png` Playwright captures
+(already contract-quality: state, role, viewport encoded in filename).
 
-```bash
-.venv/bin/python scripts/capture_ui_screenshots.py \
-  --airflow-url http://localhost:8080 --airflow-user airflow --airflow-password airflow \
-  --datahub-url http://localhost:9002 --datahub-user datahub --datahub-password datahub \
-  --flink-url http://localhost:8081 \
-  --output docs/evidence/screenshots
-```
+## Redaction pass (blocking gate before commit)
 
-To capture only a subset of services, pass `--skip-airflow`, `--skip-datahub`,
-or `--skip-flink`. Missing services produce a `WARN` line and are skipped, so a
-partial run is still safe.
+Every new PNG reviewed for: secrets, tokens, cookies, JWTs, private IPs beyond
+what's already public in the repo, personal data. Blur or re-take otherwise —
+this gate blocks the commit, not a formality.
 
 ## After capture
 
-1. Review the new PNGs and replace the HTML-rendered pack if the genuine
-   captures are materially better:
-   `docs/evidence/reviewer_screenshots/*.png`.
-2. Update `docs/evidence/final/coursework-final-*/screenshots/*.png` if you
-   regenerate the final evidence bundle.
-3. Re-run the evidence audit to confirm the files are still discoverable:
-   `python scripts/audit_stage1_evidence.py docs/evidence --check`.
-
-## Why this matters
-
-The rubric asks for UI captures on Airflow, DataHub, Spark UI, and Flink UI.
-Genuine screenshots from a running service are the strongest possible proof and
-remove the only real point-loss risk in the submission.
+1. Fill `docs/pngs/manifest.csv` — one row per image, `proves` cell never
+   empty.
+2. Any checklist row still unresolved after this campaign is left as an
+   explicit `gap` in this table, never invented.
+3. Commit: `docs(evidence): capture live tool screenshots for narrative docs`.

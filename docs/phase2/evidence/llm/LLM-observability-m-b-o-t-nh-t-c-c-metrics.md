@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-observability-m-b-o-t-nh-t-c-c-metrics
 - execution_timestamp: 2026-08-12T08:34:08+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: coordinator/feature-agent/drift-agent and MCP images from the Phase 2 Artifact Registry digests; model=qwen2.5-0.5b-instruct; data=stream_market_features:last_price with synthetic market_stress rows AAA/BBB; embedding=not-used-by-this-runtime-path
 - command: start `kubectl -n agents-sandbox port-forward svc/coordinator 18080:80` and `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus 19090:9090`; POST the nested `feature_request`/`drift_request` payload below to `http://127.0.0.1:18080/v1/run`, then query the listed PromQL expressions at `http://127.0.0.1:19090/api/v1/query`
 - expected_result: a real coordinator request reaches both specialists and emits non-zero input/output/total token counts, generation round-trip duration, TTFT, and a PII-safety catch counter for the synthetic email prompt

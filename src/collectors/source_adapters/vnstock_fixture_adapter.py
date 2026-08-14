@@ -100,12 +100,13 @@ def _build_financial_rows(
     legacy_null_columns: tuple[str, ...],
     legacy_partition_cutoff: str,
     offline_rate: float,
+    stressed_tickers: tuple[str, ...] = ("BBB",),
 ) -> list[dict]:
     rows: list[dict] = []
     for year in range(start_year, end_year + 1):
         for quarter in range(1, 5):
             report_period = f"{year}Q{quarter}"
-            stressed = ticker == "BBB" and year >= end_year
+            stressed = ticker in stressed_tickers and year >= end_year
             row = {
                 "ticker": ticker,
                 "report_period": report_period,
@@ -227,6 +228,7 @@ class VnstockFixtureAdapter:
             legacy_null_columns=cfg.evolution.legacy_null_columns,
             legacy_partition_cutoff=cfg.evolution.legacy_partition_cutoff,
             offline_rate=cfg.duplication.offline_rate,
+            stressed_tickers=cfg.stressed_tickers,
         )
 
     def fetch_market_prices(self, ticker: str, start_year: int, end_year: int) -> list[dict]:

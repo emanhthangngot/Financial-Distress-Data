@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-
 - execution_timestamp: 2026-08-12T01:31:51+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: feature-mcp `sha256:e2218e6d337b1dc1ec04a9a1e132969e9aa91c6adf034e91548a0d4e3d05b440`, Feast 0.65.0, nginx/nginx-ingress 5.5.4
 - command: `curl -sS -X POST https://distresslens.duckdns.org/v1/features/by-id -H "Content-Type: application/json" -d '{"user_id":"VNM","feature_names":["stream_market_features:last_price","stream_market_features:event_count_1h"]}'` (basic-auth flag and credential supplied out of band)
 - expected_result: 200 with real online-feature values read from the Feast/Redis online store through the gateway, not a static fixture

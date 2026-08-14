@@ -11,11 +11,12 @@ function fakeClient(
 }
 
 describe("authenticateWithPassword", () => {
-  it("returns the access token and expiry on a successful sign-in", async () => {
+  it("returns the access token, refresh token, and expiry on a successful sign-in", async () => {
     const client = fakeClient({
       data: {
         session: {
           access_token: "token-abc",
+          refresh_token: "refresh-abc",
           expires_in: 3600,
         },
         user: { id: "user-1" },
@@ -25,7 +26,12 @@ describe("authenticateWithPassword", () => {
 
     const result = await authenticateWithPassword(client, "grader@example.com", "correct-horse");
 
-    expect(result).toEqual({ ok: true, accessToken: "token-abc", expiresIn: 3600 });
+    expect(result).toEqual({
+      ok: true,
+      accessToken: "token-abc",
+      refreshToken: "refresh-abc",
+      expiresIn: 3600,
+    });
   });
 
   it("surfaces Supabase's own message on a rejected credential", async () => {

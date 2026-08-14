@@ -1,0 +1,24 @@
+%% Subsystem 3 — RAG pipeline. Nodes trace to src/llm/rag_pipeline.py,
+%% feature_repo/ (Feast), PGVector/MinIO state in the evidence plane.
+flowchart LR
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    SOURCE["Approved source document"]:::edge
+    NORM["normalize/hash/chunk<br/>src/llm/rag_pipeline.py"]:::service
+    EMBED["fd-embeddings InferenceService<br/>KServe"]:::model
+    INDEX["PGVector index<br/>+ MinIO artifact store"]:::store
+    FEAST["Feast feature_repo/"]:::store
+    RETRIEVE["governed retrieval tool<br/>feature-MCP"]:::service
+    CITE["citation with source + version + lineage"]:::result
+
+    SOURCE -->|"raw text"| NORM
+    NORM -->|"chunks"| EMBED
+    EMBED -->|"versioned vectors"| INDEX
+    NORM -->|"governance metadata"| FEAST
+    INDEX -->|"top-k match"| RETRIEVE
+    FEAST -->|"lineage record"| RETRIEVE
+    RETRIEVE -->|"cited passage"| CITE

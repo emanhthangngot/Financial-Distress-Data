@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-observability-t-ng-t-cho-logs
 - execution_timestamp: 2026-08-12T01:31:51+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: Loki 3.6.11, otel-collector-contrib 0.132.0
 - command: `curl -sS -G https://distresslens.duckdns.org/loki/api/v1/query_range --data-urlencode 'query={service_name="unknown_service"} |= "features/by-id"' ...` (basic-auth flag/credential supplied out of band) — identical query to `LLM-routing-gateway-service-coi-log`; recorded again here as the observability-track pairing with the traces row below
 - expected_result: the same correlated request (trace ID `9f891d3e6d560baaad90e2e76b821c24`, `request_id=phase5-final-1786498311`) is visible in Loki

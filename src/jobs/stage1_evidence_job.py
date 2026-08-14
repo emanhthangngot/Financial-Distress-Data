@@ -361,11 +361,24 @@ def write_generator_characteristics_evidence(
     return out_path
 
 
-def build_evidence_payload(bucket: str = DEFAULT_BUCKET) -> EvidencePayload:
-    tickers = ["AAA", "BBB"]
-    bronze_companies = _with_ingest_ts(collect_companies())
-    bronze_financial_statements = _with_ingest_ts(collect_financial_statements(tickers, 2024, 2025))
-    bronze_market_prices = _with_ingest_ts(collect_market_prices(tickers, 2024, 2025))
+def build_evidence_payload(
+    bucket: str = DEFAULT_BUCKET,
+    adapter: VnstockFixtureAdapter | None = None,
+) -> EvidencePayload:
+    """Build the canonical Stage 1 datasets.
+
+    ``adapter`` is optional to preserve the deterministic Phase 1 evidence
+    contract. Cluster jobs pass a configured adapter so they can produce the
+    requested Vietnamese ticker set through the same collector/transform path.
+    """
+    bronze_companies = _with_ingest_ts(collect_companies(adapter=adapter))
+    tickers = list(dict.fromkeys(row["ticker"] for row in bronze_companies))
+    bronze_financial_statements = _with_ingest_ts(
+        collect_financial_statements(tickers, 2024, 2025, adapter=adapter)
+    )
+    bronze_market_prices = _with_ingest_ts(
+        collect_market_prices(tickers, 2024, 2025, adapter=adapter)
+    )
 
     silver_companies, failed_companies = _silver_dataset(bronze_companies, "companies", ["ticker"])
     silver_financial_statements, failed_financial_statements = _silver_dataset(

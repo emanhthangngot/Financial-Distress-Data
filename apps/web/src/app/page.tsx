@@ -9,6 +9,7 @@ import { AnalystShell } from "@/components/shell/analyst-shell";
 import { DisclaimerBanner } from "@/components/shell/disclaimer-banner";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardFooter, CardHeader } from "@/components/ui/card";
+import { DenialAction } from "@/components/ui/denial-action";
 import { StatePanel } from "@/components/ui/state-panel";
 import type { AssistantContext } from "@/lib/assistant/assistant-context";
 import { getDataPort } from "@/lib/data";
@@ -92,11 +93,7 @@ export default async function OverviewPage({
           <StatePanel
             copy={overview.state === "loading" ? LOADING_COPY.overview : overview.copy}
             tone={overview.state === "error" ? "critical" : "neutral"}
-            action={
-              <ButtonLink href="/" variant="secondary">
-                Tải lại trang
-              </ButtonLink>
-            }
+            action={<DenialAction state={overview.state} context={context} reloadHref="/" />}
           />
         ) : null}
 

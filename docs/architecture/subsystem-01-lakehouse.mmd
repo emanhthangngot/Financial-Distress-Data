@@ -1,0 +1,28 @@
+%% Subsystem 1 — Phase 1 lakehouse. Nodes name real deployables from
+%% docker-compose.yml, src/collectors, src/streaming, src/transforms, dags/.
+flowchart LR
+    classDef edge fill:#2b6cb0,stroke:#1a365d,color:#fff
+    classDef service fill:#38a169,stroke:#22543d,color:#fff
+    classDef store fill:#805ad5,stroke:#44337a,color:#fff
+    classDef model fill:#d69e2e,stroke:#744210,color:#fff
+    classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
+
+    GEN["Generator / Collectors<br/>src/collectors, src/generator"]:::edge
+    KAFKA["Kafka KRaft<br/>docker-compose kafka"]:::store
+    AIRFLOW["Airflow<br/>dags/*.py"]:::service
+    SPARK["PySpark local mode<br/>src/transforms/*"]:::service
+    FLINK["Flink (opt-in)<br/>flink/*, ENABLE_FLINK=1"]:::service
+    MINIO["MinIO Lakehouse<br/>s3a://financial-distress-lake/"]:::store
+    POSTGRES["PostgreSQL project_metadata"]:::store
+    DUCKDB["DuckDB / DBeaver<br/>sql/*.sql"]:::result
+
+    GEN -->|"batch rows"| MINIO
+    GEN -->|"event JSON"| KAFKA
+    AIRFLOW -->|"DP1 ingest"| GEN
+    KAFKA -->|"ordered stream"| FLINK
+    FLINK -->|"windows + late/dup metrics"| MINIO
+    AIRFLOW -->|"DP2 Spark submit"| SPARK
+    MINIO -->|"Bronze Parquet"| SPARK
+    SPARK -->|"Silver/Gold/feature Parquet"| MINIO
+    AIRFLOW -->|"run state + DQ"| POSTGRES
+    MINIO -->|"Parquet inspection"| DUCKDB

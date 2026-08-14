@@ -559,9 +559,9 @@ task nói rõ Phase 2.
 | `infra/airflow/Dockerfile.baseline` | Baseline image cho Docker optimization comparison. |
 | `infra/flink/Dockerfile` | Flink image. |
 | `infra/kafka/kafka_init_topics.sh` | Create Kafka topics. |
-| `infra/phase2/rag-pipeline/Dockerfile` | RAG pipeline image. |
-| `infra/phase2/stream-feature-offline/Dockerfile` | Offline feature image. |
-| `infra/phase2/stream-feature-online/Dockerfile` | Online feature image. |
+| `infra/rag-pipeline/Dockerfile` | RAG pipeline image. |
+| `infra/stream-feature-offline/Dockerfile` | Offline feature image. |
+| `infra/stream-feature-online/Dockerfile` | Online feature image. |
 | `supabase/config.toml` | Supabase local/project config. |
 | `supabase/migrations/*_phase2_schema.sql` | Phase 2 tables. |
 | `supabase/migrations/*_phase2_rls.sql` | RLS policies. |
@@ -632,3 +632,68 @@ git ls-files src dags scripts tests configs sql apps packages supabase | sort
 Khi thêm module mới, cập nhật đúng ba nơi: **entrypoint lookup**, **file catalog**
 và **test/command chứng minh**. Không đưa cache, virtualenv, `node_modules`,
 bytecode, `warehouse.db` hay output tạm vào danh sách học thuộc.
+
+## 18. Ba lớp docs (recsys-format-docs-overhaul)
+
+Từ `plans/260814-1223-recsys-format-docs-overhaul/`, chi tiết ở
+`docs/docs-style-contract.md`:
+
+```text
+Layer 1 canonical evidence   docs/phase2/evidence/llm/*.md, docs/evidence/**
+                              (immutable, audit-gate pinned prefix)
+Layer 2 narrative            docs/submission/rubric-(mini-coursework)/*.md
+                              docs/submission/rubric-final-coursework-(final-llm)/*.md
+                              docs/submission/ml-track-deferred.md
+Layer 3 entry point          README.md (rubric index tables -> Layer 2)
+```
+
+### Target IA — trạng thái từng path theo phase
+
+| Path | Trạng thái | Phase chủ |
+|---|---|---|
+| `docs/docs-style-contract.md` | new | 1 |
+| `docs/pngs/manifest.csv`, `docs/pngs/*.png` | new | 1, 2 |
+| `docs/architecture/subsystem-*.mmd` (7 files) | new | 3 |
+| `docs/architecture/system-overview.mmd` | new (hoặc extend `deployment.mmd`) | 3 |
+| `docs/system-architecture.md` | rewrite (thành diagram home) | 3 |
+| `docs/submission/rubric-final-coursework-(final-llm)/*.md` (21 + README) | new | 4 |
+| `docs/submission/rubric-(mini-coursework)/*.md` (9 + README) | new | 5 |
+| `docs/submission/ml-track-deferred.md` | new | 5 |
+| `README.md` | rewrite | 6 |
+| `docs/operator-runbook.md` | new (nhận nội dung operator từ README) | 6 |
+| `docs/submission/{ci_cd,iac,observability,routing_gateway,security,validation_verification,cost}.md` | retire sau Phase 4 (rewire link trước) | 7 |
+| `docs/{01_data_generator,02_schema_design,05_storage_optimization,07_data_contracts,08_docker_optimization,09_novel_idea_1,10_novel_idea_2}.md` | retire candidate sau Phase 5 | 7 |
+| `docs/{data-generator,schema-design,spark-and-storage-optimization,data-governance,docker-optimization,novel-idea-pit-leakage-guard,data-pipeline-orchestration,flink-stream-processing}.md` | retire candidate (kebab duplicate, gộp vào Layer 2) | 7 |
+| `docs/evidence-index.md` | retire hoặc trỏ vào Layer 2 | 7 |
+| `docs/11_rubric_completion_spec.md` | retire candidate | 7 |
+| `docs/phase2/evidence/**` | keep, immutable, audit-pinned | — |
+
+**Chưa xoá file nào ở Phase 1** — bảng trên chỉ đánh dấu. Xoá thật diễn ra ở
+Phase 7 sau khi link được rewire và audit gate xanh lại.
+
+### Cập nhật Phase 7 (2026-08-14): retirement bị hoãn có chủ đích
+
+Inbound-link sweep cho thấy blast radius lớn hơn dự kiến ban đầu:
+
+- `docs/01_data_generator.md`, `docs/02_schema_design.md`, và các file
+  numbered khác được **`docs/mini_coursework.md` chính nó tham chiếu 5 lần**
+  — `mini_coursework.md` là Phase 1 spec authority, nằm trong "Don't Touch"
+  zone của `AGENTS.md`. Xoá các file này đòi hỏi sửa cả spec authority.
+- `docs/submission/{ci_cd,iac,observability,routing_gateway,security,
+  validation_verification,cost}.md` (bản flat cũ) vẫn được `docs/submission/
+  README.md` (index cũ, chưa động tới), `docs/system-architecture.md`, và
+  hàng chục file plan/report lịch sử tham chiếu.
+- Phần lớn inbound link còn lại nằm trong `plans/26072*/`, `plans/26080*/`,
+  `plans/26081*/` — các plan/report đã hoàn thành, là stateful history record
+  theo `~/.claude/rules/documentation-management.md` ("Plans, reports, and
+  audit results are stateful records. They do not become evergreen product
+  authority merely because a phase completed") — không nên rewrite lịch sử
+  chỉ để một retirement không bắt buộc đi qua.
+
+**Quyết định:** không xoá file nào trong phiên này. Layer 2 (docs mới dưới
+`docs/submission/rubric-*`) đã hoàn chỉnh, tự chứng minh, và không phụ thuộc
+vào các file cũ này — chúng chỉ còn dư thừa, không sai. Không có hại chức
+năng nào khi giữ lại (doc gate, evidence audit, quality gate đều xanh với
+chúng còn nguyên). Retirement thật sự cần một phiên riêng, phạm vi hẹp hơn:
+sửa `mini_coursework.md`'s reference trước (yêu cầu quyết định người dùng vì
+đây là spec authority), sau đó mới rewire phần còn lại.

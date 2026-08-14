@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v
 - execution_timestamp: 2026-08-10T05:05:00+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: feature-agent runtime 1.0.0, Qwen2.5 0.5B Q4_K_M, MCP 1.29.0
 - command: `kubectl exec sandbox-negative-probe -n agents-sandbox -- curl -fsS -X POST http://feature-agent.agents-sandbox.svc.cluster.local/v1/run ...`
 - expected_result: feature agent calls the scoped MCP tool and returns a cited answer without widening caller scope

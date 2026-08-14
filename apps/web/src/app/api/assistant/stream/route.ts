@@ -357,7 +357,7 @@ function coordinatorBody(request: AssistantRequestBody): Record<string, unknown>
   const env = process["env"];
   const ticker = request.context?.ticker ?? request.context?.selectedTickers[0] ?? "portfolio";
   const featureNames = (env["DISTRESSLENS_" + "COORDINATOR_FEATURE_NAMES"] ??
-    "company_features:risk_score")
+    "company_risk_features:z_score,company_risk_features:debt_to_asset,company_risk_features:distress_label,company_risk_features:distress_reason")
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
