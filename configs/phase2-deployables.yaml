@@ -8,6 +8,21 @@
 # see plans/260813-1846-production-hardening-overlay/plan.md Overview.
 version: 1
 deployables:
+  - name: phase1-pipeline
+    image_context: .
+    dockerfile: infra/phase1-cluster/Dockerfile.pipeline
+    test_selector: "tests -k 'cluster_pipeline or stage1_jobs or feast'"
+    lint_paths:
+      - src/jobs/stage1_evidence_job.py
+      - src/collectors/fixture_config.py
+      - src/collectors/source_adapters/vnstock_fixture_adapter.py
+      - scripts/run_cluster_pipeline.py
+      - tests/test_cluster_pipeline.py
+    gitops_chart: charts/fastapi-service/Chart.yaml
+    gitops_values_path: platform/data/pipeline-deployments.yaml
+    gitops_target_type: manifest
+    gitops_target_kind: CronJob
+    gitops_target_selector: phase1-gold-producer
   - name: stream-feature-offline
     image_context: .
     dockerfile: infra/stream-feature-offline/Dockerfile

@@ -1,0 +1,46 @@
+name: Phase 2 — production Gold and Feast materialization
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "configs/cluster-collector-config.yaml"
+      - "feature_repo/structured/**"
+      - "infra/phase1-cluster/Dockerfile.pipeline"
+      - "scripts/run_cluster_pipeline.py"
+      - "src/collectors/fixture_config.py"
+      - "src/collectors/source_adapters/vnstock_fixture_adapter.py"
+      - "src/jobs/stage1_evidence_job.py"
+      - "src/ml/feast/**"
+      - "tests/test_cluster_pipeline.py"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "configs/cluster-collector-config.yaml"
+      - "feature_repo/structured/**"
+      - "infra/phase1-cluster/Dockerfile.pipeline"
+      - "scripts/run_cluster_pipeline.py"
+      - "src/collectors/fixture_config.py"
+      - "src/collectors/source_adapters/vnstock_fixture_adapter.py"
+      - "src/jobs/stage1_evidence_job.py"
+      - "src/ml/feast/**"
+      - "tests/test_cluster_pipeline.py"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/phase2-ci.yaml
+    with:
+      deployables: >-
+        [{"name":"phase1-pipeline","image_context":".","dockerfile":"infra/phase1-cluster/Dockerfile.pipeline",
+        "test_selector":"tests -k 'cluster_pipeline or stage1_jobs or feast'",
+        "lint_paths":"src/jobs/stage1_evidence_job.py src/collectors/fixture_config.py src/collectors/source_adapters/vnstock_fixture_adapter.py scripts/run_cluster_pipeline.py tests/test_cluster_pipeline.py",
+        "gitops_path":"platform/data/pipeline-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"CronJob","gitops_target_selector":"phase1-gold-producer"}]
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
