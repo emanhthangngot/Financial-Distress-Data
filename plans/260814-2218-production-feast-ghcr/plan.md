@@ -1,6 +1,6 @@
 ---
 title: Production Feast data and GHCR pull hardening
-status: in-progress
+status: completed
 priority: P0
 effort: large
 branch: codex/production-feast-ghcr
@@ -34,11 +34,18 @@ created: 2026-08-14
 
 ## Phases
 
-1. Secure credential provisioning and GitOps secret contract.
-2. Persistent MinIO and Phase 1 Gold production workload.
-3. Feast batch materialization and readiness verification.
-4. GitOps rollout, cold-pull test, live analyst acceptance.
-5. Full tests, review, documentation and plan sync.
+1. Secure credential provisioning and GitOps secret contract — complete.
+2. Persistent MinIO and Phase 1 Gold production workload — complete.
+3. Feast batch materialization and readiness verification — complete.
+4. GitOps rollout, cold-pull test, live analyst acceptance — complete.
+5. Full tests, review, documentation and plan sync — complete.
+
+## Verification record
+
+- GitHub Actions workflow dispatch `31818827736`: lint, tests, phase5 verification, build and cosign all passed; immutable image digest `sha256:a58f381abd0e8cdb0066a12ba18566e4e8e9deb4282e88d85be3a72f04d3e0c9`.
+- GitOps PRs `#78` and `#79` merged; Argo `platform-data` is `Synced/Healthy` at revision `22d6446d44419d4df264a5136a4ecc97cfba181f`.
+- Manual cold-pull job completed after a 1m32s GHCR pull and verified 843 Gold rows, 16 risk rows, and non-null NVL `company_risk_features` in Redis.
+- Source quality gate: 318 tests passed; Ruff, Black and Compose config passed. The first failed run was corrected for missing `boto3` and string event timestamps.
 
 ## Rollback
 
