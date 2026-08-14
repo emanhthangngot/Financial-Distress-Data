@@ -559,9 +559,9 @@ task nói rõ Phase 2.
 | `infra/airflow/Dockerfile.baseline` | Baseline image cho Docker optimization comparison. |
 | `infra/flink/Dockerfile` | Flink image. |
 | `infra/kafka/kafka_init_topics.sh` | Create Kafka topics. |
-| `infra/phase2/rag-pipeline/Dockerfile` | RAG pipeline image. |
-| `infra/phase2/stream-feature-offline/Dockerfile` | Offline feature image. |
-| `infra/phase2/stream-feature-online/Dockerfile` | Online feature image. |
+| `infra/rag-pipeline/Dockerfile` | RAG pipeline image. |
+| `infra/stream-feature-offline/Dockerfile` | Offline feature image. |
+| `infra/stream-feature-online/Dockerfile` | Online feature image. |
 | `supabase/config.toml` | Supabase local/project config. |
 | `supabase/migrations/*_phase2_schema.sql` | Phase 2 tables. |
 | `supabase/migrations/*_phase2_rls.sql` | RLS policies. |

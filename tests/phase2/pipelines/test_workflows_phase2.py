@@ -21,6 +21,9 @@ CALLERS = (
     WORKFLOWS_DIR / "phase2-agent-drift.yaml",
     WORKFLOWS_DIR / "phase2-agent-coordinator.yaml",
 )
+# phase2-feature-api.yaml / phase2-drift-api.yaml deleted 2026-08-14 — ML-track
+# deployables removed from the catalog; their standalone per-app CI workflows
+# would fail on push (no GHCR write:packages scope) with zero LLM benefit.
 
 # Pinned 2026-08-08 (slice 4D) — a Phase 1 CI change must update this
 # constant deliberately, not as a silent side effect of an unrelated diff.

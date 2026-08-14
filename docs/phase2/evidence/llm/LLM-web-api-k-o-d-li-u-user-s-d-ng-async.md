@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-web-api-k-o-d-li-u-user-s-d-ng-async
 - execution_timestamp: 2026-08-10T05:03:00+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: FastAPI 0.141.1, httpx 0.28.1, Uvicorn 0.34.0
 - command: `.venv-phase2/bin/python -m pytest tests/phase2/apps/test_feature_api_and_mcp.py -q`
 - expected_result: async endpoint and off-thread Feast/RAG adapters pass focused contract tests

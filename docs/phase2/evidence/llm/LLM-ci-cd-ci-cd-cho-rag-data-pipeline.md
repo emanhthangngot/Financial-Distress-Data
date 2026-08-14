@@ -8,8 +8,8 @@ real `platform/data/pipeline-deployments.yaml` CronJob manifest (not the old
 
 - rubric_id: LLM-ci-cd-ci-cd-cho-rag-data-pipeline
 - execution_timestamp: 2026-08-10T22:48:51+07:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sigstore/cosign-installer@v3.7.0, docker/build-push-action@v5, financial-distress-data@ddea8d4
 - command: `git push origin dev` (merge of PR #61/#62 into `dev`, then `dev`→`main` merge PR #63) triggering `phase2-rag-pipeline.yaml`; watched via `gh run list --branch dev` and `gh run view <id> --json jobs`
 - expected_result: `lint`, `test`, `build`, `phase5-verification`, `gitops-pr` all succeed; the pushed image is cosign-signed; `gitops-pr` rewrites the `rag-pipeline` CronJob's `image:` field in `platform/data/pipeline-deployments.yaml` with a real `sha256:` digest and opens a PR against `master`; merging it and letting Argo sync changes the CronJob's pinned image

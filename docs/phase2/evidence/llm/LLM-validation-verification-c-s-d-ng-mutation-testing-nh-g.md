@@ -6,8 +6,8 @@ canonical rubric CSV.
 
 - rubric_id: LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g
 - execution_timestamp: 2026-08-10T13:05:00+07:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: mutmut 3.3.1, pytest 9.1.1
 - command: `python scripts/run_phase5_mutation_gate.py`
 - expected_result: mutation score on `llm.rag.chunking.*` strictly above 80%, with the surviving-mutant list recorded

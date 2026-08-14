@@ -8,8 +8,8 @@ than exposed directly.
 
 - rubric_id: LLM-a-llm-inference-platform--llm-inference-platform-setup-c
 - execution_timestamp: 2026-08-10T01:41:42+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: KServe v0.14.1, Knative Serving, llama.cpp server (`ghcr.io/ggml-org/llama.cpp:server`), agentgateway v1.4.1, Gateway API v1.6.0
 - command: `kubectl exec curl-test2 -n default -- curl -sS -X POST http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1/chat/completions -H "Content-Type: application/json" -d '{"model":"qwen2.5-0.5b-instruct","messages":[{"role":"user","content":"Say hello in exactly 3 words."}],"max_tokens":32,"temperature":0}'`
 - expected_result: agentgateway routes the OpenAI-compatible request through its Gateway/HTTPRoute to the KServe `InferenceService`'s predictor pod and returns a real chat completion

@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1.7
+# Cluster runtime image for the existing Phase 1 pipeline code.  The image
+# packages the checkout unchanged; deployment manifests decide the digest.
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/opt/financial-distress-data
+
+WORKDIR /opt/financial-distress-data
+COPY pyproject.toml uv.lock ./
+COPY src ./src
+COPY configs ./configs
+COPY dags ./dags
+COPY scripts ./scripts
+COPY sql ./sql
+
+# Runtime dependencies are installed from the declared project contract.  A
+# CI build may replace this with a wheel/cache layer; no source is copied from
+# another repository and no service credentials are baked into the image.
+RUN pip install --no-cache-dir --disable-pip-version-check \
+    "pandas>=2.2" "pyyaml>=6.0" "duckdb>=1.1" "kafka-python>=2.0" \
+    "minio>=7.2" "pyarrow>=17.0" "psycopg[binary]>=3.2" "pgvector>=0.3" \
+    "requests>=2.31" "tenacity>=8.0" "pyspark>=3.5"
+
+ENTRYPOINT ["python", "-m", "scripts.run_stage1_evidence"]

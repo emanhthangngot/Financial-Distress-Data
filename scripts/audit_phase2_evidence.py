@@ -18,6 +18,9 @@ Modes:
   --matrix PATH     Audit a specific rubric-matrix CSV (fixture-based tests).
   --strict          With --matrix-only: fail (exit 1) on any issue. Without it,
                     warnings still exit 0 (used during phase-01 bring-up).
+  --check-artifacts Validate every row's implementation artifact path without
+                     requiring evidence metadata. Missing artifacts fail for
+                     executed rows and are warnings for design_only/stretch.
   --require-executed  Phase-08 promotion gate: every row must record executed
                       evidence and its file must exist on disk and satisfy the
                       evidence contract (rubric_id, execution_timestamp,
@@ -63,6 +66,13 @@ PHASE1_PROTECTED = [
     "src/metadata/",
     "src/streaming/",
     "src/generator/",
+    "src/security/",
+    "src/evidence/",
+    "src/lakehouse/",
+    "src/jobs/",
+    "src/orchestration/",
+    "src/io/",
+    "src/governance/",
     "sql/",
     "docs/evidence/",
     "docs/mini_coursework.md",
@@ -81,6 +91,15 @@ PHASE1_PROTECTED = [
 PHASE1_PROTECTED_EXCEPTIONS = [
     "src/streaming/flink/jobs/",
     "sql/init_ml_metadata.sql",
+    # Shared package carve-outs: these helpers are owned by Phase 2 and may
+    # evolve without weakening protection for the rest of the package.
+    "src/io/paths.py",
+    "src/governance/phase2_lineage.py",
+    # Phase 2 lakehouse contracts are additive files in a shared package; the
+    # existing compaction spine and all other lakehouse files remain protected.
+    "src/lakehouse/catalog.py",
+    "src/lakehouse/tables.py",
+    "src/lakehouse/snapshots.py",
 ]
 
 REQUIRED_DOCS = [
@@ -888,6 +907,72 @@ def _audit_executed(
     return errors
 
 
+def _audit_artifacts(
+    matrix: list[dict[str, str]], gitops_root: Path | None
+) -> tuple[list[str], list[str]]:
+    """Check implementation artifacts for every rubric row.
+
+    This is intentionally separate from ``--require-executed``.  The latter
+    validates evidence metadata and is a promotion gate; ``--check-artifacts``
+    is a lightweight backlog/reporting mode that can be run while rows are
+    still design-only.  Source artifacts resolve from this checkout, while
+    GitOps artifacts are resolved only from an explicitly supplied checkout.
+
+    Returns ``(errors, warnings)``.  Missing artifacts on executed rows are
+    errors; missing artifacts on design-only or stretch rows are warnings.
+    No commands are executed while resolving paths.
+    """
+
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    for row in matrix:
+        rid = row.get("rubric_id", "?")
+        evidence_type = row.get("evidence_type", "")
+        artifact_repo = row.get("artifact_repo", "")
+        artifact_path = row.get("artifact_path", "").strip()
+
+        # Matrix validation reports malformed repositories and empty paths as
+        # contract errors. Keep this mode useful on its own by still producing
+        # a row-level finding when one of those fields is absent.
+        if artifact_repo == "source":
+            root = REPO_ROOT
+        elif artifact_repo == "gitops":
+            if gitops_root is None:
+                finding = f"{rid}: --gitops-root is required for GitOps artifact validation"
+                (errors if evidence_type == "executed" else warnings).append(finding)
+                continue
+            root = gitops_root
+        else:
+            finding = f"{rid}: artifact_repo '{artifact_repo}' cannot resolve artifact"
+            errors.append(finding)
+            continue
+
+        if not artifact_path:
+            finding = f"{rid}: missing artifact_path"
+        else:
+            artifact = root / artifact_path
+            try:
+                within_root = artifact.resolve().is_relative_to(root.resolve())
+            except (OSError, RuntimeError):
+                within_root = False
+            if within_root and artifact.is_file():
+                continue
+            finding = f"{rid}: implementation artifact not found: {artifact_path}"
+
+        if evidence_type == "executed":
+            errors.append(finding)
+        elif evidence_type in {"design_only", "stretch"}:
+            warnings.append(finding)
+        else:
+            # Invalid evidence types are owned by _audit_matrix; retaining the
+            # finding as an error here prevents an unclassified row from
+            # silently passing when this mode is used with a fixture matrix.
+            errors.append(finding)
+
+    return errors, warnings
+
+
 def _audit_behavior_validations(matrix: list[dict[str, str]]) -> list[str]:
     """Execute feature-specific validation commands without invoking a shell."""
     import subprocess
@@ -936,6 +1021,11 @@ def main(argv: list[str] | None = None) -> int:
         "--strict",
         action="store_true",
         help="Fail (exit 1) on any finding; default in phase-08 mode",
+    )
+    parser.add_argument(
+        "--check-artifacts",
+        action="store_true",
+        help="Check implementation artifact paths for every row",
     )
     parser.add_argument(
         "--require-executed",
@@ -987,6 +1077,7 @@ def main(argv: list[str] | None = None) -> int:
 
     expected = {"ML": args.ml, "LLM": args.llm}
     errors: list[str] = []
+    warnings: list[str] = []
     matrix = _read_matrix(args.matrix)
     selected_tracks = tuple(args.track) if args.track else TRACKS
     accepted_design_only = {
@@ -1066,6 +1157,11 @@ def main(argv: list[str] | None = None) -> int:
                     errors.extend(_audit_frozen_revisions(scoped, args.gitops_root))
         errors.extend(_audit_required_docs())
 
+    if args.check_artifacts and scoped is not None:
+        artifact_errors, artifact_warnings = _audit_artifacts(scoped, args.gitops_root)
+        errors.extend(artifact_errors)
+        warnings.extend(artifact_warnings)
+
     if args.run_validations:
         if not args.require_executed:
             errors.append("--run-validations requires --require-executed")
@@ -1082,10 +1178,12 @@ def main(argv: list[str] | None = None) -> int:
         errors.extend(_audit_phase1_git_diff(args.git_base))
 
     # ── Output ────────────────────────────────────────────────────────
+    for warning in warnings:
+        print(f"WARNING: {warning}")
     if errors:
         for e in errors:
             print(e)
-        fail = args.strict or args.require_executed or args.run_validations
+        fail = args.strict or args.require_executed or args.run_validations or args.check_artifacts
         print(f"\n{len(errors)} finding(s) — {'FAIL' if fail else 'exit 0 (non-strict)'}")
         return 1 if fail else 0
 

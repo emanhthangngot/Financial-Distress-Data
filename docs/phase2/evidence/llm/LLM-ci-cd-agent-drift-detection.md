@@ -7,8 +7,8 @@ push immutable GHCR digest → open a GitOps PR rewriting the real
 
 - rubric_id: LLM-ci-cd-agent-drift-detection
 - execution_timestamp: 2026-08-10T23:41:40+07:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 0bcaf1490b7ffe3561cbe409717b525488e452eb
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/drift-agent
 - command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `phase2-agent-drift.yaml` on the `push` event
 - expected_result: `lint`, `test`, `build`, `phase5-verification`, `gitops-pr` all succeed; `gitops-pr` rewrites the `drift-agent` `Deployment`'s `image:` field with a real digest and opens a PR against `master`
