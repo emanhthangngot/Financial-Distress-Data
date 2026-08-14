@@ -248,7 +248,7 @@ jobs:
                   index for index, document in enumerate(documents)
                   if re.search(rf"(?m)^kind:\s*{re.escape(kind)}\s*$", document)
                   and re.search(
-                      rf"metadata:\s*\{{name:\s*{re.escape(selector)}(?:,|\s)",
+                      rf"(?m)metadata:\s*(?:\{{name:\s*{re.escape(selector)}(?:,|\s)|\n\s+name:\s*{re.escape(selector)}\s*$)",
                       document,
                   )
               ]
