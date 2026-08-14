@@ -12,7 +12,7 @@ control.
 | `analyst` | own/allowed companies | yes, quota-bound | no | no | no | no |
 | `platform_viewer` | no analyst mutation | no | yes | no | no | no |
 | `platform_operator` | no analyst mutation | no | yes | provision/retry/destroy/export | no | no |
-| `platform_admin` | no analyst mutation | no | yes | all operator actions | yes, with lease/fencing | yes, with AAL2 |
+| `platform_admin` | no analyst mutation | no | yes | all operator actions | yes, with lease/fencing | no client path -- the `role` column has no `authenticated` grant at all (see `supabase/migrations/20260814200000_phase2_profile_identity.sql`); role changes are SQL/service-role only |
 
 The effective permission is the intersection of the role, the tenant/user
 scope, the route policy and the current evidence-plane state. A denied action
@@ -21,7 +21,12 @@ must be rejected by both the Next.js server boundary and the database policy.
 ## Authentication and request rules
 
 - Supabase Auth is the identity source. `platform_operator` and
-  `platform_admin` require AAL2/MFA before privileged actions.
+  `platform_admin` privileged actions are gated on a step-up check
+  (`meets_step_up()` in the database, `STEP_UP_REQUIRED` in
+  `packages/contracts/src/authorization.ts`), which is currently relaxed to
+  allow a password-only (AAL1) session in this demo environment -- see
+  `docs/phase2/adr/adr-015-aal2-step-up-relaxation.md` for why and the revert
+  path. `is_aal2()` itself still reports the real assurance level.
 - Server actions/API handlers validate the signed session, role claim, origin/
   CSRF policy, request schema and rate limit before touching data or an outbox.
 - The assistant stream route (`POST /api/assistant/stream`) authorizes
@@ -86,9 +91,10 @@ must not cause the client to fall back to an unscoped or unauthenticated API.
 
 - RLS test -> exercises every role/action pair -> allowed rows are returned and
   denied rows/actions are rejected at the database boundary.
-- Server-route test -> sends a valid-looking client-only role or missing AAL2
-  claim -> privileged mutation is rejected without an outbox or GitOps side
-  effect.
+- Server-route test -> sends a valid-looking client-only role for a caller
+  whose real role is not privileged -> mutation is rejected without an
+  outbox or GitOps side effect. (A missing AAL2 claim alone no longer
+  rejects: see ADR-015.)
 - Replay/fencing test -> repeats an idempotency key and then uses a stale token
   -> exactly one transition is committed and the stale request is rejected.
 - Browser security test -> navigates to every product route signed out and as

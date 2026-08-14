@@ -61,12 +61,20 @@ describe("RoleActionButton", () => {
     expect(document.getElementById(describedBy as string)).not.toBeNull();
   });
 
-  it("requires AAL2 even for a role the action otherwise allows", () => {
+  it("stays enabled at AAL1 under the demo-environment step-up relaxation", () => {
+    // STEP_UP_REQUIRED = false in @distresslens/contracts; see its doc comment
+    // for the revert path.
     render(
-      <RoleActionButton action="session.provision" role="platform_operator" aal="aal1" label="Cấp phát" />,
+      <RoleActionButton
+        action="session.provision"
+        role="platform_operator"
+        aal="aal1"
+        label="Cấp phát"
+        transition={{ targetState: "REQUESTED", sessionId: "s1", fencingToken: "t1" }}
+      />,
     );
 
-    expect(screen.getByRole("button", { name: "Cấp phát" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cấp phát" })).toBeEnabled();
   });
 
   it("renders a plain enabled control for an action that is not a state transition", () => {

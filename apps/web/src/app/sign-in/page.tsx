@@ -1,20 +1,39 @@
+import Link from "next/link";
+import { AuthCard } from "@/components/auth/auth-card";
 import { SignInForm } from "@/components/auth/sign-in-form";
 
 /**
- * The one sign-in path (plans/260811-1627-close-llm-rubric-to-100/phase-03):
- * no sign-up, no password reset, one demo/grader account provisioned out of
- * band in Supabase. Never prerendered — a cached page here would be a
- * meaningless win and the copy has no per-request data anyway, but every
- * other route in this app opts out of the static cache for the same reason,
- * so this one stays consistent with them.
+ * Sign-in. `?email=` prefills the field -- the account switcher (user-menu.tsx)
+ * lands here with the demo profile's address already in place. `?next=` is
+ * forwarded to the form and validated server-side by `safeRedirectTarget`
+ * before it is ever used as a redirect target.
+ *
+ * Never prerendered — the copy has no per-request data, but every other route
+ * in this app opts out of the static cache for the same reason, so this one
+ * stays consistent with them.
  */
 export const dynamic = "force-dynamic";
 
-export default function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string; next?: string }>;
+}) {
+  const { email, next } = await searchParams;
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-paper-1 px-4">
-      <h1 className="text-[20px] font-semibold text-text-strong">Đăng nhập DistressLens</h1>
-      <SignInForm />
-    </main>
+    <AuthCard
+      title="Đăng nhập DistressLens"
+      footer={
+        <>
+          Chưa có tài khoản?{" "}
+          <Link href="/sign-up" className="font-medium text-primary-600 hover:underline">
+            Đăng ký
+          </Link>
+        </>
+      }
+    >
+      <SignInForm defaultEmail={email ?? ""} next={next} />
+    </AuthCard>
   );
 }

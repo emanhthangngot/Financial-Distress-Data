@@ -9,6 +9,7 @@ import { AnalystShell } from "@/components/shell/analyst-shell";
 import { DisclaimerBanner } from "@/components/shell/disclaimer-banner";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { DenialAction } from "@/components/ui/denial-action";
 import { StatePanel } from "@/components/ui/state-panel";
 import type { AssistantContext } from "@/lib/assistant/assistant-context";
 import { getDataPort } from "@/lib/data";
@@ -80,11 +81,7 @@ export default async function SavedReportPage({
           <StatePanel
             copy={copy ?? LOADING_COPY.report}
             tone={isFailureState(result) ? "critical" : "neutral"}
-            action={
-              <ButtonLink href="/reports" variant="secondary">
-                Về danh sách báo cáo
-              </ButtonLink>
-            }
+            action={<DenialAction state={result.state} context={context} reloadHref="/reports" />}
           />
         ) : (
           <>

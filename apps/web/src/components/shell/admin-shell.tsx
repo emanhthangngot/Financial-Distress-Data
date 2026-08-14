@@ -1,5 +1,6 @@
 import type { PlaneHealth, Provenance, Role } from "@distresslens/contracts";
 import type { ReactNode } from "react";
+import { listDemoAccounts } from "@/lib/server/demo-accounts";
 import { BrandLockup, BrandMark } from "./brand-mark";
 import {
   AgentIcon,
@@ -53,7 +54,7 @@ const ADMIN_NAV_FOOTER: readonly NavItem[] = [
 ];
 
 export interface AdminShellProps {
-  user: { displayName: string; role: Role };
+  user: { displayName: string; role: Role | null };
   provenance: Provenance;
   environmentLabel: string;
   planeHealth: PlaneHealth;
@@ -75,6 +76,14 @@ export function AdminShell({
   notificationCount = 0,
   children,
 }: AdminShellProps) {
+  // A guest reaching an admin route directly (typed URL) is denied by every
+  // platform action, so the platform destinations are dead clicks for them --
+  // the rail offers nothing rather than a wall of "not permitted" links.
+  const isGuest = user.role === null;
+  const navGroups = isGuest ? [] : ADMIN_NAV;
+  const navFooter = isGuest ? [] : ADMIN_NAV_FOOTER;
+  const demoAccounts = listDemoAccounts();
+
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <a href="#main-content" className="skip-link">
@@ -86,7 +95,7 @@ export function AdminShell({
           <BrandLockup suffix="Admin" />
         </div>
         <div className="flex-1">
-          <NavRail groups={ADMIN_NAV} footerItems={ADMIN_NAV_FOOTER} label="Điều hướng vận hành" />
+          <NavRail groups={navGroups} footerItems={navFooter} label="Điều hướng vận hành" />
         </div>
       </div>
 
@@ -99,11 +108,7 @@ export function AdminShell({
                 <span className="sr-only">Mở điều hướng vận hành</span>
               </summary>
               <div className="absolute inset-x-0 top-[57px] z-(--z-drawer) bg-ink-900 shadow-(--shadow-overlay)">
-                <NavRail
-                  groups={ADMIN_NAV}
-                  footerItems={ADMIN_NAV_FOOTER}
-                  label="Điều hướng vận hành"
-                />
+                <NavRail groups={navGroups} footerItems={navFooter} label="Điều hướng vận hành" />
               </div>
             </details>
 
@@ -137,6 +142,7 @@ export function AdminShell({
                 displayName={user.displayName}
                 role={user.role}
                 notificationCount={notificationCount}
+                demoAccounts={demoAccounts}
               />
             </div>
           </div>

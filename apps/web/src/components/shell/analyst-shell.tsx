@@ -2,6 +2,7 @@ import type { Provenance, Role } from "@distresslens/contracts";
 import type { ReactNode } from "react";
 import { AnalysisAssistant } from "@/components/assistant/analysis-assistant";
 import type { AssistantContext } from "@/lib/assistant/assistant-context";
+import { listDemoAccounts } from "@/lib/server/demo-accounts";
 import { BrandLockup, BrandMark } from "./brand-mark";
 import { HeaderSearch } from "./header-search";
 import {
@@ -62,8 +63,18 @@ const ANALYST_NAV_FOOTER: readonly NavItem[] = [
   { label: "Đăng xuất", href: "/sign-out", icon: <SignOutIcon /> },
 ];
 
+/**
+ * A guest is denied `analyst.query` and `session.read` alike (both require a
+ * signed-in caller), so every destination but the landing page is a dead
+ * click for them. Rather than render each one into a "not permitted" state,
+ * the rail only offers what a guest can actually open.
+ */
+const GUEST_NAV: readonly NavGroup[] = [
+  { label: "Phân tích", items: [{ label: "Tổng quan", href: "/", icon: <OverviewIcon /> }] },
+];
+
 export interface AnalystShellProps {
-  user: { displayName: string; role: Role };
+  user: { displayName: string; role: Role | null };
   provenance: Provenance;
   /** Sync time shown in the header status, e.g. "23/05/2025 08:46". */
   syncedAtLabel: string;
@@ -83,6 +94,11 @@ export function AnalystShell({
   notificationCount = 0,
   children,
 }: AnalystShellProps) {
+  const isGuest = user.role === null;
+  const navGroups = isGuest ? GUEST_NAV : ANALYST_NAV;
+  const navFooter = isGuest ? [] : ANALYST_NAV_FOOTER;
+  const demoAccounts = listDemoAccounts();
+
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <a href="#main-content" className="skip-link">
@@ -95,11 +111,7 @@ export function AnalystShell({
           <BrandLockup />
         </div>
         <div className="flex-1">
-          <NavRail
-            groups={ANALYST_NAV}
-            footerItems={ANALYST_NAV_FOOTER}
-            label="Điều hướng phân tích"
-          />
+          <NavRail groups={navGroups} footerItems={navFooter} label="Điều hướng phân tích" />
         </div>
       </div>
 
@@ -114,11 +126,7 @@ export function AnalystShell({
                 <span className="sr-only">Mở điều hướng</span>
               </summary>
               <div className="absolute inset-x-0 top-[57px] z-(--z-drawer) bg-ink-900 shadow-(--shadow-overlay)">
-                <NavRail
-                  groups={ANALYST_NAV}
-                  footerItems={ANALYST_NAV_FOOTER}
-                  label="Điều hướng phân tích"
-                />
+                <NavRail groups={navGroups} footerItems={navFooter} label="Điều hướng phân tích" />
               </div>
             </details>
 
@@ -139,6 +147,7 @@ export function AnalystShell({
                 displayName={user.displayName}
                 role={user.role}
                 notificationCount={notificationCount}
+                demoAccounts={demoAccounts}
               />
             </div>
           </div>

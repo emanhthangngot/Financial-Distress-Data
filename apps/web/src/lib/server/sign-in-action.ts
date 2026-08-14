@@ -4,6 +4,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { setSessionCookies } from "./auth-cookies";
+import { safeRedirectTarget } from "./redirect-target";
 import { createRequestClient } from "./supabase";
 
 /**
@@ -14,13 +16,14 @@ import { createRequestClient } from "./supabase";
  * configures a browser-side Supabase client — only a server-side exchange
  * that runs after the image is built can use runtime env. This route is that
  * exchange: it authenticates against Supabase with the anon key (server-side,
- * never shipped as a service-role key) and sets the `sb-access-token` cookie
- * that `resolveSession` (session.ts) already reads. The anon key itself never
- * reaches the browser through this path — only the resulting session cookie
- * does.
+ * never shipped as a service-role key) and sets the session cookies
+ * `resolveSession` (session.ts) already reads. The anon key itself never
+ * reaches the browser through this path — only the resulting session cookies
+ * do.
  *
- * One demo/grader account is the entire scope: no sign-up, no password
- * reset, no account management. Those are not rubric rows.
+ * The access token alone used to be the whole session, which decayed to a
+ * guest after `expires_in` (~1h). The refresh token is now stored too, and
+ * `middleware.ts` rotates the pair before it expires.
  */
 
 export interface SignInResult {
@@ -28,8 +31,6 @@ export interface SignInResult {
   /** User-facing message; never a Supabase/database error string verbatim. */
   message: string;
 }
-
-const ACCESS_TOKEN_COOKIE = "sb-access-token";
 
 /**
  * The authentication call, factored out from the cookie/redirect side
@@ -41,7 +42,7 @@ export async function authenticateWithPassword(
   email: string,
   password: string,
 ): Promise<
-  | { ok: true; accessToken: string; expiresIn: number }
+  | { ok: true; accessToken: string; refreshToken: string; expiresIn: number }
   | { ok: false; message: string }
 > {
   const { data, error } = await client.auth.signInWithPassword({ email, password });
@@ -60,6 +61,7 @@ export async function authenticateWithPassword(
   return {
     ok: true,
     accessToken: data.session.access_token,
+    refreshToken: data.session.refresh_token,
     expiresIn: data.session.expires_in,
   };
 }
@@ -77,15 +79,15 @@ export async function signIn(_prevState: SignInResult, formData: FormData): Prom
     return result;
   }
 
-  (await cookies()).set(ACCESS_TOKEN_COOKIE, result.accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: result.expiresIn,
+  setSessionCookies(await cookies(), {
+    accessToken: result.accessToken,
+    refreshToken: result.refreshToken,
+    expiresIn: result.expiresIn,
   });
+
+  const target = safeRedirectTarget(formData.get("next"));
 
   // Throws internally (NEXT_REDIRECT) — deliberately not wrapped in a
   // try/catch above, or the redirect would be swallowed as an error.
-  redirect("/");
+  redirect(target);
 }

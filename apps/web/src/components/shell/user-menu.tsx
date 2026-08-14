@@ -1,5 +1,10 @@
 import type { Role } from "@distresslens/contracts";
+import type { DemoAccount } from "@/lib/server/demo-accounts";
+import { ButtonLink } from "@/components/ui/button";
+import { AccountSwitcher } from "./account-switcher";
+import { DisplayNameForm } from "./display-name-form";
 import { BellIcon, ChevronDownIcon, SignOutIcon } from "./icons";
+import { ROLE_LABELS } from "./role-labels";
 
 /**
  * User and notification controls.
@@ -7,22 +12,23 @@ import { BellIcon, ChevronDownIcon, SignOutIcon } from "./icons";
  * Built on `<details>` rather than a JS popover: it is keyboard-operable and
  * screen-reader-announced without hydration, which matters because the header
  * must stay usable on a degraded page where a client bundle failed to load.
+ *
+ * A guest (`role === null`) gets no menu at all -- an avatar and a "Khách"
+ * label implied a session that did not exist (RC2). Instead the header shows
+ * the entry point that was previously missing entirely (RC1): a sign-in and
+ * sign-up pair.
  */
-
-const ROLE_LABELS: Record<Role, string> = {
-  analyst: "Chuyên viên phân tích",
-  platform_viewer: "Nền tảng — chỉ đọc",
-  platform_operator: "Nền tảng — vận hành",
-  platform_admin: "Quản trị viên",
-};
 
 export interface UserMenuProps {
   displayName: string;
-  role: Role;
+  /** Null for a guest, who gets the sign-in/sign-up pair below instead of a menu. */
+  role: Role | null;
   /** Unread notification count; 0 renders no badge. */
   notificationCount?: number;
   /** Rendered on the navy admin chrome rather than the light analyst header. */
   onInk?: boolean;
+  /** Switchable demo profiles; empty when `DISTRESSLENS_DEMO_ACCOUNTS` is unset. */
+  demoAccounts?: readonly DemoAccount[];
 }
 
 export function UserMenu({
@@ -30,10 +36,24 @@ export function UserMenu({
   role,
   notificationCount = 0,
   onInk = false,
+  demoAccounts = [],
 }: UserMenuProps) {
   const controlTone = onInk
     ? "text-paper-1 hover:bg-ink-800"
     : "text-text-body hover:bg-paper-2";
+
+  if (role === null) {
+    return (
+      <div className="flex shrink-0 items-center gap-2">
+        <ButtonLink href="/sign-in" variant="primary">
+          Đăng nhập
+        </ButtonLink>
+        <ButtonLink href="/sign-up" variant="secondary">
+          Đăng ký
+        </ButtonLink>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-w-0 shrink items-center gap-1">
@@ -77,6 +97,9 @@ export function UserMenu({
             <span className="block text-[14px] font-semibold text-text-strong">{displayName}</span>
             <span className="block text-[13px] text-text-muted">{ROLE_LABELS[role]}</span>
           </p>
+
+          <DisplayNameForm currentName={displayName} />
+
           <hr className="my-1 border-line-hairline" />
           <a
             href="/sign-out"
@@ -85,6 +108,8 @@ export function UserMenu({
             <SignOutIcon />
             Đăng xuất
           </a>
+
+          <AccountSwitcher accounts={demoAccounts} />
         </div>
       </details>
     </div>
