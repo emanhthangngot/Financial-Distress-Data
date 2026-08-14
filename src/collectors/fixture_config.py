@@ -111,7 +111,7 @@ class FixtureGeneratorConfig:
 def _as_tuple(value: Any) -> tuple[Any, ...]:
     if value is None:
         return ()
-    if isinstance(value, (list, tuple)):
+    if isinstance(value, list | tuple):
         return tuple(value)
     raise TypeError(f"Expected list or tuple, got {type(value).__name__}")
 
@@ -121,7 +121,7 @@ def _coerce_float(value: Any, default: float) -> float:
         return default
     if isinstance(value, bool):
         return float(value)
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return float(value)
     if isinstance(value, str):
         return float(value)
