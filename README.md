@@ -38,7 +38,7 @@ Composed system diagram — seven subsystems and their cross-boundary contracts 
 
 ![System architecture overview](docs/pngs/system_architecture_overview.png)
 
-Each subsystem also has its own small Mermaid diagram, embedded in the narrative doc that proves it — see [`docs/system-architecture.md`](docs/system-architecture.md) for the full diagram index (5-class color legend: edge/service/store/model/result) and links into every owning doc. The Phase 1-mandated deployment diagram required by `docs/mini_coursework.md` stays at its spec-pinned path:
+Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), Spark (PySpark local mode), MinIO, and PostgreSQL each run as their own process or container, never a library or SDK. Each subsystem also has its own small Mermaid diagram, embedded in the narrative doc that proves it — see [`docs/system-architecture.md`](docs/system-architecture.md) for the full diagram index (5-class color legend: edge/service/store/model/result) and links into every owning doc. The Phase 1-mandated deployment diagram required by `docs/mini_coursework.md` stays at its spec-pinned path:
 
 ![Stage 1 architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
 
@@ -155,4 +155,3 @@ Full local setup, Docker Compose profiles (incl. opt-in Flink), product/Phase 2 
 | Known operational residual | GHCR cold-node pull | The current web image is private; cached nodes run it, but a cold node needs an out-of-band sealed `read:packages` credential. |
 
 This status table is the honesty anchor for the whole documentation set — nothing above claims more than the linked evidence proves.
-</content>

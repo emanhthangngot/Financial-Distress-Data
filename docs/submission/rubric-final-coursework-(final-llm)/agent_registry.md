@@ -70,6 +70,31 @@ $ kubectl exec -n kagent deploy/agentregistry -- python -c "..."
 Full evidence:
 [`LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori.md`](../../phase2/evidence/llm/LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori.md).
 
+#### Image proof
+
+![kagent agent detail panel](../../pngs/kagent_agent_spec_detail.png)
+
+*Image note:* live kagent-ui agent detail panel (2026-08-14) for
+`kagent/argo-rollouts-conversion-agent` shows its model
+(`qwen2.5-0.5b-instruct`) and its bound-tools list. It proves the registry
+detail view exposes per-agent model and tool metadata, not just a name in a
+list. It does not represent one of this submission's three agents — kagent's
+own bundled Kubernetes-operations agents share the same UI, used here only
+to demonstrate the detail-panel mechanism.
+
+## Part III — Product web app registry surface
+
+The registry is also visible through the product plane's own agent-registry
+UI, independent of the kagent-ui capture above:
+
+![Product web app agent registry UI](../../pngs/product_agent_registry_ui.png)
+
+*Image note:* Next.js product agent-registry surface (Playwright capture),
+degraded-state view for the `platform_operator` role. It proves the product
+plane renders a live agent-registry surface, including an honest degraded
+state rather than hiding it. It does not show the analyst-role happy-path
+view — see `web_api_user_data.md` for that capture.
+
 ## Limitations
 
 The registry lists 3 agents matching this submission's scope (feature,

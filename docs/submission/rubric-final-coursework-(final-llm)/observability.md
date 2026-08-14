@@ -110,6 +110,18 @@ Full evidence:
 
 ## Part III — Correlated logs and traces for the same request
 
+#### Image proof
+
+![Jaeger discoverable services list](../../pngs/jaeger_search_services.png)
+
+*Image note:* live Jaeger search page (2026-08-14) lists 6 discoverable
+traced services (coordinator-agent, drift-agent, drift-mcp, feature-agent,
+feature-mcp, jaeger). It proves every agent/tool service in the platform
+actually emits traces discoverable by Jaeger, not just the one request
+correlated below. It does not show a specific trace — see
+`coordinator_agent.md`'s Jaeger capture for a full trace, or the
+`trace_id`/`request_id` anchor below for the log/trace pairing.
+
 ### 5. The same request in Loki and Jaeger, anchored by ID
 
 ```text

@@ -1,7 +1,7 @@
 ---
 phase: 7
 title: "Integrity gates, cleanup, and freeze"
-status: pending
+status: in_progress
 priority: P1
 effort: "0.5d"
 dependencies: [1, 2, 3, 4, 5, 6]

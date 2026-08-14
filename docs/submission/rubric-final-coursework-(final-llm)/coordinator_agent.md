@@ -95,6 +95,18 @@ $ kubectl exec -n kagent deploy/agentregistry -- python -c "..." /v1/agents/coor
 Full evidence:
 [`LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry.md`](../../phase2/evidence/llm/LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry.md).
 
+#### Image proof
+
+![kagent chat round-trip with visible token usage](../../pngs/kagent_agent_run_success.png)
+
+*Image note:* live kagent-ui chat round-trip (2026-08-14) with
+`kagent/promql-agent` shows a successful response with visible token usage
+(1767 total: 1753 in / 14 out). It proves a real agent round-trip through
+the same kagent runtime the coordinator uses, with genuine token accounting
+rather than a placeholder. It is a different agent than the coordinator
+itself — included as corroborating evidence that the kagent chat mechanism
+produces real, measured responses.
+
 ## Limitations
 
 `max_hops=2` is a hard-coded ceiling, not a configurable per-request budget —

@@ -76,6 +76,18 @@ feature-agent: version 1.0.0, status active, replicas 2..3,
 Full evidence:
 [`LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr.md`](../../phase2/evidence/llm/LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr.md).
 
+#### Image proof
+
+![Product web app login surface](../../pngs/product_web_login_success.png)
+![Product web app analyst companies surface](../../pngs/product_analyst_companies_surface.png)
+
+*Image note:* Next.js product plane captures (Playwright), analyst role,
+desktop viewport. They prove the product plane's own consumer surfaces for
+this data (login, companies list) render successfully end to end — the
+human-facing side of the feature-pull API this doc otherwise proves at the
+API/agent layer. They do not show the underlying API call — see the CLI
+evidence above and in `routing_gateway.md` for that.
+
 ## Part II — Agent call and sandbox boundary
 
 ### 4. Feature agent calls the scoped MCP tool

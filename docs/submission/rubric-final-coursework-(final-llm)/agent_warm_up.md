@@ -57,6 +57,19 @@ for a warm start, `/v1/run` TTFT via `kubectl port-forward`), and the
 policy's `measurement.command` was updated to point at it. Disclosed here
 rather than silently patched, per this submission's honesty rule.
 
+#### Image proof
+
+![kagent chat round-trip hitting the model's context-window limit](../../pngs/kagent_agent_run_token_limit_error.png)
+
+*Image note:* live kagent-ui chat round-trip (2026-08-14) with a
+tool-heavy kagent agent shows a real `400` error — `request (2187 tokens)
+exceeds` the model's context window. It proves the deployed
+`qwen2.5-0.5b-instruct` server genuinely enforces its context limit and
+returns a real error rather than truncating silently. It does not concern
+`feature-agent` specifically (the warm-up subject above) — it is included
+here as disclosed evidence of the same small-model constraint that shapes
+this platform's operating envelope, not smoothed away.
+
 ## Cost/capacity discipline
 
 The measurement scales `feature-agent` to zero and back during the run and

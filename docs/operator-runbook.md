@@ -437,4 +437,3 @@ Stop and remove containers/network.
 ```bash
 docker compose down
 ```
-</content>
