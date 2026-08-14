@@ -22,3 +22,24 @@ produces at least one file; this prevents a successful command log from being
 mistaken for visual evidence. When `--source-sha` or `--gitops-sha` are omitted,
 the driver records the checkout `HEAD` values (or an explicit `unresolved`
 marker when a checkout cannot be inspected) in the run manifest.
+
+## Current Production Sources
+
+Pattern borrowed from `itsmekhoathekid/RecSys-MLops`
+(`docs/submission/README.md`, pinned `e99df9d1`): one authoritative file per
+operational concern, so a reader never has to guess which of several
+candidate paths is the live one.
+
+| Concern | Authoritative source |
+|---|---|
+| Rubric matrix (source of truth for all 60 LLM rows) | `docs/phase2/rubric-matrix.csv` |
+| Evidence contract + strict gate logic | `scripts/audit_phase2_evidence.py` |
+| Evidence capture checklist (commands + claims) | `configs/evidence-checklist.yaml` |
+| Deployable image catalog (build source of truth) | `configs/phase2-deployables.yaml` |
+| Shared build/sign CI workflow | `.github/workflows/phase2-ci.yaml` |
+| GitOps offline validation gate | `financial-distress-gitops/scripts/validate-gitops.sh` |
+| GitOps control-repo rules | `financial-distress-gitops/AGENTS.md` |
+| Feature-pull / drift-detection Web APIs | `apps/feature-mcp/`, `apps/drift-mcp/` |
+| RAG ingest / stream-feature jobs | `infra/rag-pipeline/`, `infra/stream-feature-offline/`, `infra/stream-feature-online/` |
+| Public gateway routes | `financial-distress-gitops/platform/ingress/routes-ui.yaml` |
+| Validation & verification evidence bundle | `docs/phase2/evidence/llm/validation-verification/README.md` |
