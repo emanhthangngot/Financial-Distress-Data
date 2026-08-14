@@ -1,7 +1,7 @@
 ---
 phase: 6
 title: "Root README rebuild"
-status: pending
+status: done
 priority: P1
 effort: "0.5d"
 dependencies: [3, 4, 5]
