@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-observability-web-api-metrics
 - execution_timestamp: 2026-08-12T01:32:59+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: prometheus-client 0.24.1, `src/observability/telemetry.py` canonical metric families
 - command: `curl http://127.0.0.1:19090/api/v1/query?query=fd_web_api_requests_total{service="feature-mcp"}` via `kubectl -n monitoring port-forward svc/monitoring-kube-prometheus-prometheus`
 - expected_result: per-route, per-status HTTP request-count/latency/error series exist for both the feature and drift MCP services

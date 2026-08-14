@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori
 - execution_timestamp: 2026-08-10T05:14:00+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: FastAPI registry 1.0.0, ConfigMap registry.fd.dev/v1alpha1
 - command: `kubectl exec -n kagent deploy/agentregistry -- python -c "urllib.request.urlopen('/readyz'); urllib.request.urlopen('/v1/agents')"`
 - expected_result: deployed registry API is ready and returns all registered agents

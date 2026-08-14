@@ -6,8 +6,8 @@ waits for readiness, and shifts only a canary share of traffic.
 
 - rubric_id: LLM-a-b-testing-when-you-deploy-a-new-model
 - execution_timestamp: 2026-08-11T00:31+07:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: v1 (`fd-chat-model-v1-config-ab`) and v2 (`fd-chat-model-ab-v2-clone`); pod `MODEL_VERSION` values `v1`/`v2`
 - command: live Kubernetes inspection of the GitOps Application, PR-backed revisions, model-weight PVC/PV bindings, revision readiness/node placement, Knative route conditions/traffic, probes, and agent `ModelConfig` resources
 - expected_result: deploying v2 does not replace v1 directly; immutable revisions retain distinct bound storage, both revisions become ready, and the service exposes v1 as stable with v2 as a monitored canary

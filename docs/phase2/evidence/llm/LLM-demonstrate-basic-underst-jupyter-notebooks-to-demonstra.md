@@ -2,8 +2,8 @@
 
 - rubric_id: LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra
 - execution_timestamp: 2026-08-11T08:52:37Z
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: Python 3.11; mcp streamable-http client; feature-mcp and drift-mcp images deployed from the recorded GitOps revision
 - command: Port-forward `feature-mcp` and `drift-mcp` and run the code cells in `notebooks/agent-mcp-demo.ipynb` with feature scope `financial-distress:read` and drift scope `financial-distress:drift`
 - expected_result: one bounded agent invocation calls both governed MCP tools and returns feature/RAG context plus a deterministic drift report

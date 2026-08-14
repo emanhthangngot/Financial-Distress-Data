@@ -8,8 +8,8 @@ a real push to `dev`, deploying `src/ml/feast/online_job.py`
 
 - rubric_id: LLM-ci-cd-job-2
 - execution_timestamp: 2026-08-09T06:41:12+00:00
-- source_sha: 6ee3175073333df7ed3ed6737bc6c2ac65e6a0a8
-- gitops_sha: a9491d1a0164f098e0de02ab6cebec39752dc8c0
+- source_sha: 529fc06a0919fb9dab74aeeff43e14d440e1f8d8
+- gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: financial-distress-data@94774e5, docker/build-push-action@v5, docker/login-action@v3, ghcr.io/emanhthangngot/financial-distress-data/stream-feature-online
 - command: `git push origin dev` (merge of PR #54) triggering `phase2-stream-feature-online.yaml` on the `push` event; workflow run watched via `gh run list --branch dev` and `gh run view <id> --json jobs`
 - expected_result: all four jobs (`lint`, `test`, `build`, `gitops-pr`) succeed; `build` pushes an immutable digest to GHCR; `gitops-pr` opens a PR in `financial-distress-gitops` bumping `pipelines/stream-feature-online/digest.txt` to that digest
