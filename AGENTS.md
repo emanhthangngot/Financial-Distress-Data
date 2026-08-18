@@ -2,29 +2,6 @@
 
 Process memory only. WHY/architecture live in `docs/`; this file is HOW-TO-BEHAVE.
 
-## Read Order (source of truth)
-
-1. `AGENTS.md` (this file) — non-negotiable.
-2. `docs/mini_coursework.md` — Phase 1 spec (active scope, see below).
-3. `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` — Phase 2 ground truth, read only when a task explicitly targets Phase 2. It links onward to `docs/coursework.md`, `docs/phase2/*` (rubric matrix, ADRs, low-level design), and phase files `phase-01..08`.
-
-Conflict between docs: Phase 1 local-first decisions in this file and `docs/mini_coursework.md` win.
-
-## Phase Scope
-
-- Phase 1 = `docs/01_data_generator.md` + `docs/02_schema_design.md`. Default active phase unless the task says Phase 2.
-- Phase 2 code is additive-only under `src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, and thin wrappers in `dags/phase2/`.
-- `dags/phase2/` wrappers must have zero import-time side effects and must not rename/remove any existing Phase 1 DAG ID or task.
-- Never edit a Phase 1 DAG (`dags/*.py` outside `dags/phase2/`) or Phase 1 pipeline behavior for a Phase 2 task unless the task explicitly asks for it.
-
-## Don't Touch
-
-- Phase 1 (this repo, `src/collectors`/`generator`/`streaming`/`transforms`/`quality`/`catalog`/`metadata`, `dags/*.py` outside `phase2/`): no AWS RDS/S3/Glue/Athena/EMR/MSK/Redshift/SageMaker, no Kubernetes, no `boto3` for Athena/Glue — local-first stack only (MinIO + DuckDB `httpfs`, not cloud equivalents).
-- Phase 2's AWS/EKS/GitOps platform (EKS, S3, ECR, RDS, ElastiCache, Argo CD, etc. — see `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-03-bootstrap-gitops-and-aws-evidence-platform.md`) lives in a **separate** `financial-distress-gitops` control repo, not in this repo. If a Phase 2 task needs that infra and the gitops repo isn't checked out locally, say so instead of adding AWS/K8s code here.
-- Don't change an existing test's expected value to make it pass. If a test fails, re-check the test and code against the spec (`docs/mini_coursework.md` for Phase 1, `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` for Phase 2); if the spec is right, fix the code.
-- Don't hand-edit `warehouse.db`, `outputs/**`, or anything under `docs/evidence/` — these are generated artifacts, regenerate via the producing script instead.
-- Don't run Flink locally by default — it's opt-in via the `flink` Docker Compose profile and `ENABLE_FLINK=1`; not started by plain `docker compose up`.
-
 ## Data Contract Rules (non-obvious, wrong-by-default otherwise)
 
 - Bronze: append-only.
