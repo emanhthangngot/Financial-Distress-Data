@@ -79,6 +79,12 @@ def test_architecture_directory_contains_only_known_files() -> None:
     actual = {p.name for p in IMG_DIR.iterdir() if p.is_file()}
     expected = {
         "architecture-stage-1.png",
+        "architecture-stage-1-excalidraw.excalidraw",
+        "architecture-full-system.png",
+        "architecture-full-system.excalidraw",
+        "architecture-project-poster.png",
+        "architecture-project-poster.excalidraw",
+        "reference-recsys-mlops-overview.png",
         "system_deployment_diagram.png",
         "system_deployment_diagram.dot",
     }
