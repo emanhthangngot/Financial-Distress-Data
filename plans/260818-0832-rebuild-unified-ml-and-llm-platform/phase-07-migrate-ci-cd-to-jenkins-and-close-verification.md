@@ -39,6 +39,8 @@ Functional — Validation & Verification:
 
 Non-functional:
 - [ ] CD pulls the model tagged `production` from the MLflow registry, packages and deploys it
+- [ ] Model promotion runs as its own pipeline, triggered by an MLflow webhook, not as extra stages inside the application pipeline
+- [ ] No candidate reaches the GitOps repo without passing the holdout gate
 - [ ] A pipeline failure blocks deployment rather than deploying a broken artifact
 
 ## Architecture
@@ -51,6 +53,40 @@ the GitOps repo, and Argo CD reconciles. That keeps GitOps the single deployment
 path even with Jenkins driving.
 
 Credentials come from Vault through the Jenkins Vault plugin, scoped per pipeline.
+
+### Two lanes, one exit
+
+Application CI and model promotion are different pipelines with different triggers,
+different inputs and different cadences — a `git push` versus an MLflow stage
+transition. Folding them into one lane means every README edit re-validates a model
+and every promotion re-lints the codebase. They share only the final stage:
+
+```
+app-ci          (trigger: git push)
+  lint → test-build → scan-image → push-by-digest ─┐
+                                                   ├─▶ bump-gitops ─▶ GitOps repo ─▶ Argo CD
+model-promote   (trigger: MLflow webhook, stage=Staging)
+  fetch-run → validate-holdout → smoke-test → scan-artifact → sign ─┘
+```
+
+One shared exit keeps GitOps the single deployment path for models as well as for
+images — a model promoted by any other route would be the one thing in the platform
+not reconciled from git, and not reproducible from it either.
+
+Stage order in the model lane is load-bearing: **validation precedes the GitOps
+bump**. Bumping first means Argo CD syncs immediately and a bad model is already
+serving canary traffic before anything has checked it, with the Rollouts analysis
+gate — which cannot see prediction quality, only latency and errors — as the sole
+remaining defence.
+
+| Stage | Gate |
+|---|---|
+| `fetch-run` | Resolve `run_id`, metrics and artifact URI from the webhook payload |
+| `validate-holdout` | Assert `candidate.holdout_snapshot == champion.holdout_snapshot == HOLDOUT_SNAPSHOT`, then compare metrics; exit non-zero on mismatch **or** regression |
+| `smoke-test` | Load into a throwaway Triton, assert output shape, absence of NaN and a latency ceiling |
+| `scan-artifact` | Scan the serialized model — a pickle is executable code, and this is the one artifact in the platform that reaches production without passing through an image scan |
+| `sign` | `cosign` over the artifact plus a model card recording run ID, data snapshot, holdout tag and metrics |
+| `bump-gitops` | Commit `modelUri` into the candidate `InferenceService` values, shared with `app-ci` |
 
 Verification techniques map to rubric rows one-to-one, so each is a deliberate,
 documented artifact rather than a side effect:
@@ -65,7 +101,7 @@ documented artifact rather than a side effect:
 
 ## Related Code Files
 
-- Create: `Jenkinsfile` per deployable, `ci/jenkins/shared-library/`, `tests/verification/test_equivalence_boundary.py`, `tests/verification/test_idempotency_properties.py`, `locust/feature_api_load.py`, `docs/validation-verification.md`
+- Create: `Jenkinsfile` per deployable, `ci/jenkins/shared-library/`, `ci/jenkins/Jenkinsfile.model-promote`, `scripts/validate_holdout_gate.py`, `tests/verification/test_equivalence_boundary.py`, `tests/verification/test_idempotency_properties.py`, `locust/feature_api_load.py`, `docs/validation-verification.md`
 - Modify: `pyproject.toml` (coverage config, mutmut config), `tests/**`
 - Create in GitOps: `platform/ci-jenkins/pipelines/`, image-digest bump automation
 - Delete: `.github/workflows/**` deploy workflows in both repos (retain at most a lint-only PR check)
@@ -75,7 +111,7 @@ documented artifact rather than a side effect:
 1. Build the Jenkins shared library first: lint → test → build → scan → push-by-digest → bump-GitOps. Every pipeline composes these stages instead of restating them.
 2. Write the `Jenkinsfile` for one representative service (feature API) end to end and prove the full path: commit → Jenkins → image digest → GitOps bump → Argo sync → running pod.
 3. Replicate across the remaining pipelines, services, jobs and agents.
-4. Wire the model-promotion path: CD pulls the MLflow model tagged `production`, packages it, and deploys through the same digest-bump mechanism.
+4. Wire the model-promotion path as a second lane sharing the shared library's `bump-gitops` stage: an MLflow webhook on the `Staging` transition triggers `Jenkinsfile.model-promote`, which runs `fetch-run → validate-holdout → smoke-test → scan-artifact → sign → bump-gitops`. `scripts/validate_holdout_gate.py` compares candidate and champion on the pinned holdout snapshot and **exits non-zero** on either a snapshot mismatch or a metric regression — a warning here would be ignored precisely when it matters, since the pipeline otherwise looks green. Cover the mismatch path with a test that feeds two runs carrying different snapshot IDs and asserts the non-zero exit.
 5. Move every credential into Vault; verify no pipeline holds a secret in its own config; delete the GitHub Actions deploy workflows.
 6. Raise coverage above 90% across the APIs and MCP servers, using fixtures and mocks for external dependencies (Feast, Redis, MLflow, the inference endpoint).
 7. Write the equivalence-partitioning and BVA test module: document the partitions and boundaries in a table, then parametrize the tests directly from it so the table and the tests cannot drift.
@@ -88,6 +124,9 @@ documented artifact rather than a side effect:
 - [ ] Every deployable has a Jenkins pipeline that has run green at least once, captured from the Jenkins UI
 - [ ] A commit reaches a running pod with no manual step and no `kubectl` from Jenkins
 - [ ] A deliberately failing test blocks the deployment stage
+- [ ] An MLflow `Staging` transition triggers `model-promote` end to end: webhook → holdout gate → signed artifact → GitOps bump → Argo sync → candidate `InferenceService` serving
+- [ ] A candidate whose `holdout_snapshot` differs from the champion's fails `validate-holdout` with a non-zero exit and never reaches `bump-gitops`
+- [ ] A candidate that regresses on the holdout is rejected before the GitOps bump, not by the Rollouts analysis gate afterwards
 - [ ] `grep` finds no credential literal in either repo; Jenkins credentials resolve from Vault
 - [ ] No GitHub Actions workflow retains deploy permissions
 - [ ] Coverage report shows > 90%, with fixture and mock usage visible in the test source
@@ -102,4 +141,5 @@ documented artifact rather than a side effect:
 - **Twelve-plus Jenkins pipelines is a lot of near-duplicate YAML/Groovy.** Mitigation: the shared library is step 1 for exactly this reason. If a pipeline needs more than ~30 lines of its own, the shared library is missing a stage.
 - **Chasing 90% coverage produces assertion-free tests that inflate the number.** Mitigation: mutation testing is the counterweight, and it runs on the same code. A high coverage figure with many surviving mutants fails this phase, and should be treated as failing.
 - **`mutmut` over the whole repo would run for hours.** Mitigation: scope to files changed in this plan, as the rubric itself instructs.
+- **The MLflow webhook is a single point of failure that fails quietly.** If it never fires, nothing errors — promotions simply stop, and that is indistinguishable from having no candidates. Mitigation: a nightly Jenkins job lists MLflow models sitting in `Staging` beyond a threshold age and alerts. Cheap, and it converts silence into a signal.
 - **Load testing from inside the cluster measures the wrong thing.** Mitigation: run Locust from the GCE VM through the public ingress, so the SLA reflects the path a real client takes.

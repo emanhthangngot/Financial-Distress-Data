@@ -85,7 +85,7 @@ remains the graded path — the graph sits beside it.
 ## Implementation Steps
 
 1. **DuckLake vs Iceberg benchmark.** Replay the same streaming write pattern into both formats; measure file count growth, checkpoint/commit latency, and query latency before and after compaction. Report where each wins and state the conclusion honestly, including where Iceberg is the right production choice despite DuckLake's numbers.
-2. **Point-in-time leakage guard.** Implement a check that detects a feature computed from data timestamped after the label event, run it over the training pull, and deliberately introduce a leak to prove the guard catches it. A guard that has never caught anything is not proof.
+2. **Point-in-time leakage guard.** Implement a check that detects a feature computed from data timestamped after the label event, run it over the training pull, and deliberately introduce a leak to prove the guard catches it. A guard that has never caught anything is not proof. Extend it to the split itself: assert that no training row's label window (`label_event_ts` back one `label_horizon`) overlaps the holdout window from phase 2. Feature-level leakage and split-level leakage are the same defect entering through different doors, and the second is the one that silently inflates the promotion gate the whole ML track depends on.
 3. **Semantic cache + speculative decoding.** Add an embedding-similarity cache in front of the LLM gateway and enable speculative decoding on the model server; measure TTFT, total round-trip and token cost before and after, and report the cache hit rate.
 4. Redraw the deployment diagram against the running cluster: every box a deployable unit, arrows following data flow with numbered descriptions, separate numbering and colour per user flow (end user, developer, analytic stakeholder), dashed arrows reserved for non-primary flows.
 5. Rewrite `README.md`: business domain, table of contents, repo structure table, the diagram, and links out to `docs/` — summary only, detail lives in `docs/`.
@@ -103,6 +103,7 @@ remains the graded path — the graph sits beside it.
 
 - [ ] Six novel-idea documents, each with a method and a measured result table, one per rubric row, no artifact reused across two rows
 - [ ] The leakage guard catches a deliberately introduced leak, captured
+- [ ] The guard also rejects a deliberately shortened embargo, proving it covers split-level leakage and not only feature-level leakage
 - [ ] Deployment diagram matches the running cluster component-for-component, with numbered per-flow arrows
 - [ ] README carries business domain, TOC, repo structure and the diagram, and links to `docs/`
 - [ ] Docstring lint passes across `src`, `dags`, `apps`, `scripts`

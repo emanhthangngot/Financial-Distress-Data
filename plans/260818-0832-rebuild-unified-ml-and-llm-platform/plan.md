@@ -46,6 +46,7 @@ evidence artifact from zero under one unified, phase-free tree.
 | 11 | Novel ideas: DuckLake-vs-Iceberg benchmark, point-in-time leakage guard, LLM semantic cache + speculative decoding | Three ideas cover the four novel-idea rows (2 per track). |
 | 12 | Timeline ~10 weeks, no hard external deadline | Bounded only by credit expiry on 2026-11-06. |
 | 13 | **KServe pinned to 0.18+, LLM served through llm-d** via `LLMInferenceService`, vLLM CPU backend | The old project pinned KServe `v0.14.1`, which predates the `LLMInferenceService` CRD that llm-d integrates with — a version constraint, not an architecture decision. Rebuilding removes it. Affects the ML track too: Triton serving migrates to the same 0.18+ install. |
+| 14 | **Frozen holdout `gold.distress_holdout_v1`, pinned by an Iceberg tag, is the sole promotion gate**; model promotion runs as a second Jenkins lane sharing `bump-gitops` | Added 2026-08-19. Online A/B has no ground truth, so the offline comparison is the only check on model quality — and it is worthless unless champion and candidate are scored on identical data. A rolling evaluation window fails silently: the pipeline stays green and promotes anyway. Costs a `label_event_ts` column on the label table (phase 2), one embargo window of training data, and a hard equality assert in phase 7. |
 
 ### GPU constraint
 
@@ -240,6 +241,7 @@ GKE cluster (48 vCPU, asia-southeast1-b)
 ├─ ns: governance    DataHub, Airflow
 ├─ ns: kubeflow      Kubeflow Pipelines, Ray cluster
 ├─ ns: tracking      MLflow (Postgres metadata + MinIO artifacts)
+│                    promotion gated on gold.distress_holdout_v1 @ tag holdout-v1
 ├─ ns: rollouts     Argo Rollouts (progressive delivery, both tracks' A/B)
 ├─ ns: kserve        KServe 0.18+: Triton champion / candidate (ML),
 │                    LLMInferenceService on llm-d, vLLM CPU backend (LLM)
@@ -371,5 +373,6 @@ itself here regardless of the 4 points.
 - [ ] Vault is the only secret source; no sealed-secret remains in the GitOps repo
 - [ ] Total GCP spend stays inside the free-trial credit, reconciled in the cost ledger
 - [ ] Deployment diagram in README matches the running cluster component-for-component
+- [ ] No model version reaches the GitOps repo without passing the holdout gate; a snapshot mismatch fails the pipeline with a non-zero exit
 
 <!-- slug: rebuild-unified-ml-and-llm-platform -->
