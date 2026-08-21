@@ -30,14 +30,17 @@ Functional:
 - [ ] Feature API: FastAPI, Pydantic validation, async, k8s healthchecks, reads Feast online store by entity ID, forwards to the inference engine
 - [ ] Drift API: FastAPI, Pydantic validation, async, k8s healthchecks, real-time drift detection
 - [ ] The drift service is triggered through **Knative Eventing** (Broker → Trigger) combined with KServe, as the rubric names literally — not by a plain HTTP call
+- [ ] The Trigger's sink is the **`drift-api` Deployment**, and `drift-api` in turn scores against the Triton `InferenceService` — the Eventing/KServe combination is the request path, not a Knative-hosted drift model
+- [ ] Two producers publish to the Broker: a `KafkaSource` on `inference_log` for the real-time path, and the Airflow drift DAG for the scheduled daily check
 - [ ] Both APIs deployed by Helm with rolling update and automatic rollback (`--atomic`)
 - [ ] Both APIs autoscaled by KEDA on request rate, with a demonstrated scale-out and scale-in
 - [ ] KServe serves the model through Triton, with a champion and a candidate `InferenceService`
 - [ ] An Airflow drift pipeline compares offline features against reference, pushes PSI to Prometheus via PushGateway, and triggers a Kubeflow retrain
 - [ ] Triton and `feature-api` log every request to a Kafka `inference_log` topic, sunk to `gold.inference_log` on Iceberg (request id, timestamp, model version, feature version, features, prediction, latency)
 - [ ] The drift pipeline also compares `gold.inference_log` against the holdout reference, and joins `gold.labels` on `label_event_ts` for performance drift once outcomes land
-- [ ] A/B traffic split between two model versions driven by **Argo Rollouts**, progressive (10% -> 25% -> 50%) with a Prometheus analysis gate and automatic rollback on regression, with a dashboard comparing the versions
-- [ ] Rollouts routes traffic through `trafficRouting.nginx` (stable Ingress + canary Ingress with `nginx.ingress.kubernetes.io/canary-weight`), and the Argo CD Application carries `ignoreDifferences` for that annotation so a sync does not revert a weight step
+- [ ] A/B traffic split between two model versions driven by KServe **`canaryTrafficPercent`** on a serverless-mode `InferenceService`, stepped 10% -> 25% -> 50% by the promotion pipeline, with the same Prometheus queries checked between steps and an automatic revert to 0 on regression, plus a dashboard comparing the versions
+- [ ] **Argo Rollouts** drives progressive delivery for `feature-api`, `drift-api` and `prediction-api` through `trafficRouting.nginx` (stable Ingress + canary Ingress with `nginx.ingress.kubernetes.io/canary-weight`), with an `AnalysisTemplate` gate and automatic rollback
+- [ ] The Argo CD Applications carry `ignoreDifferences` for both the canary annotation and `spec.predictor.canaryTrafficPercent`, so a sync does not revert a weight step
 - [ ] Feature API fronted by gateway **basic authentication and rate limiting**, both demonstrated
 - [ ] Both APIs follow the API → Service → Repository layering from `plan.md`, with Triton reached through the `ModelRuntime` interface rather than a direct client call
 - [ ] Both APIs instrumented with the **OpenTelemetry** SDK, exporting OTLP spans that link the incoming request to the Feast read and the inference call
@@ -105,12 +108,16 @@ and nothing downstream would flag it.
 5b. Implement `evaluate_holdout.py`: read `gold.distress_holdout_v1` at tag `holdout-v1`, compute AUC, KS and the prediction-distribution summary, and log them to the run alongside `holdout_tag` and `holdout_snapshot`. Both the notebook and the Kubeflow evaluate component call this one function, so the notebook's numbers and the pipeline's numbers are comparable by construction — a graded row in its own right.
 5c. Run `scripts/score_champion_baseline.py` once against the current champion and register the result as the promotion baseline. Skipping this is the most likely way the first phase-7 promotion fails: the gate has a candidate score and nothing to compare it against.
 6. Build the feature API — async FastAPI, Pydantic request/response models, `/healthz` and `/readyz`, Feast online read by entity ID, forward to the inference engine. Apply the layering contract: routers hold no business logic, the service layer imports no framework and no store client, and Feast access sits behind a `FeatureRepository` interface so tests fake it without a live store. Reach Triton through the `ModelRuntime` adapter, not a Triton client in the service layer.
-7. Build the drift API — async FastAPI, Pydantic models, healthchecks, computing drift statistics on demand against a reference window. Wire it as a **Knative Eventing** sink: a Broker receives drift-check events and a Trigger routes them to the service, combined with KServe as the rubric's CI/CD row states verbatim (*"sử dụng KNative Eventing kết hợp với KServe"*). A direct HTTP invocation does not satisfy that row.
+7. Build the drift API — async FastAPI, Pydantic models, healthchecks, computing drift statistics on demand against a reference window. Wire it as a **Knative Eventing** sink, as the rubric's CI/CD row states verbatim (*"sử dụng KNative Eventing kết hợp với KServe"*). A direct HTTP invocation does not satisfy that row.
+
+   The wiring is settled here so it is not re-litigated at build time. A Kafka-backed **Broker** receives `type=drift.check` CloudEvents from two producers — a **`KafkaSource`** on the `inference_log` topic for the real-time path, and the Airflow drift DAG for the scheduled daily check. A **Trigger** filtering on that type routes them to **`drift-api` as an ordinary Deployment**, which then scores the live window against the reference by calling the Triton `InferenceService`. That call is where "kết hợp với KServe" is earned.
+
+   The alternative — making `drift-api` itself a Knative Service so the Trigger sinks straight into a KServe `InferenceService` — is **rejected**: Knative would own its autoscaling, which costs the KEDA row in step 9. One rubric row is not worth trading for another.
 8. Package both as one parameterized Helm chart; deploy through Argo CD with `--atomic` semantics; force a bad image to demonstrate automatic rollback and capture it.
 9. Deploy KEDA HTTP scalers for both APIs; drive load and capture the scale-out and the scale-back-in.
 10. Deploy Triton as champion and candidate `InferenceService`s serving the MLflow-registered model, on the **same KServe 0.18+ install** phase 4 provisions for llm-d. One KServe version serves both tracks; do not stand up a second install for the ML track.
 11. Build the Airflow drift DAG: pull recent offline features, compute PSI against the reference window, push to Prometheus via PushGateway, and call the Kubeflow API to trigger retraining when PSI exceeds threshold.
-12. Configure the A/B test as an **Argo Rollouts** `Rollout` with a canary strategy: weight steps 10% -> 25% -> 50%, an `AnalysisTemplate` querying Prometheus between steps, automatic promotion on pass and automatic rollback to weight 0 on regression. This is the mechanism the reference architecture draws; a static traffic split with no gate does not demonstrate "monitor it, and deploy". Build the per-version comparison dashboard alongside it.
+12. Configure the model A/B as a KServe **`canaryTrafficPercent`** split on the serverless-mode `InferenceService`: the candidate is the latest ready revision, the champion is `LatestRolledoutRevision`, and the promotion pipeline walks the percentage 10 -> 25 -> 50, running the same Prometheus queries between steps that the `AnalysisTemplate` uses and setting the value back to 0 on regression. **Argo Rollouts cannot drive this** — a serverless `InferenceService` is a Knative Service whose Deployment the Knative controller owns, so there is no Pod-template workload for a `Rollout` to reference, and KServe's canary is documented as serverless-only. Rollouts earns the progressive-delivery row on `feature-api`/`drift-api`/`prediction-api`, which are ordinary Deployments; the same `AnalysisTemplate` queries serve both so there is one analysis definition, not two. A static traffic split with no gate does not demonstrate "monitor it, and deploy" in either place. Build the per-version comparison dashboard alongside it.
 13. Put the feature API behind NGINX Ingress **basic auth and a rate limit** (`nginx.ingress.kubernetes.io/limit-rps` plus an auth secret sourced from Vault). Demonstrate both: an unauthenticated request rejected, and a request burst returning 429 once over the limit. The ML rubric asks for this on the data-pulling Web API specifically, not on a UI.
 
 ## Success Criteria
@@ -124,13 +131,15 @@ and nothing downstream would flag it.
 - [ ] The champion's holdout baseline exists in MLflow before the first candidate is evaluated
 - [ ] Notebook and Kubeflow pipeline report the same holdout metrics for the same model, within floating-point tolerance
 - [ ] Both APIs pass Pydantic validation tests, expose healthchecks, and serve async
-- [ ] An event published to the Knative Broker reaches the drift service via its Trigger, captured end to end
+- [ ] An event published to the Knative Broker reaches `drift-api` via its Trigger, captured end to end, from both producers — one `inference_log` record through the `KafkaSource`, and one scheduled event from the Airflow DAG
+- [ ] The resulting drift computation calls the Triton `InferenceService`, captured in the trace, so the Eventing → KServe combination is visible rather than asserted
 - [ ] A deliberately broken rollout rolls back automatically, captured from Argo CD / Helm output
 - [ ] KEDA scales each API up under load and back to baseline, captured from the HPA/ScaledObject state over time
 - [ ] Champion and candidate `InferenceService`s both serve predictions
 - [ ] Drift DAG run pushes a PSI value visible on a Grafana panel and triggers a Kubeflow run
-- [ ] Argo Rollouts advances through all three weight steps with the Prometheus gate passing, captured from the Rollouts dashboard or `kubectl argo rollouts get`
-- [ ] A deliberately regressed candidate is rolled back to weight 0 automatically by the analysis gate
+- [ ] Argo Rollouts advances `feature-api` through all three weight steps with the Prometheus gate passing, captured from the Rollouts dashboard or `kubectl argo rollouts get`
+- [ ] The model canary advances 10 -> 25 -> 50, captured from `kubectl get isvc` showing the traffic split across two revisions
+- [ ] A deliberately regressed candidate is returned to 0% automatically by the analysis gate, on both the API and the model path
 - [ ] A/B dashboard shows both versions receiving traffic with comparable per-version metrics
 - [ ] Unauthenticated request to the feature API is rejected; a burst past the configured rate returns 429
 - [ ] `python scripts/run_quality_gates.py` passes

@@ -23,8 +23,8 @@ should absorb slippage, not cause it.
 ## Requirements
 
 Functional:
-- [ ] LLM inference platform deployed as a KServe `LLMInferenceService` backed by llm-d, with a custom model server (vLLM CPU backend)
-- [ ] Model server benchmarked, then optimized, with a before/after result table covering both quantization and llm-d KV-cache aware routing
+- [ ] LLM inference platform deployed on the branch phase 4 step 12 selected — **A**: KServe `LLMInferenceService` backed by llm-d on the vLLM CPU backend; **B**: llama.cpp OpenAI-compatible server behind a plain `InferenceService` with a custom `ServingRuntime`
+- [ ] Model server benchmarked, then optimized, with a before/after result table covering quantization plus the branch's routing evidence — llm-d KV-cache aware routing on branch A, gateway semantic-cache hit rate on branch B
 - [ ] A global model config applied, linking agents to the inference platform through the agent gateway
 - [ ] Agent registry deployed, with all three agents published to it
 - [ ] Airflow RAG pipeline: text → chunk → embed → store vectors in Feast, with DataHub lineage and governance checks
@@ -69,8 +69,8 @@ hand-instrumented per agent, so adding an agent does not mean adding metrics cod
 
 ## Implementation Steps
 
-1. Deploy the LLM platform as a KServe `LLMInferenceService` on the 0.18+ install from phase 4, with llm-d as the serving stack and a small quantized model on the vLLM CPU backend. Verify a completion end to end through the agent gateway.
-2. Benchmark in three passes, each a row in the same before/after table: (a) baseline — throughput, TTFT, p99, tokens/s; (b) after quantization; (c) with llm-d KV-cache aware routing enabled, driven by a multi-turn workload whose requests share a prefix so the routing has something to exploit. Report cache hit rate alongside TTFT.
+1. Deploy the LLM platform on the branch phase 4 step 12 recorded — do not re-open that decision here. Branch A: a KServe `LLMInferenceService` on the 0.18+ install, llm-d serving stack, small quantized model on the vLLM CPU backend, reached through its Gateway API `HTTPRoute`. Branch B: a llama.cpp OpenAI-compatible server behind a plain `InferenceService` with a custom `ServingRuntime`, reached through NGINX. Verify a completion end to end through the agent gateway either way — the gateway and `ModelConfig` wiring is identical, which is the point of the `ModelRuntime` adapter.
+2. Benchmark in three passes, each a row in the same before/after table: (a) baseline — throughput, TTFT, p99, tokens/s; (b) after quantization; (c) the branch's routing/caching pass. On branch A that is llm-d KV-cache aware routing, driven by a multi-turn workload whose requests share a prefix so the routing has something to exploit; report cache hit rate alongside TTFT. On branch B it is the gateway semantic cache over the same prefix-sharing workload, reported the same way — hit rate against TTFT — so the row's evidence shape is unchanged even though the mechanism is not.
    Do **not** attempt disaggregated prefill/decode — the cluster has no GPU (`GPUS_ALL_REGIONS` = 0, unraisable on a trial account) and the feature yields no meaningful CPU measurement. Say so explicitly in the write-up rather than omitting it.
 3. Apply the global model config so agents resolve their model through the gateway rather than by direct endpoint.
 4. Deploy the agent registry; confirm it is reachable behind the gateway.
@@ -83,7 +83,9 @@ hand-instrumented per agent, so adding an agent does not mean adding metrics cod
 11. Write both notebooks demonstrating agent ↔ MCP interaction for feature/drift and for RAG.
 12. Expose the agent-invocation and registry-listing APIs the phase-9 UIs consume, and confirm the gateway's basic auth and rate limit apply to those routes. The UIs themselves are phase 9's deliverable — do not build a second frontend here.
 13. Instrument LLM telemetry (tokens in/out/total, round-trip, TTFT, error frequency) and agent telemetry (calls per agent, calls per tool, failures per tool); build Grafana panels for both.
-14. Configure the two A/B tests using the same **Argo Rollouts** canary + Prometheus-analysis mechanism phase 5 establishes, so one A/B mechanism serves both tracks rather than two hand-rolled splits.
+14. Configure the two A/B tests. The split mechanism differs by surface, but the **analysis definition is shared with phase 5** — the same Prometheus queries and the same promotion thresholds, so there is one gate contract rather than two hand-rolled ones.
+    - **Split mechanism (branch A).** The LLM pair is split by the `LLMInferenceService` router's Gateway API `HTTPRoute` weights; Argo Rollouts cannot own an llmisvc-managed workload any more than it can own a Knative-backed `InferenceService`. The agent pair runs on ordinary Deployments, so it uses the phase-5 Rollouts + `trafficRouting.nginx` mechanism directly.
+    - **Split mechanism (branch B).** If phase 4 step 12 selected llama.cpp, both LLM variants are plain `InferenceService`s and the split moves to the same NGINX canary-weight mechanism as the agent pair.
     - **Agent A/B** — variant A and variant B differ on three axes at once (model, temperature, prompt version), which is what makes the comparison a real production decision rather than a parameter sweep. Compare on: latency, token usage, error rate, tool-failure rate, **task success rate** against a fixed evaluation set, and **cost per task**. Task success and cost are the two that actually decide promotion; latency alone would let a cheap-but-wrong variant win.
     - **LLM A/B** — two models at 50/50 behind the gateway, compared on answer quality (scored against the same fixed question set), latency, TTFT, throughput, token usage, cost and safety/refusal rate. Record the trade-off explicitly: the faster model is rarely also the better and the cheaper one, and the write-up should name which axis was chosen and why.
     - Neither promotion is by feel. The `AnalysisTemplate` gate encodes the chosen threshold, so the decision is in Git and reversible.
@@ -105,7 +107,7 @@ hand-instrumented per agent, so adding an agent does not mean adding metrics cod
 - [ ] Grafana shows token counts, TTFT, round-trip time, per-agent and per-tool call counts and failures, plus derived cost per request and per agent run
 - [ ] Agent A/B table reports all six dimensions per variant, including task success rate and cost per task
 - [ ] LLM A/B table reports all seven dimensions per variant, with the chosen trade-off axis named
-- [ ] Both A/B tests route traffic across variants through Argo Rollouts with a comparison dashboard
+- [ ] Both A/B tests route traffic across variants — the agent pair through Argo Rollouts, the LLM pair through the llmisvc `HTTPRoute` weights (or NGINX canary weights on branch B) — with a comparison dashboard
 - [ ] `python scripts/run_quality_gates.py` passes
 
 ## Risk Assessment

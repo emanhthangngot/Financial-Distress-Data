@@ -75,9 +75,11 @@ not reconciled from git, and not reproducible from it either.
 
 Stage order in the model lane is load-bearing: **validation precedes the GitOps
 bump**. Bumping first means Argo CD syncs immediately and a bad model is already
-serving canary traffic before anything has checked it, with the Rollouts analysis
+serving canary traffic before anything has checked it, with the canary analysis
 gate — which cannot see prediction quality, only latency and errors — as the sole
-remaining defence.
+remaining defence. This lane also owns the `canaryTrafficPercent` walk (10 → 25 →
+50) for the model `InferenceService`, since KServe's canary has no controller
+stepping it on its own the way Argo Rollouts does for the API Deployments.
 
 | Stage | Gate |
 |---|---|
@@ -126,7 +128,7 @@ documented artifact rather than a side effect:
 - [ ] A deliberately failing test blocks the deployment stage
 - [ ] An MLflow `Staging` transition triggers `model-promote` end to end: webhook → holdout gate → signed artifact → GitOps bump → Argo sync → candidate `InferenceService` serving
 - [ ] A candidate whose `holdout_snapshot` differs from the champion's fails `validate-holdout` with a non-zero exit and never reaches `bump-gitops`
-- [ ] A candidate that regresses on the holdout is rejected before the GitOps bump, not by the Rollouts analysis gate afterwards
+- [ ] A candidate that regresses on the holdout is rejected before the GitOps bump, not by the canary analysis gate afterwards
 - [ ] `grep` finds no credential literal in either repo; Jenkins credentials resolve from Vault
 - [ ] No GitHub Actions workflow retains deploy permissions
 - [ ] Coverage report shows > 90%, with fixture and mock usage visible in the test source

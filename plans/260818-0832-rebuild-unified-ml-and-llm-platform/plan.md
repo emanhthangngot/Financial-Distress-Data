@@ -45,7 +45,7 @@ evidence artifact from zero under one unified, phase-free tree.
 | 10 | **Two repos retained**: app monorepo + GitOps control repo | Preserves least-privilege GitOps; only the evidence tree is restructured. |
 | 11 | Novel ideas: DuckLake-vs-Iceberg benchmark, point-in-time leakage guard, LLM semantic cache + speculative decoding | Three ideas cover the four novel-idea rows (2 per track). |
 | 12 | Timeline ~10 weeks, no hard external deadline | Bounded only by credit expiry on 2026-11-06. |
-| 13 | **KServe pinned to 0.18+, LLM served through llm-d** via `LLMInferenceService`, vLLM CPU backend | The old project pinned KServe `v0.14.1`, which predates the `LLMInferenceService` CRD that llm-d integrates with — a version constraint, not an architecture decision. Rebuilding removes it. Affects the ML track too: Triton serving migrates to the same 0.18+ install. |
+| 13 | **KServe pinned to 0.18+, LLM served through llm-d** via `LLMInferenceService`, vLLM CPU backend | The old project pinned KServe `v0.14.1`, which predates the `LLMInferenceService` CRD that llm-d integrates with — a version constraint, not an architecture decision. Rebuilding removes it. Affects the ML track too: Triton serving migrates to the same 0.18+ install. Carries a dependency the earlier draft missed: llmisvc is a **Gateway API** resource (Gateway API + GIE + LeaderWorkerSet + a gateway provider), not a Knative one — see the routing section below. |
 | 14 | **Frozen holdout `gold.distress_holdout_v1`, pinned by an Iceberg tag, is the sole promotion gate**; model promotion runs as a second Jenkins lane sharing `bump-gitops` | Added 2026-08-19. Online A/B has no ground truth, so the offline comparison is the only check on model quality — and it is worthless unless champion and candidate are scored on identical data. A rolling evaluation window fails silently: the pipeline stays green and promotes anyway. Costs a `label_event_ts` column on the label table (phase 2), one embargo window of training data, and a hard equality assert in phase 7. |
 
 ### GPU constraint
@@ -60,6 +60,24 @@ on/off comparison is the evidence for the "benchmark model server and optimize t
 platform" row, alongside quantization. Any claim in the final write-up must stay
 inside what CPU can demonstrate.
 
+**The CPU backend is a fork, not a risk to monitor.** vLLM's own documentation says
+it is not intended for CPU inference and has not been optimized for it, and llm-d
+and `LLMInferenceService` are GPU-oriented throughout their docs. Phase 4 step 11
+therefore decides between two architectures, and each has its own evidence story
+written before the benchmark runs, not after:
+
+| Branch | Serving path | LLM optimization evidence |
+|---|---|---|
+| **A — vLLM CPU usable** | `LLMInferenceService` on llm-d, Gateway API router | KV-cache-aware routing on/off TTFT comparison **plus** quantization |
+| **B — vLLM CPU unusable** | llama.cpp OpenAI-compatible server behind a plain `InferenceService` with a custom `ServingRuntime` | Quantization (GGUF q4 vs q8), batch-size and thread-pinning sweeps, and a prompt/prefix **semantic cache** hit-rate comparison at the gateway |
+
+Branch B is not a drop-in backend swap, and the earlier draft was wrong to describe
+it as one: there is no shipped llama.cpp `ServingRuntime` for KServe (the proposal
+is open as kserve issue #5334), and dropping llm-d drops KV-cache-aware routing with
+it. Branch B keeps the same rubric row by moving its evidence to the semantic cache
+— which phase 8 builds as a novel idea anyway — so the row is covered either way.
+What must not happen is claiming branch A's routing evidence while running branch B.
+
 ### Capacity budget at 48 vCPU
 
 The full stack does **not** fit resident at 48 vCPU. This is a design constraint, not
@@ -69,6 +87,7 @@ a warning to keep in mind — component residency has to be scheduled.
 |---|---:|---|
 | Istio (istiod + mesh-wide sidecars) + Kiali | 5-6 | Always — sidecars scale with pod count |
 | Core platform: Argo CD, Argo Rollouts, Vault, ESO, cert-manager, NGINX | 2-3 | Always |
+| Gateway API stack for llm-d: GIE endpoint-picker + LeaderWorkerSet controller (gateway provider is Istio, already counted above) | 1-2 | Always — the llmisvc router depends on it |
 | Observability: Prometheus, Grafana, Loki, Jaeger, OTel Collector, PushGateway | 3-4 | Always |
 | Stores: MinIO, Postgres, Redis | 2-3 | Always |
 | Serving: KServe/Knative, Triton, vLLM, agents, MCP, gateway, registry | 6-12 | Serving + LLM windows |
@@ -78,7 +97,7 @@ a warning to keep in mind — component residency has to be scheduled.
 | DataHub (GMS + frontend + single-node Elasticsearch; Kafka and Postgres reused) | 2-3 | Governance/lineage window |
 | Trino (+ Superset) | 2-4 | Analytic window |
 | Jenkins controller (agents ephemeral) | 1-2 | CI windows |
-| **Idle total if everything resident** | **34-51** | — |
+| **Idle total if everything resident** | **35-53** | — |
 | Burst: Spark job, Ray workers, Locust | +6-12 | Their own windows only |
 
 **Always-on floor is roughly 12-16 vCPU**, leaving ~32 for scheduled work. That is
@@ -91,7 +110,9 @@ comfortable for any two or three groups at once and impossible for all of them. 
 If Google grants less than 48, the mesh-wide sidecar decision is the first thing to
 revisit — selective injection in `api-serving`, `agents` and `kserve` recovers
 roughly 3-4 vCPU while keeping the mesh row, the Kiali graph of the request path and
-the `VirtualService` A/B mechanism. Decide at phase 4 step 1, before provisioning.
+the A/B mechanisms. Decide at phase 4 step 1, before provisioning. Note that
+`kserve` cannot be dropped from the injected set under that fallback: Istio is the
+Gateway API provider for llm-d's router.
 
 Mesh-wide injection also makes one configuration detail load-bearing rather than
 optional: Istio sidecars historically prevent Kubernetes Jobs from ever reaching
@@ -242,9 +263,11 @@ GKE cluster (48 vCPU, asia-southeast1-b)
 ├─ ns: kubeflow      Kubeflow Pipelines, Ray cluster
 ├─ ns: tracking      MLflow (Postgres metadata + MinIO artifacts)
 │                    promotion gated on gold.distress_holdout_v1 @ tag holdout-v1
-├─ ns: rollouts     Argo Rollouts (progressive delivery, both tracks' A/B)
-├─ ns: kserve        KServe 0.18+: Triton champion / candidate (ML),
-│                    LLMInferenceService on llm-d, vLLM CPU backend (LLM)
+├─ ns: rollouts      Argo Rollouts (progressive delivery for the API/web Deployments)
+├─ ns: kserve        KServe 0.18+: Triton champion / candidate (ML, canaryTrafficPercent),
+│                    LLMInferenceService on llm-d, vLLM CPU backend (LLM),
+│                    Gateway API + GIE + LeaderWorkerSet; GatewayClass: istio,
+│                    Gateway is ClusterIP behind the single NGINX Ingress
 ├─ ns: api-serving   feature-api, drift-api, MCP servers (KEDA-autoscaled)
 ├─ ns: agents        kagent agents, agent registry, agentgateway, sandbox
 ├─ ns: observability Prometheus, Grafana, Loki, Jaeger, PushGateway, OTel Collector
@@ -322,15 +345,43 @@ holdout reference, and joins it to `gold.labels` on `label_event_ts` for
 performance drift once outcomes land. Without it the A/B dashboard and the drift
 gate describe two different populations.
 
-**2. Progressive delivery routes through NGINX, not Gateway API.** The edge is a
-single NGINX Ingress (rubric-mandated), so Argo Rollouts must use
-`trafficRouting.nginx` — a stable Ingress plus a canary Ingress carrying
-`nginx.ingress.kubernetes.io/canary-weight` — for both the ML champion/candidate
-split and the LLM A/B pair. Gateway API `HTTPRoute` weights are not available
-without a second edge controller, and a second edge splits TLS, auth and rate
-limiting across two data planes. Because Rollouts mutates the canary annotation
-in place, the Argo CD Application must carry `ignoreDifferences` for it, or
-every weight step is reverted on the next sync.
+**2. Progressive delivery uses three mechanisms, not one — and the constraint is
+one *load balancer*, not one routing API.** The earlier draft of this section said
+Argo Rollouts would drive both tracks through `trafficRouting.nginx`. That is not
+implementable, for two independent reasons found on 2026-08-21:
+
+- **Argo Rollouts cannot own a KServe workload.** Rollouts drives pods through a
+  `Rollout`, or a `workloadRef` to a workload that provides a Pod template
+  (documented as Deployment). A serverless-mode `InferenceService` is a Knative
+  Service whose Deployment belongs to the Knative controller, so there is nothing
+  for Rollouts to take ownership of. KServe's own canary is `canaryTrafficPercent`,
+  and its documentation states canary is supported **only** in serverless mode —
+  `RawDeployment` cannot do it either.
+- **`LLMInferenceService` is a Gateway API resource, not a Knative one.** Its
+  documented dependencies are Gateway API, the Gateway API Inference Extension
+  (GIE), a gateway provider and LeaderWorkerSet; it creates `Gateway` and
+  `HTTPRoute` objects itself, and Knative is not involved. Forbidding Gateway API
+  forbids llm-d.
+
+So each surface uses the mechanism that actually fits it:
+
+| Surface | Mechanism | Why |
+|---|---|---|
+| `feature-api`, `drift-api`, `prediction-api`, web | **Argo Rollouts** canary + `AnalysisTemplate`, `trafficRouting.nginx` (stable Ingress + canary Ingress carrying `nginx.ingress.kubernetes.io/canary-weight`) | Real Deployments, so Rollouts can own them. This is where the progressive-delivery and automatic-rollback rows are earned. |
+| Triton champion / candidate (ML) | **KServe `canaryTrafficPercent`**, serverless mode, stepped 10 → 25 → 50 by the promotion pipeline, with the same Prometheus queries the `AnalysisTemplate` uses run as an explicit pipeline gate | The only canary KServe supports for an `InferenceService`. |
+| LLM A/B pair | **`LLMInferenceService` router weights** (Gateway API `HTTPRoute`) | The CRD's own routing layer; nothing else can split traffic between llm-d-backed variants. |
+
+The single-edge constraint survives intact, restated precisely: **exactly one
+`LoadBalancer` Service exists cluster-wide** — the NGINX Ingress holding the static
+IP, the wildcard certificate, basic auth and rate limiting. The Gateway API
+`Gateway` that llmisvc requires is a `ClusterIP` behind it, and **Istio is its
+provider** (`GatewayClass: istio`) rather than a second Envoy Gateway install,
+since Istio is already mesh-wide. TLS, auth and rate limiting stay in one place.
+
+Because Rollouts mutates the canary annotation in place, the Argo CD Application
+must carry `ignoreDifferences` for it, or every weight step is reverted on the next
+sync. The same applies to `canaryTrafficPercent` on the `InferenceService` and to
+the `HTTPRoute` weights, whichever component last wrote them.
 
 **3. Debezium needs a schema registry.** Phase 3 consumes Debezium envelopes in
 Flink. Without a registry the envelope schema is implicit, and a source DDL
