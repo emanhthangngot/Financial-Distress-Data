@@ -34,7 +34,10 @@ Functional:
 - [ ] Both APIs autoscaled by KEDA on request rate, with a demonstrated scale-out and scale-in
 - [ ] KServe serves the model through Triton, with a champion and a candidate `InferenceService`
 - [ ] An Airflow drift pipeline compares offline features against reference, pushes PSI to Prometheus via PushGateway, and triggers a Kubeflow retrain
+- [ ] Triton and `feature-api` log every request to a Kafka `inference_log` topic, sunk to `gold.inference_log` on Iceberg (request id, timestamp, model version, feature version, features, prediction, latency)
+- [ ] The drift pipeline also compares `gold.inference_log` against the holdout reference, and joins `gold.labels` on `label_event_ts` for performance drift once outcomes land
 - [ ] A/B traffic split between two model versions driven by **Argo Rollouts**, progressive (10% -> 25% -> 50%) with a Prometheus analysis gate and automatic rollback on regression, with a dashboard comparing the versions
+- [ ] Rollouts routes traffic through `trafficRouting.nginx` (stable Ingress + canary Ingress with `nginx.ingress.kubernetes.io/canary-weight`), and the Argo CD Application carries `ignoreDifferences` for that annotation so a sync does not revert a weight step
 - [ ] Feature API fronted by gateway **basic authentication and rate limiting**, both demonstrated
 - [ ] Both APIs follow the API → Service → Repository layering from `plan.md`, with Triton reached through the `ModelRuntime` interface rather than a direct client call
 - [ ] Both APIs instrumented with the **OpenTelemetry** SDK, exporting OTLP spans that link the incoming request to the Feast read and the inference call

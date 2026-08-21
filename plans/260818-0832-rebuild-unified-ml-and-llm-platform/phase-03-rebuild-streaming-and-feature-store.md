@@ -20,6 +20,7 @@ explicitly. Register everything in DataHub for lineage and governance.
 
 Functional:
 - [ ] Debezium captures changes from the source Postgres into Kafka topics
+- [ ] A Kafka schema registry holds the CDC subjects; the Flink job deserializes against the registered schema, so a source DDL change fails the contract instead of the job
 - [ ] Flink computes windowed real-time features from those topics
 - [ ] Feast feature views defined for both batch (Spark/Iceberg) and streaming features
 - [ ] Job 1: push streaming features to the **offline** store, deployable and independently runnable

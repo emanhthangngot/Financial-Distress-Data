@@ -31,6 +31,7 @@ Functional:
 - [ ] Feature MCP server and drift MCP server, each async FastAPI + Pydantic + healthchecks, deployed by Helm with rolling update and `--atomic` rollback
 - [ ] Three agents deployed multi-replica with autoscaling: feature agent, drift agent, coordinator agent
 - [ ] Agents run sandboxed with restricted permissions
+- [ ] A guardrail component sits on both legs of the agent-to-model path: PII redaction and prompt-injection filtering inbound, citation and PII checks outbound; the bypass attempt is covered by the negative test
 - [ ] Warm-up configured, benchmarked, with an HA note on worker-pool replicas
 - [ ] Two notebooks: agent ↔ MCP for feature retrieval + drift detection; agent ↔ MCP for RAG retrieval
 - [ ] Chat UI and registry UI behind the gateway with authentication and rate limiting — **built in phase 9** as routes of the in-cluster web app; this phase owns the agent and registry APIs they call, not the frontend

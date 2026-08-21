@@ -305,6 +305,53 @@ Cloudflare's DNS is free, cert-manager has a first-class Cloudflare solver, and
 nameservers can point there regardless of registrar. The Cloudflare API token goes
 into Vault like every other credential.
 
+## Serving-loop and diagram review (2026-08-21)
+
+A walkthrough of the architecture diagram against both rubrics surfaced four
+gaps that the phase files do not yet name, plus one labelling rule. All four are
+small additions to work already planned; none changes a locked decision.
+
+**1. Drift must also read serving traffic, not only the offline store.** Phase 5
+computes PSI from offline features against a reference window. That detects data
+drift in the warehouse but never sees what the models actually received. Add a
+serving-side log: Triton, the LLM inference service and `feature-api` emit one
+record per request to a Kafka `inference_log` topic — request id, timestamp,
+model version, feature version, feature payload, prediction, latency — sunk into
+`gold.inference_log` on Iceberg. The drift DAG compares that table against the
+holdout reference, and joins it to `gold.labels` on `label_event_ts` for
+performance drift once outcomes land. Without it the A/B dashboard and the drift
+gate describe two different populations.
+
+**2. Progressive delivery routes through NGINX, not Gateway API.** The edge is a
+single NGINX Ingress (rubric-mandated), so Argo Rollouts must use
+`trafficRouting.nginx` — a stable Ingress plus a canary Ingress carrying
+`nginx.ingress.kubernetes.io/canary-weight` — for both the ML champion/candidate
+split and the LLM A/B pair. Gateway API `HTTPRoute` weights are not available
+without a second edge controller, and a second edge splits TLS, auth and rate
+limiting across two data planes. Because Rollouts mutates the canary annotation
+in place, the Argo CD Application must carry `ignoreDifferences` for it, or
+every weight step is reverted on the next sync.
+
+**3. Debezium needs a schema registry.** Phase 3 consumes Debezium envelopes in
+Flink. Without a registry the envelope schema is implicit, and a source DDL
+change breaks the Flink job at runtime with no contract to fail against. Deploy a
+Kafka schema registry alongside Connect and register the CDC subjects.
+
+**4. The agent path needs a guardrail hop.** Coordinator → agent gateway → model
+carries user text straight to the model and returns model text straight to the
+UI. Insert one guardrail component on both legs: PII redaction and prompt
+injection filtering inbound, citation and PII checks outbound. This is also the
+honest place to enforce the "agents may not bypass the gateway" negative test.
+
+**5. Diagram labels are evidence.** The deployment diagram is graded from a
+screenshot, so a logo alone scores nothing. Every component carries the text a
+reviewer needs: metric names on the telemetry path (tokens in/out/total, calls
+per agent, calls per MCP tool, req/s, failures), `TTL` on each feature view,
+replica counts and `--atomic` on Helm-deployed services, `basic auth + rate
+limit` and the hidden-service list on NGINX, `mTLS STRICT + AuthorizationPolicy`
+on the mesh boundary, and the secret path on Vault. Components that map to no
+rubric row are decoration and come off the diagram.
+
 ## Architecture constraint: layering and design patterns
 
 The "Clean Code + clean repo + demonstrate the use of Design Pattern" row is worth
