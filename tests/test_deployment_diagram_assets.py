@@ -85,6 +85,7 @@ def test_architecture_directory_contains_only_known_files() -> None:
         "architecture-project-poster.png",
         "architecture-project-poster.excalidraw",
         "reference-recsys-mlops-overview.png",
+        "fdd-architecture-full-4k.png",
         "system_deployment_diagram.png",
         "system_deployment_diagram.dot",
     }
