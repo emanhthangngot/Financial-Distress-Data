@@ -40,9 +40,9 @@ matches). The rubric explicitly grades the *role decomposition*, not merely that
   - Ansible configures and deploys the evidence VM services, decomposed into roles, idempotent on
     a second run.
   - Terraform provisions GKE with the P0-approved topology and no phase label.
-- Non-functional: PERMISSIVE → STRICT with zero inter-service breakage; KServe 0.14.1 Knative routing
-  unaffected (G6 branch); G4 Job termination verified on **real** Kubeflow/Spark/Airflow Jobs, not a
-  synthetic sleep.
+- Non-functional: PERMISSIVE → STRICT with zero inter-service breakage; KServe 0.18 routes through
+  `net-istio` with no `net-kourier` resources; G4 Job termination verified on **real**
+  Kubeflow/Spark/Airflow Jobs, not a synthetic sleep.
 
 ## Architecture
 
@@ -143,9 +143,9 @@ switch. Mitigation: 24 h PERMISSIVE soak with `istioctl analyze`. Response: reve
 `PeerAuthentication` to PERMISSIVE; fix the specific service; re-attempt.
 
 **Risk:** Istio injection breaks Knative-routed KServe. Signal: `InferenceService` revisions stop
-routing. Mitigation: Kourier keeps `ingress-class: kourier.ingress.networking.knative.dev`;
-`disableIstioVirtualHost: true` separates the layers (G6 branch A). Response: G6 branch B — migrate
-to `net-istio` and keep its Service `ClusterIP`, never `LoadBalancer`.
+routing through `net-istio`. Mitigation: install and smoke-test the Istio `GatewayClass` and
+`InferenceService` route before deleting the old Kourier resources. Response: roll back the
+`net-istio` cutover as one GitOps revision; do not retain two active network layers.
 
 **Risk:** Vault unsealing fails or rotation breaks ESO. Signal: `ExternalSecret` stuck
 `SecretSyncedError`. Mitigation: test with a non-critical secret first; ESO is purely additive until
