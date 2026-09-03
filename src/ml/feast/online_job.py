@@ -1,7 +1,7 @@
 """Deployable: Kafka `financial.price_events` -> Feast online store (Redis
 push) + checkpoint. Runs from a container image, not the host env
 (phase-04-implementation-notes.md section 9) — ``run_online_job`` is the
-entrypoint ``dags/phase2/phase2_stream_feature_online.py`` wraps.
+entrypoint ``dags/stream_feature_online.py`` wraps.
 
 Reuses ``src.ml.feast.offline_job.aggregate_stream_events`` for the actual
 aggregation (DRY — the online and offline deployables compute the same
@@ -43,7 +43,7 @@ def push_events_online(store: Any, events: list[dict[str, Any]]) -> dict[str, An
 def run_online_job() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
-    dags/phase2/phase2_stream_feature_online.py's only job is to point a
+    dags/stream_feature_online.py's only job is to point a
     PythonOperator at this callable). Same bounded-consumption and
     commit-after-write reasoning as ``offline_job.run_offline_job`` — see
     its docstring."""
@@ -84,9 +84,9 @@ def run_online_job() -> dict[str, Any]:
 
     import uuid
 
-    from src.governance.phase2_lineage import (
-        audit_phase2_lineage,
-        emit_phase2_lineage_if_configured,
+    from src.governance.lineage import (
+        audit_lineage,
+        emit_lineage_if_configured,
     )
     from src.ml.feast.materialization import record_stream_checkpoint
 
@@ -94,8 +94,8 @@ def run_online_job() -> dict[str, Any]:
     record_stream_checkpoint("phase2_stream_feature_online", last_offset, last_event_ts)
     return {
         "events_consumed": len(events),
-        "lineage_audit": audit_phase2_lineage(pipeline_name="phase2_stream_feature_online"),
-        "lineage_emit": emit_phase2_lineage_if_configured(
+        "lineage_audit": audit_lineage(pipeline_name="phase2_stream_feature_online"),
+        "lineage_emit": emit_lineage_if_configured(
             run_id=uuid.uuid4().hex, pipeline_name="phase2_stream_feature_online"
         ),
         **result,

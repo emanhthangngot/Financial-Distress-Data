@@ -47,7 +47,7 @@ after the transition. A mismatched-dimension candidate is rejected before the
 alias changes.
 
 - Implementation: [`src/llm/embedding_registry.py`](../../src/llm/embedding_registry.py)
-- Test: [`tests/phase2/verification/test_llm_novel_ideas.py`](../../tests/phase2/verification/test_llm_novel_ideas.py)
+- Test: [`tests/phase2/verification/test_llm_novel_ideas.py`](../../tests/platform/verification/test_llm_novel_ideas.py)
 - Evidence: `docs/phase2/evidence/llm/LLM-novel-ideas-idea-1.md`
 
 ## LLM Idea 2: Citation / PII Guard With Trace-Linked Decisions
@@ -70,5 +70,5 @@ reason, and category-only PII findings; it never includes matched values. The
 focused tests cover rewrite, block, and fail-closed paths.
 
 - Implementation: [`src/llm/citation_guard.py`](../../src/llm/citation_guard.py)
-- Test: [`tests/phase2/verification/test_llm_novel_ideas.py`](../../tests/phase2/verification/test_llm_novel_ideas.py)
+- Test: [`tests/phase2/verification/test_llm_novel_ideas.py`](../../tests/platform/verification/test_llm_novel_ideas.py)
 - Evidence: `docs/phase2/evidence/llm/LLM-novel-ideas-idea-2.md`

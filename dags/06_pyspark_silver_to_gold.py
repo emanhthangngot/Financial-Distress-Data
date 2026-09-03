@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.lakehouse.compaction import compact_small_files
 from src.transforms.compute_distress_labels import compute_labels

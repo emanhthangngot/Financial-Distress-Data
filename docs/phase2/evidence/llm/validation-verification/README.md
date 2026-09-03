@@ -12,14 +12,14 @@
 
 - Web API unit tests use FastAPI's `TestClient`, pytest fixtures, and mocked
   Feast/MCP boundaries
-  ([test_web_api_adapters.py](../../../../../tests/phase2/verification/test_web_api_adapters.py),
+  ([test_web_api_adapters.py](../../../../../tests/platform/verification/test_web_api_adapters.py),
   [LLM-validation-verification-validation-verification.md](../LLM-validation-verification-validation-verification.md)).
 - EP/BVA cases are visible in pytest IDs containing `valid-partition`,
   `max-inclusive-boundary`, `quarter-below-domain`
-  ([test_equivalence_boundary.py](../../../../../tests/phase2/verification/test_equivalence_boundary.py),
+  ([test_equivalence_boundary.py](../../../../../tests/platform/verification/test_equivalence_boundary.py),
   [LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p.md](../LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p.md)).
 - Property-based idempotency uses Hypothesis
-  ([test_idempotency.py](../../../../../tests/phase2/verification/test_idempotency.py),
+  ([test_idempotency.py](../../../../../tests/platform/verification/test_idempotency.py),
   [LLM-validation-verification-idempotency-testing-s-d-ng-pro.md](../LLM-validation-verification-idempotency-testing-s-d-ng-pro.md)).
 - Mutation score: 86.11%.
 - Locust HTML SLA report: archived [`locust-report.html`](../locust-report.html).

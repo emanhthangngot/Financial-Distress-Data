@@ -68,8 +68,8 @@ def test_unified_feature_builder_excludes_future_market_rows():
     assert unified[0]["feature_trading_date"] == "2025-03-01"
 
 
-def test_stage1_evidence_dry_run_reports_deterministic_counts():
-    from scripts.run_stage1_evidence import build_evidence_payload
+def test_lakehouse_evidence_dry_run_reports_deterministic_counts():
+    from scripts.run_lakehouse_evidence import build_evidence_payload
 
     payload = build_evidence_payload()
 
@@ -96,7 +96,7 @@ def test_vnstock_fixture_adapter_new_and_legacy_import_paths_match():
 
 
 def test_evidence_runner_reads_postgres_host_port_from_env_file(tmp_path, monkeypatch):
-    from scripts.run_stage1_evidence import metadata_dsn
+    from scripts.run_lakehouse_evidence import metadata_dsn
 
     env_file = tmp_path / ".env"
     env_file.write_text(
@@ -119,7 +119,7 @@ def test_evidence_runner_reads_postgres_host_port_from_env_file(tmp_path, monkey
 
 
 def test_project_metadata_dsn_overrides_env_file(tmp_path, monkeypatch):
-    from scripts.run_stage1_evidence import metadata_dsn
+    from scripts.run_lakehouse_evidence import metadata_dsn
 
     env_file = tmp_path / ".env"
     env_file.write_text("POSTGRES_HOST_PORT=55432\n", encoding="utf-8")
@@ -132,7 +132,7 @@ def test_project_metadata_dsn_overrides_env_file(tmp_path, monkeypatch):
 
 
 def test_host_minio_endpoint_ignores_docker_network_endpoint(tmp_path, monkeypatch):
-    from scripts.run_stage1_evidence import minio_host_endpoint
+    from scripts.run_lakehouse_evidence import minio_host_endpoint
 
     env_file = tmp_path / ".env"
     env_file.write_text("MINIO_ENDPOINT=http://minio:9000\n", encoding="utf-8")
@@ -142,7 +142,7 @@ def test_host_minio_endpoint_ignores_docker_network_endpoint(tmp_path, monkeypat
 
 
 def test_real_e2e_minio_config_reads_env_file_credentials(tmp_path, monkeypatch):
-    from scripts.run_stage1_real_e2e import _minio_client_config
+    from scripts.run_lakehouse_real_e2e import _minio_client_config
 
     env_file = tmp_path / ".env"
     env_file.write_text(
@@ -170,7 +170,7 @@ def test_real_e2e_minio_config_reads_env_file_credentials(tmp_path, monkeypatch)
 
 
 def test_real_e2e_minio_config_prefers_environment_credentials(tmp_path, monkeypatch):
-    from scripts.run_stage1_real_e2e import _minio_client_config
+    from scripts.run_lakehouse_real_e2e import _minio_client_config
 
     env_file = tmp_path / ".env"
     env_file.write_text(
@@ -187,7 +187,7 @@ def test_real_e2e_minio_config_prefers_environment_credentials(tmp_path, monkeyp
 
 
 def test_real_e2e_postgres_cli_args_derive_user_and_database_from_dsn(tmp_path, monkeypatch):
-    from scripts.run_stage1_real_e2e import _postgres_cli_args
+    from scripts.run_lakehouse_real_e2e import _postgres_cli_args
 
     env_file = tmp_path / ".env"
     env_file.write_text(

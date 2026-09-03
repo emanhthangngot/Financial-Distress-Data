@@ -8,7 +8,7 @@ volatility and distress features from this feed.
 
 from __future__ import annotations
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.market_price_collector import collect_market_prices
 
 DAG, PythonOperator = airflow_imports()

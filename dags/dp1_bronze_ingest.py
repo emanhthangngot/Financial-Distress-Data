@@ -29,7 +29,7 @@ import json
 import os
 from pathlib import Path
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.company_list_collector import collect_companies
 from src.collectors.financial_statement_collector import collect_financial_statements
 from src.collectors.market_price_collector import collect_market_prices

@@ -1,7 +1,7 @@
 """Deployable: Kafka `financial.price_events` -> offline parquet append +
 checkpoint. Runs from a container image, not the host env
 (phase-04-implementation-notes.md section 9) — ``run_offline_job`` is the
-entrypoint ``dags/phase2/phase2_stream_feature_offline.py`` wraps.
+entrypoint ``dags/stream_feature_offline.py`` wraps.
 
 ``aggregate_stream_events`` is pure and carries the actual logic; it is
 tested directly (no Kafka needed). Kafka/minio/psycopg are lazy imports (D4).
@@ -88,7 +88,7 @@ def _deterministic_batch_id(rows: list[dict[str, Any]]) -> str:
 def run_offline_job() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
-    dags/phase2/phase2_stream_feature_offline.py's only job is to point a
+    dags/stream_feature_offline.py's only job is to point a
     PythonOperator at this callable).
 
     Bounded consumption: ``consumer_timeout_ms`` makes the loop terminate
@@ -133,9 +133,9 @@ def run_offline_job() -> dict[str, Any]:
 
     import uuid
 
-    from src.governance.phase2_lineage import (
-        audit_phase2_lineage,
-        emit_phase2_lineage_if_configured,
+    from src.governance.lineage import (
+        audit_lineage,
+        emit_lineage_if_configured,
     )
     from src.ml.feast.materialization import record_stream_checkpoint
 
@@ -144,8 +144,8 @@ def run_offline_job() -> dict[str, Any]:
     return {
         "events_consumed": len(events),
         "rows_written": len(rows),
-        "lineage_audit": audit_phase2_lineage(pipeline_name="phase2_stream_feature_offline"),
-        "lineage_emit": emit_phase2_lineage_if_configured(
+        "lineage_audit": audit_lineage(pipeline_name="phase2_stream_feature_offline"),
+        "lineage_emit": emit_lineage_if_configured(
             run_id=uuid.uuid4().hex, pipeline_name="phase2_stream_feature_offline"
         ),
     }

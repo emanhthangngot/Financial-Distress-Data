@@ -291,8 +291,8 @@ Nằm trong thư mục `dags/`:
 * [07_run_data_quality_checks.py](../dags/07_run_data_quality_checks.py): DAG kiểm tra chất lượng DQ toàn hệ thống.
 * [08_minio_duckdb_register_tables.py](../dags/08_minio_duckdb_register_tables.py): DAG tự động cập nhật SQL views trên DuckDB.
 * [09_data_governance.py](../dags/09_data_governance.py): DAG đồng bộ dữ liệu quản trị metadata.
-* [stage1_local_evidence_pipeline.py](../dags/stage1_local_evidence_pipeline.py): DAG kiểm thử nhẹ sinh evidence nhanh cho môi trường CI.
-* [stage1_real_e2e_pipeline.py](../dags/stage1_real_e2e_pipeline.py): **DAG E2E Cốt Lõi**, kết nối toàn bộ luồng thu thập $\rightarrow$ Kafka $\rightarrow$ MinIO $\rightarrow$ PySpark $\rightarrow$ Postgres $\rightarrow$ DuckDB.
+* [stage1_local_evidence_pipeline.py](../dags/lakehouse_local_evidence_pipeline.py): DAG kiểm thử nhẹ sinh evidence nhanh cho môi trường CI.
+* [stage1_real_e2e_pipeline.py](../dags/lakehouse_real_e2e_pipeline.py): **DAG E2E Cốt Lõi**, kết nối toàn bộ luồng thu thập $\rightarrow$ Kafka $\rightarrow$ MinIO $\rightarrow$ PySpark $\rightarrow$ Postgres $\rightarrow$ DuckDB.
 
 ---
 
@@ -300,12 +300,12 @@ Nằm trong thư mục `dags/`:
 
 Nằm trong thư mục `scripts/`:
 
-* [run_stage1_real_e2e.py](../scripts/run_stage1_real_e2e.py): Script kích hoạt và theo dõi việc chạy DAG E2E thực tế trên Airflow Docker.
-* [check_stage1_services.py](../scripts/check_stage1_services.py): Kiểm tra độ sẵn sàng (Healthcheck) của các dịch vụ Docker (Airflow, MinIO, Postgres, Kafka).
-* [run_stage1_quality_gates.py](../scripts/run_stage1_quality_gates.py): Chạy Quality Gate kiểm tra 100% hợp đồng dữ liệu trước khi xuất bằng chứng.
-* [run_stage1_dq_failure_probe.py](../scripts/run_stage1_dq_failure_probe.py): Script cố tình bơm dữ liệu lỗi để kiểm chứng tính năng Soft-fail cách ly vào `failed_records`.
-* [stage1_readiness_report.py](../scripts/stage1_readiness_report.py): Xuất báo cáo tổng quan độ sẵn sàng của Phase 1 cho Reviewer.
-* [audit_stage1_evidence.py](../scripts/audit_stage1_evidence.py): Đọc và thẩm định toàn bộ file minh chứng trong thư mục [docs/evidence/](evidence/).
+* [run_stage1_real_e2e.py](../scripts/run_lakehouse_real_e2e.py): Script kích hoạt và theo dõi việc chạy DAG E2E thực tế trên Airflow Docker.
+* [check_stage1_services.py](../scripts/check_lakehouse_services.py): Kiểm tra độ sẵn sàng (Healthcheck) của các dịch vụ Docker (Airflow, MinIO, Postgres, Kafka).
+* [run_stage1_quality_gates.py](../scripts/run_lakehouse_quality_gates.py): Chạy Quality Gate kiểm tra 100% hợp đồng dữ liệu trước khi xuất bằng chứng.
+* [run_stage1_dq_failure_probe.py](../scripts/run_lakehouse_dq_failure_probe.py): Script cố tình bơm dữ liệu lỗi để kiểm chứng tính năng Soft-fail cách ly vào `failed_records`.
+* [stage1_readiness_report.py](../scripts/lakehouse_readiness_report.py): Xuất báo cáo tổng quan độ sẵn sàng của Phase 1 cho Reviewer.
+* [audit_stage1_evidence.py](../scripts/audit_lakehouse_evidence.py): Đọc và thẩm định toàn bộ file minh chứng trong thư mục [docs/evidence/](evidence/).
 
 ---
 

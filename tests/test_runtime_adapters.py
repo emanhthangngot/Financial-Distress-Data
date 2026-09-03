@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from dags.utils.stage1_dag_utils import metadata_writer_from_env
+from dags.utils.dag_utils import metadata_writer_from_env
 from src.metadata.metadata_writer import PostgresMetadataWriter
 from src.streaming.events import StreamEvent
 from src.streaming.kafka_to_bronze_consumer import (

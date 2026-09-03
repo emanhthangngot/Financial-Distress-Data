@@ -20,7 +20,7 @@ when a Flink service is part of the compose profile.
 
 from __future__ import annotations
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.streaming.events import StreamEvent
 from src.streaming.flink import client as flink_client
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer

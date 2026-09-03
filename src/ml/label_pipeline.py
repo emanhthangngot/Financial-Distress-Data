@@ -80,7 +80,7 @@ def run_label_build(
     """Generate offline financial-statement rows, build labels, and persist
     to Postgres when ``pg_dsn_env`` is set (no-op write otherwise — unit
     tests never reach a real Postgres). This is the single callable
-    ``dags/phase2/phase2_label_drift_build.py``'s label step wraps."""
+    ``dags/label_drift_build.py``'s label step wraps."""
     from src.generator.config import load_generator_config
     from src.generator.offline import generate_offline_data
 
@@ -117,7 +117,7 @@ def _fail(message: str) -> None:
 def run_label_drift_build_task() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
-    dags/phase2/phase2_label_drift_build.py's only job is to point a
+    dags/label_drift_build.py's only job is to point a
     PythonOperator at this callable).
 
     Runs both drift-report generation (the evidence for the two
@@ -128,7 +128,7 @@ def run_label_drift_build_task() -> dict[str, Any]:
     its input), so the label table is never trained on synthetically
     corrupted figures. Raises (fails the task) when the drift assertion
     itself fails — AGENTS.md's critical-failure-halts-downstream rule,
-    matching scripts/run_phase2_drift_report.py's CLI exit-1 behaviour so
+    matching scripts/run_platform_drift_report.py's CLI exit-1 behaviour so
     the two entrypoints agree.
 
     ``PHASE2_DRIFT_OUTPUT_ROOT`` is read but **not yet mounted** into the
@@ -171,16 +171,16 @@ def run_label_drift_build_task() -> dict[str, Any]:
 
     import uuid
 
-    from src.governance.phase2_lineage import (
-        audit_phase2_lineage,
-        emit_phase2_lineage_if_configured,
+    from src.governance.lineage import (
+        audit_lineage,
+        emit_lineage_if_configured,
     )
 
     return {
         "drift_report_path": str(drift_directory),
         "drift_passed": drift_report["passed"],
-        "lineage_audit": audit_phase2_lineage(pipeline_name="phase2_label_drift_build"),
-        "lineage_emit": emit_phase2_lineage_if_configured(
+        "lineage_audit": audit_lineage(pipeline_name="phase2_label_drift_build"),
+        "lineage_emit": emit_lineage_if_configured(
             run_id=uuid.uuid4().hex, pipeline_name="phase2_label_drift_build"
         ),
         **label_result,

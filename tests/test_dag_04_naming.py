@@ -9,7 +9,7 @@ Kafka. The task_id must therefore be ``produce_smoke_events_microbatch``
 from __future__ import annotations
 
 from dags import dag_04_stream_market_events_to_kafka as dag04_module
-from dags.utils.stage1_dag_utils import airflow_imports
+from dags.utils.dag_utils import airflow_imports
 
 _, _ = airflow_imports()
 
