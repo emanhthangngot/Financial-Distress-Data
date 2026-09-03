@@ -75,7 +75,7 @@ def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
 
 
 def run_label_build(
-    generator_config_path: str | Path, profile: str = "ci", pg_dsn_env: str = "PHASE2_PG_DSN"
+    generator_config_path: str | Path, profile: str = "ci", pg_dsn_env: str = "PLATFORM_PG_DSN"
 ) -> dict[str, Any]:
     """Generate offline financial-statement rows, build labels, and persist
     to Postgres when ``pg_dsn_env`` is set (no-op write otherwise — unit
@@ -131,7 +131,7 @@ def run_label_drift_build_task() -> dict[str, Any]:
     matching scripts/run_platform_drift_report.py's CLI exit-1 behaviour so
     the two entrypoints agree.
 
-    ``PHASE2_DRIFT_OUTPUT_ROOT`` is read but **not yet mounted** into the
+    ``PLATFORM_DRIFT_OUTPUT_ROOT`` is read but **not yet mounted** into the
     Airflow containers (docker-compose.yml's airflow-* services mount
     ``dags``/``src``/``configs``/``sql``/``docs``, not ``outputs``) — a
     report written here from inside a container does not survive a
@@ -141,13 +141,13 @@ def run_label_drift_build_task() -> dict[str, Any]:
 
     from src.drift.generator import run_scenario_against_generator
 
-    scenario_name = os.environ.get("PHASE2_DRIFT_SCENARIO", "financial_deterioration")
+    scenario_name = os.environ.get("PLATFORM_DRIFT_SCENARIO", "financial_deterioration")
     generator_config_path = os.environ.get(
-        "PHASE2_GENERATOR_CONFIG", "configs/generator-config.yaml"
+        "PLATFORM_GENERATOR_CONFIG", "configs/generator-config.yaml"
     )
-    drift_config_path = os.environ.get("PHASE2_DRIFT_CONFIG", "configs/drift-config.yaml")
-    profile = os.environ.get("PHASE2_GENERATOR_PROFILE", "ci")
-    output_root_env = os.environ.get("PHASE2_DRIFT_OUTPUT_ROOT")
+    drift_config_path = os.environ.get("PLATFORM_DRIFT_CONFIG", "configs/drift-config.yaml")
+    profile = os.environ.get("PLATFORM_GENERATOR_PROFILE", "ci")
+    output_root_env = os.environ.get("PLATFORM_DRIFT_OUTPUT_ROOT")
     kwargs: dict[str, Any] = {}
     if output_root_env:
         kwargs["output_root"] = Path(output_root_env)
@@ -179,9 +179,9 @@ def run_label_drift_build_task() -> dict[str, Any]:
     return {
         "drift_report_path": str(drift_directory),
         "drift_passed": drift_report["passed"],
-        "lineage_audit": audit_lineage(pipeline_name="phase2_label_drift_build"),
+        "lineage_audit": audit_lineage(pipeline_name="platform_label_drift_build"),
         "lineage_emit": emit_lineage_if_configured(
-            run_id=uuid.uuid4().hex, pipeline_name="phase2_label_drift_build"
+            run_id=uuid.uuid4().hex, pipeline_name="platform_label_drift_build"
         ),
         **label_result,
     }

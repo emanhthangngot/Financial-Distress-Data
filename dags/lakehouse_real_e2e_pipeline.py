@@ -16,18 +16,18 @@ from src.catalog.duckdb_runner import run_duckdb_validation
 from src.io.minio_writer import write_minio_dataset
 from src.io.paths import DEFAULT_BUCKET
 from src.jobs.kafka_to_bronze_job import (
-    build_stage1_stream_events,
-    consume_stage1_stream_events_to_bronze,
-    produce_stage1_stream_events,
+    build_lakehouse_stream_events,
+    consume_lakehouse_stream_events_to_bronze,
+    produce_lakehouse_stream_events,
 )
-from src.jobs.stage1_dq_job import build_actual_dq_checks
-from src.jobs.stage1_evidence_job import (
+from src.jobs.lakehouse_dq_job import build_actual_dq_checks
+from src.jobs.lakehouse_evidence_job import (
     build_evidence_payload,
     current_evidence_run_id,
     write_minio_evidence_artifacts,
     write_postgres_metadata,
 )
-from src.jobs.stage1_spark_lakehouse_job import run_stage1_spark_lakehouse
+from src.jobs.lakehouse_spark_lakehouse_job import run_lakehouse_spark_lakehouse
 from src.quality.dq_runner import DQRunner
 
 DAG, PythonOperator = airflow_imports()
@@ -38,7 +38,7 @@ def _bucket() -> str:
 
 
 def _evidence_dir() -> Path:
-    return Path(os.getenv("STAGE1_EVIDENCE_DIR", "/tmp/stage1-evidence"))
+    return Path(os.getenv("LAKEHOUSE_EVIDENCE_DIR", "/tmp/lakehouse-evidence"))
 
 
 def task_chain() -> list[str]:
@@ -54,7 +54,7 @@ def task_chain() -> list[str]:
 
 
 def materialize_bronze_batch_objects() -> dict[str, int]:
-    from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
+    from src.jobs.lakehouse_evidence_job import _ensure_bucket, _minio_client
 
     bucket = _bucket()
     payload = build_evidence_payload(bucket)
@@ -72,18 +72,18 @@ def materialize_bronze_batch_objects() -> dict[str, int]:
 
 def produce_fixture_stream_events_to_kafka() -> dict[str, int | str]:
     run_id = current_evidence_run_id()
-    count = produce_stage1_stream_events(run_id)
+    count = produce_lakehouse_stream_events(run_id)
     return {"evidence_run_id": run_id, "records_produced": count}
 
 
 def consume_kafka_events_to_bronze() -> list[dict]:
     run_id = current_evidence_run_id()
-    expected_records = len(build_stage1_stream_events(run_id))
-    return consume_stage1_stream_events_to_bronze(run_id, _bucket(), expected_records)
+    expected_records = len(build_lakehouse_stream_events(run_id))
+    return consume_lakehouse_stream_events_to_bronze(run_id, _bucket(), expected_records)
 
 
 def run_spark_bronze_to_silver_gold() -> dict[str, int]:
-    return run_stage1_spark_lakehouse(_bucket(), evidence_run_id=current_evidence_run_id())
+    return run_lakehouse_spark_lakehouse(_bucket(), evidence_run_id=current_evidence_run_id())
 
 
 def run_silver_gold_dq_gate() -> list[dict]:
@@ -103,7 +103,7 @@ def write_project_metadata_rows() -> str:
         build_evidence_payload(_bucket()),
         dag_id="lakehouse_real_e2e_pipeline",
         task_id="write_project_metadata_rows",
-        dataset_name="stage1_real_e2e",
+        dataset_name="lakehouse_real_e2e",
     )
 
 

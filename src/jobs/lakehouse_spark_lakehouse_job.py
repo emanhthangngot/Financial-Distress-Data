@@ -12,7 +12,7 @@ from typing import Any
 
 from src.io.minio_writer import clear_minio_prefix
 from src.io.paths import DEFAULT_BUCKET
-from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
+from src.jobs.lakehouse_evidence_job import _ensure_bucket, _minio_client
 from src.metadata.schema_registry import InMemorySchemaRegistry
 from src.security.secrets import require
 from src.transforms.bronze_to_silver import bronze_to_silver_spark
@@ -38,7 +38,7 @@ def spark_runtime_config(minio_endpoint: str | None = None) -> dict[str, str]:
     }
 
 
-def _spark_session(app_name: str = "financial-distress-stage1-real-e2e") -> Any:
+def _spark_session(app_name: str = "financial-distress-lakehouse-real-e2e") -> Any:
     try:
         from pyspark.sql import SparkSession
     except ImportError as exc:
@@ -617,7 +617,7 @@ def build_feat_company_unified_spark(obt_df: Any, market_df: Any) -> Any:
     )
 
 
-def run_stage1_spark_lakehouse(
+def run_lakehouse_spark_lakehouse(
     bucket: str = DEFAULT_BUCKET, evidence_run_id: str | None = None
 ) -> dict[str, int]:
     _clear_output_prefixes(bucket)

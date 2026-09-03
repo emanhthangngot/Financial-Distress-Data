@@ -27,7 +27,7 @@ from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 
 DAG, PythonOperator = airflow_imports()
 
-FLINK_JAR_ID = "stage1-burst-handler"
+FLINK_JAR_ID = "lakehouse-burst-handler"
 
 
 def _stream_smoke():

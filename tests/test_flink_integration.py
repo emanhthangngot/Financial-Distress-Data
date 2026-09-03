@@ -63,7 +63,7 @@ def test_flink_submit_returns_job_id_on_success(monkeypatch):
     """Submit a Flink job to a mocked jobmanager REST endpoint and assert
     the helper returns a job_id string.
 
-    WHO: data engineer running stage1 streaming DAG.
+    WHO: data engineer running lakehouse streaming DAG.
     ACTION: call flink_client.submit_job with a dummy jar_id and program args.
     RESULT: returns a job_id (non-empty string) and POSTs to the right URL.
     """
@@ -81,13 +81,13 @@ def test_flink_submit_returns_job_id_on_success(monkeypatch):
 
     with patch.object(flink_client.urllib.request, "urlopen", side_effect=fake_urlopen):
         job_id = flink_client.submit_job(
-            jar_id="stage1-burst-handler",
+            jar_id="lakehouse-burst-handler",
             program_args=["--bootstrap", "kafka:9092", "--bucket", "lake"],
         )
 
     assert isinstance(job_id, str)
     assert job_id == "abcd1234"
-    assert captured["url"].endswith("/jars/stage1-burst-handler/run")
+    assert captured["url"].endswith("/jars/lakehouse-burst-handler/run")
     assert captured["method"] == "POST"
     assert captured["body"]["programArgs"] == "--bootstrap kafka:9092 --bucket lake"
     assert captured["body"]["parallelism"] == 1
@@ -105,7 +105,7 @@ def test_flink_submit_raises_when_jobmanager_unreachable(monkeypatch):
     monkeypatch.delenv("FLINK_JOBMANAGER_URL", raising=False)
 
     with pytest.raises(RuntimeError, match="FLINK_JOBMANAGER_URL"):
-        flink_client.submit_job(jar_id="stage1-burst-handler", program_args=[])
+        flink_client.submit_job(jar_id="lakehouse-burst-handler", program_args=[])
 
 
 def test_flink_submit_raises_on_http_error(monkeypatch):
@@ -160,7 +160,7 @@ def test_dag_04_uses_flink_when_enabled(monkeypatch):
 
     WHO: reviewer verifying opt-in behavior.
     ACTION: load dag_04 and call the task callable after toggling ENABLE_FLINK=1.
-    RESULT: flink_client.submit_job called once with jar_id=stage1-burst-handler.
+    RESULT: flink_client.submit_job called once with jar_id=lakehouse-burst-handler.
     """
     monkeypatch.setenv("ENABLE_FLINK", "1")
     monkeypatch.setenv("FLINK_JOBMANAGER_URL", "http://flink-jobmanager:8081")
@@ -175,7 +175,7 @@ def test_dag_04_uses_flink_when_enabled(monkeypatch):
         result = dag04._stream_smoke()
 
     mock_submit.assert_called_once()
-    assert "stage1-burst-handler" in str(mock_submit.call_args)
+    assert "lakehouse-burst-handler" in str(mock_submit.call_args)
     assert result == {"flink_job_id": "job-opt-in-test", "mode": "flink"}
 
 
@@ -221,7 +221,7 @@ def test_flink_submit_rejects_non_http_scheme(monkeypatch):
 
     with patch.object(flink_client.urllib.request, "urlopen", side_effect=should_not_be_called):
         with pytest.raises(RuntimeError, match="scheme"):
-            flink_client.submit_job(jar_id="stage1-burst-handler", program_args=[])
+            flink_client.submit_job(jar_id="lakehouse-burst-handler", program_args=[])
     assert called["n"] == 0
 
 

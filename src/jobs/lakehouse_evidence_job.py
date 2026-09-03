@@ -22,7 +22,7 @@ from src.collectors.fixture_config import load_fixture_config
 from src.collectors.market_price_collector import collect_market_prices
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.io.minio_writer import write_minio_dataset, write_minio_text
-from src.io.paths import DEFAULT_BUCKET, stage1_dataset_object_keys
+from src.io.paths import DEFAULT_BUCKET, lakehouse_dataset_object_keys
 from src.metadata.metadata_writer import (
     PostgresMetadataWriter,
     psycopg_connection_factory,
@@ -56,7 +56,7 @@ from src.transforms.silver_to_gold import (
 
 DEFAULT_EVIDENCE_DIR = Path("docs/evidence")
 DEFAULT_ENV_PATH = Path(".env")
-DEFAULT_EVIDENCE_PREFIX = "evidence/stage1"
+DEFAULT_EVIDENCE_PREFIX = "evidence/lakehouse"
 
 
 @dataclass(frozen=True)
@@ -118,7 +118,7 @@ def minio_host_endpoint(env_path: str | Path = DEFAULT_ENV_PATH) -> str:
 
 
 def current_evidence_run_id() -> str:
-    run_id = os.getenv("STAGE1_EVIDENCE_RUN_ID") or os.getenv("AIRFLOW_CTX_DAG_RUN_ID")
+    run_id = os.getenv("LAKEHOUSE_EVIDENCE_RUN_ID") or os.getenv("AIRFLOW_CTX_DAG_RUN_ID")
     if not run_id:
         run_id = utc_now_iso()
     return _sanitize_evidence_run_id(run_id)
@@ -346,10 +346,10 @@ def write_generator_characteristics_evidence(
     evidence_dir: str | Path,
     payload: dict[str, Any] | None = None,
 ) -> Path:
-    """Persist the characteristics dict to ``stage1_generator_characteristics.json``."""
+    """Persist the characteristics dict to ``lakehouse_generator_characteristics.json``."""
     output_dir = Path(evidence_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    out_path = output_dir / "stage1_generator_characteristics.json"
+    out_path = output_dir / "lakehouse_generator_characteristics.json"
     out_path.write_text(
         json.dumps(
             payload if payload is not None else build_generator_characteristics(),
@@ -478,7 +478,7 @@ def build_evidence_payload(
     }
     return EvidencePayload(
         datasets=datasets,
-        object_keys=stage1_dataset_object_keys(bucket),
+        object_keys=lakehouse_dataset_object_keys(bucket),
         row_counts={name: len(rows) for name, rows in datasets.items()},
         stream_batches=_stream_batches(),
     )
@@ -487,15 +487,15 @@ def build_evidence_payload(
 def write_evidence_files(payload: EvidencePayload, evidence_dir: str | Path) -> None:
     output_dir = Path(evidence_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "stage1_row_counts.json").write_text(
+    (output_dir / "lakehouse_row_counts.json").write_text(
         json.dumps(payload.row_counts, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    (output_dir / "stage1_minio_objects.txt").write_text(
+    (output_dir / "lakehouse_minio_objects.txt").write_text(
         "\n".join(payload.object_keys) + "\n",
         encoding="utf-8",
     )
-    (output_dir / "stage1_stream_batches.json").write_text(
+    (output_dir / "lakehouse_stream_batches.json").write_text(
         json.dumps(payload.stream_batches, indent=2, sort_keys=True),
         encoding="utf-8",
     )
@@ -543,16 +543,16 @@ def build_evidence_artifacts(
     duckdb_validation: list[dict[str, Any]] | None = None,
 ) -> dict[str, str]:
     artifacts = {
-        "stage1_row_counts.json": json.dumps(payload.row_counts, indent=2, sort_keys=True),
-        "stage1_minio_objects.txt": "\n".join(payload.object_keys) + "\n",
-        "stage1_stream_batches.json": json.dumps(
+        "lakehouse_row_counts.json": json.dumps(payload.row_counts, indent=2, sort_keys=True),
+        "lakehouse_minio_objects.txt": "\n".join(payload.object_keys) + "\n",
+        "lakehouse_stream_batches.json": json.dumps(
             payload.stream_batches,
             indent=2,
             sort_keys=True,
         ),
     }
     if duckdb_validation is not None:
-        artifacts["stage1_duckdb_validation.json"] = json.dumps(
+        artifacts["lakehouse_duckdb_validation.json"] = json.dumps(
             duckdb_validation,
             indent=2,
             default=str,
@@ -577,9 +577,9 @@ def write_minio_evidence_artifacts(
 
 def write_postgres_metadata(
     payload: EvidencePayload,
-    dag_id: str = "stage1_runtime_evidence",
+    dag_id: str = "lakehouse_runtime_evidence",
     task_id: str = "materialize_fixture_lakehouse",
-    dataset_name: str = "stage1_evidence",
+    dataset_name: str = "lakehouse_evidence",
 ) -> str:
     writer = PostgresMetadataWriter(psycopg_connection_factory(metadata_dsn()))
     run_id = writer.log_run(
@@ -590,7 +590,7 @@ def write_postgres_metadata(
         output_rows=sum(payload.row_counts.values()),
     )
     writer.log_backfill_request(
-        "stage1_lakehouse",
+        "lakehouse_lakehouse",
         "2024-01-01",
         "2026-01-01",
         "completed",
@@ -600,7 +600,7 @@ def write_postgres_metadata(
     writer.log_source_request(
         run_id=run_id,
         source_system="vnstock_fixture",
-        source_endpoint="fixture://stage1",
+        source_endpoint="fixture://lakehouse",
         ticker=None,
         report_period=None,
         request_status="success",
@@ -608,7 +608,7 @@ def write_postgres_metadata(
         raw_payload_hash=None,
     )
     writer.upsert_collector_checkpoint(
-        collector_name="stage1_fixture_collectors",
+        collector_name="lakehouse_fixture_collectors",
         source_system="vnstock_fixture",
         checkpoint_key="last_successful_run_id",
         checkpoint_value=run_id,
@@ -657,7 +657,7 @@ def write_postgres_metadata(
     return run_id
 
 
-def materialize_stage1_evidence(
+def materialize_lakehouse_evidence(
     bucket: str = DEFAULT_BUCKET,
     evidence_dir: str | Path = DEFAULT_EVIDENCE_DIR,
     dry_run: bool = False,

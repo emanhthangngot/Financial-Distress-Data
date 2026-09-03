@@ -10,7 +10,7 @@ from __future__ import annotations
 from io import BytesIO
 from typing import Any
 
-from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
+from src.jobs.lakehouse_evidence_job import _ensure_bucket, _minio_client
 from src.metadata.metadata_writer import utc_now_iso
 
 

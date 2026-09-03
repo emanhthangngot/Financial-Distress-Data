@@ -19,7 +19,7 @@ Externalised configuration (rubric bonus: connections and variables inside Airfl
 
 This DAG is intentionally a coordinator: it does not duplicate collector or Bronze-write logic. It
 imports the existing collectors from ``src.collectors`` and the Bronze materializer from
-``src.jobs.stage1_evidence_job`` so the rubric graph shares the same data path as the Stage 1
+``src.jobs.lakehouse_evidence_job`` so the rubric graph shares the same data path as the Stage 1
 real E2E pipeline.
 """
 
@@ -92,7 +92,7 @@ def _window_years() -> tuple[int, int]:
 
 
 def _evidence_dir() -> Path:
-    return Path(os.getenv("STAGE1_EVIDENCE_DIR", "/tmp/stage1-evidence"))
+    return Path(os.getenv("LAKEHOUSE_EVIDENCE_DIR", "/tmp/lakehouse-evidence"))
 
 
 def ingest_bronze_callable() -> dict[str, int]:
@@ -115,7 +115,7 @@ def ingest_bronze_callable() -> dict[str, int]:
 
     def _client():
         if "client" not in client_holder:
-            from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
+            from src.jobs.lakehouse_evidence_job import _ensure_bucket, _minio_client
 
             client = _minio_client()
             _ensure_bucket(client, bucket)
@@ -152,7 +152,7 @@ def validate_bronze_callable() -> dict[str, int]:
     JSON sidecar to the evidence dir so the rubric screenshot can be paired
     with a number, not just a graph.
     """
-    from src.jobs.stage1_evidence_job import build_evidence_payload
+    from src.jobs.lakehouse_evidence_job import build_evidence_payload
 
     bucket = _bucket()
     payload = build_evidence_payload(bucket)

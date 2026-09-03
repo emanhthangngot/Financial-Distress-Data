@@ -4,8 +4,8 @@ import pytest
 
 from src.catalog.duckdb_runner import create_views_sql
 from src.io.paths import dataset_object_key
-from src.jobs.stage1_dq_job import build_intentional_dq_failure_checks
-from src.jobs.stage1_evidence_job import (
+from src.jobs.lakehouse_dq_job import build_intentional_dq_failure_checks
+from src.jobs.lakehouse_evidence_job import (
     DEFAULT_BUCKET,
     build_evidence_artifacts,
     build_evidence_payload,
@@ -42,9 +42,9 @@ def test_write_evidence_files_exports_runtime_manifest_inputs(tmp_path: Path):
 
     write_evidence_files(payload, tmp_path)
 
-    assert (tmp_path / "stage1_row_counts.json").exists()
-    assert (tmp_path / "stage1_minio_objects.txt").exists()
-    assert (tmp_path / "stage1_stream_batches.json").exists()
+    assert (tmp_path / "lakehouse_row_counts.json").exists()
+    assert (tmp_path / "lakehouse_minio_objects.txt").exists()
+    assert (tmp_path / "lakehouse_stream_batches.json").exists()
 
 
 def test_duckdb_create_views_sql_can_use_container_minio_endpoint(tmp_path: Path, monkeypatch):
@@ -115,7 +115,7 @@ def test_duckdb_validation_sql_checks_point_in_time_feature_leakage():
 def test_evidence_prefix_is_run_scoped_and_sanitized():
     assert (
         evidence_prefix("manual__2026-06-06T01:00:00+00:00")
-        == "evidence/stage1/run_id=manual__2026-06-06T01_00_00_00_00"
+        == "evidence/lakehouse/run_id=manual__2026-06-06T01_00_00_00_00"
     )
 
 
@@ -126,11 +126,11 @@ def test_build_evidence_artifacts_includes_duckdb_validation_when_available():
         duckdb_validation=[{"query": "select 1", "columns": ["one"], "rows": [(1,)]}],
     )
 
-    assert "stage1_row_counts.json" in artifacts
-    assert "stage1_minio_objects.txt" in artifacts
-    assert "stage1_stream_batches.json" in artifacts
-    assert "stage1_duckdb_validation.json" in artifacts
-    assert '"gold_fact_financial_statement": 16' in artifacts["stage1_row_counts.json"]
+    assert "lakehouse_row_counts.json" in artifacts
+    assert "lakehouse_minio_objects.txt" in artifacts
+    assert "lakehouse_stream_batches.json" in artifacts
+    assert "lakehouse_duckdb_validation.json" in artifacts
+    assert '"gold_fact_financial_statement": 16' in artifacts["lakehouse_row_counts.json"]
 
 
 def test_dq_runner_logs_warning_and_continues():

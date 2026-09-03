@@ -1,7 +1,7 @@
 """
 Command-line runner for the DuckDB catalog.
 
-Applies the catalog DDL against a local DuckDB instance, used by DAG 08 and by the stage1 evidence
+Applies the catalog DDL against a local DuckDB instance, used by DAG 08 and by the lakehouse evidence
 script. Idempotent: re-running drops and recreates the views.
 """
 
@@ -99,6 +99,6 @@ def run_duckdb_validation(
 
     output_dir = Path(evidence_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / "stage1_duckdb_validation.json"
+    output_path = output_dir / "lakehouse_duckdb_validation.json"
     output_path.write_text(json.dumps(outputs, indent=2, default=str), encoding="utf-8")
     return outputs

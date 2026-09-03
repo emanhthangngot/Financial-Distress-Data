@@ -54,9 +54,9 @@ def run_online_job() -> dict[str, Any]:
     from feast import FeatureStore
 
     bootstrap_servers = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
-    topic = os.environ.get("PHASE2_PRICE_EVENTS_TOPIC", "financial.price_events")
-    max_events = int(os.environ.get("PHASE2_STREAM_MAX_EVENTS", "1000"))
-    repo_path = os.environ.get("PHASE2_FEAST_REPO_PATH", "feature_repo/structured")
+    topic = os.environ.get("PLATFORM_PRICE_EVENTS_TOPIC", "financial.price_events")
+    max_events = int(os.environ.get("PLATFORM_STREAM_MAX_EVENTS", "1000"))
+    repo_path = os.environ.get("PLATFORM_FEAST_REPO_PATH", "feature_repo/structured")
 
     consumer = KafkaConsumer(
         topic,
@@ -64,7 +64,7 @@ def run_online_job() -> dict[str, Any]:
         group_id="phase2-stream-feature-online",
         auto_offset_reset="earliest",
         enable_auto_commit=False,
-        consumer_timeout_ms=int(os.environ.get("PHASE2_STREAM_POLL_TIMEOUT_MS", "10000")),
+        consumer_timeout_ms=int(os.environ.get("PLATFORM_STREAM_POLL_TIMEOUT_MS", "10000")),
     )
     events: list[dict[str, Any]] = []
     last_offset = 0
@@ -91,12 +91,12 @@ def run_online_job() -> dict[str, Any]:
     from src.ml.feast.materialization import record_stream_checkpoint
 
     last_event_ts = rows[-1]["event_timestamp"] if rows else None
-    record_stream_checkpoint("phase2_stream_feature_online", last_offset, last_event_ts)
+    record_stream_checkpoint("platform_stream_feature_online", last_offset, last_event_ts)
     return {
         "events_consumed": len(events),
-        "lineage_audit": audit_lineage(pipeline_name="phase2_stream_feature_online"),
+        "lineage_audit": audit_lineage(pipeline_name="platform_stream_feature_online"),
         "lineage_emit": emit_lineage_if_configured(
-            run_id=uuid.uuid4().hex, pipeline_name="phase2_stream_feature_online"
+            run_id=uuid.uuid4().hex, pipeline_name="platform_stream_feature_online"
         ),
         **result,
     }
