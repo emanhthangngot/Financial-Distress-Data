@@ -16,7 +16,7 @@ import yaml
 from .gitops_paths import GitOpsPathError, validate_gitops_paths
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CATALOG = REPO_ROOT / "configs" / "phase2-deployables.yaml"
+DEFAULT_CATALOG = REPO_ROOT / "configs" / "platform-deployables.yaml"
 
 
 class CatalogError(ValueError):

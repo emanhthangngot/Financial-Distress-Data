@@ -34,7 +34,7 @@ def run_platform_quality_gates(
 ) -> None:
     """Run bash syntax, catalog, platform .ests, and optional GitOps checks."""
 
-    catalog = project_root / "configs" / "phase2-deployables.yaml"
+    catalog = project_root / "configs" / "platform-deployables.yaml"
     try:
         validate_catalog(catalog, source_root=project_root, gitops_root=gitops_root)
     except CatalogError as exc:
@@ -59,7 +59,7 @@ def run_platform_quality_gates(
         "-m",
         "not slow",
     )
-    print(f"\n==> phase2 pytest: {' '.join(test_command)}", flush=True)
+    print(f"\n==> platform pytest: {' '.join(test_command)}", flush=True)
     runner(test_command, cwd=project_root, check=True)
 
     if gitops_root is None:

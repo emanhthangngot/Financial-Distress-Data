@@ -1,7 +1,7 @@
 # platform .AG trusted-source registry (RagIngestionService.fetch_documents).
 #
 # Committed fixture corpus, not a live HTTP fetch (confirmed 2026-08-08 —
-# plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md,
+# plans/260802-1037-unified-platform-ml-llm-gitops/phase-04-implementation-notes.md,
 # Open Question Q4). source_uri is a repo-relative path to a committed text
 # extract; fetch_documents reads it directly — no network call, no scraping
 # code, byte-identical across runs. Mirrors the existing

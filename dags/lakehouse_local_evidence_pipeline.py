@@ -1,7 +1,7 @@
 """
-Stage 1 local evidence pipeline.
+platform local evidence pipeline.
 
-The on-demand DAG that exercises the full Stage 1 path on the developer laptop:
+The on-demand DAG that exercises the full platform path on the developer laptop:
 collectors, Bronze-to-Silver, Silver-to-Gold, DQ, and DuckDB catalog
 registration. Drives the rubric row 4 evidence collection.
 """

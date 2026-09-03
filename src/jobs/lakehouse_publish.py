@@ -1,4 +1,4 @@
-"""Stage 1 rejection persistence and pre-publication quality gates."""
+"""platform rejection persistence and pre-publication quality gates."""
 
 from __future__ import annotations
 

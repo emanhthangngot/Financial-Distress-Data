@@ -106,7 +106,7 @@ def consume_lakehouse_stream_events_to_bronze(
     except ImportError as exc:
         raise RuntimeError(
             "Kafka consumer integration requires kafka-python. "
-            "Install runtime dependencies before running Stage 1 E2E jobs."
+            "Install runtime dependencies before running platform E2E jobs."
         ) from exc
 
     consumer = KafkaConsumer(

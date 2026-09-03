@@ -28,7 +28,7 @@ class CDCConfig:
     publication_name: str = "financial_distress_cdc_publication"
     table_include_list: tuple[str, ...] = ("public.financial_events",)
     iceberg_catalog_uri: str = "http://lakekeeper:8181/catalog"
-    iceberg_namespace: str = "phase2"
+    iceberg_namespace: str = "platform"
     iceberg_table: str = "cdc_bronze"
     server_id: int = 5401
     snapshot_mode: str = "initial"
@@ -93,7 +93,7 @@ class CDCConfig:
                 "iceberg_catalog_uri": env.get(
                     "ICEBERG_CATALOG_URI", "http://lakekeeper:8181/catalog"
                 ),
-                "iceberg_namespace": env.get("CDC_ICEBERG_NAMESPACE", "phase2"),
+                "iceberg_namespace": env.get("CDC_ICEBERG_NAMESPACE", "platform"),
                 "iceberg_table": env.get("CDC_ICEBERG_TABLE", "cdc_bronze"),
                 "server_id": env.get("CDC_SERVER_ID", "5401"),
                 "snapshot_mode": env.get("CDC_SNAPSHOT_MODE", "initial"),

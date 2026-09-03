@@ -2,7 +2,7 @@
 Point-in-time feature join helpers.
 
 Point-in-time joins attach only feature rows whose event timestamp is less than
-or equal to a reference row's as-of timestamp. For Stage 1 this prevents future
+or equal to a reference row's as-of timestamp. For platform this prevents future
 market or news observations from leaking into company-quarter feature rows that
 are keyed by ``report_release_date`` or ``report_period``.
 """

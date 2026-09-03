@@ -1,5 +1,5 @@
 """
-Stage 1 DQ failure probe.
+platform DQ failure probe.
 
 Runs the Bronze-to-Silver transform against a deliberately-bad fixture to
 prove that the DQ framework routes critical failures to
@@ -27,7 +27,7 @@ from src.quality.dq_runner import CriticalDQFailure, DQRunner
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Prove that Stage 1 critical DQ failures are persisted before halting."
+        description="Prove that platform critical DQ failures are persisted before halting."
     )
     parser.add_argument("--run-id", default="lakehouse-dq-failure-probe")
     parser.add_argument("--export-evidence", default="/tmp/lakehouse-dq-failure-probe")
@@ -59,7 +59,7 @@ def main() -> None:
         json.dumps(evidence, indent=2, sort_keys=True),
         encoding="utf-8",
     )
-    print(f"Exported Stage 1 DQ failure probe evidence to {evidence_dir}")
+    print(f"Exported platform DQ failure probe evidence to {evidence_dir}")
 
 
 if __name__ == "__main__":

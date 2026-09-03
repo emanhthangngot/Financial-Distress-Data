@@ -19,7 +19,7 @@ Externalised configuration (rubric bonus: connections and variables inside Airfl
 
 This DAG is intentionally a coordinator: it does not duplicate collector or Bronze-write logic. It
 imports the existing collectors from ``src.collectors`` and the Bronze materializer from
-``src.jobs.lakehouse_evidence_job`` so the rubric graph shares the same data path as the Stage 1
+``src.jobs.lakehouse_evidence_job`` so the rubric graph shares the same data path as the platform
 real E2E pipeline.
 """
 
@@ -147,7 +147,7 @@ def ingest_bronze_callable() -> dict[str, int]:
 def validate_bronze_callable() -> dict[str, int]:
     """Validate stage: read Bronze back and assert key invariants.
 
-    Uses the shared Stage 1 evidence builder so the row-count baseline matches
+    Uses the shared platform evidence builder so the row-count baseline matches
     what the rest of the pipeline already considers the contract. Writes a small
     JSON sidecar to the evidence dir so the rubric screenshot can be paired
     with a number, not just a graph.

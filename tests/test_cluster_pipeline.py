@@ -72,7 +72,7 @@ def test_configure_s3_environment_maps_minio_without_logging_secrets(
     assert os.environ["AWS_ENDPOINT_URL"] == "http://minio.internal:9000"
     assert os.environ["AWS_ACCESS_KEY_ID"] == "access"
     assert os.environ["AWS_SECRET_ACCESS_KEY"] == "secret"
-    assert os.environ["FEAST_REDIS_HOST"] == "phase2-redis"
+    assert os.environ["FEAST_REDIS_HOST"] == "platform-redis"
     assert os.environ["FEAST_REGISTRY_PATH"].startswith("s3://financial-distress-lake/")
 
 

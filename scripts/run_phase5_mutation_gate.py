@@ -12,7 +12,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MUTANT_PATTERN = "llm.rag.chunking.*"
 MINIMUM_MUTATION_SCORE = 80.0
-REPORT_DIR = REPO_ROOT / "plans/260809-2039-complete-phase2-llm-submission/reports"
+REPORT_DIR = REPO_ROOT / "plans/260809-2039-complete-platform-llm-submission/reports"
 SUMMARY_PATH = REPORT_DIR / "phase05-mutation-summary.json"
 RESULTS_PATH = REPORT_DIR / "phase05-mutmut-results.txt"
 STATS_PATH = REPO_ROOT / "mutants/mutmut-cicd-stats.json"

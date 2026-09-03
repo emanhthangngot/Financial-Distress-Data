@@ -96,6 +96,6 @@ if DAG is not None:
         default_args={**DEFAULT_ARGS, "retries": 2, "retry_delay": timedelta(seconds=30)},
         schedule=None,
         catchup=False,
-        tags=["financial-distress", "phase2", "ml", "monitoring", "drift"],
+        tags=["financial-distress", "platform", "ml", "monitoring", "drift"],
     ) as dag:
         PythonOperator(task_id="monitoring", python_callable=run_drift_monitoring_task)

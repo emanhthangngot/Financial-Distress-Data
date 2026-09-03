@@ -78,7 +78,7 @@ def test_mutation_gate_rejects_an_invalid_survivor_report(monkeypatch, tmp_path:
 
 
 def test_reusable_ci_executes_phase5_hard_gates() -> None:
-    workflow = (REPO_ROOT / ".github/workflows/phase2-ci.yaml").read_text(encoding="utf-8")
+    workflow = (REPO_ROOT / ".github/workflows/platform-ci.yaml").read_text(encoding="utf-8")
 
     assert "scripts/run_phase5_web_gate.py" in workflow
     assert "scripts/run_phase5_mutation_gate.py" in workflow

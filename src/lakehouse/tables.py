@@ -27,7 +27,7 @@ PLATFORM_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
         ("ticker",),
     ),
     TableDefinition(
-        "phase2.labels",
+        "platform.labels",
         {
             "ticker": "string",
             "event_timestamp": "timestamp",
@@ -37,7 +37,7 @@ PLATFORM_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
         ("ticker",),
     ),
     TableDefinition(
-        "phase2.drift_reference",
+        "platform.drift_reference",
         {
             "ticker": "string",
             "event_timestamp": "timestamp",
@@ -51,7 +51,7 @@ PLATFORM_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
 
 
 def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebergTable]:
-    """Register all Phase 2 tables and return them by identifier.
+    """Register all platform tables and return them by identifier.
 
     Existing registrations are accepted when their schema and partition spec
     still match; this makes repeated setup calls idempotent without hiding a
@@ -59,7 +59,7 @@ def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebe
     """
     tables: dict[str, LocalIcebergTable] = {}
     for definition in PLATFORM_TABLE_DEFINITIONS:
-        if definition.identifier in catalog.list_tables("phase2"):
+        if definition.identifier in catalog.list_tables("platform"):
             table = catalog.load_table(definition.identifier)
             if (
                 table.schema != dict(definition.schema)

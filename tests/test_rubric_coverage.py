@@ -1,4 +1,4 @@
-"""Stage 1 Rubric Coverage Audit (W25).
+"""platform Rubric Coverage Audit (W25).
 
 Maps each rubric item from
 ``docs/Coursework Tracking (Public) - rubic (mini-coursework).csv``

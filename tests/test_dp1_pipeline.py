@@ -1,7 +1,7 @@
 """
 DP1 pipeline invariant tests.
 
-Regression locks for the Stage 1 DP1 Bronze ingest DAG. These tests parse the DAG
+Regression locks for the platform DP1 Bronze ingest DAG. These tests parse the DAG
 source statically and import it defensively, so they run on a machine without
 Airflow installed (matches the test environment in ``pyproject.toml``).
 """

@@ -37,7 +37,7 @@ class CatalogConfig:
 
     name: str = "lakekeeper"
     uri: str = "http://lakekeeper:8181/catalog"
-    warehouse: str = "s3://financial-distress-lake/phase2"
+    warehouse: str = "s3://financial-distress-lake/platform"
     mode: str = "memory"
     token: str | None = field(default=None, repr=False)
 
@@ -56,7 +56,7 @@ class CatalogConfig:
         return cls(
             name=env.get("ICEBERG_CATALOG_NAME", "lakekeeper"),
             uri=env.get("ICEBERG_CATALOG_URI", "http://lakekeeper:8181/catalog"),
-            warehouse=env.get("ICEBERG_WAREHOUSE", "s3://financial-distress-lake/phase2"),
+            warehouse=env.get("ICEBERG_WAREHOUSE", "s3://financial-distress-lake/platform"),
             mode=env.get("ICEBERG_CATALOG_MODE", "memory"),
             token=env.get("ICEBERG_CATALOG_TOKEN"),
         )
@@ -230,7 +230,7 @@ class LocalIcebergCatalog:
     ) -> LocalIcebergTable:
         normalized = str(identifier).strip()
         if "." not in normalized:
-            raise CatalogError("table identifier must include a namespace, e.g. phase2.features")
+            raise CatalogError("table identifier must include a namespace, e.g. platform.features")
         with self._lock:
             if normalized in self._tables:
                 raise CatalogError(f"table already exists: {normalized}")
@@ -246,7 +246,7 @@ class LocalIcebergCatalog:
         except KeyError as exc:
             raise CatalogError(f"unknown table: {identifier}") from exc
 
-    def list_tables(self, namespace: str = "phase2") -> list[str]:
+    def list_tables(self, namespace: str = "platform") -> list[str]:
         prefix = f"{namespace}."
         return sorted(name for name in self._tables if name.startswith(prefix))
 

@@ -35,7 +35,7 @@ class LoggingTraceSink:
     """Emit a structured, redaction-safe MCP audit event to container logs."""
 
     def emit(self, event: str, attributes: dict[str, Any]) -> None:
-        logging.getLogger("phase2.mcp.audit").info(
+        logging.getLogger("platform.mcp.audit").info(
             json.dumps(
                 redact_fields({"event": event, **attributes}),
                 sort_keys=True,
@@ -171,8 +171,8 @@ def create_mcp_server(service: DriftMcpService):
             allowed_hosts=[
                 "drift-mcp",
                 "drift-mcp:*",
-                "drift-mcp.phase2-data.svc.cluster.local",
-                "drift-mcp.phase2-data.svc.cluster.local:*",
+                "drift-mcp.dataflow.svc.cluster.local",
+                "drift-mcp.dataflow.svc.cluster.local:*",
                 "127.0.0.1:*",
                 "localhost:*",
             ],

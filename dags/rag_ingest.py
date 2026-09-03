@@ -1,4 +1,4 @@
-"""Phase 2: RAG ingestion (fetch -> chunk -> dedupe -> govern -> embed_write),
+"""platform: RAG ingestion (fetch -> chunk -> dedupe -> govern -> embed_write),
 all five RagIngestionService steps run in one task — see
 src.llm.rag_pipeline.RagIngestionPipeline's class docstring for why."""
 
@@ -24,7 +24,7 @@ if DAG is not None:
         schedule=None,
         catchup=False,
         dagrun_timeout=timedelta(hours=1),
-        tags=["financial-distress", "phase2", "llm", "rag"],
+        tags=["financial-distress", "platform", "llm", "rag"],
     ) as dag:
         PythonOperator(
             task_id="run_ingestion",

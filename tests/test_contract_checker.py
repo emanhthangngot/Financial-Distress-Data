@@ -1,6 +1,6 @@
 """W21 data governance lite invariants.
 
-The W21 plan locks a self-contained governance story for Phase 1:
+The W21 plan locks a self-contained governance story for platform:
 
 - ``docs/07_data_contracts.md`` lists every Bronze/Silver/Gold table with
   schema, owner, source, refresh cadence, primary keys, expected row count

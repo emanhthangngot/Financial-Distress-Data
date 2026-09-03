@@ -1,4 +1,4 @@
-"""Stage 1 rubric coverage audit runner (W25).
+"""platform rubric coverage audit runner (W25).
 
 Walks the shared item catalogue in ``scripts/_rubric_items.py``, runs each
 ``evidence_check`` callback, and writes a machine-readable summary to

@@ -28,7 +28,7 @@ import { fileURLToPath } from "node:url";
 const WEB_ROOT = path.resolve(fileURLToPath(import.meta.url), "../../..");
 const REPO_ROOT = path.resolve(WEB_ROOT, "../..");
 const SOURCE_DIR = path.join(WEB_ROOT, "e2e", ".artifacts", "evidence");
-const TARGET_DIR = path.join(REPO_ROOT, "docs", "phase2", "evidence", "product");
+const TARGET_DIR = path.join(REPO_ROOT, "docs", "platform", "evidence", "product");
 
 /**
  * Rubric-named states worth a committed PNG: the three approved routes at

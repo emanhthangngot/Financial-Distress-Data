@@ -13,7 +13,7 @@ Modes:
                     (phase-01). Checks that every scored row exists with the
                     required fields (including the reproducible `test` command
                     and a role-based owner), both tracks total the expected
-                    points, every role owns at least one row, and no Phase 1
+                    points, every role owns at least one row, and no platform
                     contract mutation is referenced.
   --matrix PATH     Audit a specific rubric-matrix CSV (fixture-based tests).
   --strict          With --matrix-only: fail (exit 1) on any issue. Without it,
@@ -160,7 +160,7 @@ EVIDENCE_REQUIRED_KEYS = [
 
 def _read_matrix(matrix_path: Path | None = None) -> list[dict[str, str]] | None:
     """Return matrix rows or None if the CSV is unreadable/missing."""
-    path = matrix_path or (REPO_ROOT / "docs" / "phase2" / "rubric-matrix.csv")
+    path = matrix_path or (REPO_ROOT / "docs" / "platform" / "rubric-matrix.csv")
     if not path.exists():
         return None
     try:
@@ -446,7 +446,7 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
     ``PHASE1_HYGIENE_OVERRIDE=1`` suppresses only the protected-path findings
     below, after the baseline has been resolved and the diff computed — a
     missing/unresolvable baseline still fails closed regardless of this var.
-    It exists for Phase 1's own architecture-hygiene work (moving/renaming
+    It exists for platform's own architecture-hygiene work (moving/renaming
     platform .iles without changing platform behavior), which this gate cannot
     distinguish from a platform .ask mutating platform . it only sees changed
     paths, not intent. Unset by default so a real platform .ask is still
@@ -765,7 +765,7 @@ EVIDENCE_SECRET_DENYLIST = (
         "userinfo credential in URL",
         # Scoped to http(s) so a captured gateway curl (the leak this guards
         # against) trips it, while a local dev DSN like
-        # postgresql://phase2:phase2@localhost:5433 does not.
+        # postgresql://platform:platform@localhost:5433 does not.
         re.compile(r"(?i)\bhttps?://[^\s/@]+:[^\s/@]+@"),
     ),
     (

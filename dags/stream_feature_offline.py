@@ -1,4 +1,4 @@
-"""Phase 2: stream `financial.price_events` -> offline parquet append +
+"""platform: stream `financial.price_events` -> offline parquet append +
 checkpoint, via src.ml.feast.offline_job.run_offline_job."""
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ if DAG is not None:
         schedule=None,
         catchup=False,
         dagrun_timeout=timedelta(hours=1),
-        tags=["financial-distress", "phase2", "ml", "feast", "streaming"],
+        tags=["financial-distress", "platform", "ml", "feast", "streaming"],
     ) as dag:
         PythonOperator(
             task_id="consume_transform_push_offline",

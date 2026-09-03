@@ -14,10 +14,10 @@ def test_evidence_checklist_covers_llm_scope() -> None:
     # infrastructure this repo no longer claims to run.
     sections = _load_checklist(REPO_ROOT / "configs/evidence-checklist.yaml")
     assert set(sections) == {
-        "phase1",
-        "phase2-tests",
-        "phase2-matrix",
-        "phase2-quality-gates",
+        "lakehouse",
+        "platform-tests",
+        "platform-matrix",
+        "platform-quality-gates",
     }
     assert all(section["screenshot"] is False for section in sections.values())
 

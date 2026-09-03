@@ -1,7 +1,7 @@
 """
-Stage 1 evidence audit.
+platform evidence audit.
 
-Compares the local Stage 1 evidence bundle against the rubric checklist. Used
+Compares the local platform evidence bundle against the rubric checklist. Used
 by the rubric row 4 evidence-acceptance flow to confirm that every required
 artefact is present and well-formed before submission.
 """
@@ -200,7 +200,7 @@ def audit_evidence(evidence_dir: str | Path) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Audit Stage 1 E2E evidence artifacts.")
+    parser = argparse.ArgumentParser(description="Audit platform E2E evidence artifacts.")
     parser.add_argument("evidence_dir")
     parser.add_argument(
         "--check",

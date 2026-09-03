@@ -7,7 +7,7 @@
 # (tests/platform/pipelines/test_embedding_http.py) pins this file's digest to
 # catch silent drift.
 #
-# See plans/260802-1037-unified-phase2-ml-llm-gitops/phase-06-embedding-slice-notes.md
+# See plans/260802-1037-unified-platform-ml-llm-gitops/phase-06-embedding-slice-notes.md
 # D-E7 for the full rationale.
 schema_version: 1
 backends:

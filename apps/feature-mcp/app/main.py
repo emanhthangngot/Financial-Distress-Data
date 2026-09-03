@@ -128,7 +128,7 @@ class FeastOnlineFeatureClient:
     async def ready(self) -> bool:
         try:
             await asyncio.to_thread(self._feature_store)
-            host = os.getenv("FEAST_REDIS_HOST", "phase2-redis")
+            host = os.getenv("FEAST_REDIS_HOST", "platform-redis")
             reader, writer = await asyncio.wait_for(
                 asyncio.open_connection(host, int(os.getenv("FEAST_REDIS_PORT", "6379"))),
                 timeout=2.0,

@@ -24,7 +24,7 @@ def produce_events(
     except ImportError as exc:
         raise RuntimeError(
             "Kafka producer integration requires kafka-python. "
-            "Install runtime dependencies before running Stage 1 E2E jobs."
+            "Install runtime dependencies before running platform E2E jobs."
         ) from exc
 
     producer = KafkaProducer(

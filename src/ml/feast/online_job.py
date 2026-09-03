@@ -61,7 +61,7 @@ def run_online_job() -> dict[str, Any]:
     consumer = KafkaConsumer(
         topic,
         bootstrap_servers=bootstrap_servers,
-        group_id="phase2-stream-feature-online",
+        group_id="platform-stream-feature-online",
         auto_offset_reset="earliest",
         enable_auto_commit=False,
         consumer_timeout_ms=int(os.environ.get("PLATFORM_STREAM_POLL_TIMEOUT_MS", "10000")),

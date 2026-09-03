@@ -1,7 +1,7 @@
 """
-Stage 1 evidence orchestrator.
+platform evidence orchestrator.
 
-End-to-end runner that drives the Stage 1 evidence pipeline from the command
+End-to-end runner that drives the platform evidence pipeline from the command
 line: starts services if needed, triggers the local-evidence DAG, and writes
 the result bundle to ``docs/evidence/``. Used by rubric row 4.
 """
@@ -57,7 +57,7 @@ __all__ = [
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Materialize Stage 1 runtime evidence.")
+    parser = argparse.ArgumentParser(description="Materialize platform runtime evidence.")
     parser.add_argument(
         "--dry-run",
         action="store_true",

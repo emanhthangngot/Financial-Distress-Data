@@ -44,11 +44,11 @@ class Step:
 
 
 REQUIRED_WORKLOADS: tuple[Workload, ...] = (
-    Workload("deployment", "phase2-data", "web"),
-    Workload("deployment", "phase2-data", "feature-mcp"),
-    Workload("deployment", "phase2-data", "drift-mcp"),
-    Workload("deployment", "phase2-data", "phase2-redis"),
-    Workload("statefulset", "phase2-data", "phase2-postgres"),
+    Workload("deployment", "dataflow", "web"),
+    Workload("deployment", "dataflow", "feature-mcp"),
+    Workload("deployment", "dataflow", "drift-mcp"),
+    Workload("deployment", "dataflow", "platform-redis"),
+    Workload("statefulset", "dataflow", "platform-postgres"),
     Workload("deployment", "agents-sandbox", "feature-agent"),
     Workload("deployment", "agents-sandbox", "drift-agent"),
     Workload("deployment", "agents-sandbox", "coordinator"),
@@ -65,9 +65,9 @@ REQUIRED_WORKLOADS: tuple[Workload, ...] = (
 )
 
 REQUIRED_SERVICES: tuple[tuple[str, str, str], ...] = (
-    ("web", "phase2-data", "web"),
-    ("feature-mcp", "phase2-data", "feature-mcp"),
-    ("drift-mcp", "phase2-data", "drift-mcp"),
+    ("web", "dataflow", "web"),
+    ("feature-mcp", "dataflow", "feature-mcp"),
+    ("drift-mcp", "dataflow", "drift-mcp"),
     ("feature-agent", "agents-sandbox", "feature-agent"),
     ("drift-agent", "agents-sandbox", "drift-agent"),
     ("coordinator", "agents-sandbox", "coordinator"),
@@ -418,7 +418,7 @@ def run_telemetry(timeout: float) -> dict[str, Any]:
     with port_forward(
         "monitoring", "monitoring-kube-prometheus-prometheus", 9090, timeout
     ) as base_url:
-        query = 'up{namespace=~"agents-sandbox|phase2-data"}'
+        query = 'up{namespace=~"agents-sandbox|dataflow"}'
         status, response = http_json(f"{base_url}/api/v1/query?query={quote(query)}", timeout=30)
         if status != 200 or not isinstance(response, dict):
             raise RuntimeError(f"Prometheus query failed: status={status}")

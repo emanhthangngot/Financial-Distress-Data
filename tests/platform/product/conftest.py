@@ -80,8 +80,8 @@ def pg_cluster(tmp_path_factory: pytest.TempPathFactory):
                 pytest.fail(message)
             pytest.skip(message)
 
-    data_dir = tmp_path_factory.mktemp("phase2-pgdata")
-    socket_dir = tmp_path_factory.mktemp("phase2-pgsocket")
+    data_dir = tmp_path_factory.mktemp("platform-pgdata")
+    socket_dir = tmp_path_factory.mktemp("platform-pgsocket")
     log_file = data_dir / "server.log"
 
     subprocess.run(

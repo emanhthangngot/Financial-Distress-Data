@@ -1,7 +1,7 @@
 # DistressLens web
 
 platform .roduct shell: Next.js 16 (App Router) + Supabase Auth/Postgres. See
-`docs/platform/product.md` and `../../plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
+`docs/platform/product.md` and `../../plans/260802-1037-unified-platform-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
 for scope and acceptance criteria.
 
 ```bash
@@ -16,7 +16,7 @@ The complete service graph runs in the GitOps/GKE evidence cluster. From the
 GitOps checkout, run the source-repo runner after the node pool is available:
 
 ```bash
-make phase2-e2e \
+make platform-e2e \
   SOURCE_REPO=/home/pearspringmind/Studying/FSDS/Financial-Distress-Data \
   PHASE2_E2E_ARGS="--json"
 ```

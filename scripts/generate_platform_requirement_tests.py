@@ -31,7 +31,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # Matches pyproject.toml [tool.black]; kept in sync manually since black has
 # no public API to read a project's config file.
 BLACK_MODE = FileMode(line_length=100, target_versions={TargetVersion.PY311})
-MATRIX_PATH = REPO_ROOT / "docs" / "phase2" / "rubric-matrix.csv"
+MATRIX_PATH = REPO_ROOT / "docs" / "platform" / "rubric-matrix.csv"
 OUT_DIR = REPO_ROOT / "tests" / "platform" / "requirements"
 
 FILENAME_RE = re.compile(r"test_[a-z0-9_]+\.py")
@@ -129,7 +129,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 # of misreporting a missing checkout as a missing implementation artifact.
 _gitops_env = os.environ.get("PLATFORM_GITOPS_ROOT")
 GITOPS_ROOT = Path(_gitops_env) if _gitops_env else None
-MATRIX_PATH = REPO_ROOT / "docs" / "phase2" / "rubric-matrix.csv"
+MATRIX_PATH = REPO_ROOT / "docs" / "platform" / "rubric-matrix.csv"
 
 EVIDENCE_REQUIRED_KEYS = [
     "rubric_id",

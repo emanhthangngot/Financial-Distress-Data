@@ -1,4 +1,4 @@
-"""Lightweight Flink REST client for Stage 1 job submission.
+"""Lightweight Flink REST client for platform job submission.
 
 Speaks only to the jobmanager HTTP API surface that the local
 ``apache/flink:1.19`` image exposes. We do NOT pull in ``pyflink``
@@ -138,7 +138,7 @@ def submit_job(
     ----------
     jar_id:
         The jar id registered with the jobmanager (see
-        ``GET /jars/overview``). For Stage 1 we use a single bundled
+        ``GET /jars/overview``). For platform we use a single bundled
         jar id ``lakehouse-burst-handler`` that contains the
         burst / late-arrival / dedup streaming job.
     program_args:

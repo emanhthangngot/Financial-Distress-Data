@@ -1,4 +1,4 @@
-"""Per-rubric-row contract tests (Phase 2).
+"""Per-rubric-row contract tests (platform).
 
 Every scored rubric row gets its own parametrized test keyed by ``rubric_id``
 so the matrix's ``test`` field — ``pytest tests/platform -k '<rubric_id>'`` —

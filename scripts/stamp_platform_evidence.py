@@ -114,10 +114,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--source-path", action="append", default=[])
     parser.add_argument("--gitops-path", action="append", default=[])
     parser.add_argument(
-        "--implementation-message", default="feat(phase2): complete llm evidence artifacts"
+        "--implementation-message", default="feat(platform): complete llm evidence artifacts"
     )
-    parser.add_argument("--evidence-message", default="docs(phase2): capture llm evidence")
-    parser.add_argument("--stamp-message", default="docs(phase2): stamp evidence revisions")
+    parser.add_argument("--evidence-message", default="docs(platform): capture llm evidence")
+    parser.add_argument("--stamp-message", default="docs(platform): stamp evidence revisions")
     return parser.parse_args()
 
 
@@ -134,7 +134,7 @@ def main() -> int:
         raise SystemExit("GitOps worktree has uncommitted changes; pass --gitops-path explicitly")
 
     gitops_sha = commit_paths(
-        gitops_root, args.gitops_path, "chore(phase2): prepare evidence revision"
+        gitops_root, args.gitops_path, "chore(platform): prepare evidence revision"
     )
     commit_paths(source_root, args.source_path, args.implementation_message)
 

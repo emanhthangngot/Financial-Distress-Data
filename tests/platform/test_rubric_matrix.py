@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-MATRIX_CSV = REPO_ROOT / "docs" / "phase2" / "rubric-matrix.csv"
+MATRIX_CSV = REPO_ROOT / "docs" / "platform" / "rubric-matrix.csv"
 PLATFORM_PROTECTED = [
     "src/collectors/",
     "src/transforms/",
@@ -60,7 +60,7 @@ class TestPhase1ContractNoMutation:
             if path.lower() in text:
                 pytest.fail(
                     f"Matrix references platform protected path '{path}' — "
-                    "platform .ust not mutate Phase 1."
+                    "platform .ust not mutate platform."
                 )
         assert "dags/" in text, "platform .irflow wrappers must be mapped explicitly"
 
@@ -420,14 +420,14 @@ class TestAcceptanceCriteria:
 
     def test_acceptance_criteria_doc_exists(self) -> None:
         """The resolvable acceptance catalog must exist."""
-        reqs_md = REPO_ROOT / "docs" / "phase2" / "acceptance-criteria.md"
+        reqs_md = REPO_ROOT / "docs" / "platform" / "acceptance-criteria.md"
         assert reqs_md.exists(), (
             f"{reqs_md} not found — write per-deliverable AA in" " WHO -> ACTION -> RESULT form"
         )
 
     def test_acceptance_criteria_in_who_action_result(self) -> None:
         """At least one acceptance criterion follows WHO -> ACTION -> RESULT pattern."""
-        reqs_md = REPO_ROOT / "docs" / "phase2" / "acceptance-criteria.md"
+        reqs_md = REPO_ROOT / "docs" / "platform" / "acceptance-criteria.md"
         if not reqs_md.exists():
             pytest.xfail("requirements.md not yet created")
         text = reqs_md.read_text(encoding="utf-8")
@@ -568,7 +568,7 @@ class TestClassContracts:
 
     def test_ml_low_level_design_doc_exists(self) -> None:
         """docs/platform/low-level-design.md must document class contracts."""
-        path = REPO_ROOT / "docs" / "phase2" / "low-level-design.md"
+        path = REPO_ROOT / "docs" / "platform" / "low-level-design.md"
         assert path.exists(), f"{path} not found"
 
 
@@ -576,12 +576,12 @@ class TestNovelIdeas:
     """Two novel ideas per track must be documented before platform .ode begins."""
 
     def test_novel_ideas_doc_exists(self) -> None:
-        path = REPO_ROOT / "docs" / "phase2" / "novel-ideas.md"
+        path = REPO_ROOT / "docs" / "platform" / "novel-ideas.md"
         assert path.exists(), f"{path} not found"
 
     def test_four_ideas_documented(self) -> None:
         """Exactly 4 novel ideas: 2 ML + 2 LLM, each with a proof path."""
-        path = REPO_ROOT / "docs" / "phase2" / "novel-ideas.md"
+        path = REPO_ROOT / "docs" / "platform" / "novel-ideas.md"
         if not path.exists():
             pytest.xfail("novel-ideas.md not yet created")
         text = path.read_text(encoding="utf-8")
@@ -602,11 +602,11 @@ class TestArchitectureDocs:
     """System architecture docs must reflect the platform .wo-plane design."""
 
     def test_platform_architecture_doc_exists(self) -> None:
-        path = REPO_ROOT / "docs" / "phase2" / "architecture.md"
+        path = REPO_ROOT / "docs" / "platform" / "architecture.md"
         assert path.exists(), f"{path} not found"
 
     def test_nine_adrs_exist(self) -> None:
-        adr_dir = REPO_ROOT / "docs" / "phase2" / "adr"
+        adr_dir = REPO_ROOT / "docs" / "platform" / "adr"
         if not adr_dir.exists():
             pytest.fail(f"ADR dir {adr_dir} not found")
         adrs = list(adr_dir.glob("adr-*.md"))
@@ -618,9 +618,9 @@ class TestArchitectureDocs:
         path = REPO_ROOT / "docs" / "coursework.md"
         assert path.exists()
         text = path.read_text(encoding="utf-8")
-        must = ["phase-2", "phase2", "Kubernetes"]
+        must = ["phase-2", "platform", "Kubernetes"]
         found = any(token.lower() in text.lower() for token in must)
-        assert found, "docs/coursework.md has not been updated to Phase 2"
+        assert found, "docs/coursework.md has not been updated to platform"
 
 
 class TestLinterSmoke:
@@ -996,9 +996,9 @@ class TestPhase2PromotionHardening:
         cls._git(
             root,
             "-c",
-            "user.name=phase2-test",
+            "user.name=platform-test",
             "-c",
-            "user.email=phase2-test@example.invalid",
+            "user.email=platform-test@example.invalid",
             "commit",
             "-m",
             message,

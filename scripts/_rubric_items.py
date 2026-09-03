@@ -1,4 +1,4 @@
-"""Rubric items mapping for Stage 1 audit (W25).
+"""Rubric items mapping for platform audit (W25).
 
 Single source of truth shared between:
   - tests/test_rubric_coverage.py  (pytest harness asserting evidence exists)

@@ -12,5 +12,5 @@ docker build -f infra/lakehouse-cluster/Dockerfile.pipeline .
 ```
 
 The cluster image is an additional runtime target. Local `docker compose` and
-the Stage 1 quality gates remain the reproduction path for the protected Phase 1
+the platform quality gates remain the reproduction path for the protected platform
 evidence set.

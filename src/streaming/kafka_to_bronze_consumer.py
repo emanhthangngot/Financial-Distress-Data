@@ -103,7 +103,7 @@ def create_kafka_consumer(
     except ImportError as exc:
         raise RuntimeError(
             "Kafka broker integration requires kafka-python. "
-            "Install runtime dependencies before running Stage 1 streaming evidence jobs."
+            "Install runtime dependencies before running platform streaming evidence jobs."
         ) from exc
 
     return KafkaConsumer(

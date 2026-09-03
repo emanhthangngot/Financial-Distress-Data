@@ -1,4 +1,4 @@
--- Phase 1, rename class C: Postgres schema rename forward migration.
+-- platform, rename class C: Postgres schema rename forward migration.
 --
 -- Brings an existing platform database to the
 -- unified target. Idempotent: re-runs cleanly on a partially-migrated
