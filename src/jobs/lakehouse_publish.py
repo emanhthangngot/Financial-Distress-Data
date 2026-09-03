@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from src.jobs.stage1_evidence_job import metadata_dsn
+from src.jobs.lakehouse_evidence_job import metadata_dsn
 from src.metadata.metadata_writer import PostgresMetadataWriter, psycopg_connection_factory
 
 PUBLISHED_PREFIXES = [

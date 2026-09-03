@@ -17,7 +17,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SQL_VIEWS = REPO_ROOT / "sql" / "duckdb_create_views.sql"
-JOB_FILE = REPO_ROOT / "src" / "jobs" / "stage1_spark_lakehouse_job.py"
+JOB_FILE = REPO_ROOT / "src" / "jobs" / "lakehouse_spark_lakehouse_job.py"
 README_FILE = REPO_ROOT / "README.md"
 SCHEMA_DOC = REPO_ROOT / "docs" / "02_schema_design.md"
 OPERATOR_RUNBOOK = REPO_ROOT / "docs" / "operator-runbook.md"
@@ -93,7 +93,7 @@ def test_gold_storage_paths_in_spark_job() -> None:
     text = _read(JOB_FILE)
     layers_used = _collect_gold_layers(text)
 
-    assert layers_used, "No s3a://.../gold/.../ paths found in stage1_spark_lakehouse_job.py"
+    assert layers_used, "No s3a://.../gold/.../ paths found in lakehouse_spark_lakehouse_job.py"
     illegal = layers_used - ALLOWED_GOLD_LAYERS
     assert not illegal, (
         f"Spark job writes to illegal Gold layers {sorted(illegal)}; "

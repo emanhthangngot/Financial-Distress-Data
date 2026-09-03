@@ -3,7 +3,7 @@ real pyspark package is unavailable (e.g. on CI).
 
 Several unit tests assert on pyspark ``StructType`` / ``StructField`` shape
 via ``isinstance`` checks against objects returned by
-``src.jobs.stage1_spark_lakehouse_job._rows_with_schema``. That function
+``src.jobs.lakehouse_spark_lakehouse_job._rows_with_schema``. That function
 itself only constructs these type objects; it does not require a live
 SparkSession. The full PySpark runtime is exercised separately by the
 integration DAGs in the Airflow Docker cluster.

@@ -18,7 +18,7 @@ from src.ml.feast.feature_definitions import FEATURE_VIEW_TTL
 
 
 class FeastMaterializationService(FeatureMaterializationService):
-    def __init__(self, repo_path: str, pg_dsn_env: str = "PHASE2_PG_DSN") -> None:
+    def __init__(self, repo_path: str, pg_dsn_env: str = "PLATFORM_PG_DSN") -> None:
         self.repo_path = repo_path
         self.pg_dsn_env = pg_dsn_env
 
@@ -127,7 +127,7 @@ def _bucket() -> str:
 
 
 def record_stream_checkpoint(
-    job_name: str, last_offset: int, last_event_ts: str | None, pg_dsn_env: str = "PHASE2_PG_DSN"
+    job_name: str, last_offset: int, last_event_ts: str | None, pg_dsn_env: str = "PLATFORM_PG_DSN"
 ) -> None:
     """Shared by both stream deployables (offline_job.py, online_job.py) so
     ``ml_metadata.stream_feature_checkpoint`` has one writer. No-ops when
@@ -155,17 +155,17 @@ def run_materialize_task() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
     dags/feature_materialize.py's only job is to point a
-    PythonOperator at this callable). ``PHASE2_MATERIALIZE_START_TS``/
+    PythonOperator at this callable). ``PLATFORM_MATERIALIZE_START_TS``/
     ``_END_TS`` default to the last 24h so a manual run has a sane window
     without requiring every env var to be set."""
     import os
     from datetime import UTC, datetime, timedelta
 
-    repo_path = os.environ.get("PHASE2_FEAST_REPO_PATH", "feature_repo/structured")
-    feature_view = os.environ.get("PHASE2_FEATURE_VIEW", "company_financial_features")
+    repo_path = os.environ.get("PLATFORM_FEAST_REPO_PATH", "feature_repo/structured")
+    feature_view = os.environ.get("PLATFORM_FEATURE_VIEW", "company_financial_features")
     now = datetime.now(UTC)
-    start_ts = os.environ.get("PHASE2_MATERIALIZE_START_TS", (now - timedelta(days=1)).isoformat())
-    end_ts = os.environ.get("PHASE2_MATERIALIZE_END_TS", now.isoformat())
+    start_ts = os.environ.get("PLATFORM_MATERIALIZE_START_TS", (now - timedelta(days=1)).isoformat())
+    end_ts = os.environ.get("PLATFORM_MATERIALIZE_END_TS", now.isoformat())
 
     import uuid
 
@@ -177,8 +177,8 @@ def run_materialize_task() -> dict[str, Any]:
         emit_lineage_if_configured,
     )
 
-    result["lineage_audit"] = audit_lineage(pipeline_name="phase2_feature_materialize")
+    result["lineage_audit"] = audit_lineage(pipeline_name="platform_feature_materialize")
     result["lineage_emit"] = emit_lineage_if_configured(
-        run_id=uuid.uuid4().hex, pipeline_name="phase2_feature_materialize"
+        run_id=uuid.uuid4().hex, pipeline_name="platform_feature_materialize"
     )
     return result

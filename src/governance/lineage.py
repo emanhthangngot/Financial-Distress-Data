@@ -2,13 +2,13 @@
 phase-04-implementation-notes.md section 2): every Phase 2 flow's run
 summary emits through here to ``src.governance.datahub_emitter.
 emit_governance``, using a Phase-2-only ``GovernanceModel`` loaded from
-``configs/phase2-governance.yaml`` — the Phase 1 governance config
+``configs/platform-governance.yaml`` — the Phase 1 governance config
 (``configs/datahub/governance.yaml``) is never touched.
 
 Mirrors ``scripts/sync_datahub_governance.py``'s split: audit locally
 (``audit_governance_model``, no live server needed — this is what
 ``.venv``'s test suite exercises) versus emit to a real DataHub server
-(lazy ``datahub`` SDK import, D4-style — DataHub isn't a `.venv`/`.venv-phase2`
+(lazy ``datahub`` SDK import, D4-style — DataHub isn't a `.venv`/`.venv-platform`
 dependency at all, so this import must never happen at module load time).
 """
 
@@ -24,11 +24,11 @@ from src.governance.datahub_model import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CONFIG_PATH = REPO_ROOT / "configs" / "phase2-governance.yaml"
+DEFAULT_CONFIG_PATH = REPO_ROOT / "configs" / "platform-governance.yaml"
 
 
 def load_platform_governance_model(path: Path = DEFAULT_CONFIG_PATH) -> GovernanceModel:
-    """Load and validate configs/phase2-governance.yaml (or an override)."""
+    """Load and validate configs/platform-governance.yaml (or an override)."""
     return load_governance_model(path)
 
 
@@ -59,7 +59,7 @@ def _model_for_pipeline(model: GovernanceModel, pipeline_name: str) -> Governanc
     every Phase 2 pipeline at once."""
     if pipeline_name not in model.pipelines:
         raise KeyError(
-            f"unknown phase2 pipeline {pipeline_name!r}; known: {sorted(model.pipelines)}"
+            f"unknown platform pipeline {pipeline_name!r}; known: {sorted(model.pipelines)}"
         )
     pipeline = model.pipelines[pipeline_name]
     referenced = {*pipeline.inputs, *pipeline.outputs, pipeline.contract_dataset}
@@ -82,7 +82,7 @@ def emit_lineage(
     config_path: Path = DEFAULT_CONFIG_PATH,
 ) -> dict[str, Any]:
     """Emits one pipeline's lineage to a real DataHub server. ``pipeline_name``
-    must be one of ``configs/phase2-governance.yaml``'s declared pipelines —
+    must be one of ``configs/platform-governance.yaml``'s declared pipelines —
     see ``_model_for_pipeline`` for how the whole-model config is narrowed
     to just this pipeline's datasets before ``emit_governance`` ever runs."""
     model = load_platform_governance_model(config_path)
@@ -108,12 +108,12 @@ def emit_lineage_if_configured(
     sandbox, so this mirrors the env-gated no-op pattern already used by
     ``FeastMaterializationService._write_revision_row`` and
     ``record_stream_checkpoint`` (src/ml/feast/materialization.py): unset
-    ``PHASE2_DATAHUB_SERVER`` means "no server configured", not "skip
+    ``PLATFORM_DATAHUB_SERVER`` means "no server configured", not "skip
     silently forever" — set it in the container/Airflow environment to turn
     this into a real emit with no code change. This entrypoint currently
     lives unwired into any deployment surface (no compose service, Airflow
     env, or image installs ``datahub``) — flip it on by adding
-    ``PHASE2_DATAHUB_SERVER``/``PHASE2_DATAHUB_TOKEN`` plus the ``datahub``
+    ``PLATFORM_DATAHUB_SERVER``/``PLATFORM_DATAHUB_TOKEN`` plus the ``datahub``
     package to whichever image/Airflow environment should emit for real.
 
     Governance telemetry must never fail the data task that produced it —
@@ -123,10 +123,10 @@ def emit_lineage_if_configured(
     case, never raised."""
     import os
 
-    server = os.environ.get("PHASE2_DATAHUB_SERVER")
+    server = os.environ.get("PLATFORM_DATAHUB_SERVER")
     if not server:
-        return {"emitted": False, "reason": "PHASE2_DATAHUB_SERVER not set"}
-    token = os.environ.get("PHASE2_DATAHUB_TOKEN")
+        return {"emitted": False, "reason": "PLATFORM_DATAHUB_SERVER not set"}
+    token = os.environ.get("PLATFORM_DATAHUB_TOKEN")
     try:
         report = emit_lineage(run_id, pipeline_name, server, token, config_path)
     except Exception as exc:  # noqa: BLE001 - telemetry must never fail the caller

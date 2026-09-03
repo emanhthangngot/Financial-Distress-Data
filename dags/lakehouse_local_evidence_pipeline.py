@@ -13,7 +13,7 @@ from pathlib import Path
 
 from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.catalog.duckdb_runner import run_duckdb_validation
-from src.jobs.stage1_evidence_job import (
+from src.jobs.lakehouse_evidence_job import (
     DEFAULT_BUCKET,
     DEFAULT_EVIDENCE_DIR,
     build_evidence_payload,
@@ -31,7 +31,7 @@ def _bucket() -> str:
 
 
 def _evidence_dir() -> Path:
-    return Path(os.getenv("STAGE1_EVIDENCE_DIR", str(DEFAULT_EVIDENCE_DIR)))
+    return Path(os.getenv("LAKEHOUSE_EVIDENCE_DIR", str(DEFAULT_EVIDENCE_DIR)))
 
 
 def build_lakehouse_payload() -> dict[str, int]:

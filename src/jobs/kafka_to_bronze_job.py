@@ -24,7 +24,7 @@ STREAM_TOPICS = [
 ]
 
 
-def build_stage1_stream_events(evidence_run_id: str) -> list[dict[str, Any]]:
+def build_lakehouse_stream_events(evidence_run_id: str) -> list[dict[str, Any]]:
     events = [
         StreamEvent.price_update(
             "AAA",
@@ -79,8 +79,8 @@ def kafka_bootstrap_servers() -> str:
     return os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 
 
-def produce_stage1_stream_events(evidence_run_id: str) -> int:
-    return produce_events(build_stage1_stream_events(evidence_run_id), kafka_bootstrap_servers())
+def produce_lakehouse_stream_events(evidence_run_id: str) -> int:
+    return produce_events(build_lakehouse_stream_events(evidence_run_id), kafka_bootstrap_servers())
 
 
 def _decode_message_value(value: Any) -> dict[str, Any]:
@@ -93,13 +93,13 @@ def _decode_message_value(value: Any) -> dict[str, Any]:
     raise TypeError(f"unsupported Kafka message value type: {type(value).__name__}")
 
 
-def consume_stage1_stream_events_to_bronze(
+def consume_lakehouse_stream_events_to_bronze(
     evidence_run_id: str,
     bucket: str,
     expected_records: int = 3,
     timeout_seconds: int = 30,
 ) -> list[dict[str, Any]]:
-    from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
+    from src.jobs.lakehouse_evidence_job import _ensure_bucket, _minio_client
 
     try:
         from kafka import KafkaConsumer
@@ -112,7 +112,7 @@ def consume_stage1_stream_events_to_bronze(
     consumer = KafkaConsumer(
         *STREAM_TOPICS,
         bootstrap_servers=kafka_bootstrap_servers(),
-        group_id=f"stage1-e2e-{evidence_run_id}",
+        group_id=f"lakehouse-e2e-{evidence_run_id}",
         auto_offset_reset="earliest",
         enable_auto_commit=False,
         consumer_timeout_ms=1000,

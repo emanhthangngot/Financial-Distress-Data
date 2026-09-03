@@ -139,7 +139,7 @@ def submit_job(
     jar_id:
         The jar id registered with the jobmanager (see
         ``GET /jars/overview``). For Stage 1 we use a single bundled
-        jar id ``stage1-burst-handler`` that contains the
+        jar id ``lakehouse-burst-handler`` that contains the
         burst / late-arrival / dedup streaming job.
     program_args:
         CLI args forwarded to the job's ``main(...)``. Each element is

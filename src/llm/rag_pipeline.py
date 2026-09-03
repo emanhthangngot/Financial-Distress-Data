@@ -274,7 +274,7 @@ def run_ingestion(
 
     Lineage emission (Flow E, phase-04-implementation-notes.md section 2) is
     deliberately not wired here — ``src/governance/lineage.py`` and
-    ``configs/phase2-governance.yaml`` are slice 4D's files, not 4C's."""
+    ``configs/platform-governance.yaml`` are slice 4D's files, not 4C's."""
     documents = pipeline.fetch_documents(source, window)
     chunks = pipeline.parse_and_chunk(documents)
     chunks = pipeline.deduplicate_chunks(chunks)
@@ -294,9 +294,9 @@ def run_ingestion_task() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
     dags/rag_ingest.py's only job is to point a
-    PythonOperator at this callable). ``PHASE2_PG_DSN`` required;
-    ``PHASE2_EMBEDDING_ENDPOINT`` unset falls back to the network-free hash
-    embedder, matching D5's CI default; ``PHASE2_RAG_SOURCE`` defaults to
+    PythonOperator at this callable). ``PLATFORM_PG_DSN`` required;
+    ``PLATFORM_EMBEDDING_ENDPOINT`` unset falls back to the network-free hash
+    embedder, matching D5's CI default; ``PLATFORM_RAG_SOURCE`` defaults to
     the first registered source."""
     import os
     import uuid
@@ -307,14 +307,14 @@ def run_ingestion_task() -> dict[str, Any]:
     from src.llm.rag.embedding import DeterministicHashEmbedder, TeiHttpEmbedder
     from src.llm.rag.pgvector_store import PgVectorStore
 
-    source = os.environ.get("PHASE2_RAG_SOURCE", "vnstock_news_vnm")
-    embedding_endpoint = os.environ.get("PHASE2_EMBEDDING_ENDPOINT")
+    source = os.environ.get("PLATFORM_RAG_SOURCE", "vnstock_news_vnm")
+    embedding_endpoint = os.environ.get("PLATFORM_EMBEDDING_ENDPOINT")
     embedder = (
         TeiHttpEmbedder(endpoint=embedding_endpoint)
         if embedding_endpoint
         else DeterministicHashEmbedder()
     )
-    with psycopg.connect(os.environ["PHASE2_PG_DSN"]) as conn:
+    with psycopg.connect(os.environ["PLATFORM_PG_DSN"]) as conn:
         # PgVectorStore's own docstring documents this obligation: without
         # it, psycopg3 adapts list[float] to float8[] and there is no
         # implicit float8[] -> vector cast for a real vector(384) column.
@@ -327,9 +327,9 @@ def run_ingestion_task() -> dict[str, Any]:
         emit_lineage_if_configured,
     )
 
-    result["lineage_audit"] = audit_lineage(pipeline_name="phase2_rag_ingest")
+    result["lineage_audit"] = audit_lineage(pipeline_name="platform_rag_ingest")
     result["lineage_emit"] = emit_lineage_if_configured(
-        run_id=uuid.uuid4().hex, pipeline_name="phase2_rag_ingest"
+        run_id=uuid.uuid4().hex, pipeline_name="platform_rag_ingest"
     )
     return result
 

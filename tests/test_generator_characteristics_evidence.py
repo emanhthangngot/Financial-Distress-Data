@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.jobs.stage1_evidence_job import (
+from src.jobs.lakehouse_evidence_job import (
     build_generator_characteristics,
     write_generator_characteristics_evidence,
 )

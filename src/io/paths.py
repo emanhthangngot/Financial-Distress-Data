@@ -14,7 +14,7 @@ def dataset_object_key(bucket: str, layer: str, dataset_name: str) -> str:
     return f"{bucket}/{layer}/{dataset_name}/data.parquet"
 
 
-def stage1_dataset_object_keys(bucket: str = DEFAULT_BUCKET) -> list[str]:
+def lakehouse_dataset_object_keys(bucket: str = DEFAULT_BUCKET) -> list[str]:
     datasets = [
         ("bronze", "companies"),
         ("bronze", "financial_statements"),
