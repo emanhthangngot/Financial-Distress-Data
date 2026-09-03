@@ -31,7 +31,7 @@ from typing import Any
 
 from src.drift.generator_config import DERIVED_METRIC_NAMES, DriftScenario, ShiftSpec
 
-OUTPUT_ROOT = Path("outputs/phase2/drift")
+OUTPUT_ROOT = Path("outputs/evidence/drift")
 
 # One resolver per name in generator_config.DERIVED_METRIC_NAMES — kept in
 # sync by the assertion below (a name present in one without the other is a
@@ -217,7 +217,7 @@ def write_drift_report(
     report: dict[str, Any], markdown: str, run_id: str, output_root: Path = OUTPUT_ROOT
 ) -> Path:
     """Writes ``report.json`` and ``report.md`` to
-    ``outputs/phase2/drift/{scenario}/{run_id}/``; returns the directory."""
+    ``outputs/evidence/drift/{scenario}/{run_id}/``; returns the directory."""
     directory = output_root / report["scenario"] / run_id
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -247,8 +247,8 @@ def run_scenario_against_generator(
 ) -> tuple[Path, dict[str, Any]]:
     """Generate deterministic offline data, apply the named drift scenario,
     write the before/after report. The single orchestrator both
-    scripts/run_phase2_drift_report.py (CLI evidence command) and
-    dags/phase2/phase2_label_drift_build.py (Airflow wrapper) call — kept
+    scripts/run_platform_drift_report.py (CLI evidence command) and
+    dags/label_drift_build.py (Airflow wrapper) call — kept
     here rather than in scripts/ because dags/ containers mount src/ and
     configs/ but not scripts/ (docker-compose.yml's airflow-* volumes)."""
     from src.drift.generator_config import get_scenario, load_drift_config

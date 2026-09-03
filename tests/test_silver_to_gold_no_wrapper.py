@@ -43,7 +43,7 @@ def test_dag_06_imports_compute_labels_directly():
     assert "build_distress_labels" not in src
 
 
-def test_stage1_evidence_job_imports_compute_labels_directly():
+def test_lakehouse_evidence_job_imports_compute_labels_directly():
     from pathlib import Path
 
     src = Path("src/jobs/stage1_evidence_job.py").read_text()

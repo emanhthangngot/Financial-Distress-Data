@@ -1,0 +1,2 @@
+rubric_id,track,section,points,requirement,proof,deliverables,owner,test,evidence_path,evidence_type,acceptance_criterion,artifact_path
+ML-fixme-feature-store,FULL,Feature Store,100,"Deliberately incomplete fixture: owner omitted",proof,deliverable,,pytest tests/platform,docs/phase2/evidence/ml/fixme.md,design_only,,src/ml/ML-fixme-feature-store

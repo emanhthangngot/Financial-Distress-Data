@@ -111,7 +111,7 @@ class RagIngestionPipeline(RagIngestionService):
     that splits these five methods across separate Airflow tasks (as
     phase-04-implementation-notes.md section 7's per-subtask table implies)
     would lose that state across task boundaries. Whichever slice wires
-    ``dags/phase2/phase2_rag_ingest.py`` (4C) must call all five methods from
+    ``dags/rag_ingest.py`` (4C) must call all five methods from
     a single task, or carry ``license`` on ``Chunk`` itself so
     ``enforce_licensing_and_metadata`` doesn't need the lookup."""
 
@@ -270,10 +270,10 @@ def run_ingestion(
     """Runs all five contract methods in order against one pipeline instance
     — see ``RagIngestionPipeline``'s class docstring for why they must not
     be split across separate Airflow tasks. This is the single callable
-    ``dags/phase2/phase2_rag_ingest.py`` wraps in one ``PythonOperator``.
+    ``dags/rag_ingest.py`` wraps in one ``PythonOperator``.
 
     Lineage emission (Flow E, phase-04-implementation-notes.md section 2) is
-    deliberately not wired here — ``src/governance/phase2_lineage.py`` and
+    deliberately not wired here — ``src/governance/lineage.py`` and
     ``configs/phase2-governance.yaml`` are slice 4D's files, not 4C's."""
     documents = pipeline.fetch_documents(source, window)
     chunks = pipeline.parse_and_chunk(documents)
@@ -293,7 +293,7 @@ def run_ingestion(
 def run_ingestion_task() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
-    dags/phase2/phase2_rag_ingest.py's only job is to point a
+    dags/rag_ingest.py's only job is to point a
     PythonOperator at this callable). ``PHASE2_PG_DSN`` required;
     ``PHASE2_EMBEDDING_ENDPOINT`` unset falls back to the network-free hash
     embedder, matching D5's CI default; ``PHASE2_RAG_SOURCE`` defaults to
@@ -322,13 +322,13 @@ def run_ingestion_task() -> dict[str, Any]:
         pipeline = RagIngestionPipeline(PgVectorStore(conn), embedder)
         result = run_ingestion(pipeline, source)
 
-    from src.governance.phase2_lineage import (
-        audit_phase2_lineage,
-        emit_phase2_lineage_if_configured,
+    from src.governance.lineage import (
+        audit_lineage,
+        emit_lineage_if_configured,
     )
 
-    result["lineage_audit"] = audit_phase2_lineage(pipeline_name="phase2_rag_ingest")
-    result["lineage_emit"] = emit_phase2_lineage_if_configured(
+    result["lineage_audit"] = audit_lineage(pipeline_name="phase2_rag_ingest")
+    result["lineage_emit"] = emit_lineage_if_configured(
         run_id=uuid.uuid4().hex, pipeline_name="phase2_rag_ingest"
     )
     return result

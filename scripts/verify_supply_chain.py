@@ -19,9 +19,9 @@ from dataclasses import dataclass
 from typing import Any
 
 try:
-    from phase2_ci.gitops_paths import GitOpsPathError, validate_digest
+    from ci.gitops_paths import GitOpsPathError, validate_digest
 except ModuleNotFoundError:  # package import from the repository root
-    from scripts.phase2_ci.gitops_paths import GitOpsPathError, validate_digest
+    from scripts.ci.gitops_paths import GitOpsPathError, validate_digest
 
 DEFAULT_ISSUER = "https://token.actions.githubusercontent.com"
 DEFAULT_IDENTITY = r"^repo:emanhthangngot/Financial-Distress-Data:ref:refs/heads/(main|dev)$"

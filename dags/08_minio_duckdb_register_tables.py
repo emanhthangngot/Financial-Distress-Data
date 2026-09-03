@@ -8,7 +8,7 @@ views. The DAG also runs a smoke query so the catalog is verified end-to-end
 
 from __future__ import annotations
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.catalog.duckdb_catalog import create_view_sql
 
 DAG, PythonOperator = airflow_imports()

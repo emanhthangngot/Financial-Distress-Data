@@ -19,7 +19,7 @@ runs, so the obligation is documented here instead. ``src.llm.rag_pipeline.
 run_ingestion_task`` is the one production caller and does call it before
 constructing ``PgVectorStore``, verified against a real
 ``pgvector/pgvector:pg16`` container (fresh insert + idempotent rerun).
-``tests/phase2/pipelines/test_pgvector_store.py`` still skips whenever the
+``tests/platform/pipelines/test_pgvector_store.py`` still skips whenever the
 pgvector extension itself is unavailable in the test environment.
 """
 

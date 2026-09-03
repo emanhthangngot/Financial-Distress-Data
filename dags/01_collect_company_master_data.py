@@ -8,7 +8,7 @@ the Stage 1 evidence pipeline.
 
 from __future__ import annotations
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.company_list_collector import collect_companies
 
 DAG, PythonOperator = airflow_imports()
