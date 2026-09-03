@@ -131,7 +131,7 @@ def test_flink_submit_raises_on_http_error(monkeypatch):
 
 
 def test_flink_disabled_by_default(monkeypatch):
-    """Stage 1 keeps Flink opt-in. When ENABLE_FLINK is unset, is_enabled()
+    """platform keeps Flink opt-in. When ENABLE_FLINK is unset, is_enabled()
     must return False so the DAG falls back to MicroBatchConsumer.
 
     WHO: developer running local Docker stack without Flink.

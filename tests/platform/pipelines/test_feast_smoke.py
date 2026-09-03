@@ -2,7 +2,7 @@
 online store — proves feature_repo/structured/definitions.py and
 feature_repo/rag/definitions.py actually parse and register with a real
 Feast install. Skipped unless `feast` is importable — it cannot run in
-`.venv` (Feast lives only in `.venv-phase2`, D4)."""
+`.venv` (Feast lives only in `.venv-platform`, D4)."""
 
 from __future__ import annotations
 

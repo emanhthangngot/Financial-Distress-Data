@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock
 import httpx
 import pytest
 
-from tests.phase2.apps.conftest import load_app_module
+from tests.platform.apps.conftest import load_app_module
 
 
 @pytest.fixture()

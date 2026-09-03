@@ -15,7 +15,7 @@ See `docs/flink-stream-processing.md` for the full reproduce steps. The
 stock `apache/flink` image, so `import pyflink` and the connector are both
 available inside the container.
 
-For Stage 1 the default streaming path does not require this job: the
+For platform the default streaming path does not require this job: the
 burst / late-arrival / dedup logic lives in
 `src/streaming/kafka_to_bronze_consumer.py` and is exercised via the default
 `MicroBatchConsumer` smoke path. The Flink opt-in path (W26) is wired through

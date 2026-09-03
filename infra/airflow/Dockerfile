@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # Multistage build for the Airflow image.
 #
-# Stage 1 (builder): create a Python venv with all wheels prebuilt. This stage
+# platform (builder): create a Python venv with all wheels prebuilt. This stage
 # carries pip, build tools, and source distributions — none of which are needed
 # at runtime.
 #

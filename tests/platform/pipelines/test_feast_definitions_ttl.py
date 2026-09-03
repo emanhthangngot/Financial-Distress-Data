@@ -1,5 +1,5 @@
 """Pins src/ml/feast/feature_definitions.py's TTL table without importing
-Feast — Feast lives only in .venv-phase2 (D4). Every FeatureView has a
+Feast — Feast lives only in .venv-platform (D4). Every FeatureView has a
 non-null TTL, TTL values equal the documented table, every declared source
 has an event_timestamp_column, and every view has a rationale string."""
 

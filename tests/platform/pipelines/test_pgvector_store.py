@@ -88,8 +88,8 @@ def ml_metadata_conn(tmp_path_factory: pytest.TempPathFactory):
             # extension is installed. CI's `apt-get install postgresql` step
             # (.github/workflows/ci.yml) does not install pgvector — that only
             # ships in pgvector/pgvector:pg16 (docker-compose.yml's
-            # phase2-postgres service). Wiring a pgvector-capable CI job is
-            # slice 4D's job (phase2-*.yaml workflows), not this test's.
+            # platform-postgres service). Wiring a pgvector-capable CI job is
+            # slice 4D's job (platform-*.yaml workflows), not this test's.
             pytest.skip(f"pgvector extension not available on this machine: {exc}")
 
         yield conn

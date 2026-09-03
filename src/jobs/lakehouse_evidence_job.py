@@ -1,5 +1,5 @@
 """
-Stage 1 evidence job.
+platform evidence job.
 
 Builds the small evidence set (counts, sample rows, schema summary) consumed by
 ``scripts/run_lakehouse_evidence.py`` and the rubric evidence screenshots. Read-only with respect to
@@ -365,7 +365,7 @@ def build_evidence_payload(
     bucket: str = DEFAULT_BUCKET,
     adapter: VnstockFixtureAdapter | None = None,
 ) -> EvidencePayload:
-    """Build the canonical Stage 1 datasets.
+    """Build the canonical platform datasets.
 
     ``adapter`` is optional to preserve the deterministic platform .vidence
     contract. Cluster jobs pass a configured adapter so they can produce the

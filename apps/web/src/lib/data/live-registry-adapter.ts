@@ -143,7 +143,7 @@ function liveProvenance(env: NodeJS.ProcessEnv): Provenance {
     cachedAt: null,
     sourceSha,
     gitopsSha,
-    dataVersion: env["DISTRESSLENS_DATA_VERSION"] ?? "phase2-live",
+    dataVersion: env["DISTRESSLENS_DATA_VERSION"] ?? "platform-live",
     modelVersion: env["DISTRESSLENS_MODEL_VERSION"] ?? null,
     agentVersion: env["DISTRESSLENS_AGENT_VERSION"] ?? null,
     runId: env["DISTRESSLENS_RUN_ID"] ?? null,

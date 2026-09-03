@@ -51,7 +51,7 @@ def _run(command: tuple[str, ...], *, timeout: int) -> dict[str, object]:
 
 
 def capture(
-    *, rollout: str, namespace: str = "phase2-data", timeout: int = 60
+    *, rollout: str, namespace: str = "dataflow", timeout: int = 60
 ) -> dict[str, object]:
     """Capture status and analysis records for one rollout."""
 
@@ -77,7 +77,7 @@ def capture(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rollout", required=True)
-    parser.add_argument("--namespace", default="phase2-data")
+    parser.add_argument("--namespace", default="dataflow")
     parser.add_argument("--output", type=Path, default=None)
     parser.add_argument("--timeout", type=int, default=60)
     args = parser.parse_args(argv)

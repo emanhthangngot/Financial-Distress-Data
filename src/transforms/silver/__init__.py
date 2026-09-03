@@ -1,1 +1,1 @@
-"""Silver normalization and deduplication helpers for Stage 1."""
+"""Silver normalization and deduplication helpers for platform."""

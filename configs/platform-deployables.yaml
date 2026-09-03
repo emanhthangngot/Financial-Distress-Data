@@ -8,9 +8,9 @@
 # see plans/260813-1846-production-hardening-overlay/plan.md Overview.
 version: 1
 deployables:
-  - name: phase1-pipeline
+  - name: lakehouse-pipeline
     image_context: .
-    dockerfile: infra/phase1-cluster/Dockerfile.pipeline
+    dockerfile: infra/lakehouse-cluster/Dockerfile.pipeline
     test_selector: "tests -k 'cluster_pipeline or lakehouse_jobs or feast'"
     lint_paths:
       - src/jobs/lakehouse_evidence_job.py
@@ -22,7 +22,7 @@ deployables:
     gitops_values_path: platform/data/pipeline-deployments.yaml
     gitops_target_type: manifest
     gitops_target_kind: CronJob
-    gitops_target_selector: phase1-gold-producer
+    gitops_target_selector: lakehouse-gold-producer
   - name: stream-feature-offline
     image_context: .
     dockerfile: infra/stream-feature-offline/Dockerfile

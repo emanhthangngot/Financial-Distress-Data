@@ -1,7 +1,7 @@
-"""Pins src/governance/lineage.py: configs/phase2-governance.yaml
+"""Pins src/governance/lineage.py: configs/platform-governance.yaml
 loads and validates, audit works with no live DataHub server, and
 emit_lineage rejects an unknown pipeline name before ever attempting
-the lazy `datahub` import (module is not a `.venv`/`.venv-phase2` dependency
+the lazy `datahub` import (module is not a `.venv`/`.venv-platform` dependency
 at all)."""
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ def test_rag_ingest_contract_dataset_is_rag_chunk() -> None:
 
 
 def test_emit_rejects_unknown_pipeline_before_importing_datahub() -> None:
-    with pytest.raises(KeyError, match="unknown phase2 pipeline"):
+    with pytest.raises(KeyError, match="unknown platform pipeline"):
         emit_lineage("run-1", "not_a_real_pipeline", server="http://localhost:8080")
     assert "datahub" not in sys.modules
 
@@ -88,7 +88,7 @@ def test_audit_narrowed_pipeline_only_carries_its_own_datasets() -> None:
 
 
 def test_audit_rejects_unknown_pipeline_name() -> None:
-    with pytest.raises(KeyError, match="unknown phase2 pipeline"):
+    with pytest.raises(KeyError, match="unknown platform pipeline"):
         audit_lineage(pipeline_name="not_a_real_pipeline")
 
 

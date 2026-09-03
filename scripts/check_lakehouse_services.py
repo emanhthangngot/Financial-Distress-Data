@@ -1,5 +1,5 @@
 """
-Stage 1 service health check.
+platform service health check.
 
 Probes MinIO, PostgreSQL, Kafka, and the local Airflow metadata DB to confirm
 the developer cluster is up and the ``ops`` schema is reachable.
@@ -193,7 +193,7 @@ def check_services(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Check Stage 1 local Docker service readiness.")
+    parser = argparse.ArgumentParser(description="Check platform local Docker service readiness.")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON output.")
     args = parser.parse_args()
 

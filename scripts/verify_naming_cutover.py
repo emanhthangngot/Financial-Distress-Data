@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P1 naming cutover verifier.
 
-Exits 0 when the working tree contains zero ``phase1`` / ``phase2`` / ``stage1``
+Exits 0 when the working tree contains zero ``lakehouse`` / ``platform`` / ``lakehouse``
 tokens outside the documented exceptions; exits 1 otherwise and prints every
 match so the cutover can be driven against a decreasing list.
 
@@ -43,7 +43,7 @@ EXCLUDE_DIR_NAMES = frozenset({
     ".pytest_cache",
     ".hypothesis",
     ".venv",
-    ".venv-phase2",
+    ".venv-platform",
     ".venv-platform",
     "supabase",
     "plans",
@@ -133,7 +133,7 @@ def main() -> int:
     files = _iter_scannable_files()
     content_hits = 0
     name_hits = 0
-    print(f"Scanning {len(files)} files under {REPO_ROOT} for phase1/phase2/stage1 tokens...")
+    print(f"Scanning {len(files)} files under {REPO_ROOT} for lakehouse/platform/lakehouse tokens...")
     for path in files:
         rel = path.relative_to(REPO_ROOT)
         name_str = str(rel)

@@ -9,7 +9,7 @@ the project and so the offline/online contract is provable, per ADR-005's
 amendment note that the offline store must be defined correctly even though
 only the online path is exercised this week.
 
-Loaded only by the `feast` CLI (.venv-phase2) — physical construction here
+Loaded only by the `feast` CLI (.venv-platform) — physical construction here
 rather than a re-export from src/, since no src/llm module needs a Feast
 dependency of its own (RagIngestionPipeline never imports feast).
 """
@@ -29,7 +29,7 @@ chunk_id = Entity(name="chunk_id", join_keys=["chunk_id"], value_type=ValueType.
 # slice (RAG training-set export belongs to the phase-05 ML retrofit).
 _offline_placeholder = FileSource(
     name="rag_chunk_offline_placeholder",
-    path="s3://financial-distress-lake/phase2/rag/offline/rag_chunk_placeholder.parquet",
+    path="s3://financial-distress-lake/platform/rag/offline/rag_chunk_placeholder.parquet",
     timestamp_field="created_ts",
 )
 

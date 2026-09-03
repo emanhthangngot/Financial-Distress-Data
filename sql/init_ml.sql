@@ -1,5 +1,5 @@
 -- ml schema. Runs against platform-postgres (pgvector/pgvector:pg16),
--- a separate Postgres instance from Phase 1's ops (AGENTS.md: the two
+-- a separate Postgres instance from platform's ops (AGENTS.md: the two
 -- schemas never cross-write). Mirrors init_ops.sql's style.
 
 CREATE SCHEMA IF NOT EXISTS ml;

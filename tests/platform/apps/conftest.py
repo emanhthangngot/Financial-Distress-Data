@@ -9,11 +9,11 @@ import pytest
 
 pytest.importorskip(
     "fastapi",
-    reason="platform .pp tests require .venv-phase2; the Stage 1 .venv stays dependency-clean",
+    reason="platform .pp tests require .venv-platform; the platform .venv stays dependency-clean",
 )
 pytest.importorskip(
     "httpx",
-    reason="platform .pp tests require .venv-phase2; the Stage 1 .venv stays dependency-clean",
+    reason="platform .pp tests require .venv-platform; the platform .venv stays dependency-clean",
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]

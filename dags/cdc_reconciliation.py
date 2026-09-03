@@ -1,4 +1,4 @@
-"""Phase 2: reconcile generator and Flink CDC Bronze paths.
+"""platform: reconcile generator and Flink CDC Bronze paths.
 
 The module is a thin Airflow wrapper.  All connector/network work remains in
 the task callable so importing the DAG in tests or scheduler discovery has no
@@ -27,7 +27,7 @@ if DAG is not None:
         schedule=None,
         catchup=False,
         dagrun_timeout=timedelta(hours=1),
-        tags=["financial-distress", "phase2", "cdc", "reconciliation"],
+        tags=["financial-distress", "platform", "cdc", "reconciliation"],
     ) as dag:
         PythonOperator(
             task_id="reconcile_generator_and_cdc",

@@ -1,7 +1,7 @@
 """
-Stage 1 real end-to-end runner.
+platform real end-to-end runner.
 
-Drives the real end-to-end Stage 1 run on the developer cluster: starts the
+Drives the real end-to-end platform run on the developer cluster: starts the
 local stack, triggers the real-e2e DAG, and collects evidence. Used by rubric
 rows 3 and 4 to prove the pipeline works against a live MinIO/PostgreSQL/Kafka
 setup.
@@ -166,7 +166,7 @@ def write_json(path: Path, payload: object) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run and verify the Stage 1 real local E2E DAG.")
+    parser = argparse.ArgumentParser(description="Run and verify the platform real local E2E DAG.")
     parser.add_argument(
         "--start", action="store_true", help="Build and start docker compose first."
     )
@@ -223,7 +223,7 @@ def main() -> None:
         completed_at=datetime.now(UTC).isoformat(),
     )
     manifest.write(evidence_dir / "run-manifest.json")
-    print(f"Exported Stage 1 real E2E evidence to {evidence_dir}")
+    print(f"Exported platform real E2E evidence to {evidence_dir}")
 
 
 if __name__ == "__main__":

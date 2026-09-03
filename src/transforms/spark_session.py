@@ -61,7 +61,7 @@ def build_spark_session(config_path: str | Path = "configs/spark_config.yaml") -
     except ImportError as exc:
         raise RuntimeError(
             "PySpark is required for local MinIO Parquet jobs. "
-            "Install the runtime dependencies before running Stage 1 evidence jobs."
+            "Install the runtime dependencies before running platform evidence jobs."
         ) from exc
 
     builder = configure_spark_builder(SparkSession.builder, load_spark_config(config_path))

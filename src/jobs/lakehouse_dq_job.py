@@ -1,5 +1,5 @@
 """
-Stage 1 data quality job.
+platform data quality job.
 
 Runs the DQ check catalog against the Bronze, Silver, and Gold zones and persists the results. Used
 by DAG 07 to gate downstream tasks.
@@ -18,7 +18,7 @@ def read_minio_parquet_rows(bucket: str, prefix: str) -> list[dict[str, Any]]:
     try:
         import pyarrow.parquet as pq
     except ImportError as exc:
-        raise RuntimeError("PyArrow is required to read Stage 1 DQ parquet inputs.") from exc
+        raise RuntimeError("PyArrow is required to read platform DQ parquet inputs.") from exc
 
     client = _minio_client()
     _ensure_bucket(client, bucket)

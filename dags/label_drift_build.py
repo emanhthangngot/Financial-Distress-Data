@@ -1,4 +1,4 @@
-"""Phase 2: drift-scenario report + label table build
+"""platform: drift-scenario report + label table build
 (generate -> apply_drift -> drift_report -> build_labels -> publish), run as
 one task via src.ml.label_pipeline.run_label_drift_build_task."""
 
@@ -24,7 +24,7 @@ if DAG is not None:
         schedule=None,
         catchup=False,
         dagrun_timeout=timedelta(hours=1),
-        tags=["financial-distress", "phase2", "ml", "llm", "drift", "labels"],
+        tags=["financial-distress", "platform", "ml", "llm", "drift", "labels"],
     ) as dag:
         PythonOperator(
             task_id="build_drift_report_and_labels",

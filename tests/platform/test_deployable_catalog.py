@@ -16,7 +16,7 @@ GITOPS_ROOT = REPO_ROOT.parent / "financial-distress-gitops"
 def test_catalog_contains_all_unique_deployables() -> None:
     entries = load_catalog()
     # feature-api/drift-api (ML-track) removed 2026-08-14 — LLM submission
-    # does not need them; see configs/phase2-deployables.yaml header.
+    # does not need them; see configs/platform-deployables.yaml header.
     assert len(entries) == 8
     assert len({entry.name for entry in entries}) == len(entries)
     assert all(entry.test_args for entry in entries)

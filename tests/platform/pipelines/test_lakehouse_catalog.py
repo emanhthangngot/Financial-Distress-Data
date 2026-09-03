@@ -8,7 +8,7 @@ from src.lakehouse.tables import register_phase2_tables
 def test_platform_tables_register_and_time_travel() -> None:
     catalog = load_catalog(CatalogConfig(uri="http://localhost:8181/catalog"))
     tables = register_phase2_tables(catalog)
-    table = tables["phase2.features"]
+    table = tables["platform.features"]
     first = table.append(
         [
             {
@@ -38,7 +38,7 @@ def test_platform_tables_register_and_time_travel() -> None:
 
 def test_schema_evolution_is_additive_and_old_snapshot_remains_readable() -> None:
     catalog = load_catalog()
-    table = register_phase2_tables(catalog)["phase2.labels"]
+    table = register_phase2_tables(catalog)["platform.labels"]
     snapshot = table.append(
         [
             {
@@ -68,7 +68,7 @@ def test_schema_evolution_is_additive_and_old_snapshot_remains_readable() -> Non
 
 
 def test_stale_expected_snapshot_is_rejected() -> None:
-    table = load_catalog().create_table("phase2.t", {"id": "integer"})
+    table = load_catalog().create_table("platform.t", {"id": "integer"})
     first = table.append([{"id": 1}])
     table.append([{"id": 2}], expected_snapshot_id=first.snapshot_id)
     try:

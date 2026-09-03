@@ -1,7 +1,7 @@
 """
-Stage 1 real end-to-end pipeline.
+platform real end-to-end pipeline.
 
-The DAG that drives the Stage 1 real end-to-end run used for rubric evidence
+The DAG that drives the platform real end-to-end run used for rubric evidence
 collection. It schedules collectors, Bronze/Silver/Gold transforms, DQ, and
 DuckDB view registration as a single Airflow graph.
 """

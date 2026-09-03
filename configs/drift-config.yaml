@@ -9,7 +9,7 @@ schema_version: 1
 # intraday/rolling time series to compute a real 30-day volatility from.
 # observed_stat: std treats the cross-sectional stdev of close_price across
 # all tickers as the volatility proxy — documented substitution, see
-# plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md,
+# plans/260802-1037-unified-platform-ml-llm-gitops/phase-04-implementation-notes.md,
 # section 6 (amend that file's "volatility_30d" mention to match).
 #
 # Neither scenario co-shifts a feature's dependents (e.g. total_liabilities

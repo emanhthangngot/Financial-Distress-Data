@@ -1,6 +1,6 @@
 """DAG 04 — Stream market events to Kafka (Flink-opt-in).
 
-This DAG is the Stage 1 streaming entry point. It has two execution
+This DAG is the platform streaming entry point. It has two execution
 modes, picked at task-call time via the ``ENABLE_FLINK`` env var:
 
 * **Default (opt-out)** — ``ENABLE_FLINK`` unset. Use the original

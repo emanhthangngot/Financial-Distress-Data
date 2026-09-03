@@ -2,11 +2,11 @@
 
 ``FEATURE_VIEW_TTL`` is a plain module-level constant declared before any
 Feast import, so ``.venv``'s fast loop can read it without Feast installed
-(Feast lives only in ``.venv-phase2`` — D4 lazy-import rule,
+(Feast lives only in ``.venv-platform`` — D4 lazy-import rule,
 phase-04-implementation-notes.md section 0). ``build_feature_objects()`` is
 the single place Entity/FeatureView objects are actually constructed; Feast
 is imported lazily inside it. ``feature_repo/structured/definitions.py``
-(loaded only by the ``feast`` CLI, which runs under ``.venv-phase2``) calls
+(loaded only by the ``feast`` CLI, which runs under ``.venv-platform``) calls
 it once and injects the result into its own module globals — this is a
 reasoned resolution between the star-re-export design in
 phase-04-implementation-notes.md section 3.4 (verified working against
@@ -66,7 +66,7 @@ GOLD_DATASETS: dict[str, str] = {
 
 def gold_source_path(dataset_name: str) -> str:
     """s3:// URI for a Gold dataset's single ``data.parquet`` object,
-    resolved through the same ``src.io.paths`` module Phase 1's writers use
+    resolved through the same ``src.io.paths`` module platform's writers use
     — no new path convention invented for Feast."""
     from src.io.paths import DEFAULT_BUCKET, dataset_object_key
 

@@ -3,7 +3,7 @@ digraph W22Deployment {
         rankdir=TB,
         fontname="Helvetica",
         fontsize=14,
-        label="Stage 1 Local Lakehouse - Deployable Units and Data Flow",
+        label="platform Local Lakehouse - Deployable Units and Data Flow",
         labelloc=t,
         pad=0.4,
         nodesep=0.4,

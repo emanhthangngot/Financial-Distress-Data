@@ -46,7 +46,7 @@ def aggregate_stream_events(events: list[dict[str, Any]]) -> list[dict[str, Any]
 
 
 def write_offline_rows(rows: list[dict[str, Any]], client: Any, bucket: str) -> None:
-    """Appends one object under ``phase2/offline/stream_features/`` per call
+    """Appends one object under ``platform/offline/stream_features/`` per call
     via the existing MinIO writer (src.io.minio_writer — reused, not
     reimplemented, per phase-04-implementation-notes.md section 3.1's "no
     new S3 client" rule). The object key is a content hash of every field of
@@ -66,7 +66,7 @@ def write_offline_rows(rows: list[dict[str, Any]], client: Any, bucket: str) -> 
         return
     from src.io.minio_writer import write_minio_dataset
 
-    object_key = f"{bucket}/phase2/offline/stream_features/{_deterministic_batch_id(rows)}.parquet"
+    object_key = f"{bucket}/platform/offline/stream_features/{_deterministic_batch_id(rows)}.parquet"
     write_minio_dataset(client, bucket, object_key, rows)
 
 
@@ -110,7 +110,7 @@ def run_offline_job() -> dict[str, Any]:
     consumer = KafkaConsumer(
         topic,
         bootstrap_servers=bootstrap_servers,
-        group_id="phase2-stream-feature-offline",
+        group_id="platform-stream-feature-offline",
         auto_offset_reset="earliest",
         enable_auto_commit=False,
         consumer_timeout_ms=int(os.environ.get("PLATFORM_STREAM_POLL_TIMEOUT_MS", "10000")),

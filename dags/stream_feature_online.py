@@ -1,4 +1,4 @@
-"""Phase 2: stream `financial.price_events` -> Feast online store (Redis
+"""platform: stream `financial.price_events` -> Feast online store (Redis
 push) + checkpoint, via src.ml.feast.online_job.run_online_job."""
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ if DAG is not None:
         schedule=None,
         catchup=False,
         dagrun_timeout=timedelta(hours=1),
-        tags=["financial-distress", "phase2", "ml", "feast", "streaming"],
+        tags=["financial-distress", "platform", "ml", "feast", "streaming"],
     ) as dag:
         PythonOperator(
             task_id="consume_transform_push_online",

@@ -180,10 +180,10 @@ def _behavioral_assertion(rubric_id: str, artifact_path: str) -> str:
     if stem in {"main", "chart", "values", "readme", "__init__"} or stem.startswith("test_"):
         stem = path.parent.name.lower()
     words = re.findall(r"[a-z0-9]+", stem)
-    meaningful = [word for word in words if word not in {"data", "pipeline", "phase2", "test"}]
-    token = max(meaningful or words, key=len, default="phase2")
+    meaningful = [word for word in words if word not in {"data", "pipeline", "platform", "test"}]
+    token = max(meaningful or words, key=len, default="platform")
     if not token:
-        token = "phase2"
+        token = "platform"
     suffix = path.suffix.lower()
     if suffix == ".py":
         return f"python_ast_contains:{token}"
@@ -452,24 +452,24 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
         "source",
         "src/ml/data_versioning.py",
     ),
-    "ML-ci-cd-ci-cd-cho-pipelines": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
-    "ML-ci-cd-training-pipeline": ("ml_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-ci-cd-ci-cd-cho-pipelines": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "ML-ci-cd-training-pipeline": ("ml_engineer", "source", ".github/workflows/platform-ci.yaml"),
     "ML-ci-cd-dp-1": ("platform_operator", "source", ".github/workflows/ci.yml"),
     "ML-ci-cd-dp-2": ("platform_operator", "source", ".github/workflows/ci.yml"),
     "ML-ci-cd-dp-3": ("platform_operator", "source", ".github/workflows/ci.yml"),
-    "ML-ci-cd-web-api": ("platform_operator", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-ci-cd-web-api": ("platform_operator", "source", ".github/workflows/platform-ci.yaml"),
     "ML-ci-cd-inference-engine": (
         "platform_operator",
         "source",
-        ".github/workflows/phase2-ci.yaml",
+        ".github/workflows/platform-ci.yaml",
     ),
     "ML-ci-cd-cho-real-time-drift-detection-": (
         "platform_operator",
         "source",
-        ".github/workflows/phase2-ci.yaml",
+        ".github/workflows/platform-ci.yaml",
     ),
-    "ML-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
-    "ML-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "ML-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "ML-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
     "ML-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
         "platform_operator",
         "gitops",
@@ -727,21 +727,21 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
         "data_engineer",
         "source",
-        ".github/workflows/phase2-ci.yaml",
+        ".github/workflows/platform-ci.yaml",
     ),
-    "LLM-ci-cd-agent-k-o-d-li-u": ("llm_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "LLM-ci-cd-agent-k-o-d-li-u": ("llm_engineer", "source", ".github/workflows/platform-ci.yaml"),
     "LLM-ci-cd-agent-drift-detection": (
         "llm_engineer",
         "source",
-        ".github/workflows/phase2-ci.yaml",
+        ".github/workflows/platform-ci.yaml",
     ),
     "LLM-ci-cd-agent-l-m-coordinator": (
         "llm_engineer",
         "source",
-        ".github/workflows/phase2-ci.yaml",
+        ".github/workflows/platform-ci.yaml",
     ),
-    "LLM-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
-    "LLM-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/phase2-ci.yaml"),
+    "LLM-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "LLM-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
     "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
         "platform_operator",
         "gitops",
@@ -1432,7 +1432,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="exit 1 when the CSV is stale")
     args = parser.parse_args(argv)
-    path = DOCS / "phase2" / "rubric-matrix.csv"
+    path = DOCS / "platform" / "rubric-matrix.csv"
     expected = export_matrix_csv()
     current = path.read_text(encoding="utf-8") if path.exists() else None
     if args.check:

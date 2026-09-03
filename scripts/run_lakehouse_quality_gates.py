@@ -1,5 +1,5 @@
 """
-Stage 1 quality gates runner.
+platform quality gates runner.
 
 Runs the full pre-merge quality gate suite (ruff, black, pytest,
 ``docker compose config``, stage 1 evidence audit) and surfaces the combined
@@ -69,7 +69,7 @@ def run_quality_gates(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run Stage 1 local quality gates.")
+    parser = argparse.ArgumentParser(description="Run platform local quality gates.")
     parser.add_argument(
         "--only",
         action="append",

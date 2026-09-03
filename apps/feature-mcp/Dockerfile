@@ -10,7 +10,7 @@ RUN cd /service/feature_repo/structured && \
     cp feature_store.cluster.yaml feature_store.yaml && \
     PYTHONPATH=/service \
     FEAST_REGISTRY_PATH=/service/feature_repo/structured/registry.db \
-    FEAST_REDIS_HOST=phase2-redis.phase2-data.svc.cluster.local \
+    FEAST_REDIS_HOST=platform-redis.dataflow.svc.cluster.local \
     feast apply
 COPY apps/feature-mcp/app ./app
 USER 65532:65532

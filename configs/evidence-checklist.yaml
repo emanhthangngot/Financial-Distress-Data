@@ -4,7 +4,7 @@
 # Trimmed 2026-08-14 to the LLM-only submission scope (ML track cancelled,
 # see plans/260813-1846-production-hardening-overlay/plan.md Overview). The
 # removed sections (phase3 supply-chain, phase4 capacity, phase5 kyverno,
-# phase6 secrets-mesh, phase7 lakehouse, phase8 cdc, phase9 phase1-plane,
+# phase6 secrets-mesh, phase7 lakehouse, phase8 cdc, phase9 lakehouse-plane,
 # phase10 ml, phase11 rollouts, phase12 freeze) targeted cluster operators
 # (Kyverno, ESO, Linkerd, Lakekeeper, MLflow, Argo Rollouts) and archived
 # apps (feature-api/drift-api) that are no longer part of this submission —

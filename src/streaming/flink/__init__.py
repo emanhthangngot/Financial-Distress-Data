@@ -1,4 +1,4 @@
-"""Stage 1 Flink integration (opt-in).
+"""platform Flink integration (opt-in).
 
 Wires Apache Flink as a streaming option alongside the existing Kafka
 MicroBatchConsumer path. Flink is OFF by default; toggle ENABLE_FLINK=1

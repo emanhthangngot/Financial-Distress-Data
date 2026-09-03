@@ -25,7 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 # of misreporting a missing checkout as a missing implementation artifact.
 _gitops_env = os.environ.get("PHASE2_GITOPS_ROOT")
 GITOPS_ROOT = Path(_gitops_env) if _gitops_env else None
-MATRIX_PATH = REPO_ROOT / "docs" / "phase2" / "rubric-matrix.csv"
+MATRIX_PATH = REPO_ROOT / "docs" / "platform" / "rubric-matrix.csv"
 
 EVIDENCE_REQUIRED_KEYS = [
     "rubric_id",

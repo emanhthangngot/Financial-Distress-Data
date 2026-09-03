@@ -1,4 +1,4 @@
-"""Phase 2: Feast structured feature materialization
+"""platform: Feast structured feature materialization
 (feast_apply -> materialize_incremental -> record_registry_revision), run as
 one task via src.ml.feast.materialization.run_materialize_task."""
 
@@ -24,7 +24,7 @@ if DAG is not None:
         schedule=None,
         catchup=False,
         dagrun_timeout=timedelta(hours=1),
-        tags=["financial-distress", "phase2", "ml", "feast"],
+        tags=["financial-distress", "platform", "ml", "feast"],
     ) as dag:
         PythonOperator(
             task_id="materialize",

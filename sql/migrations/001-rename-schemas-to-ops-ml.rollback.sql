@@ -1,4 +1,4 @@
--- Phase 1, rename class C: schema-rename rollback.
+-- platform, rename class C: schema-rename rollback.
 --
 -- Mirrors sql/migrations/001-rename-schemas-to-ops-ml.sql in the
 -- reverse direction. Apply this if the unified-naming deployment must

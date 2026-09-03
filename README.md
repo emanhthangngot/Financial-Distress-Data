@@ -19,14 +19,14 @@ The platform is a **local-first financial-distress data lakehouse** for Vietname
 Primary users:
 
 - **Data engineer** — owns the Airflow DAGs, Kafka topics, PySpark transforms, MinIO layout, and PostgreSQL metadata.
-- **ML engineer** — consumes Gold features and `obt_company_quarter_risk` to train, score, and monitor financial-distress models (Phase 2).
+- **ML engineer** — consumes Gold features and `obt_company_quarter_risk` to train, score, and monitor financial-distress models (platform).
 - **Analyst / reviewer** — opens DBeaver or DuckDB against the local lakehouse to validate row counts, SCD2 history, lineage, and data contracts, or the product web app for a live authenticated view.
 
 Why it matters: a missed early warning on a stressed issuer costs downstream capital and credit decisions. The platform compresses that feedback loop by putting curated, quality-checked, lineage-tracked data one query away from the consumer.
 
 ## 📝 System Overview
 
-- **Lakehouse (Phase 1, verified):** a local-first medallion pipeline — `src/collectors`/`src/generator` produce deterministic batch and streaming data, Airflow (`dags/`) orchestrates three DAGs (DP1 source→Bronze, DP2 Bronze→Silver/Gold, DP3 offline features), Kafka (KRaft) carries streaming events, PySpark local mode performs the Bronze→Silver→Gold transform with a measured 1.56x optimization, Flink is an opt-in event-time streaming path, MinIO is the durable S3A lakehouse boundary, PostgreSQL holds operational metadata and DQ results, and DuckDB/DBeaver is the reviewer inspection surface — nothing here talks to AWS.
+- **Lakehouse (platform, verified):** a local-first medallion pipeline — `src/collectors`/`src/generator` produce deterministic batch and streaming data, Airflow (`dags/`) orchestrates three DAGs (DP1 source→Bronze, DP2 Bronze→Silver/Gold, DP3 offline features), Kafka (KRaft) carries streaming events, PySpark local mode performs the Bronze→Silver→Gold transform with a measured 1.56x optimization, Flink is an opt-in event-time streaming path, MinIO is the durable S3A lakehouse boundary, PostgreSQL holds operational metadata and DQ results, and DuckDB/DBeaver is the reviewer inspection surface — nothing here talks to AWS.
 - **LLM + RAG (platform, live-verified):** a real OpenAI-compatible model server (llama.cpp on KServe/Knative, Qwen2.5-0.5B, quantization-benchmarked) reached only through `agentgateway`, backing a RAG pipeline (`src/llm/rag_pipeline.py`) that fetches, chunks, governs (licensing/PII/quarantine), embeds, and writes to PGVector with proven idempotency and a real quarantine round-trip.
 - **Agents + MCP (platform, live-verified):** a coordinator agent fans out in parallel to a feature specialist and a drift specialist under a hard hop bound, each calling its own governed MCP tool (`feature-mcp`, `drift-mcp`) inside a sandboxed, tokenless, read-only `agents-sandbox` namespace with default-deny NetworkPolicies — proven live with a 5-span, 170ms Jaeger trace across all three services.
 - **Product plane (persistent):** Next.js renders authenticated analyst, report, agent-registry, and chat surfaces; Supabase owns Auth/Postgres/RLS and the evidence-session outbox that bridges the persistent product plane to the disposable evidence plane — the UI never claims a successful live answer before the evidence plane actually returns one.
@@ -38,14 +38,14 @@ Composed system diagram — seven subsystems and their cross-boundary contracts 
 
 ![System architecture overview](docs/pngs/system_architecture_overview.png)
 
-Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), Spark (PySpark local mode), MinIO, and PostgreSQL each run as their own process or container, never a library or SDK. Each subsystem also has its own small Mermaid diagram, embedded in the narrative doc that proves it — see [`docs/system-architecture.md`](docs/system-architecture.md) for the full diagram index (5-class color legend: edge/service/store/model/result) and links into every owning doc. The Phase 1-mandated deployment diagram required by `docs/mini_coursework.md` stays at its spec-pinned path:
+Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), Spark (PySpark local mode), MinIO, and PostgreSQL each run as their own process or container, never a library or SDK. Each subsystem also has its own small Mermaid diagram, embedded in the narrative doc that proves it — see [`docs/system-architecture.md`](docs/system-architecture.md) for the full diagram index (5-class color legend: edge/service/store/model/result) and links into every owning doc. The platform-mandated deployment diagram required by `docs/mini_coursework.md` stays at its spec-pinned path:
 
-![Stage 1 architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
+![platform architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
 
 ## 📁 Repository Structure
 
 ```txt
-├── dags/                  - Airflow DAGs (Stage 1) + dags/phase2/ additive wrappers
+├── dags/                  - Airflow DAGs (platform) + dags/platform/ additive wrappers
 ├── src/                   - Python source code
 │   ├── collectors/        - Fixture-backed source adapters and collectors
 │   ├── streaming/         - Kafka event contracts, micro-batch logic, Flink opt-in client
@@ -66,12 +66,12 @@ Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), 
 ├── notebooks/             - Agent/MCP demonstration notebooks (LLM evidence track)
 ├── configs/               - Collector, Spark, source, drift, and DQ config files
 ├── sql/                   - PostgreSQL metadata DDL and DuckDB SQL views
-├── tests/                 - PyTest unit, contract, and runtime tests; tests/platform/ covers Phase 2
+├── tests/                 - PyTest unit, contract, and runtime tests; tests/platform/ covers platform
 ├── docs/                  - Specs, narrative submission docs, architecture, evidence notes
 │   ├── submission/         - Reviewer-facing narrative docs (LLM track, mini-coursework, ML deferred)
 │   ├── architecture/       - Subsystem + composed Mermaid diagram sources
 │   ├── pngs/                - Reviewer screenshot/diagram pool (manifest-tracked)
-│   └── phase2/evidence/    - Canonical, audit-pinned LLM evidence rows (immutable location)
+│   └── platform/evidence/    - Canonical, audit-pinned LLM evidence rows (immutable location)
 ├── images/                - platform .pec-mandated architecture diagrams
 ├── infra/                 - Container build/bootstrap assets (airflow/, flink/, kafka/)
 ├── scripts/               - Local E2E, DQ-failure, evidence-audit, and doc-gate runners
@@ -113,7 +113,7 @@ Three reviewer index tables, each row linking to a full narrative doc with real 
 | Novel ideas | [`novel_ideas.md`](<docs/submission/rubric-final-coursework-(final-llm)/novel_ideas.md>) |
 | Cost | [`cost.md`](<docs/submission/rubric-final-coursework-(final-llm)/cost.md>) |
 
-**Mini-coursework (Phase 1) — full index at [`rubric-(mini-coursework)/README.md`](<docs/submission/rubric-(mini-coursework)/README.md>):**
+**Mini-coursework (platform) — full index at [`rubric-(mini-coursework)/README.md`](<docs/submission/rubric-(mini-coursework)/README.md>):**
 
 | Area | Doc |
 |---|---|
@@ -139,7 +139,7 @@ docker compose up -d
 .venv/bin/python scripts/check_stage1_services.py
 ```
 
-Full local setup, Docker Compose profiles (incl. opt-in Flink), product/platform .hecks, service URLs, Stage 1 evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.
+Full local setup, Docker Compose profiles (incl. opt-in Flink), product/platform .hecks, service URLs, platform evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.
 
 ## 📌 Project Status
 

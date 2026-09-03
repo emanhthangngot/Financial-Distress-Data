@@ -14,7 +14,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from scripts._platform_rubric_items import ITEMS, export_matrix_csv  # noqa: E402
 
-DOCS = REPO_ROOT / "docs" / "phase2"
+DOCS = REPO_ROOT / "docs" / "platform"
 
 
 def main() -> int:

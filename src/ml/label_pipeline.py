@@ -1,10 +1,10 @@
 """platform .abel table build.
 
-Wraps ``src.transforms.compute_distress_labels.compute_labels`` (Phase 1,
-read-only import — AGENTS.md forbids editing Phase 1) and reshapes its
+Wraps ``src.transforms.compute_distress_labels.compute_labels`` (platform,
+read-only import — AGENTS.md forbids editing platform) and reshapes its
 output to the ``ml.label_table`` contract. Registered as offline
 parquet + a Postgres row, never as a Feast FeatureView — see
-``plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md``,
+``plans/260802-1037-unified-platform-ml-llm-gitops/phase-04-implementation-notes.md``,
 section 5, for why: a training-time label must never be reachable through
 the online feature-serving path.
 """

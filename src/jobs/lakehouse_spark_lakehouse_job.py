@@ -1,7 +1,7 @@
 """
-Main Stage 1 Spark lakehouse job.
+Main platform Spark lakehouse job.
 
-Runs the end-to-end Bronze -> Silver -> Gold pipeline for Phase 1, including the distress labeler
+Runs the end-to-end Bronze -> Silver -> Gold pipeline for platform, including the distress labeler
 and the OBT builder. Invoked by the Spark DAGs and by the local evidence script.
 """
 
@@ -42,7 +42,7 @@ def _spark_session(app_name: str = "financial-distress-lakehouse-real-e2e") -> A
     try:
         from pyspark.sql import SparkSession
     except ImportError as exc:
-        raise RuntimeError("PySpark is required for the Stage 1 real E2E Spark job.") from exc
+        raise RuntimeError("PySpark is required for the platform real E2E Spark job.") from exc
 
     builder = SparkSession.builder.master("local[*]").appName(app_name)
     for key, value in spark_runtime_config().items():

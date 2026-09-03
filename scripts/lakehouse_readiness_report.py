@@ -1,7 +1,7 @@
 """
-Stage 1 readiness report.
+platform readiness report.
 
-Prints a one-shot report describing the developer cluster state, the Stage 1
+Prints a one-shot report describing the developer cluster state, the platform
 fixture config, and any missing prerequisites for the rubric evidence
 collection. Used as a smoke check before running the evidence pipeline.
 """
@@ -143,7 +143,7 @@ def _write_report(report: dict[str, Any], output_path: str | Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Build a Stage 1 coursework readiness report.")
+    parser = argparse.ArgumentParser(description="Build a platform coursework readiness report.")
     parser.add_argument("--evidence-dir", default="docs/evidence")
     parser.add_argument(
         "--include-services",

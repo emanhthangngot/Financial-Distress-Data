@@ -37,11 +37,11 @@ def configure_s3_environment() -> None:
     os.environ.setdefault("AWS_SECRET_ACCESS_KEY", os.environ["MINIO_ROOT_PASSWORD"])
     os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
     os.environ.setdefault("AWS_EC2_METADATA_DISABLED", "true")
-    os.environ.setdefault("FEAST_REDIS_HOST", "phase2-redis")
+    os.environ.setdefault("FEAST_REDIS_HOST", "platform-redis")
     os.environ.setdefault(
         "FEAST_REGISTRY_PATH",
         f"s3://{os.environ.get('FINANCIAL_DISTRESS_BUCKET', DEFAULT_BUCKET)}"
-        "/phase2/feast/structured/registry.db",
+        "/platform/feast/structured/registry.db",
     )
 
 
