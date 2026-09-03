@@ -188,13 +188,13 @@ class PostgresRagLookupClient:
 def production_clients_from_env() -> tuple[OnlineFeatureClient, RagLookupClient]:
     feast_repo = os.getenv("FEAST_REPO_PATH")
     rag_dsn = os.getenv("RAG_DATABASE_URL")
-    if not rag_dsn and os.getenv("PHASE2_PG_PASSWORD"):
+    if not rag_dsn and os.getenv("PLATFORM_PG_PASSWORD"):
         rag_dsn = (
-            f"host={os.getenv('PHASE2_PG_HOST', 'phase2-postgres')} "
-            f"port={os.getenv('PHASE2_PG_PORT', '5432')} "
-            f"dbname={os.getenv('PHASE2_PG_DATABASE', 'ml_metadata')} "
-            f"user={os.getenv('PHASE2_PG_USER', 'phase2')} "
-            f"password={os.environ['PHASE2_PG_PASSWORD']} connect_timeout=3"
+            f"host={os.getenv('PLATFORM_PG_HOST', 'platform-postgres')} "
+            f"port={os.getenv('PLATFORM_PG_PORT', '5432')} "
+            f"dbname={os.getenv('PLATFORM_PG_DATABASE', 'ml_metadata')} "
+            f"user={os.getenv('PLATFORM_PG_USER', 'platform')} "
+            f"password={os.environ['PLATFORM_PG_PASSWORD']} connect_timeout=3"
         )
     features: OnlineFeatureClient = (
         FeastOnlineFeatureClient(feast_repo) if feast_repo else UnconfiguredFeatureClient()

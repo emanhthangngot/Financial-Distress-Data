@@ -5,12 +5,12 @@ provider: local
 registry: ${FEAST_REGISTRY_PATH}
 online_store:
   type: postgres
-  host: ${PHASE2_PG_HOST}
+  host: ${PLATFORM_PG_HOST}
   port: 5432
-  database: ${PHASE2_PG_DATABASE}
+  database: ${PLATFORM_PG_DATABASE}
   db_schema: ml_metadata
-  user: ${PHASE2_PG_USER}
-  password: ${PHASE2_PG_PASSWORD}
+  user: ${PLATFORM_PG_USER}
+  password: ${PLATFORM_PG_PASSWORD}
 offline_store:
   type: file
 entity_key_serialization_version: 3

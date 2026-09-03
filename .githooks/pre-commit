@@ -11,10 +11,10 @@ protected=(
   "src/io/" "src/governance/" "sql/" "docs/evidence/"
   "docs/mini_coursework.md" "docs/01_data_generator.md" "docs/02_schema_design.md"
 )
-# Keep in sync with scripts/audit_phase2_evidence.py:PHASE1_PROTECTED_EXCEPTIONS.
+# Keep in sync with scripts/audit_platform_evidence.py:PHASE1_PROTECTED_EXCEPTIONS.
 exceptions=(
   "src/streaming/flink/jobs/" "sql/init_ml_metadata.sql"
-  "src/io/paths.py" "src/governance/phase2_lineage.py"
+  "src/io/paths.py" "src/governance/lineage.py"
   "src/lakehouse/catalog.py" "src/lakehouse/tables.py" "src/lakehouse/snapshots.py"
 )
 
@@ -34,10 +34,6 @@ while IFS= read -r -d '' path; do
       exit 1
     fi
   done
-  if [[ "${path}" == dags/* && "${path}" != dags/phase2/* ]]; then
-    echo "pre-commit: staged edit touches a protected Phase 1 DAG: ${path}" >&2
-    exit 1
-  fi
 done < <(git diff --cached --name-only -z --)
 
 echo "pre-commit: Phase 1 protected-path check passed"

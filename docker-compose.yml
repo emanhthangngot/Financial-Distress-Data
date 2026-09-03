@@ -63,7 +63,7 @@ services:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     command: webserver
     depends_on:
       airflow-init:
@@ -85,7 +85,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      LAKEHOUSE_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -102,7 +102,7 @@ services:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     depends_on:
       - postgres
     command: >
@@ -123,7 +123,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      LAKEHOUSE_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -138,7 +138,7 @@ services:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     command: scheduler
     depends_on:
       - airflow-webserver
@@ -155,7 +155,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      LAKEHOUSE_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -170,7 +170,7 @@ services:
     build:
       context: .
       dockerfile: infra/flink/Dockerfile
-    image: financial-distress-flink:stage1
+    image: financial-distress-flink:lakehouse
     profiles: ["flink"]
     hostname: flink-jobmanager
     ports:
@@ -197,7 +197,7 @@ services:
     build:
       context: .
       dockerfile: infra/flink/Dockerfile
-    image: financial-distress-flink:stage1
+    image: financial-distress-flink:lakehouse
     profiles: ["flink"]
     depends_on:
       flink-jobmanager:
@@ -211,39 +211,39 @@ services:
     volumes:
       - flink-checkpoints:/tmp/flink-checkpoints
 
-  # --- Phase 2 (profile "phase2") — never started by plain `docker compose up` ---
+  # --- Platform services (profile "platform") — never started by plain `docker compose up` ---
 
-  phase2-redis:                      # Feast online store, mirrors in-cluster Redis
+  platform-redis:                    # Feast online store, mirrors in-cluster Redis
     image: redis:7-alpine
     command: redis-server --save "" --appendonly no
     ports:
-      - "${PHASE2_REDIS_HOST_PORT:-6380}:6379"
+      - "${PLATFORM_REDIS_HOST_PORT:-6380}:6379"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 5s
-    profiles: ["phase2"]
+    profiles: ["platform"]
 
-  phase2-postgres:                   # PGVector + ml_metadata; NOT the Phase 1 postgres
+  platform-postgres:                 # PGVector + ml_metadata datastore
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_DB: ml_metadata
-      POSTGRES_USER: ${PHASE2_PG_USER:-phase2}
-      POSTGRES_PASSWORD: ${PHASE2_PG_PASSWORD:-phase2}
+      POSTGRES_USER: ${PLATFORM_PG_USER:-platform}
+      POSTGRES_PASSWORD: ${PLATFORM_PG_PASSWORD:-platform}
     ports:
-      - "${PHASE2_PG_HOST_PORT:-5433}:5432"
+      - "${PLATFORM_PG_HOST_PORT:-5433}:5432"
     volumes:
       - ./sql/init_ml_metadata.sql:/docker-entrypoint-initdb.d/01_init_ml_metadata.sql:ro
-      - phase2-pgdata:/var/lib/postgresql/data
+      - platform-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PHASE2_PG_USER:-phase2} -d ml_metadata"]
+      test: ["CMD-SHELL", "pg_isready -U ${PLATFORM_PG_USER:-platform} -d ml_metadata"]
       interval: 5s
       timeout: 10s
       retries: 10
-    profiles: ["phase2"]
+    profiles: ["platform"]
 
 volumes:
   flink-checkpoints:
-  phase2-pgdata:
+  platform-pgdata:

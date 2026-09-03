@@ -1,5 +1,5 @@
 # Machine-readable capture contract.  Commands are argv-style strings and are
-# executed without a shell by scripts/capture_phase2_evidence.py.
+# executed without a shell by scripts/capture_platform_evidence.py.
 #
 # Trimmed 2026-08-14 to the LLM-only submission scope (ML track cancelled,
 # see plans/260813-1846-production-hardening-overlay/plan.md Overview). The
@@ -12,19 +12,19 @@
 # be connected would record evidence for infrastructure this repo no longer
 # claims to have.
 sections:
-  phase1:
+  lakehouse:
     claim: "Phase 1 protected-path and rubric contracts remain green."
-    command: "uv run --offline python scripts/audit_phase2_evidence.py --require-executed --track LLM --strict"
+    command: "uv run --offline python scripts/audit_platform_evidence.py --require-executed --track LLM --strict"
     screenshot: false
-  phase2-tests:
+  platform-tests:
     claim: "The Phase 2 rubric-matrix contract tests pass in the local checkout."
-    command: "uv run --offline python -m pytest tests/phase2/test_rubric_matrix.py -q"
+    command: "uv run --offline python -m pytest tests/platform/test_rubric_matrix.py -q"
     screenshot: false
-  phase2-matrix:
+  platform-matrix:
     claim: "The canonical LLM rubric matrix totals 100 points."
-    command: "uv run --offline python scripts/audit_phase2_evidence.py --matrix-only --strict"
+    command: "uv run --offline python scripts/audit_platform_evidence.py --matrix-only --strict"
     screenshot: false
-  phase2-quality-gates:
+  platform-quality-gates:
     claim: "Source and GitOps Phase 2 quality gates pass with rendered manifests and tests."
-    command: "uv run --offline python scripts/run_phase2_quality_gates.py --gitops-root ../financial-distress-gitops"
+    command: "uv run --offline python scripts/run_platform_quality_gates.py --gitops-root ../financial-distress-gitops"
     screenshot: false

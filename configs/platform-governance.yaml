@@ -50,7 +50,7 @@ datasets:
   ml_metadata.label_table:
     platform: postgres
     fields: [[ticker, string], [event_timestamp, time], [label, number]]
-  phase2.drift_report:
+  platform.drift_report:
     platform: file
     fields: [[scenario, string], [observed_direction, string], [passed, boolean]]
   online.feast_redis_structured:
@@ -59,33 +59,33 @@ datasets:
   source.kafka_price_events:
     platform: kafka
     fields: [[ticker, string], [price, number], [event_timestamp, time]]
-  phase2.stream_features_offline:
+  platform.stream_features_offline:
     platform: s3
     fields: [[ticker, string], [last_price, number], [event_timestamp, time]]
   online.feast_redis_stream:
     platform: redis
     fields: [[ticker, string], [last_price, number]]
 pipelines:
-  phase2_rag_ingest:
+  platform_rag_ingest:
     inputs: [source.rag_corpus]
     outputs: [ml_metadata.rag_document, ml_metadata.rag_chunk, ml_metadata.rag_quarantine]
     contract_dataset: ml_metadata.rag_chunk
-  phase2_label_drift_build:
+  platform_label_drift_build:
     inputs: [source.generator_config, gold.fact_financial_statement]
-    outputs: [ml_metadata.label_table, phase2.drift_report]
+    outputs: [ml_metadata.label_table, platform.drift_report]
     contract_dataset: ml_metadata.label_table
-  phase2_feature_materialize:
+  platform_feature_materialize:
     inputs:
       - gold.fact_financial_statement
       - gold.obt_company_quarter_risk
       - gold.fact_market_price
     outputs: [online.feast_redis_structured]
     contract_dataset: online.feast_redis_structured
-  phase2_stream_feature_offline:
+  platform_stream_feature_offline:
     inputs: [source.kafka_price_events]
-    outputs: [phase2.stream_features_offline]
-    contract_dataset: phase2.stream_features_offline
-  phase2_stream_feature_online:
+    outputs: [platform.stream_features_offline]
+    contract_dataset: platform.stream_features_offline
+  platform_stream_feature_online:
     inputs: [source.kafka_price_events]
     outputs: [online.feast_redis_stream]
     contract_dataset: online.feast_redis_stream

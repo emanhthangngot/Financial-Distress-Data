@@ -19,8 +19,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.jobs.stage1_dq_job import build_intentional_dq_failure_checks
-from src.jobs.stage1_evidence_job import metadata_dsn
+from src.jobs.lakehouse_dq_job import build_intentional_dq_failure_checks
+from src.jobs.lakehouse_evidence_job import metadata_dsn
 from src.metadata.metadata_writer import PostgresMetadataWriter, psycopg_connection_factory
 from src.quality.dq_runner import CriticalDQFailure, DQRunner
 
@@ -29,8 +29,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Prove that Stage 1 critical DQ failures are persisted before halting."
     )
-    parser.add_argument("--run-id", default="stage1-dq-failure-probe")
-    parser.add_argument("--export-evidence", default="/tmp/stage1-dq-failure-probe")
+    parser.add_argument("--run-id", default="lakehouse-dq-failure-probe")
+    parser.add_argument("--export-evidence", default="/tmp/lakehouse-dq-failure-probe")
     parser.add_argument(
         "--dsn",
         default=metadata_dsn(),
@@ -55,7 +55,7 @@ def main() -> None:
 
     evidence_dir = Path(args.export_evidence)
     evidence_dir.mkdir(parents=True, exist_ok=True)
-    (evidence_dir / "stage1_dq_failure_probe.json").write_text(
+    (evidence_dir / "lakehouse_dq_failure_probe.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True),
         encoding="utf-8",
     )

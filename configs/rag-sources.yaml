@@ -25,7 +25,7 @@ governance_policy:
 
 sources:
   vnstock_news_vnm:
-    source_uri: tests/phase2/fixtures/rag_corpus/vnstock_news_vnm.txt
+    source_uri: tests/platform/fixtures/rag_corpus/vnstock_news_vnm.txt
     source_name: vnstock_news
     company: VNM
     report_date: null
@@ -35,7 +35,7 @@ sources:
     rate_limit_rps: 2
 
   vnstock_news_hpg:
-    source_uri: tests/phase2/fixtures/rag_corpus/vnstock_news_hpg.txt
+    source_uri: tests/platform/fixtures/rag_corpus/vnstock_news_hpg.txt
     source_name: vnstock_news
     company: HPG
     report_date: null
@@ -45,7 +45,7 @@ sources:
     rate_limit_rps: 2
 
   annual_report_fpt_2025:
-    source_uri: tests/phase2/fixtures/rag_corpus/annual_report_fpt_2025_extract.txt
+    source_uri: tests/platform/fixtures/rag_corpus/annual_report_fpt_2025_extract.txt
     source_name: annual_report_extract
     company: FPT
     report_date: "2025-12-31"
