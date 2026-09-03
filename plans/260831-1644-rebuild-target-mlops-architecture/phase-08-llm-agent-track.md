@@ -55,7 +55,7 @@ mentioned:
 
 ```
 ns: kserve
-  KServe operator 0.18 + Knative Serving + net-kourier (retained, G6 branch A)
+  KServe operator 0.18 + Knative Serving + net-istio
   Gateway (GatewayClass: istio, type: ClusterIP)
   HTTPRoute group llm-ab ──► isvc-a (w=9)   llm-d LLMInferenceService
                          ──► isvc-b (w=1)   llm-d LLMInferenceService
@@ -171,10 +171,10 @@ upgrade fails mid-way with the CRD schema inconsistent. Mitigation: AC-P8-1's ex
 prerequisite, enforced as a phase entry gate. Response: restore from the export YAML; never attempt a
 Helm rollback without it.
 
-**Risk:** Kourier conflicts with the Istio `GatewayClass` in practice (G6). Signal: Knative
-`InferenceService` revisions stop routing after injection. Mitigation: `disableIstioVirtualHost: true`
-separates the layers. Response: G6 branch B — migrate to `net-istio` and force its Service to
-`ClusterIP`, never `LoadBalancer`.
+**Risk:** the `net-istio` cutover breaks Knative `InferenceService` routing. Signal: revisions stop
+routing after the old Kourier resources are removed. Mitigation: smoke-test the Istio
+`GatewayClass` and a real revision before the deletion commits. Response: revert the atomic GitOps
+cutover; never leave `net-istio` and `net-kourier` active together.
 
 **Risk:** the 9:1 split does not hold under load. Signal: distribution deviates more than 5 %.
 Mitigation: 1000-request load test rather than 100. Response: confirm the GIE endpoint-picker is
