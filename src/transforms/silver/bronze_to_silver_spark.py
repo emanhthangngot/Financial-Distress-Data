@@ -3,7 +3,7 @@ PySpark implementation of the Bronze-to-Silver pipeline.
 
 Reads Bronze Parquet, applies the core transforms, and overwrites the affected
 Silver partitions. Handles schema drift by widening columns, routes rejected rows
-to ``project_metadata.failed_records``, and deduplicates by business keys using
+to ``ops.failed_records``, and deduplicates by business keys using
 the newest ``created_ts``.
 """
 

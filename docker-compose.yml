@@ -226,10 +226,10 @@ services:
       start_period: 5s
     profiles: ["platform"]
 
-  platform-postgres:                 # PGVector + ml_metadata datastore
+  platform-postgres:                 # PGVector + ml datastore
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: ml_metadata
+      POSTGRES_DB: ml
       POSTGRES_USER: ${PLATFORM_PG_USER:-platform}
       POSTGRES_PASSWORD: ${PLATFORM_PG_PASSWORD:-platform}
     ports:
@@ -238,7 +238,7 @@ services:
       - ./sql/init_ml_metadata.sql:/docker-entrypoint-initdb.d/01_init_ml_metadata.sql:ro
       - platform-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PLATFORM_PG_USER:-platform} -d ml_metadata"]
+      test: ["CMD-SHELL", "pg_isready -U ${PLATFORM_PG_USER:-platform} -d ml"]
       interval: 5s
       timeout: 10s
       retries: 10

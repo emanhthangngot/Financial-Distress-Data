@@ -85,7 +85,7 @@ PHASE1_PROTECTED = [
 # design (see its README) it holds no burst/late-arrival/dedup logic — that
 # lives in `kafka_to_bronze_consumer.py`, which stays fully protected. A diff
 # confined to this carve-out is not a Phase 1 behavior mutation.
-# `sql/init_ml_metadata.sql` is the Phase 2 `ml_metadata` schema (plan-pinned:
+# `sql/init_ml_metadata.sql` is the Phase 2 `ml` schema (plan-pinned:
 # phase-04-implementation-notes.md section 1) — a new file, never touching
 # `sql/init_project_metadata.sql` or any other Phase 1 SQL.
 PHASE1_PROTECTED_EXCEPTIONS = [

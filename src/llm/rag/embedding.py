@@ -14,7 +14,7 @@ Both produce 384-dim vectors so the PGVector column type
 (``embedding vector(384)``) never changes across backends — but vectors from
 different backends are NOT comparable. Callers must give each backend its
 own ``embedding_version`` string; the ``(content_hash, embedding_version)``
-uniqueness constraint on ``ml_metadata.rag_chunk`` depends on this.
+uniqueness constraint on ``ml.rag_chunk`` depends on this.
 
 Heavy dependencies (``requests``, ``numpy``) are imported lazily inside the
 functions that need them, per the two-venv import rule (`.venv` runs the

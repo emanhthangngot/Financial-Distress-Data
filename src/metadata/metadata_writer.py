@@ -1,5 +1,5 @@
 """
-PostgreSQL writer for ``project_metadata``.
+PostgreSQL writer for ``ops``.
 
 Centralized helpers to insert run records, DQ results, and failed-record rows. Every job must use
 this writer so metadata stays consistent.
@@ -269,7 +269,7 @@ class PostgresMetadataWriter:
         now = utc_now_iso()
         self._execute(
             """
-            INSERT INTO project_metadata.pipeline_run_log (
+            INSERT INTO ops.pipeline_run_log (
                 run_id, dag_id, task_id, dataset_name, status, started_at, ended_at,
                 input_rows, output_rows, error_message
             )
@@ -300,7 +300,7 @@ class PostgresMetadataWriter:
             return
 
         template = (
-            "INSERT INTO project_metadata.pipeline_run_log ("
+            "INSERT INTO ops.pipeline_run_log ("
             "run_id, dag_id, task_id, dataset_name, status, started_at, ended_at, "
             "input_rows, output_rows, error_message) VALUES %s"
         )
@@ -347,7 +347,7 @@ class PostgresMetadataWriter:
     ) -> None:
         self._execute(
             """
-            INSERT INTO project_metadata.data_quality_result (
+            INSERT INTO ops.data_quality_result (
                 check_id, run_id, dataset_name, check_name, status, severity,
                 metric_value, threshold_value, checked_at, error_message
             )
@@ -376,7 +376,7 @@ class PostgresMetadataWriter:
     ) -> None:
         self._execute(
             """
-            INSERT INTO project_metadata.failed_records (
+            INSERT INTO ops.failed_records (
                 record_id, dataset_name, run_id, failure_reason, raw_payload, created_at
             )
             VALUES (%s, %s, %s, %s, %s::jsonb, %s)
@@ -417,7 +417,7 @@ class PostgresMetadataWriter:
     ) -> None:
         self._execute(
             """
-            INSERT INTO project_metadata.dataset_freshness (
+            INSERT INTO ops.dataset_freshness (
                 dataset_name, latest_event_timestamp, latest_ingest_ts,
                 freshness_lag_minutes, sla_minutes, status, checked_at
             )
@@ -453,7 +453,7 @@ class PostgresMetadataWriter:
         backfill_id = run_id or str(uuid4())
         self._execute(
             """
-            INSERT INTO project_metadata.backfill_request (
+            INSERT INTO ops.backfill_request (
                 backfill_id, dataset_name, start_date, end_date, status, requested_by, created_at
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -492,7 +492,7 @@ class PostgresMetadataWriter:
         request_id = str(uuid4())
         self._execute(
             """
-            INSERT INTO project_metadata.source_request_log (
+            INSERT INTO ops.source_request_log (
                 request_id, run_id, source_system, source_endpoint, ticker, report_period,
                 request_status, http_status_code, retry_count, raw_payload_hash,
                 error_message, requested_at
@@ -525,7 +525,7 @@ class PostgresMetadataWriter:
     ) -> None:
         self._execute(
             """
-            INSERT INTO project_metadata.collector_checkpoint (
+            INSERT INTO ops.collector_checkpoint (
                 collector_name, source_system, checkpoint_key, checkpoint_value, updated_at
             )
             VALUES (%s, %s, %s, %s, %s)

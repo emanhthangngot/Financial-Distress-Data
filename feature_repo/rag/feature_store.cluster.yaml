@@ -8,7 +8,7 @@ online_store:
   host: ${PLATFORM_PG_HOST}
   port: 5432
   database: ${PLATFORM_PG_DATABASE}
-  db_schema: ml_metadata
+  db_schema: ml
   user: ${PLATFORM_PG_USER}
   password: ${PLATFORM_PG_PASSWORD}
 offline_store:
