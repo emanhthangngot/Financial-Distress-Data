@@ -1,6 +1,6 @@
 # Operator Runbook
 
-Local setup, Docker Compose, product/Phase 2 checks, service URLs, Stage 1
+Local setup, Docker Compose, product/the platform checks, service URLs, Stage 1
 evidence regeneration, validation commands, inspection queries, naming
 convention, and stop/teardown — moved out of `README.md` so the README stays
 reviewer-facing. Every command below was verified to reference a real,
@@ -9,13 +9,13 @@ existing script or file as of this move (2026-08-14).
 ## Table of Contents
 
 1. [Naming Convention](#naming-convention)
-2. [Runtime Evidence Snapshot — Phase 1](#runtime-evidence-snapshot--phase-1)
+2. [Runtime Evidence Snapshot — the platform](#runtime-evidence-snapshot--phase-1)
 3. [Schema Evidence](#schema-evidence)
 4. [API Surface](#api-surface)
 5. [Local Setup](#local-setup)
 6. [Running in Docker](#running-in-docker)
-7. [Product and Phase 2 Checks](#product-and-phase-2-checks)
-8. [Runtime Evidence Snapshot — Phase 2](#runtime-evidence-snapshot--phase-2)
+7. [Product and the platform Checks](#product-and-phase-2-checks)
+8. [Runtime Evidence Snapshot — the platform](#runtime-evidence-snapshot--phase-2)
 9. [Service URLs](#service-urls)
 10. [Run Stage 1 Evidence](#run-stage-1-evidence)
 11. [Validation Commands](#validation-commands)
@@ -56,7 +56,7 @@ s3a://financial-distress-lake/gold/distress_labels/
 
 `distress_labels` is the only Gold folder that does not use the
 `dim_/fact_/obt_/feat_` family because it carries the label targets
-that the Phase 2 ML training reads; it is intentionally a single
+that the the platform ML training reads; it is intentionally a single
 top-level folder so the labels are easy to discover and audit.
 
 ### Bronze and Silver
@@ -73,7 +73,7 @@ This keeps the raw ingest and dedup layers flexible enough to absorb
 new source adapters without forcing a schema rename on every
 addition.
 
-## Runtime Evidence Snapshot — Phase 1
+## Runtime Evidence Snapshot — the platform
 
 The checked-in Stage 1 evidence proves the local pipeline has run end to end.
 The latest committed evidence package reports `status: pass` in
@@ -83,7 +83,7 @@ The latest committed evidence package reports `status: pass` in
 |---|---|
 | Airflow pipeline | `stage1_real_e2e_pipeline` finished successfully in `docs/evidence/stage1_real_airflow_dag_test.txt` |
 | Kafka streaming | Offsets exist for `financial.price_events`, `financial.news_events`, and `financial.alert_events` |
-| MinIO lakehouse | 436 objects across Bronze, Silver, Gold, and `evidence/stage1/` prefixes |
+| MinIO lakehouse | 436 objects across Bronze, Silver, Gold, and `evidence/lakehouse/` prefixes |
 | PostgreSQL metadata | `pipeline_run_log`, `data_quality_result`, `dataset_freshness`, `backfill_request`, `source_request_log`, and `collector_checkpoint` exported in `docs/evidence/stage1_real_postgres_summary.json` |
 | DuckDB validation | Gold row counts, duplicate checks, distress-label distribution, and PIT leakage checks exported in `docs/evidence/stage1_real_duckdb_validation.json` |
 | DQ failure handling | Critical DQ failure probe confirms failure is persisted before halt |
@@ -114,12 +114,12 @@ for the narrative naming/SCD2/feature-contract proof.
 
 ## API Surface
 
-There is no REST/FastAPI service in Phase 1. The Phase 2 LLM track adds
+There is no REST/FastAPI service in the platform. The the platform LLM track adds
 FastAPI-backed MCP services and agents under `apps/`, `src/agents/`, and
 `src/llm/`. The Next.js product exposes authenticated analyst, agent registry,
 chat, report, and evidence-session surfaces; the GKE evidence plane exposes
 only the routed ingress/MCP/model endpoints needed by the product and live
-evidence checks. These are additive and do not change the Phase 1 pipeline
+evidence checks. These are additive and do not change the the platform pipeline
 contracts.
 
 ## Local Setup
@@ -166,9 +166,9 @@ Create Kafka topics manually if needed.
 docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 ```
 
-## Product and Phase 2 Checks
+## Product and the platform Checks
 
-The local Docker commands above validate the Phase 1 lakehouse. The product
+The local Docker commands above validate the the platform lakehouse. The product
 and evidence-plane checks are separate because the product is a pnpm/Next.js
 workspace and the live LLM runtime is owned by the private GitOps repository.
 
@@ -197,23 +197,23 @@ is up:
 The current live contract covers 28 checks: Argo/workload and service
 readiness, model warm-up, coordinator round-trip with feature/drift citations,
 Prometheus targets, and Jaeger service discovery. The equivalent operator
-entrypoint is `make phase2-e2e` in the separate
+entrypoint is `make platform-e2e` in the separate
 `financial-distress-gitops` repository.
 
-Run Phase 2 source and contract tests locally:
+Run the platform source and contract tests locally:
 
 ```bash
-.venv/bin/python -m pytest tests/phase2 -q
+.venv/bin/python -m pytest tests/platform -q
 ```
 
 The final submission gate is a two-repository audit. Use the project-local
-Phase 2 environment and the checked-out GitOps repository:
+the platform environment and the checked-out GitOps repository:
 
 ```bash
-PATH="$PWD/.venv-phase2/bin:$PATH" \
-.venv-phase2/bin/python scripts/audit_phase2_evidence.py \
+PATH="$PWD/.venv-platform/bin:$PATH" \
+.venv-platform/bin/python scripts/audit_phase2_evidence.py \
   --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 \
-  --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 \
+  --lakehouse-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 \
   --gitops-root "${GITOPS_ROOT:-../financial-distress-gitops}"
 ```
 
@@ -225,7 +225,7 @@ the final freeze is still pending: evidence source/GitOps SHA stamps must be
 restamped after the latest repository commits and this strict command must
 pass before the submission is called frozen.
 
-## Runtime Evidence Snapshot — Phase 2
+## Runtime Evidence Snapshot — the platform
 
 The following is a live verification snapshot from **2026-08-13**, not a claim
 that the final evidence freeze has passed:
@@ -271,13 +271,13 @@ PostgreSQL, and DuckDB.
 ```bash
 .venv/bin/python scripts/run_stage1_real_e2e.py \
   --execution-date 2026-06-06T10:04:00+00:00 \
-  --export-evidence /tmp/stage1-e2e
+  --export-evidence /tmp/lakehouse-e2e
 ```
 
 Generate a machine-readable audit summary for the E2E artifacts.
 
 ```bash
-.venv/bin/python scripts/audit_stage1_evidence.py /tmp/stage1-e2e
+.venv/bin/python scripts/audit_stage1_evidence.py /tmp/lakehouse-e2e
 ```
 
 Validate the checked-in submission evidence without regenerating files.
@@ -297,14 +297,14 @@ Prove critical DQ failures are persisted before the pipeline halts.
 
 ```bash
 .venv/bin/python scripts/run_stage1_dq_failure_probe.py \
-  --run-id stage1-dq-failure-probe \
-  --export-evidence /tmp/stage1-dq-failure-probe
+  --run-id lakehouse-dq-failure-probe \
+  --export-evidence /tmp/lakehouse-dq-failure-probe
 ```
 
 For a no-service payload check:
 
 ```bash
-.venv/bin/python scripts/run_stage1_evidence.py --dry-run --evidence-dir /tmp/stage1-evidence
+.venv/bin/python scripts/run_stage1_evidence.py --dry-run --evidence-dir /tmp/lakehouse-evidence
 ```
 
 Run the primary Airflow evidence DAG once from the CLI.
@@ -316,7 +316,7 @@ docker compose exec airflow-scheduler airflow dags test stage1_local_evidence_pi
 Runtime evidence artifacts are written to MinIO:
 
 ```txt
-financial-distress-lake/evidence/stage1/run_id=.../
+financial-distress-lake/evidence/lakehouse/run_id=.../
 ```
 
 Expected files:
@@ -398,22 +398,22 @@ PostgreSQL metadata checks:
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, status, count(*) from project_metadata.pipeline_run_log group by dataset_name, status order by dataset_name, status;"
+"select dataset_name, status, count(*) from ops.pipeline_run_log group by dataset_name, status order by dataset_name, status;"
 ```
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, check_name, status, severity, count(*) from project_metadata.data_quality_result group by dataset_name, check_name, status, severity order by dataset_name, check_name;"
+"select dataset_name, check_name, status, severity, count(*) from ops.data_quality_result group by dataset_name, check_name, status, severity order by dataset_name, check_name;"
 ```
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, status, freshness_lag_minutes, sla_minutes from project_metadata.dataset_freshness;"
+"select dataset_name, status, freshness_lag_minutes, sla_minutes from ops.dataset_freshness;"
 ```
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, start_date, end_date, status, requested_by from project_metadata.backfill_request order by created_at desc limit 20;"
+"select dataset_name, start_date, end_date, status, requested_by from ops.backfill_request order by created_at desc limit 20;"
 ```
 
 DuckDB validation output is generated at:

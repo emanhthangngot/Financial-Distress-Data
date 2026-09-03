@@ -21,7 +21,7 @@ RUNNER_MODULE = "src.quality.sql_contract_runner"
 DUCKDB_VIEWS_SQL = REPO_ROOT / "sql" / "duckdb_create_views.sql"
 EVIDENCE_JSON = REPO_ROOT / "docs" / "evidence" / "dbt_macro_check.json"
 
-# Discovered from sql/duckdb_create_views.sql + docs/02_schema_design.md.
+# Discovered from sql/duckdb_create_views.sql + docs/architecture/data-model.md.
 # Views are registered as ``gold_<layer>_<name>`` where layer is one of
 # dim, fact, obt, feat. distress_labels is a Gold materialisation but is
 # only read from the parquet directory directly (no view), so it does not

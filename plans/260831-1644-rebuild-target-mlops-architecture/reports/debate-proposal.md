@@ -191,8 +191,8 @@ DataHub: lineage + schema assertions over the above
 Bronze stays append-only and Silver/Gold stay idempotent affected-partition overwrites
 (`AGENTS.md:7-8`); Iceberg's snapshot model implements those semantics rather than altering
 them. Dedupe remains business key + latest `created_ts` (`AGENTS.md:9`). DQ routing is unchanged:
-critical failures halt downstream, warnings route to `project_metadata.failed_records`
-(`AGENTS.md:10`), and `project_metadata` / `ml_metadata` stay unmixed (`AGENTS.md:11`).
+critical failures halt downstream, warnings route to `ops.failed_records`
+(`AGENTS.md:10`), and `ops` / `ml` stay unmixed (`AGENTS.md:11`).
 
 The Feast **offline** store moves from local object storage to Postgres. That is an amendment to
 ADR-005 (§3.7), locked by decision #7 (`plan.md:42`) and confirmed by the image, which draws the

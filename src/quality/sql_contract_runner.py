@@ -21,7 +21,7 @@ from collections import Counter
 from pathlib import Path
 
 # Allowed Gold layer prefixes. Kept in sync with the macro in
-# ``sql_contract_macros.sql`` and with ``docs/02_schema_design.md``.
+# ``sql_contract_macros.sql`` and with ``docs/architecture/data-model.md``.
 ALLOWED_LAYERS: tuple[str, ...] = ("dim", "fact", "obt", "feat")
 
 # Regex captures the view name from a ``CREATE [OR REPLACE] VIEW <name>``

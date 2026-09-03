@@ -24,7 +24,7 @@ connector is a manifest plus a protocol, not a bespoke script.
   rather than YAML.
 
 The difference for this project: Airbyte/Singer are external
-services that we are not running locally in Phase 1, and pulling
+services that we are not running locally in the platform, and pulling
 in `dlt` is overkill for two declared sources. The value is the
 *pattern*, not the dependency - a small YAML manifest plus a
 single dispatcher class is the right-size borrowing.
@@ -112,6 +112,6 @@ real fixture handler is invoked end-to-end.
 2. Add a CI assertion that the evidence JSON's `skipped` list is
    a subset of the manifest's `source_id` set, to catch
    dispatcher/manifest drift.
-3. When Phase 2 lands, generalise the manifest schema with
+3. When the platform lands, generalise the manifest schema with
    `cursor_field` and `primary_key` so incremental loads can be
    expressed declaratively rather than coded per-source.

@@ -171,7 +171,7 @@ dags/phase2/
   phase2_label_drift_build.py    NEW  wrapper -> src.ml.label_pipeline + src.drift.generator
 
 sql/
-  init_ml_metadata.sql           NEW  ml_metadata schema + pgvector ext + tables
+  init_ml_metadata.sql           NEW  ml schema + pgvector ext + tables
 
 .github/workflows/
   phase2-ci.yaml                 NEW  PINNED  reusable workflow_call template
@@ -203,12 +203,12 @@ docs/phase2/evidence/llm/*.md    see §10
 `src.transforms.compute_distress_labels.compute_labels`,
 verified at `src/transforms/compute_distress_labels.py:279`)
 → parquet to MinIO `phase2/offline/labels/` + row copy to
-`ml_metadata.label_table` in the **new** phase-2 Postgres.
+`ml.label_table` in the **new** phase-2 Postgres.
 
 **Flow B — Feast materialization**
 MinIO parquet (Phase 1 Gold, read-only) → Feast `FileSource` (s3 endpoint override)
 → `feast apply` → registry on MinIO → `materialize_incremental` → Redis online store
-→ registry revision recorded in `ml_metadata.feast_registry_revision`.
+→ registry revision recorded in `ml.feast_registry_revision`.
 
 **Flow C — stream features (two deployables)**
 Kafka `market.events` → `src.ml.feast.offline_job` → parquet append to
@@ -289,7 +289,7 @@ future leakage bug.
 project: fd_rag
 provider: local
 registry: s3://financial-distress-lake/phase2/feast/rag/registry.db
-online_store: type: postgres  (host = phase-2 pgvector service, db = ml_metadata)
+online_store: type: postgres  (host = phase-2 pgvector service, db = ml)
 offline_store: type: file
 ```
 
@@ -320,7 +320,7 @@ TTL, because that is the row-77 artifact).
 |---|---|
 | `fetch_documents(source, window)` | Read `configs/rag-sources.yaml` entry `source`. Cache-first: if `phase2/rag/raw/{source}/{doc_hash}` exists locally or on MinIO, return it without a network call. Otherwise fetch under the source's `rate_limit_rps` token bucket + `tenacity` retry, then write to cache. Returns `list[RawDocument]` (frozen dataclass: `source_uri`, `company`, `report_date`, `raw_bytes`, `content_type`, `license`, `access_class`, `fetched_ts`). |
 | `parse_and_chunk(documents)` | Dispatch by content type (`text/plain`, `text/html`, `application/pdf`). Recursive character chunking, target 800 chars / 120 overlap, never splitting mid-sentence when a boundary exists within 20% of the target. Emits `Chunk` with all nine metadata fields (§4.3). `parser_version` is a module constant bumped by hand when chunking behaviour changes. |
-| `deduplicate_chunks(chunks)` | Two-level. **Document level:** if `document_hash` already exists in `ml_metadata.rag_document`, short-circuit — reuse the stored chunk rows, emit zero new vectors. **Chunk level:** drop chunks whose `content_hash` already exists for the *same* `(document_hash, embedding_version)`. Returns only chunks needing embedding. This is what makes success criterion 1 (phase-04.md:97) true. |
+| `deduplicate_chunks(chunks)` | Two-level. **Document level:** if `document_hash` already exists in `ml.rag_document`, short-circuit — reuse the stored chunk rows, emit zero new vectors. **Chunk level:** drop chunks whose `content_hash` already exists for the *same* `(document_hash, embedding_version)`. Returns only chunks needing embedding. This is what makes success criterion 1 (phase-04.md:97) true. |
 | `enforce_licensing_and_metadata(chunks)` | Delegates to `src.llm.data_governance`. Raises `GovernanceViolation` on: missing/denied license, `access_class` not in the allowed set, PII detected in chunk text, any of the nine metadata fields empty. Violating chunks are routed to the quarantine table, not silently dropped. |
 | `write_vectors(chunks, embedding_version)` | Embed via the configured `EmbeddingBackend`, then `INSERT ... ON CONFLICT (content_hash, embedding_version) DO NOTHING` into PGVector. Returns `ingestion_version` = `f"{utc_date}-{sha256(sorted content_hashes)[:12]}"` — stable across reruns of identical input, which is how idempotency is *observed* in the evidence run. |
 
@@ -338,17 +338,17 @@ TTL, because that is the row-77 artifact).
 ### 4.3 PGVector table shape (`sql/init_ml_metadata.sql`)
 
 ```
-CREATE SCHEMA ml_metadata;
+CREATE SCHEMA ml;
 CREATE EXTENSION IF NOT EXISTS vector;
 
-ml_metadata.rag_document(
+ml.rag_document(
   document_hash text primary key, source_uri text not null, source_name text not null,
   company text, report_date date, license text not null, access_class text not null,
   fetched_ts timestamptz not null, first_ingested_ts timestamptz not null)
 
-ml_metadata.rag_chunk(
+ml.rag_chunk(
   chunk_id text primary key,             -- sha256(content_hash|embedding_version)[:32]
-  document_hash text references ml_metadata.rag_document,
+  document_hash text references ml.rag_document,
   content_hash text not null, chunk_index int not null, chunk_text text not null,
   source_uri text not null, company text, report_date date,
   parser_version text not null,
@@ -357,14 +357,14 @@ ml_metadata.rag_chunk(
   access_class text not null, created_ts timestamptz not null default now(),
   ingestion_version text not null,
   UNIQUE (content_hash, embedding_version))
-CREATE INDEX ON ml_metadata.rag_chunk USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX ON ml.rag_chunk USING hnsw (embedding vector_cosine_ops);
 
-ml_metadata.rag_quarantine(... same metadata + violation_reason, quarantined_ts)
-ml_metadata.rag_ingestion_run(ingestion_version pk, run_id, started_ts, finished_ts,
+ml.rag_quarantine(... same metadata + violation_reason, quarantined_ts)
+ml.rag_ingestion_run(ingestion_version pk, run_id, started_ts, finished_ts,
   documents_fetched, chunks_new, chunks_reused, chunks_quarantined, source_sha)
-ml_metadata.label_table(...)                 -- §5
-ml_metadata.feast_registry_revision(...)     -- registry digest per apply
-ml_metadata.stream_feature_checkpoint(job_name pk, last_offset, last_event_ts, updated_ts)
+ml.label_table(...)                 -- §5
+ml.feast_registry_revision(...)     -- registry digest per apply
+ml.stream_feature_checkpoint(job_name pk, last_offset, last_event_ts, updated_ts)
 ```
 
 Every one of the nine metadata fields required by phase-04.md:38-41 and success
@@ -385,15 +385,15 @@ Public surface, all pure functions or small classes with injected clients:
 - `RateLimiter(rps)` — token bucket, used by `fetch_documents`.
 - `retry_policy()` — `tenacity` config (already in `.venv-phase2`); exponential
   backoff, capped attempts, retry only on transport/5xx.
-- `Checkpoint` read/write against `ml_metadata.rag_ingestion_run`.
+- `Checkpoint` read/write against `ml.rag_ingestion_run`.
 - `quarantine(chunk, reason, conn)` — dead-letter write.
 - `assert_metadata_complete(chunk) -> None` — the nine-field contract, one place.
 
 `AGENTS.md` DQ rule mapping: governance violations are **critical** (halt the
 ingestion task); PII findings are **warning-level** → row goes to quarantine and
 the run continues. Both write a row to
-`project_metadata.data_quality_result`? **No** — `AGENTS.md` forbids
-cross-writing. Phase 2 results go to `ml_metadata.data_quality_result` in the
+`ops.data_quality_result`? **No** — `AGENTS.md` forbids
+cross-writing. Phase 2 results go to `ml.data_quality_result` in the
 phase-2 Postgres, same column shape, so the reviewer sees a familiar table.
 
 ---
@@ -426,7 +426,7 @@ edit.** `training_eligible=false` follows the existing null-label path
 Written to two places, idempotently:
 1. Parquet, MinIO `phase2/offline/labels/label_version={v}/` — overwrite the
    affected partition only (AGENTS.md Silver/Gold rule).
-2. `ml_metadata.label_table`, `INSERT ... ON CONFLICT (ticker, event_timestamp,
+2. `ml.label_table`, `INSERT ... ON CONFLICT (ticker, event_timestamp,
    label_version) DO UPDATE` keeping the latest `created_ts`.
 
 ---
@@ -520,14 +520,14 @@ Three new services appended after `flink-taskmanager`, before the top-level
     healthcheck: redis-cli ping | grep PONG, 5s/5/10s
     profiles: ["phase2"]
 
-  phase2-postgres:                 # PGVector + ml_metadata; NOT the Phase 1 postgres
+  phase2-postgres:                 # PGVector + ml; NOT the Phase 1 postgres
     image: pgvector/pgvector:pg16
-    environment: POSTGRES_DB=ml_metadata, POSTGRES_USER/PASSWORD from ${PHASE2_PG_*}
+    environment: POSTGRES_DB=ml, POSTGRES_USER/PASSWORD from ${PHASE2_PG_*}
     ports: ["${PHASE2_PG_HOST_PORT:-5433}:5432"]
     volumes:
       - ./sql/init_ml_metadata.sql:/docker-entrypoint-initdb.d/01_init_ml_metadata.sql:ro
       - phase2-pgdata:/var/lib/postgresql/data
-    healthcheck: pg_isready -U $USER -d ml_metadata, 5s/10/10s
+    healthcheck: pg_isready -U $USER -d ml, 5s/10/10s
     profiles: ["phase2"]
 
 volumes:
@@ -686,7 +686,7 @@ review gate. Same total scope, four safe stopping points.
 | Slice | Steps | Files owned (no overlap with any other slice) | Blocked by |
 |---:|---|---|---|
 | **4A — infra + data** | 1(part), 2 | `docker-compose.yml` (append), `sql/init_ml_metadata.sql`, `configs/drift-config.yaml`, `src/drift/**`, `src/ml/label_pipeline.py`, `tests/phase2/pipelines/test_drift_*.py`, `test_label_pipeline.py`, `scripts/run_phase2_drift_report.py` | nothing |
-| **4B — RAG** | 1(part), 3, 7 | `configs/rag-sources.yaml`, `src/llm/**`, `tests/phase2/pipelines/test_rag_*.py`, `test_data_governance.py`, `test_pgvector_store.py` | 4A (needs `phase2-postgres` + `ml_metadata`) |
+| **4B — RAG** | 1(part), 3, 7 | `configs/rag-sources.yaml`, `src/llm/**`, `tests/phase2/pipelines/test_rag_*.py`, `test_data_governance.py`, `test_pgvector_store.py` | 4A (needs `phase2-postgres` + `ml`) |
 | **4C — Feast + jobs + DAGs** | 1(part), 4, 5, 6 | `src/ml/feast/**`, `feature_repo/**`, `dags/phase2/**`, `tests/phase2/pipelines/test_feast_*.py`, `test_phase2_dags_import.py` | 4A (redis), 4B (rag feature view refs) |
 | **4D — CI + lineage + evidence** | 8, 9 | `.github/workflows/phase2-*.yaml`, `src/governance/phase2_lineage.py`, `configs/phase2-governance.yaml`, `docs/phase2/evidence/llm/*.md`, `tests/phase2/pipelines/test_workflows_phase2.py` | 4A–4C (evidence needs real runs) |
 
@@ -728,9 +728,9 @@ the `phase2` profile. Phase 1 datasets are never written by any of this.
 - [ ] `.venv/bin/python -m pytest tests/phase2/pipelines` green, and green again on a second run with identical output.
 - [ ] `docker compose config` passes; plain `docker compose up` starts the same services as before.
 - [ ] `feast apply` + `materialize_incremental` succeed twice against a disposable store with identical online values (success criterion 2, phase-04.md:98).
-- [ ] Re-running `phase2_rag_ingest` on an unchanged corpus writes 0 new rows to `ml_metadata.rag_chunk` (criterion 1, phase-04.md:97).
+- [ ] Re-running `phase2_rag_ingest` on an unchanged corpus writes 0 new rows to `ml.rag_chunk` (criterion 1, phase-04.md:97).
 - [ ] Both drift scenarios reproduce byte-identical reports across two runs and match their configured direction (criterion 4, phase-04.md:100).
-- [ ] `SELECT * FROM ml_metadata.rag_chunk LIMIT 1` shows all nine metadata fields populated (criterion 5, phase-04.md:101).
+- [ ] `SELECT * FROM ml.rag_chunk LIMIT 1` shows all nine metadata fields populated (criterion 5, phase-04.md:101).
 - [ ] All four workflow files exist; the three callers each show one successful run.
 - [ ] Seven LLM evidence files exist and `pytest tests/phase2/requirements -k "rag or data_generato or ci-cd"` no longer skips.
 - [ ] `scripts/audit_phase2_evidence.py --matrix-only --strict` passes.

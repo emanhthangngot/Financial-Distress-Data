@@ -77,7 +77,7 @@ PHASE1_PROTECTED = [
     "docs/evidence/",
     "docs/mini_coursework.md",
     "docs/01_data_generator.md",
-    "docs/02_schema_design.md",
+    "docs/architecture/data-model.md",
 ]
 
 # Carve-outs inside a PHASE1_PROTECTED prefix that hold no Phase 1 pipeline

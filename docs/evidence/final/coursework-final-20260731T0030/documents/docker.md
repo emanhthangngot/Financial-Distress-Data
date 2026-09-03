@@ -14,7 +14,7 @@ versions.
 docker build -f infra/airflow/Dockerfile.baseline \
   -t financial-distress-airflow:baseline .
 docker build -f infra/airflow/Dockerfile \
-  -t financial-distress-airflow:stage1 .
+  -t financial-distress-airflow:lakehouse .
 python scripts/export_docker_optimization.py
 ```
 

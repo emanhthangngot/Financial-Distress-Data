@@ -1,5 +1,5 @@
 """Real-psycopg pin for src/llm/rag/pgvector_store.py against an ephemeral
-local Postgres cluster running sql/init_ml_metadata.sql: upsert idempotency,
+local Postgres cluster running sql/init_ml.sql: upsert idempotency,
 the (content_hash, embedding_version) unique constraint, and quarantine
 writes. Marked postgres + slow (mirrors tests/platform/product/conftest.py's
 pattern), and additionally skipped when the pgvector extension itself isn't
@@ -24,7 +24,7 @@ from src.llm.rag_pipeline import Chunk, RawDocument
 pytestmark = [pytest.mark.postgres, pytest.mark.slow]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-INIT_SQL = REPO_ROOT / "sql" / "init_ml_metadata.sql"
+INIT_SQL = REPO_ROOT / "sql" / "init_ml.sql"
 
 
 @pytest.fixture(scope="module")
@@ -104,7 +104,7 @@ def ml_metadata_conn(tmp_path_factory: pytest.TempPathFactory):
 @pytest.fixture()
 def store(ml_metadata_conn: psycopg.Connection):
     for table in ("rag_chunk", "rag_quarantine", "rag_ingestion_run", "rag_document"):
-        ml_metadata_conn.execute(f"truncate ml_metadata.{table} cascade")
+        ml_metadata_conn.execute(f"truncate ml.{table} cascade")
     ml_metadata_conn.commit()
     return PgVectorStore(ml_metadata_conn)
 
@@ -146,7 +146,7 @@ def test_document_round_trip(store: PgVectorStore) -> None:
 
 def test_insert_chunks_is_idempotent(store: PgVectorStore) -> None:
     # rag_chunk.document_hash is NOT NULL REFERENCES rag_document — the
-    # parent document must exist first (sql/init_ml_metadata.sql).
+    # parent document must exist first (sql/init_ml.sql).
     store.upsert_document(_document(), "doc-hash-1", "2026-08-08T00:00:00+00:00")
     vector = [0.1] * 384
     chunk = _chunk()
@@ -171,7 +171,7 @@ def test_insert_quarantine_writes_a_row(store: PgVectorStore) -> None:
     chunk = _chunk()
     store.insert_quarantine(chunk, "pii detected: email")
     with store.conn.cursor() as cur:
-        cur.execute("SELECT violation_reason FROM ml_metadata.rag_quarantine")
+        cur.execute("SELECT violation_reason FROM ml.rag_quarantine")
         row = cur.fetchone()
     assert row == ("pii detected: email",)
 
@@ -189,6 +189,6 @@ def test_record_ingestion_run_writes_a_row(store: PgVectorStore) -> None:
         source_sha="a" * 40,
     )
     with store.conn.cursor() as cur:
-        cur.execute("SELECT chunks_new FROM ml_metadata.rag_ingestion_run")
+        cur.execute("SELECT chunks_new FROM ml.rag_ingestion_run")
         row = cur.fetchone()
     assert row == (3,)

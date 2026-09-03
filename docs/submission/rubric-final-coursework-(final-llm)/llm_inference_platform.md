@@ -58,7 +58,7 @@ OPTIMIZED_CONFIG = ModelServerConfig(
 )
 ```
 
-Full evidence: [`LLM-a-llm-inference-platform--a-custom-model.md`](../../phase2/evidence/llm/LLM-a-llm-inference-platform--a-custom-model.md).
+Full evidence: [`LLM-a-llm-inference-platform--a-custom-model.md`](../../platform/evidence/llm/LLM-a-llm-inference-platform--a-custom-model.md).
 
 ### 2. Route: ModelConfig → agentgateway → KServe
 
@@ -77,7 +77,7 @@ see a Host header naming the revision, which agentgateway does not rewrite.
 The `AgentgatewayModel` CRD stays declared but is honestly marked
 non-load-bearing — the plain Gateway API `HTTPRoute` is what actually carries
 traffic. Full evidence:
-[`LLM-a-llm-inference-platform--llm-inference-platform-setup-c.md`](../../phase2/evidence/llm/LLM-a-llm-inference-platform--llm-inference-platform-setup-c.md).
+[`LLM-a-llm-inference-platform--llm-inference-platform-setup-c.md`](../../platform/evidence/llm/LLM-a-llm-inference-platform--llm-inference-platform-setup-c.md).
 
 Subsystem diagram (color legend in `docs/docs-style-contract.md` §7):
 
@@ -151,7 +151,7 @@ $ kubectl exec curl-test2 -n default -- curl -sS -X POST \
 ```
 
 Both are real generated text from the live pod, not stubs. Full evidence:
-[`LLM-a-llm-inference-platform--a-custom-model.md`](../../phase2/evidence/llm/LLM-a-llm-inference-platform--a-custom-model.md).
+[`LLM-a-llm-inference-platform--a-custom-model.md`](../../platform/evidence/llm/LLM-a-llm-inference-platform--a-custom-model.md).
 
 ## Part III — Optimization: quantization benchmark
 
@@ -168,7 +168,7 @@ frozen prompt set (`DEFAULT_PROMPTS`) and concurrency=1.
 | server container memory (`kubectl top pod`, single snapshot) | 91Mi | 116Mi | not conclusive (see limitation) |
 
 Full evidence with per-prompt raw results:
-[`LLM-a-llm-inference-platform--benchmark-model-server-and-opt.md`](../../phase2/evidence/llm/LLM-a-llm-inference-platform--benchmark-model-server-and-opt.md).
+[`LLM-a-llm-inference-platform--benchmark-model-server-and-opt.md`](../../platform/evidence/llm/LLM-a-llm-inference-platform--benchmark-model-server-and-opt.md).
 
 ## Limitations
 

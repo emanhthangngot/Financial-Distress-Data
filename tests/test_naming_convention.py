@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SQL_VIEWS = REPO_ROOT / "sql" / "duckdb_create_views.sql"
 JOB_FILE = REPO_ROOT / "src" / "jobs" / "lakehouse_spark_lakehouse_job.py"
 README_FILE = REPO_ROOT / "README.md"
-SCHEMA_DOC = REPO_ROOT / "docs" / "02_schema_design.md"
+SCHEMA_DOC = REPO_ROOT / "docs" / "architecture/data-model.md"
 OPERATOR_RUNBOOK = REPO_ROOT / "docs" / "operator-runbook.md"
 SYSTEM_ARCHITECTURE_DOC = REPO_ROOT / "docs" / "system-architecture.md"
 
@@ -140,11 +140,11 @@ def test_schema_design_doc_documents_naming_convention() -> None:
     text = _read(SCHEMA_DOC)
     assert re.search(
         r"(?i)naming convention", text
-    ), "docs/02_schema_design.md is missing a 'naming convention' reference"
+    ), "docs/architecture/data-model.md is missing a 'naming convention' reference"
     for token in ("dim_", "fact_", "obt_", "feat_", "distress_labels"):
         assert (
             token in text
-        ), f"docs/02_schema_design.md does not mention required Gold token {token!r}"
+        ), f"docs/architecture/data-model.md does not mention required Gold token {token!r}"
 
 
 def test_schema_design_doc_documents_bronze_silver_naming() -> None:
@@ -152,11 +152,11 @@ def test_schema_design_doc_documents_bronze_silver_naming() -> None:
     text = _read(SCHEMA_DOC)
     assert re.search(
         r"(?i)bronze and silver naming", text
-    ), "docs/02_schema_design.md is missing a 'Bronze And Silver Naming' section"
+    ), "docs/architecture/data-model.md is missing a 'Bronze And Silver Naming' section"
     for token in ("bronze.companies", "silver.companies", "raw_", "stg_"):
         assert (
             token in text
-        ), f"docs/02_schema_design.md does not mention required Bronze/Silver token {token!r}"
+        ), f"docs/architecture/data-model.md does not mention required Bronze/Silver token {token!r}"
 
 
 def test_readme_documents_deployment_diagram() -> None:

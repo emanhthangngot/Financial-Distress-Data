@@ -227,7 +227,7 @@ Ghi ra để khỏi bị "sửa" nhầm:
 - **`node_modules/`, `mutants/`, `outputs/`, `*.egg-info/`, `.next/`** — untracked,
   `.gitignore` đã phủ đúng. Chỉ là rác local.
 - **`sql/` vs `supabase/migrations/`** — hai database khác nhau (Phase 1
-  `project_metadata` vs product plane Supabase). Tách đúng.
+  `ops` vs product plane Supabase). Tách đúng.
 - **`docs/project-file-map.md`** (634 dòng) — vẫn cập nhật, có cả `src/lakehouse`
   và `infra/phase2`. Tài liệu không lệch; **cây thư mục mới là chỗ lệch**.
 

@@ -189,9 +189,9 @@ def test_real_e2e_postgres_summary_exports_operational_metadata_tables():
     source = module.postgres_summary.__code__.co_consts
     joined = "\n".join(str(item) for item in source)
 
-    assert "project_metadata.dataset_freshness" in joined
-    assert "project_metadata.failed_records" in joined
-    assert "project_metadata.backfill_request" in joined
+    assert "ops.dataset_freshness" in joined
+    assert "ops.failed_records" in joined
+    assert "ops.backfill_request" in joined
 
 
 def test_lakehouse_evidence_audit_summary_passes_for_complete_artifacts(tmp_path: Path):

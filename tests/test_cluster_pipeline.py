@@ -106,7 +106,7 @@ def test_materialize_risk_features_applies_repo_materializes_and_verifies(
 
 
 def test_cluster_image_exposes_both_runtime_commands() -> None:
-    dockerfile = Path("infra/phase1-cluster/Dockerfile.pipeline").read_text(encoding="utf-8")
+    dockerfile = Path("infra/lakehouse-cluster/Dockerfile.pipeline").read_text(encoding="utf-8")
 
     assert 'ENTRYPOINT ["python", "-m", "scripts.run_cluster_pipeline"]' in dockerfile
     assert 'CMD ["produce-gold"]' in dockerfile

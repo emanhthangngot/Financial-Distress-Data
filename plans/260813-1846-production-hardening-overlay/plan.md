@@ -95,7 +95,7 @@ and `sql/init_ml_metadata.sql`.
 | Rejected | Reason |
 |---|---|
 | ML-track production build-out (phases 3, 5-12: supply-chain sign/SBOM, Kyverno, ESO+Linkerd, Iceberg+Lakekeeper, Flink CDC, Phase 1-on-cluster, MLflow/training/drift, Argo Rollouts+KEDA, ML evidence freeze) | Zero LLM rubric rows need any of it (measured, not assumed); the ML track is not being submitted. Already-written artifacts are archived, not deleted — see Overview |
-| Dagster as orchestrator | Asset-checks are genuinely nicer than Airflow's out-of-band DQ, but migrating touches protected `dags/` and the existing DQ path already writes `project_metadata.data_quality_result`. Churn, not improvement. |
+| Dagster as orchestrator | Asset-checks are genuinely nicer than Airflow's out-of-band DQ, but migrating touches protected `dags/` and the existing DQ path already writes `ops.data_quality_result`. Churn, not improvement. |
 | Trino + Superset | DuckDB `httpfs` and `apps/web` already cover query and presentation at single-node scale. |
 | HA / multi-AZ / DR | Out of accepted scope regardless of track. |
 

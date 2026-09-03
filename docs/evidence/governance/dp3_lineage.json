@@ -1,7 +1,7 @@
 {
   "dataset": "feat_company_unified",
   "downstream": [
-    "Phase 2 ML training"
+    "the platform ML training"
   ],
   "dp": "DP3",
   "upstream": [

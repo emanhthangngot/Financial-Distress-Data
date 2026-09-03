@@ -2,7 +2,7 @@
 title: "Financial Distress Data — Project File Map"
 date: 2026-08-10
 status: active-study-guide
-scope: "Phase 1 local lakehouse + Phase 2 additive ML/LLM/product plane"
+scope: "the platform local lakehouse + the platform additive ML/LLM/product plane"
 ---
 
 # Project File Map — bản đồ để trả lời và mở file ngay
@@ -49,7 +49,7 @@ Source/API/disclosure
         -> DuckDB / Analyst / ML / RAG / Product
 ```
 
-Mnemonic của Phase 1: **C-S-T-Q-M-C**
+Mnemonic của the platform: **C-S-T-Q-M-C**
 
 | Ký tự | Nhớ là | Mở thư mục chính |
 |---|---|---|
@@ -60,19 +60,19 @@ Mnemonic của Phase 1: **C-S-T-Q-M-C**
 | M | Metadata | `src/metadata/` + `src/governance/` |
 | C | Catalog/Consumer | `src/catalog/`, `apps/`, `feature_repo/` |
 
-Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
+the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 
 ## 2. Trạng thái phải nói chính xác
 
 | Nhãn | Ý nghĩa khi thuyết trình |
 |---|---|
-| ✅ Phase 1 verified | Local-first pipeline, fixture collectors, Bronze/Silver/Gold, Kafka, DQ, metadata, DuckDB và runtime evidence đã có code/test/evidence. |
-| 🟡 Phase 2 additive | ML, drift, RAG, Feast, product web app và contracts được thêm vào; không được nói là thay đổi Phase 1. |
+| ✅ the platform verified | Local-first pipeline, fixture collectors, Bronze/Silver/Gold, Kafka, DQ, metadata, DuckDB và runtime evidence đã có code/test/evidence. |
+| 🟡 the platform additive | ML, drift, RAG, Feast, product web app và contracts được thêm vào; không được nói là thay đổi the platform. |
 | 🧪 Fixture-backed | `vnstock_adapter.py` hiện re-export fixture adapter; không nói là live production API nếu chưa có runtime proof. |
 | 📦 Generated | `docs/evidence/**`, `outputs/**`, `warehouse.db` và report artifacts được tạo lại bằng script; không sửa tay. |
-| ✅ Phase 2 live-verified | Product plane và LLM evidence plane đã được chạy kiểm tra; snapshot runtime hiện tại là 13/13 Argo apps healthy, 28/28 live E2E checks passed. |
+| ✅ the platform live-verified | Product plane và LLM evidence plane đã được chạy kiểm tra; snapshot runtime hiện tại là 13/13 Argo apps healthy, 28/28 live E2E checks passed. |
 | ⏳ Submission freeze pending | 60/60 LLM rows và 100/100 logical points đã có; source/GitOps SHA cần restamp và strict two-repo audit cần pass trước khi gọi là final. |
-| ⚠️ Separate repo | GKE/Terraform/Helm/Argo GitOps platform của Phase 2 nằm ở control repo riêng; repo này giữ code, contracts, product, tests và canonical evidence. |
+| ⚠️ Separate repo | GKE/Terraform/Helm/Argo GitOps platform của the platform nằm ở control repo riêng; repo này giữ code, contracts, product, tests và canonical evidence. |
 
 ## 3. Tra cứu nhanh theo câu hỏi
 
@@ -87,7 +87,7 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 | Silver làm gì? | `src/transforms/bronze_to_silver.py` | `src/transforms/silver/core.py`, `tests/test_bronze_to_silver.py` |
 | Dedupe theo rule nào? | `src/transforms/silver/core.py` | `tests/test_bronze_to_silver.py`, `docs/07_data_contracts.md` |
 | Gold fact/dimension ở đâu? | `src/transforms/silver_to_gold.py` | `src/transforms/gold/`, `tests/test_silver_to_gold.py` |
-| Distress label tính thế nào? | `src/transforms/compute_distress_labels.py` | `tests/test_distress_labels.py`, `docs/02_schema_design.md` |
+| Distress label tính thế nào? | `src/transforms/compute_distress_labels.py` | `tests/test_distress_labels.py`, `docs/architecture/data-model.md` |
 | OBT company-quarter risk ở đâu? | `src/transforms/gold/obt_company_quarter_risk.py` | `tests/test_obt_company_quarter_risk.py` |
 | PIT leakage guard ở đâu? | `src/transforms/features/point_in_time.py` | `src/transforms/features/pit.py`, `tests/test_real_e2e_contracts.py` |
 | DQ check nào đang chạy? | `src/quality/dq_checks.py` | `src/quality/dq_runner.py`, `tests/test_dq_checks.py` |
@@ -99,12 +99,12 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 | Flink có chạy mặc định không? | `src/streaming/flink_contract.py` | `src/streaming/flink/jobs/price_event_job.py`, `docs/flink-stream-processing.md` |
 | DAG DP1/DP2/DP3 là gì? | `docs/data-pipeline-orchestration.md` | `dags/ingest_source_to_bronze.py`, `dags/build_silver_gold.py`, `dags/build_offline_features.py` |
 | DataHub lineage ở đâu? | `src/governance/datahub_model.py` | `src/governance/datahub_emitter.py`, `configs/datahub/governance.yaml` |
-| Phase 2 ML contract ở đâu? | `src/ml/contracts.py` | `src/ml/label_pipeline.py`, `src/ml/feast/`, `tests/phase2/pipelines/` |
+| the platform ML contract ở đâu? | `src/ml/contracts.py` | `src/ml/label_pipeline.py`, `src/ml/feast/`, `tests/platform/pipelines/` |
 | Drift được tạo/check thế nào? | `src/drift/generator.py` | `configs/drift-config.yaml`, `scripts/run_phase2_drift_report.py` |
-| RAG ingest ở đâu? | `src/llm/rag_pipeline.py` | `src/llm/rag/`, `configs/rag-sources.yaml`, `tests/phase2/pipelines/test_rag_*` |
+| RAG ingest ở đâu? | `src/llm/rag_pipeline.py` | `src/llm/rag/`, `configs/rag-sources.yaml`, `tests/platform/pipelines/test_rag_*` |
 | Product page ở đâu? | `apps/web/src/app/` | `apps/web/src/components/`, `apps/web/e2e/` |
-| RBAC/RLS ở đâu? | `supabase/migrations/20260803214600_phase2_rls.sql` | `packages/contracts/src/authorization.ts`, `tests/phase2/product/test_rbac_rls.py` |
-| Outbox worker ở đâu? | `apps/web/src/lib/server/outbox-worker.ts` | `apps/web/scripts/phase2/outbox-worker.ts`, `supabase/migrations/20260804150000_phase2_outbox_worker.sql` |
+| RBAC/RLS ở đâu? | `supabase/migrations/20260803214600_phase2_rls.sql` | `packages/contracts/src/authorization.ts`, `tests/platform/product/test_rbac_rls.py` |
+| Outbox worker ở đâu? | `apps/web/src/lib/server/outbox-worker.ts` | `apps/web/scripts/platform/outbox-worker.ts`, `supabase/migrations/20260804150000_phase2_outbox_worker.sql` |
 | Chạy quality gate nào? | `scripts/run_stage1_quality_gates.py` | `AGENTS.md`, `.github/workflows/ci.yml` |
 | Runtime evidence ở đâu? | `scripts/run_stage1_real_e2e.py` | `scripts/audit_stage1_evidence.py`, `docs/evidence/stage1_runtime_audit_summary.json` |
 
@@ -114,31 +114,31 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 |---|---|---|
 | `AGENTS.md` | Quy tắc bất biến, phase boundary, data contract và quality gate. | Source of truth cho cách làm |
 | `CLAUDE.md` | Pointer/routing cho Claude Code skills. | Tooling |
-| `README.md` | Complete Phase 1 + Phase 2 scope, architecture, product/evidence boundaries, setup and validation commands. | Entry point cho repo |
+| `README.md` | Complete the platform + the platform scope, architecture, product/evidence boundaries, setup and validation commands. | Entry point cho repo |
 | `environment template` | Mẫu biến môi trường local. | Không chứa secret thật |
-| `.github/workflows/` | CI Phase 1 và Phase 2. | Automation |
+| `.github/workflows/` | CI the platform và the platform. | Automation |
 | `configs/` | YAML contracts cho collector, DQ, Spark, Flink, generator, RAG, governance. | Config |
-| `dags/` | Airflow workflows Phase 1; `dags/phase2/` là wrapper additive. | Orchestration |
+| `dags/` | Airflow workflows the platform; `dags/platform/` là wrapper additive. | Orchestration |
 | `src/` | Python business logic và runtime helpers. | Core source |
 | `tests/` | Unit, contract, integration, product và rubric tests. | Verification |
 | `scripts/` | Runner, auditor, evidence exporter, demo và quality gates. | Operational tooling |
 | `sql/` | PostgreSQL metadata DDL và DuckDB views/validation. | Data contract |
 | `infra/` | Docker build contexts và Kafka topic bootstrap. | Container tooling |
 | `docker-compose.yml` | Local Postgres, MinIO, Kafka, Airflow và optional Flink. | Local platform |
-| `apps/web/` | Phase 2 Next.js product plane. | Product |
+| `apps/web/` | the platform Next.js product plane. | Product |
 | `packages/contracts/` | Shared TypeScript domain/UI/auth contracts. | Product boundary |
 | `supabase/` | Supabase config, migrations, RLS và outbox schema. | Product backend |
-| `feature_repo/` | Feast feature store definitions cho structured/RAG features. | Phase 2 ML |
+| `feature_repo/` | Feast feature store definitions cho structured/RAG features. | the platform ML |
 | `images/` | Architecture/schema source assets và rendered diagrams. | Docs assets |
 | `docs/` | Specs, runbooks, ADRs, evidence và onboarding material. | Human/AI docs |
 | `plans/` | Historical implementation plans, phases và reports. | Project history |
-| `package.json`, `pnpm-workspace.yaml` | JS workspace root. | Phase 2 tooling |
+| `package.json`, `pnpm-workspace.yaml` | JS workspace root. | the platform tooling |
 | `pyproject.toml`, `requirements.txt`, `uv.lock` | Python package, tooling và dependency locks. | Python tooling |
 | `pnpm-lock.yaml` | JS dependency lock. | Generated lockfile |
 | `warehouse.db` | DuckDB local catalog. | Generated, không sửa tay |
 | `outputs/` | Local generated pipeline/evidence outputs. | Generated, không commit tùy tiện |
 
-## 5. Python source map — Phase 1
+## 5. Python source map — the platform
 
 ### `src/collectors/` — collect và source boundary
 
@@ -245,18 +245,18 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 | `governance/datahub_model.py` | Validated datasets, pipelines, contracts và lineage model. |
 | `governance/datahub_emitter.py` | Emit governance model sang DataHub. |
 | `governance/datahub_graphql.py` | DataHub GraphQL client/query helper. |
-| `governance/phase2_lineage.py` | Phase 2 lineage bridge/evidence. |
+| `governance/phase2_lineage.py` | the platform lineage bridge/evidence. |
 | `evidence/run_manifest.py` | Machine-readable run manifest. |
 | `evidence/rubric_audit.py` | Audit rubric/evidence mapping. |
 | `lakehouse/compaction.py` | Compact small Parquet files. |
 | `security/secrets.py` | Load secrets từ environment/secret source, không default secret. |
 
-## 6. Python source map — Phase 2 additive
+## 6. Python source map — the platform additive
 
 | Path | Tác dụng và mức độ |
 |---|---|
 | `src/ml/contracts.py` | Signature contracts cho ML services. |
-| `src/ml/label_pipeline.py` | Build/persist labels và drift-aware Phase 2 task wrapper. |
+| `src/ml/label_pipeline.py` | Build/persist labels và drift-aware the platform task wrapper. |
 | `src/ml/feast/feature_definitions.py` | Feast feature/view definitions. |
 | `src/ml/feast/materialization.py` | Online/offline feature materialization service. |
 | `src/ml/feast/offline_job.py` | Aggregate/write offline stream features. |
@@ -295,14 +295,14 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 | `stage1_real_e2e_pipeline.py` | Connected real local E2E evidence DAG. |
 | `_stage1_dag_utils.py` | Shared Stage 1 DAG helper. |
 | `utils/stage1_dag_utils.py` | DAG utility package boundary/helper. |
-| `phase2/phase2_feature_materialize.py` | Phase 2 feature materialization wrapper. |
-| `phase2/phase2_label_drift_build.py` | Drift report + label build wrapper. |
-| `phase2/phase2_rag_ingest.py` | RAG ingestion wrapper. |
-| `phase2/phase2_stream_feature_offline.py` | Offline stream feature wrapper. |
-| `phase2/phase2_stream_feature_online.py` | Online stream feature wrapper. |
+| `platform/phase2_feature_materialize.py` | the platform feature materialization wrapper. |
+| `platform/phase2_label_drift_build.py` | Drift report + label build wrapper. |
+| `platform/phase2_rag_ingest.py` | RAG ingestion wrapper. |
+| `platform/phase2_stream_feature_offline.py` | Offline stream feature wrapper. |
+| `platform/phase2_stream_feature_online.py` | Online stream feature wrapper. |
 
-DAG rule cần nhớ: Phase 2 wrappers không được có import-time side effect và
-không được đổi DAG ID/task của Phase 1.
+DAG rule cần nhớ: the platform wrappers không được có import-time side effect và
+không được đổi DAG ID/task của the platform.
 
 ## 8. Script map — chạy, kiểm tra, xuất evidence
 
@@ -318,7 +318,7 @@ không được đổi DAG ID/task của Phase 1.
 | `audit_stage1_evidence.py` | Audit Stage 1 evidence completeness/truth. |
 | `audit_mini_coursework_rubric.py` | Audit mini-coursework rubric. |
 | `audit_rubric_coverage.py` | Check rubric-to-file/evidence coverage. |
-| `audit_phase2_evidence.py` | Audit Phase 2 evidence/matrix. |
+| `audit_phase2_evidence.py` | Audit the platform evidence/matrix. |
 | `audit_flink_evidence.py` | Audit Flink runtime/contract evidence. |
 | `audit_spark_benchmark.py` | Audit Spark benchmark outputs. |
 | `check_stage1_services.py` | Check local service readiness. |
@@ -338,11 +338,11 @@ không được đổi DAG ID/task của Phase 1.
 | `export_phase6_airflow_evidence.py` | Export DP1/DP2/DP3 Airflow evidence. |
 | `measure_docker_size.sh` | Measure image/storage sizes. |
 
-### Phase 2, UI, governance and rubric generation
+### the platform, UI, governance and rubric generation
 
 | File | Tác dụng |
 |---|---|
-| `generate_phase2_matrix.py` | Generate Phase 2 rubric matrix. |
+| `generate_phase2_matrix.py` | Generate the platform rubric matrix. |
 | `generate_phase2_requirement_tests.py` | Generate requirement test skeletons/contracts. |
 | `run_phase2_drift_report.py` | Run drift scenario and report. |
 | `smoke_embedding_endpoint.py` | Smoke test embedding endpoint/math. |
@@ -351,8 +351,8 @@ không được đổi DAG ID/task của Phase 1.
 | `export_novel_idea_evidence.py` | Export novel-idea evidence. |
 | `run_mini_coursework_submission.py` | Assemble mini-coursework submission evidence. |
 | `verify-clean-room-setup.sh` | Verify clean-room/reproducible setup. |
-| `_rubric_items.py` | Shared Phase 1 rubric definitions. |
-| `_phase2_rubric_items.py` | Shared Phase 2 rubric definitions. |
+| `_rubric_items.py` | Shared the platform rubric definitions. |
+| `_phase2_rubric_items.py` | Shared the platform rubric definitions. |
 
 ## 9. Config và SQL map
 
@@ -375,15 +375,15 @@ không được đổi DAG ID/task của Phase 1.
 | `datahub/governance.yaml` | DataHub datasets, pipelines, contracts, owners. |
 | `embedding-backends.yaml` | Embedding backend/model configuration. |
 | `rag-sources.yaml` | RAG fixture sources, license, access class, governance allowlist. |
-| `phase2-governance.yaml` | Phase 2 governance settings. |
-| `rubric-requirements.yaml` | Phase 2 requirement matrix source. |
+| `platform-governance.yaml` | the platform governance settings. |
+| `rubric-requirements.yaml` | the platform requirement matrix source. |
 
 ### `sql/`
 
 | File | Tác dụng |
 |---|---|
-| `init_project_metadata.sql` | PostgreSQL `project_metadata` DDL. |
-| `init_ml_metadata.sql` | Phase 2 `ml_metadata` DDL; không cross-write với Phase 1. |
+| `init_project_metadata.sql` | PostgreSQL `ops` DDL. |
+| `init_ml_metadata.sql` | the platform `ml` DDL; không cross-write với the platform. |
 | `duckdb_create_views.sql` | DuckDB views cho curated lakehouse. |
 | `duckdb_validation_queries.sql` | Counts, duplicate, label, PIT validation queries. |
 | `schema_evidence.sql` | Schema/ERD evidence query. |
@@ -431,7 +431,7 @@ không được đổi DAG ID/task của Phase 1.
 
 ## 11. Test map — mở test để chứng minh behavior
 
-### Phase 1 tests
+### the platform tests
 
 | Test file | Chứng minh |
 |---|---|
@@ -453,11 +453,11 @@ không được đổi DAG ID/task của Phase 1.
 | `test_deployment_diagram_assets.py` | Architecture image/source assets. |
 | `test_rubric_completion_spec.py`, `test_rubric_coverage.py` | Rubric completeness/coverage. |
 
-### Phase 2 tests
+### the platform tests
 
 | Folder | File family | Chức năng |
 |---|---|---|
-| `tests/phase2/pipelines/` | `test_data_governance`, `test_phase2_lineage` | Governance/lineage. |
+| `tests/platform/pipelines/` | `test_data_governance`, `test_phase2_lineage` | Governance/lineage. |
 |  | `test_drift_config`, `test_drift_generator` | Drift configuration/scenario. |
 |  | `test_label_pipeline` | Label build/persistence. |
 |  | `test_feast_definitions_ttl`, `test_feast_smoke` | Feast definitions/runtime. |
@@ -466,10 +466,10 @@ không được đổi DAG ID/task của Phase 1.
 |  | `test_pgvector_store` | Vector storage/versioning. |
 |  | `test_stream_feature_jobs` | Offline/online stream features. |
 |  | `test_phase2_dags_import`, `test_workflows_phase2` | Additive DAG import/workflow contracts. |
-| `tests/phase2/product/` | `test_rbac_rls`, `test_outbox_worker` | Supabase security/outbox. |
-| `tests/phase2/requirements/` | `test_llm_ac_01`…`test_llm_ac_20` | One executable acceptance family per LLM rubric item. |
-| `tests/phase2/test_rubric_matrix.py` | Matrix schema/content. |
-| `tests/phase2/test_rubric_row_contracts.py` | Rubric row contract. |
+| `tests/platform/product/` | `test_rbac_rls`, `test_outbox_worker` | Supabase security/outbox. |
+| `tests/platform/requirements/` | `test_llm_ac_01`…`test_llm_ac_20` | One executable acceptance family per LLM rubric item. |
+| `tests/platform/test_rubric_matrix.py` | Matrix schema/content. |
+| `tests/platform/test_rubric_row_contracts.py` | Rubric row contract. |
 
 To list every test file immediately:
 
@@ -483,11 +483,11 @@ git ls-files 'tests/**' | sort
 
 | Mục tiêu | File |
 |---|---|
-| Phase 1 source of truth | `docs/mini_coursework.md` |
+| the platform source of truth | `docs/mini_coursework.md` |
 | Data generator | `docs/01_data_generator.md`, `docs/data-generator.md` |
-| Schema/data model | `docs/02_schema_design.md`, `docs/schema-design.md` |
+| Schema/data model | `docs/architecture/data-model.md`, `docs/architecture/data-model.md` |
 | Data contracts | `docs/07_data_contracts.md` |
-| Architecture | `docs/phase1_architecture.md`, `docs/system-architecture.md`, `docs/architecture/repository-map.md` |
+| Architecture | `docs/architecture/lakehouse.md`, `docs/system-architecture.md`, `docs/architecture/repository-map.md` |
 | Orchestration | `docs/data-pipeline-orchestration.md` |
 | Storage/Spark | `docs/05_storage_optimization.md`, `docs/spark-and-storage-optimization.md` |
 | Flink | `docs/flink-stream-processing.md` |
@@ -497,20 +497,20 @@ git ls-files 'tests/**' | sort
 | Onboarding | `docs/onboarding-presentation-script.md`, `docs/onboarding-stakeholder-deep-dive.md`, `docs/onboarding-presentation-beamer.pdf` |
 | Evidence index | `docs/evidence-index.md`, `docs/evidence/README.md` |
 
-### Phase 2 docs
+### the platform docs
 
 | File/group | Tác dụng |
 |---|---|
-| `docs/phase2/architecture.md` | Two-plane product/evidence architecture. |
-| `docs/phase2/product.md` | Product plane behavior and UI surfaces. |
-| `docs/phase2/acceptance-criteria.md`, `requirements.md` | Phase 2 requirements. |
-| `docs/phase2/low-level-design.md` | Class/interface/data-flow design. |
-| `docs/phase2/evidence-contract.md` | Evidence file contract. |
-| `docs/phase2/rubric-matrix.md` | Rubric mapping. |
-| `docs/phase2/security/rbac.md` | RBAC/RLS rules. |
-| `docs/phase2/adr/adr-001`…`adr-010` | Architecture decisions: agentgateway, repository split, GKE/KServe, Feast, security, Helm, degradation, NGINX, and LLM-only scope. ADR-010 is current. |
-| `docs/phase2/evidence/llm/` | LLM implementation/evidence notes. |
-| `docs/phase2/evidence/product/` | UI/accessibility/product evidence. |
+| `docs/platform/architecture.md` | Two-plane product/evidence architecture. |
+| `docs/platform/product.md` | Product plane behavior and UI surfaces. |
+| `docs/platform/acceptance-criteria.md`, `requirements.md` | the platform requirements. |
+| `docs/platform/low-level-design.md` | Class/interface/data-flow design. |
+| `docs/platform/evidence-contract.md` | Evidence file contract. |
+| `docs/platform/rubric-matrix.md` | Rubric mapping. |
+| `docs/platform/security/rbac.md` | RBAC/RLS rules. |
+| `docs/platform/adr/adr-001`…`adr-010` | Architecture decisions: agentgateway, repository split, GKE/KServe, Feast, security, Helm, degradation, NGINX, and LLM-only scope. ADR-010 is current. |
+| `docs/platform/evidence/llm/` | LLM implementation/evidence notes. |
+| `docs/platform/evidence/product/` | UI/accessibility/product evidence. |
 
 ### Generated evidence
 
@@ -524,31 +524,31 @@ refresh:
 | `docs/evidence/airflow/`, `flink/`, `spark/` | Runtime benchmark/evidence by platform. | matching runner/audit scripts |
 | `docs/evidence/governance/`, `schema/`, `generator/` | Governance/schema/generator artifacts. | matching build/audit scripts |
 | `docs/evidence/screenshots/` | Reviewer screenshots. | `scripts/capture_ui_screenshots.py` or runtime capture |
-| `docs/phase2/evidence/product/` | Product state/accessibility screenshots and JSON. | web e2e/evidence tooling |
+| `docs/platform/evidence/product/` | Product state/accessibility screenshots and JSON. | web e2e/evidence tooling |
 
 Không hand-edit evidence. Khi cần biết file cụ thể:
 
 ```bash
 git ls-files 'docs/evidence/**' | sort
-git ls-files 'docs/phase2/evidence/**' | sort
+git ls-files 'docs/platform/evidence/**' | sort
 ```
 
 ## 13. Plans và lịch sử triển khai
 
 | Plan folder | Dùng khi cần biết |
 |---|---|
-| `plans/260721-1033-achieve-mini-coursework-rubric/` | Các phase hoàn thiện rubric Phase 1. |
-| `plans/260802-0113-refresh-mini-coursework-evidence-package/` | Refresh/đóng gói evidence Phase 1. |
-| `plans/260802-1037-unified-phase2-ml-llm-gitops/` | Ground truth lớn của Phase 2: product, ML, LLM, GitOps. |
-| `plans/260805-0800-phase2-stage2-completion/` | Quota, assistant path, outbox, coverage, accessibility. |
+| `plans/260721-1033-achieve-mini-coursework-rubric/` | Các phase hoàn thiện rubric the platform. |
+| `plans/260802-0113-refresh-mini-coursework-evidence-package/` | Refresh/đóng gói evidence the platform. |
+| `plans/260802-1037-unified-platform-ml-llm-gitops/` | Ground truth lớn của the platform: product, ML, LLM, GitOps. |
+| `plans/260805-0800-platform-stage2-completion/` | Quota, assistant path, outbox, coverage, accessibility. |
 | `plans/260806-2234-architecture-hygiene-before-phase-3/` | Dọn architecture/package/container/test markers. |
-| `plans/260809-2039-complete-phase2-llm-submission/` | Hoàn thiện submission LLM. |
+| `plans/260809-2039-complete-platform-llm-submission/` | Hoàn thiện submission LLM. |
 | `plans/260813-1519-project-wide-readme-docs/` | Đồng bộ README, architecture, maps và submission index với hệ thống hoàn chỉnh. |
 | `plans/reports/` | Báo cáo/research độc lập, không phải current source of truth. |
 
 Plan là lịch sử quyết định và execution context. Khi có conflict, ưu tiên
-`AGENTS.md`, `docs/mini_coursework.md` cho Phase 1 và unified Phase 2 plan khi
-task nói rõ Phase 2.
+`AGENTS.md`, `docs/mini_coursework.md` cho the platform và unified the platform plan khi
+task nói rõ the platform.
 
 ## 14. Local platform và deployment assets
 
@@ -563,11 +563,11 @@ task nói rõ Phase 2.
 | `infra/stream-feature-offline/Dockerfile` | Offline feature image. |
 | `infra/stream-feature-online/Dockerfile` | Online feature image. |
 | `supabase/config.toml` | Supabase local/project config. |
-| `supabase/migrations/*_phase2_schema.sql` | Phase 2 tables. |
+| `supabase/migrations/*_phase2_schema.sql` | the platform tables. |
 | `supabase/migrations/*_phase2_rls.sql` | RLS policies. |
 | `supabase/migrations/*_outbox_worker*.sql` | Outbox worker access/schema. |
 | `supabase/migrations/*_ai_usage_audit.sql` | AI usage audit persistence. |
-| `supabase/migrations/rollback/` | Down migrations for selected Phase 2 changes. |
+| `supabase/migrations/rollback/` | Down migrations for selected the platform changes. |
 
 ## 15. Quality gates và câu lệnh mở khi bị hỏi
 
@@ -575,7 +575,7 @@ task nói rõ Phase 2.
 # Full definition of done
 .venv/bin/python scripts/run_stage1_quality_gates.py
 
-# Narrow Phase 1 test
+# Narrow the platform test
 .venv/bin/python -m pytest tests/test_distress_labels.py -q
 
 # Full Python tests
@@ -609,12 +609,12 @@ Ví dụ với distress label:
 > “Distress label thuộc Gold transform. Entrypoint là
 > `src/transforms/compute_distress_labels.py`, được dùng cùng
 > `src/transforms/gold/obt_company_quarter_risk.py`. Test là
-> `tests/test_distress_labels.py`; schema/rule nằm ở `docs/02_schema_design.md`.
+> `tests/test_distress_labels.py`; schema/rule nằm ở `docs/architecture/data-model.md`.
 > Có thể chạy `.venv/bin/python -m pytest tests/test_distress_labels.py -q`.”
 
 Ví dụ với stakeholder research:
 
-> “Stakeholder research là Phase 2/product design, không phải live Phase 1
+> “Stakeholder research là the platform/product design, không phải live the platform
 > source. Mở `docs/onboarding-stakeholder-deep-dive.md` để nói domain model,
 > provenance, review và conflict; mở `src/llm/rag_pipeline.py` nếu câu hỏi
 > chuyển sang document/RAG ingestion; mở `apps/web/src/components/company/provenance-panel.tsx`
@@ -639,7 +639,7 @@ Từ `plans/260814-1223-recsys-format-docs-overhaul/`, chi tiết ở
 `docs/docs-style-contract.md`:
 
 ```text
-Layer 1 canonical evidence   docs/phase2/evidence/llm/*.md, docs/evidence/**
+Layer 1 canonical evidence   docs/platform/evidence/llm/*.md, docs/evidence/**
                               (immutable, audit-gate pinned prefix)
 Layer 2 narrative            docs/submission/rubric-(mini-coursework)/*.md
                               docs/submission/rubric-final-coursework-(final-llm)/*.md
@@ -666,18 +666,18 @@ Layer 3 entry point          README.md (rubric index tables -> Layer 2)
 | `docs/{data-generator,schema-design,spark-and-storage-optimization,data-governance,docker-optimization,novel-idea-pit-leakage-guard,data-pipeline-orchestration,flink-stream-processing}.md` | retire candidate (kebab duplicate, gộp vào Layer 2) | 7 |
 | `docs/evidence-index.md` | retire hoặc trỏ vào Layer 2 | 7 |
 | `docs/11_rubric_completion_spec.md` | retire candidate | 7 |
-| `docs/phase2/evidence/**` | keep, immutable, audit-pinned | — |
+| `docs/platform/evidence/**` | keep, immutable, audit-pinned | — |
 
-**Chưa xoá file nào ở Phase 1** — bảng trên chỉ đánh dấu. Xoá thật diễn ra ở
+**Chưa xoá file nào ở the platform** — bảng trên chỉ đánh dấu. Xoá thật diễn ra ở
 Phase 7 sau khi link được rewire và audit gate xanh lại.
 
 ### Cập nhật Phase 7 (2026-08-14): retirement bị hoãn có chủ đích
 
 Inbound-link sweep cho thấy blast radius lớn hơn dự kiến ban đầu:
 
-- `docs/01_data_generator.md`, `docs/02_schema_design.md`, và các file
+- `docs/01_data_generator.md`, `docs/architecture/data-model.md`, và các file
   numbered khác được **`docs/mini_coursework.md` chính nó tham chiếu 5 lần**
-  — `mini_coursework.md` là Phase 1 spec authority, nằm trong "Don't Touch"
+  — `mini_coursework.md` là the platform spec authority, nằm trong "Don't Touch"
   zone của `AGENTS.md`. Xoá các file này đòi hỏi sửa cả spec authority.
 - `docs/submission/{ci_cd,iac,observability,routing_gateway,security,
   validation_verification,cost}.md` (bản flat cũ) vẫn được `docs/submission/

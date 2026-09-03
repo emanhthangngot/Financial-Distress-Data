@@ -19,33 +19,33 @@ to catch.
 | `.claude/` | platform_operator | shared tooling | No | Claude Code project settings (`settings.json`) |
 | `CLAUDE.md` | data_engineer | shared tooling | No | Claude Code skill-routing pointer to `AGENTS.md` |
 | `README.md` | data_engineer | documentation | No | Complete project overview, architecture, setup, product/evidence boundaries, and project tree |
-| `apps/` | product_engineer | Phase 2 product | No | Phase 2 web app(s) (pnpm workspace member) |
-| `packages/` | product_engineer | Phase 2 product | No | Shared TypeScript packages (pnpm workspace member) |
-| `configs/` | data_engineer | Phase 1 local lakehouse | No | Collector, Spark, source, and DQ config YAMLs |
-| `dags/` | data_engineer | Phase 1 local lakehouse | No | Airflow DAGs; `dags/phase2/` holds additive Phase 2 wrappers |
+| `apps/` | product_engineer | the platform product | No | the platform web app(s) (pnpm workspace member) |
+| `packages/` | product_engineer | the platform product | No | Shared TypeScript packages (pnpm workspace member) |
+| `configs/` | data_engineer | the platform local lakehouse | No | Collector, Spark, source, and DQ config YAMLs |
+| `dags/` | data_engineer | the platform local lakehouse | No | Airflow DAGs; `dags/platform/` holds additive the platform wrappers |
 | `docker-compose.yml` | platform_operator | shared tooling | No | Local platform service definitions (Postgres, Kafka, MinIO, Airflow, Flink) |
 | `docs/` | data_engineer | documentation | Partial — `docs/evidence/**` is generated | Specs, ADRs, runbooks, and captured runtime evidence |
-| `feature_repo/` | ml_engineer | Phase 2 feature/RAG | No | Feast structured/RAG feature definitions and materialization configuration |
+| `feature_repo/` | ml_engineer | the platform feature/RAG | No | Feast structured/RAG feature definitions and materialization configuration |
 | `.env.example` | platform_operator | shared tooling | No | Local environment variable template |
-| `flink/` | data_engineer | Phase 1 local lakehouse | No | PyFlink job source for the opt-in Flink profile |
+| `flink/` | data_engineer | the platform local lakehouse | No | PyFlink job source for the opt-in Flink profile |
 | `.github/` | platform_operator | shared tooling | No | CI workflow definitions |
 | `.gitignore` | platform_operator | shared tooling | No | Git ignore patterns |
 | `images/` | data_engineer | documentation | No | Architecture diagrams referenced from docs |
 | `infra/` | platform_operator | shared tooling | No | Container build/bootstrap assets: `airflow/` (image build context), `flink/` (image build context), `kafka/` (topic init script) |
-| `mutants/` | data_engineer | generated test output | Generated | Mutation-testing workspace/output; regenerate with the Phase 2 mutation gate |
-| `notebooks/` | llm_engineer | Phase 2 evidence | No | Agent/MCP demonstration notebooks used by the LLM evidence track |
-| `package.json` | product_engineer | Phase 2 product | No | pnpm workspace root manifest |
+| `mutants/` | data_engineer | generated test output | Generated | Mutation-testing workspace/output; regenerate with the the platform mutation gate |
+| `notebooks/` | llm_engineer | the platform evidence | No | Agent/MCP demonstration notebooks used by the LLM evidence track |
+| `package.json` | product_engineer | the platform product | No | pnpm workspace root manifest |
 | `plans/` | data_engineer | documentation | No | Implementation plans, phase files, and reports |
-| `pnpm-lock.yaml` | product_engineer | Phase 2 product | Generated (lockfile) | pnpm dependency lock |
-| `pnpm-workspace.yaml` | product_engineer | Phase 2 product | No | pnpm workspace member list |
+| `pnpm-lock.yaml` | product_engineer | the platform product | Generated (lockfile) | pnpm dependency lock |
+| `pnpm-workspace.yaml` | product_engineer | the platform product | No | pnpm workspace member list |
 | `pyproject.toml` | data_engineer | shared tooling | No | Python package and tooling config (pytest, ruff, black) |
-| `requirements-phase2.txt` | platform_operator | Phase 2 shared tooling | No | Phase 2 runtime/test dependency pins |
+| `requirements-platform.txt` | platform_operator | the platform shared tooling | No | the platform runtime/test dependency pins |
 | `requirements.txt` | data_engineer | shared tooling | No | Python dependency pins |
 | `scripts/` | data_engineer | shared tooling | No | Local E2E, DQ-failure-probe, and evidence-audit runners |
-| `sql/` | data_engineer | Phase 1 local lakehouse | No | PostgreSQL metadata DDL and DuckDB SQL views |
+| `sql/` | data_engineer | the platform local lakehouse | No | PostgreSQL metadata DDL and DuckDB SQL views |
 | `src/` | mixed — see below | mixed | No | Python source: see subdirectory ownership below |
-| `supabase/` | product_engineer | Phase 2 product | No | Supabase config and migrations for the Phase 2 backend |
-| `tests/` | data_engineer | shared tooling | No | PyTest unit/contract/runtime suite; `tests/phase2/` covers Phase 2 |
+| `supabase/` | product_engineer | the platform product | No | Supabase config and migrations for the the platform backend |
+| `tests/` | data_engineer | shared tooling | No | PyTest unit/contract/runtime suite; `tests/platform/` covers the platform |
 | `uv.lock` | data_engineer | shared tooling | Generated (lockfile) | uv dependency lock |
 
 ## `src/` subdirectory ownership
@@ -55,9 +55,9 @@ has one owner:
 
 | Subdirectory | Owner | Plane |
 |---|---|---|
-| `src/collectors/`, `src/generator/`, `src/streaming/`, `src/transforms/`, `src/quality/`, `src/catalog/`, `src/metadata/`, `src/io/`, `src/jobs/`, `src/security/` | data_engineer | Phase 1 local lakehouse |
-| `src/ml/`, `src/drift/` | ml_engineer | Phase 2 product |
-| `src/llm/`, `src/agents/` | llm_engineer | Phase 2 product |
+| `src/collectors/`, `src/generator/`, `src/streaming/`, `src/transforms/`, `src/quality/`, `src/catalog/`, `src/metadata/`, `src/io/`, `src/jobs/`, `src/security/` | data_engineer | the platform local lakehouse |
+| `src/ml/`, `src/drift/` | ml_engineer | the platform product |
+| `src/llm/`, `src/agents/` | llm_engineer | the platform product |
 
 `src/generators/` no longer exists — its two modules were split into
 `src/collectors/fixture_config.py` and `src/streaming/problem_factory.py`
@@ -71,7 +71,7 @@ manifests, Argo CD applications, image digests, ingress, security policies,
 model serving, agents, and observability desired state. This repository owns
 the application code, contracts, tests, product migrations, runbooks, and
 canonical evidence. The two repositories are joined by the source SHA +
-GitOps SHA recorded in Phase 2 evidence; the final submission freeze requires
+GitOps SHA recorded in the platform evidence; the final submission freeze requires
 those stamps to be regenerated after the latest commits.
 
 ## Python package boundary
@@ -82,7 +82,7 @@ than the repo root — required for phases 5-6 to `pip install` this repo into a
 model/agent container image. The distributed package is named `src`, which is
 a known wart: `src` is conventionally a layout directory, not an importable
 name. A proper fix renames it to `financial_distress` with a repo-wide import
-rewrite across `src/`, `dags/`, `tests/`, `scripts/`, and the Phase 1 spec's
+rewrite across `src/`, `dags/`, `tests/`, `scripts/`, and the the platform spec's
 file tables in `docs/mini_coursework.md` — rejected for now (YAGNI) since
 declaring `src` as the package name buys full installability at a few lines of
 config. `dags/` is deliberately excluded from the distribution: Airflow

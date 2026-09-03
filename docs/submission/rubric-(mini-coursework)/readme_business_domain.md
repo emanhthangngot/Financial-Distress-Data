@@ -22,7 +22,7 @@ audit-ready evidence. Three primary users:
 - **Data engineer** — owns Airflow DAGs, Kafka topics, PySpark transforms,
   MinIO layout, PostgreSQL metadata.
 - **ML engineer** — consumes Gold features and `obt_company_quarter_risk`
-  for Phase 2 training/scoring/monitoring.
+  for the platform training/scoring/monitoring.
 - **Analyst / reviewer** — opens DBeaver or DuckDB against the local
   lakehouse to validate row counts, SCD2 history, lineage, and contracts.
 
@@ -30,7 +30,7 @@ Full text: `README.md` §Business Domain.
 
 ## Part II — Deployable-unit diagram
 
-The Phase 1 lakehouse subsystem diagram (Phase 3 of this plan) draws only
+The the platform lakehouse subsystem diagram (Phase 3 of this plan) draws only
 real deployable units — Kafka, Airflow, Spark, MinIO, PostgreSQL, DuckDB —
 never a library or SDK as a node:
 
@@ -48,7 +48,7 @@ flowchart LR
     SPARK["PySpark local mode<br/>src/transforms/*"]:::service
     FLINK["Flink (opt-in)<br/>flink/*, ENABLE_FLINK=1"]:::service
     MINIO["MinIO Lakehouse<br/>s3a://financial-distress-lake/"]:::store
-    POSTGRES["PostgreSQL project_metadata"]:::store
+    POSTGRES["PostgreSQL ops"]:::store
     DUCKDB["DuckDB / DBeaver<br/>sql/*.sql"]:::result
 
     GEN -->|"batch rows"| MINIO

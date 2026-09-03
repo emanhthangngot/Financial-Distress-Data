@@ -62,7 +62,7 @@ def test_audit_reports_every_pipeline_as_a_contract() -> None:
 
 def test_rag_ingest_contract_dataset_is_rag_chunk() -> None:
     report = audit_lineage()
-    assert report["contracts"]["phase2_rag_ingest"]["dataset"] == "ml_metadata.rag_chunk"
+    assert report["contracts"]["phase2_rag_ingest"]["dataset"] == "ml.rag_chunk"
 
 
 def test_emit_rejects_unknown_pipeline_before_importing_datahub() -> None:

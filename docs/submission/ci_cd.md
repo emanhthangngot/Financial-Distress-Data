@@ -6,7 +6,7 @@ Argo CD reconciles the merged revision. Pushing a tag alone never deploys.
 
 ## Implementation present (static)
 
-- The reusable workflow `.github/workflows/phase2-ci.yaml` accepts a caller
+- The reusable workflow `.github/workflows/platform-ci.yaml` accepts a caller
   supplied JSON `deployables` matrix. Each entry declares its build, test,
   lint, and kind-and-name-qualified GitOps target; adding a service changes
   that caller input rather than the reusable workflow body.

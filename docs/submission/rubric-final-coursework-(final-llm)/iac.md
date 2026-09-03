@@ -42,7 +42,7 @@ from `../../gcp`) and points its backend at the pre-existing
 only the declared root moved. `terraform init` in the old `terraform/gcp/`
 now fails fast with "Backend configuration changed", confirming the new
 entrypoint is the one real path. Full evidence:
-[`LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`](../../phase2/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md).
+[`LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`](../../platform/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md).
 
 ## Part II — Ansible configures the worker VM
 
@@ -61,7 +61,7 @@ install Docker, the GCP CLI/`kubectl`, and the Locust benchmark client
 virtualenv. The GKE-credentials task self-skips on the second run because
 `kubectl config get-contexts` already lists the context — itself evidence of
 idempotent design, not a failure. Full evidence:
-[`LLM-iac-d-ng-ansible-configure-v-deplo.md`](../../phase2/evidence/llm/LLM-iac-d-ng-ansible-configure-v-deplo.md).
+[`LLM-iac-d-ng-ansible-configure-v-deplo.md`](../../platform/evidence/llm/LLM-iac-d-ng-ansible-configure-v-deplo.md).
 
 ## Limitations
 

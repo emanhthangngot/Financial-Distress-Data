@@ -13,7 +13,7 @@ agent registry and cannot escape its NetworkPolicy. It does not prove Feast
 online-store performance at scale — the store is exercised functionally, not
 load-tested here (see `validation_verification.md` for load testing).
 
-**Active deployment facts:** namespace `phase2-data` (feature-mcp,
+**Active deployment facts:** namespace `platform-data` (feature-mcp,
 feature-api), namespace `agents-sandbox` (feature-agent, 2-3 replicas).
 FastAPI 0.141.1, Pydantic 2.13.4, Feast 0.65.0, Redis 7.4.1, Helm 3,
 feature-mcp chart 0.1.0.
@@ -48,22 +48,22 @@ def create_app(provider: Callable[[str], Mapping[str, Any]] | None = None) -> An
 ```
 
 Focused contract tests pass:
-`.venv-phase2/bin/python -m pytest tests/phase2/apps/test_feature_api_and_mcp.py -q`.
+`.venv-platform/bin/python -m pytest tests/platform/apps/test_feature_api_and_mcp.py -q`.
 Full evidence:
-[`LLM-web-api-k-o-d-li-u-user-s-d-ng-async.md`](../../phase2/evidence/llm/LLM-web-api-k-o-d-li-u-user-s-d-ng-async.md),
-[`LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati.md`](../../phase2/evidence/llm/LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati.md).
+[`LLM-web-api-k-o-d-li-u-user-s-d-ng-async.md`](../../platform/evidence/llm/LLM-web-api-k-o-d-li-u-user-s-d-ng-async.md),
+[`LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati.md`](../../platform/evidence/llm/LLM-web-api-k-o-d-li-u-user-c-s-d-ng-fastapi-data-validati.md).
 
 ### 2. MCP tool deployed via Helm with atomic rollback
 
 ```text
-$ helm upgrade --install feature-mcp charts/feature-mcp -n phase2-data \
+$ helm upgrade --install feature-mcp charts/feature-mcp -n platform-data \
     -f apps/dev/feature-mcp/values.yaml --atomic --timeout 5m
 ```
 
 A deliberately bad image revision was rolled back atomically to the last
 healthy revision (revision 6) with no failed requests during the rollback.
 Full evidence:
-[`LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s.md`](../../phase2/evidence/llm/LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s.md).
+[`LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s.md`](../../platform/evidence/llm/LLM-web-api-k-o-d-li-u-user-in-the-form-of-mcp-tool-to-k8s.md).
 
 ### 3. Registry publication
 
@@ -74,7 +74,7 @@ feature-agent: version 1.0.0, status active, replicas 2..3,
 ```
 
 Full evidence:
-[`LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr.md`](../../phase2/evidence/llm/LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr.md).
+[`LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr.md`](../../platform/evidence/llm/LLM-web-api-k-o-d-li-u-user-publish-agent-tr-n-l-n-registr.md).
 
 #### Image proof
 
@@ -100,7 +100,7 @@ $ kubectl exec sandbox-negative-probe -n agents-sandbox -- curl -fsS -X POST \
 ```
 
 Full evidence:
-[`LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v.md`](../../phase2/evidence/llm/LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v.md).
+[`LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v.md`](../../platform/evidence/llm/LLM-web-api-k-o-d-li-u-user-1-agent-s-d-ng-mcp-tool-tr-n-v.md).
 
 ### 5. Sandbox boundary: negative proofs
 
@@ -115,7 +115,7 @@ filesystem write (touch /x)              -> failed, read-only root
 The agent's readiness turned green only after its gateway dependency
 recovered — proving the health check is wired to the real dependency, not a
 static `200`. Full evidence:
-[`LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o.md`](../../phase2/evidence/llm/LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o.md).
+[`LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o.md`](../../platform/evidence/llm/LLM-web-api-k-o-d-li-u-user-agent-ch-y-trong-sandbox-m-b-o.md).
 
 ## Limitations
 

@@ -32,7 +32,7 @@ PHASE1_PROTECTED = [
     "src/generator/",
     "sql/",
     "docs/01_data_generator.md",
-    "docs/02_schema_design.md",
+    "docs/architecture/data-model.md",
     "docs/evidence/",
     "docs/mini_coursework.md",
     "tests/test_lakehouse",

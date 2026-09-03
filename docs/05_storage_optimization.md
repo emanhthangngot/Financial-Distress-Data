@@ -1,7 +1,7 @@
 # 05. Storage Optimization
 
 This document describes the storage-side optimizations applied to the
-Gold lakehouse layer in Phase 1: small-file compaction, Z-order
+Gold lakehouse layer in the platform: small-file compaction, Z-order
 clustering, and DuckDB index benchmarks for downstream analytical
 queries.
 

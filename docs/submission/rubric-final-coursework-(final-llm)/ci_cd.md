@@ -7,7 +7,7 @@ status: active
 # CI/CD: six deployables through the same reusable lint→test→build→sign→GitOps-PR template
 
 This doc proves the six rows in "CI/CD": one reusable template
-(`.github/workflows/phase2-ci.yaml`) drives lint, test, build, cosign sign,
+(`.github/workflows/platform-ci.yaml`) drives lint, test, build, cosign sign,
 push an immutable GHCR digest, and open a GitOps digest-bump/manifest-rewrite
 PR — for the coordinator agent, feature agent, drift agent, and RAG data
 pipeline deployables, plus the two Feast stream-feature jobs. No secret is
@@ -15,7 +15,7 @@ embedded in code — GHCR auth and cosign signing use GitHub Actions' own
 token/OIDC identity. It does not prove blue/green or canary deployment
 strategy — every merge here is a rolling digest bump.
 
-**Active deployment facts:** `.github/workflows/phase2-ci.yaml` (reusable
+**Active deployment facts:** `.github/workflows/platform-ci.yaml` (reusable
 template) called by 6 caller workflows; `sigstore/cosign-installer@v3.7.0`;
 GitOps target repo `financial-distress-gitops` (private, default branch
 `master`).
@@ -24,12 +24,12 @@ GitOps target repo `financial-distress-gitops` (private, default branch
 
 | Deployable | Workflow | Run | GitOps PR | Result |
 |---|---|---|---|---|
-| coordinator | `phase2-agent-coordinator.yaml` | [31410264103](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410264103) | [gitops#29](https://github.com/emanhthangngot/financial-distress-gitops/pull/29) | 5/5 jobs success, merged |
-| feature-agent | `phase2-agent-feature.yaml` | [31410263833](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410263833) | [gitops#30](https://github.com/emanhthangngot/financial-distress-gitops/pull/30) | 5/5 jobs success, merged |
-| drift-agent | `phase2-agent-drift.yaml` | [31410267509](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410267509) | [gitops#27](https://github.com/emanhthangngot/financial-distress-gitops/pull/27) | 5/5 jobs success, merged |
-| RAG data pipeline | `phase2-rag-pipeline.yaml` | [31405317841](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31405317841) | [gitops#24](https://github.com/emanhthangngot/financial-distress-gitops/pull/24) | 5/5 jobs success (2nd attempt), merged; `platform-data` Argo app `Synced` |
-| stream-feature-offline (Job 1) | `phase2-stream-feature-offline.yaml` | [31300863227](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31300863227) | [gitops#3](https://github.com/emanhthangngot/financial-distress-gitops/pull/3) | 4/4 jobs success |
-| stream-feature-online (Job 2) | `phase2-stream-feature-online.yaml` | [31300863194](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31300863194) | [gitops#2](https://github.com/emanhthangngot/financial-distress-gitops/pull/2) | 4/4 jobs success |
+| coordinator | `platform-agent-coordinator.yaml` | [31410264103](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410264103) | [gitops#29](https://github.com/emanhthangngot/financial-distress-gitops/pull/29) | 5/5 jobs success, merged |
+| feature-agent | `platform-agent-feature.yaml` | [31410263833](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410263833) | [gitops#30](https://github.com/emanhthangngot/financial-distress-gitops/pull/30) | 5/5 jobs success, merged |
+| drift-agent | `platform-agent-drift.yaml` | [31410267509](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410267509) | [gitops#27](https://github.com/emanhthangngot/financial-distress-gitops/pull/27) | 5/5 jobs success, merged |
+| RAG data pipeline | `platform-rag-pipeline.yaml` | [31405317841](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31405317841) | [gitops#24](https://github.com/emanhthangngot/financial-distress-gitops/pull/24) | 5/5 jobs success (2nd attempt), merged; `platform-data` Argo app `Synced` |
+| stream-feature-offline (Job 1) | `platform-stream-feature-offline.yaml` | [31300863227](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31300863227) | [gitops#3](https://github.com/emanhthangngot/financial-distress-gitops/pull/3) | 4/4 jobs success |
+| stream-feature-online (Job 2) | `platform-stream-feature-online.yaml` | [31300863194](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31300863194) | [gitops#2](https://github.com/emanhthangngot/financial-distress-gitops/pull/2) | 4/4 jobs success |
 
 Real digests landed in real manifests, verified after merge — e.g. the
 drift-agent Deployment:
@@ -40,17 +40,17 @@ image: ghcr.io/emanhthangngot/financial-distress-data/drift-agent@sha256:b29bdbf
 ```
 
 Full evidence, one file per deployable:
-[`LLM-ci-cd-agent-l-m-coordinator.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-l-m-coordinator.md) (coordinator),
-[`LLM-ci-cd-agent-k-o-d-li-u.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-k-o-d-li-u.md) (feature-agent),
-[`LLM-ci-cd-agent-drift-detection.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-drift-detection.md) (drift-agent),
-[`LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md`](../../phase2/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md) (RAG pipeline),
-[`LLM-ci-cd-job-1.md`](../../phase2/evidence/llm/LLM-ci-cd-job-1.md) (stream-feature-offline),
-[`LLM-ci-cd-job-2.md`](../../phase2/evidence/llm/LLM-ci-cd-job-2.md) (stream-feature-online).
+[`LLM-ci-cd-agent-l-m-coordinator.md`](../../platform/evidence/llm/LLM-ci-cd-agent-l-m-coordinator.md) (coordinator),
+[`LLM-ci-cd-agent-k-o-d-li-u.md`](../../platform/evidence/llm/LLM-ci-cd-agent-k-o-d-li-u.md) (feature-agent),
+[`LLM-ci-cd-agent-drift-detection.md`](../../platform/evidence/llm/LLM-ci-cd-agent-drift-detection.md) (drift-agent),
+[`LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md`](../../platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md) (RAG pipeline),
+[`LLM-ci-cd-job-1.md`](../../platform/evidence/llm/LLM-ci-cd-job-1.md) (stream-feature-offline),
+[`LLM-ci-cd-job-2.md`](../../platform/evidence/llm/LLM-ci-cd-job-2.md) (stream-feature-online).
 
 ## Part II — Real bugs found and fixed while building the reusable template
 
 Three infrastructure bugs surfaced on the first CI runs and were fixed once
-in `phase2-ci.yaml`, benefiting all six caller workflows — not patched
+in `platform-ci.yaml`, benefiting all six caller workflows — not patched
 per-workflow:
 
 1. **Missing `packages: write` permission.** The repo's default

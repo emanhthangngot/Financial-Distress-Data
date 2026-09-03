@@ -73,7 +73,7 @@ request-log workload and captures JSON `EXPLAIN (ANALYZE, BUFFERS)` before and
 after a selective composite index. The recorded plan changes from `Seq Scan` to
 `Index Scan`; execution time falls from 23.717 ms to 0.061 ms, and the script
 then installs the equivalent index on
-`project_metadata.source_request_log(run_id, request_status, requested_at DESC)`.
+`ops.source_request_log(run_id, request_status, requested_at DESC)`.
 
 ## Rubric Boundary
 

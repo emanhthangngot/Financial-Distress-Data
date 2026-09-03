@@ -23,7 +23,7 @@ cost-delta model is a documented estimate, not a billing reconciliation.
 
 ```text
 $ python scripts/run_phase5_warmup_measurement.py --warm-replicas 2 \
-    --output docs/phase2/evidence/llm/warmup.json
+    --output docs/platform/evidence/llm/warmup.json
 {
   "cold_start_seconds": 7.732,
   "warm_start_seconds": 9.058,
@@ -43,7 +43,7 @@ feature-agent   2/2     2            2           12h
 Warm TTFT (0.671s median of 5 samples) is lower than cold TTFT (0.743s); the
 pool was restored to its declared minimum (2/2 Ready) after the run. Full
 evidence:
-[`LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a.md`](../../phase2/evidence/llm/LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a.md).
+[`LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a.md`](../../platform/evidence/llm/LLM-c-i-t-h-th-ng-ch-warm-up--c-i-t-h-th-ng-ch-warm-up-cho-a.md).
 
 ### 2. A real bug found and fixed during this measurement
 

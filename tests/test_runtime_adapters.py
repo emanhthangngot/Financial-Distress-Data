@@ -118,13 +118,13 @@ def test_postgres_metadata_writer_executes_project_metadata_inserts():
     )
 
     executed_sql = "\n".join(sql for sql, _params in connection.cursor_instance.executed)
-    assert "project_metadata.pipeline_run_log" in executed_sql
-    assert "project_metadata.data_quality_result" in executed_sql
-    assert "project_metadata.failed_records" in executed_sql
-    assert "project_metadata.backfill_request" in executed_sql
-    assert "project_metadata.source_request_log" in executed_sql
-    assert "project_metadata.collector_checkpoint" in executed_sql
-    assert "project_metadata.dataset_freshness" in executed_sql
+    assert "ops.pipeline_run_log" in executed_sql
+    assert "ops.data_quality_result" in executed_sql
+    assert "ops.failed_records" in executed_sql
+    assert "ops.backfill_request" in executed_sql
+    assert "ops.source_request_log" in executed_sql
+    assert "ops.collector_checkpoint" in executed_sql
+    assert "ops.dataset_freshness" in executed_sql
     assert connection.commits == 7
 
 
@@ -233,14 +233,14 @@ def test_postgres_writer_flush_pipeline_run_logs_uses_single_commit_batched_exec
     # One execute call carrying all rows in a single multi-VALUES INSERT.
     assert len(connection.cursor_instance.executed) == 1
     sql, params = connection.cursor_instance.executed[0]
-    assert "project_metadata.pipeline_run_log" in sql
+    assert "ops.pipeline_run_log" in sql
     assert "INSERT INTO" in sql.upper()
     # 5 row tuples passed in the single batched INSERT.
     assert len(params) == 5
 
 
 def test_init_project_metadata_sql_creates_w10_indexes():
-    sql = Path("sql/init_project_metadata.sql").read_text(encoding="utf-8")
+    sql = Path("sql/init_ops.sql").read_text(encoding="utf-8")
 
     expected_indexes = [
         "idx_pipeline_run_log_dag_status_created",
@@ -253,4 +253,4 @@ def test_init_project_metadata_sql_creates_w10_indexes():
     for index_name in expected_indexes:
         assert (
             f"CREATE INDEX IF NOT EXISTS {index_name}" in sql
-        ), f"missing index {index_name} in init_project_metadata.sql"
+        ), f"missing index {index_name} in init_ops.sql"

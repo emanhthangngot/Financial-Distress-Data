@@ -1,15 +1,15 @@
 # System Architecture
 
-This document describes the complete system: the verified local-first Phase 1
-lakehouse, the persistent Phase 2 product plane, and the disposable GKE
-evidence plane. Phase 2 is additive; it reads Phase 1 outputs and does not
-rename, remove, or change any Phase 1 DAG or storage contract.
+This document describes the complete system: the verified local-first the platform
+lakehouse, the persistent the platform product plane, and the disposable GKE
+evidence plane. the platform is additive; it reads the platform outputs and does not
+rename, remove, or change any the platform DAG or storage contract.
 
 ## Architecture boundaries
 
 | Boundary | Owner | Runtime | Purpose |
 |---|---|---|---|
-| Phase 1 lakehouse | Source monorepo | Docker Compose: Airflow, Kafka, MinIO, PostgreSQL, Spark, DuckDB, optional Flink | Collect, validate, transform, govern, and publish Bronze/Silver/Gold data |
+| the platform lakehouse | Source monorepo | Docker Compose: Airflow, Kafka, MinIO, PostgreSQL, Spark, DuckDB, optional Flink | Collect, validate, transform, govern, and publish Bronze/Silver/Gold data |
 | Product plane | Source monorepo + Supabase | Next.js app, Supabase Auth/Postgres/RLS, outbox/evidence-session state | Persistent analyst, report, registry, chat, and evidence-session UX |
 | Evidence plane | `financial-distress-gitops` | GKE Standard, Argo CD, NGINX, agentgateway, kagent, MCP, KServe/Knative, telemetry | Disposable live LLM/agent execution and rubric evidence |
 
@@ -29,7 +29,7 @@ ML/LLM artifact or serving endpoint, `result` = observability/output surface.
 
 | # | Subsystem | Source | Owning narrative doc |
 |---|---|---|---|
-| 1 | Phase 1 lakehouse | `docs/architecture/subsystem-01-lakehouse.mmd` | `docs/submission/rubric-(mini-coursework)/data_pipeline_orchestration.md` |
+| 1 | the platform lakehouse | `docs/architecture/subsystem-01-lakehouse.mmd` | `docs/submission/rubric-(mini-coursework)/data_pipeline_orchestration.md` |
 | 2 | LLM inference platform | `docs/architecture/subsystem-02-llm-inference-platform.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/llm_inference_platform.md` |
 | 3 | RAG pipeline | `docs/architecture/subsystem-03-rag-pipeline.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/rag.md` |
 | 4 | Agent plane | `docs/architecture/subsystem-04-agent-plane.mmd` | `docs/submission/rubric-final-coursework-(final-llm)/coordinator_agent.md` |
@@ -51,17 +51,17 @@ PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
 ```
 
 **Hero image decision:** `images/architecture/architecture-stage-1.png` is
-**not retired** — `docs/mini_coursework.md` (Phase 1 spec, source-of-truth,
+**not retired** — `docs/mini_coursework.md` (the platform spec, source-of-truth,
 line-cap exempt) names that exact path as a required deliverable artifact, so
 it stays untouched. `docs/pngs/system_architecture_overview.png` is the
-*additional* composed Phase 1+2 hero used by the reviewer-facing README and
+*additional* composed the platform+2 hero used by the reviewer-facing README and
 narrative docs. The two do not compete: `architecture-stage-1.png` answers the
-Phase 1 spec's own diagram requirement; `system_architecture_overview.png`
+the platform spec's own diagram requirement; `system_architecture_overview.png`
 answers this plan's cross-subsystem reviewer view.
 `images/architecture/system_deployment_diagram.png` (DOT-rendered) remains the
-detailed Phase 1-only deployment view referenced below.
+detailed the platform-only deployment view referenced below.
 
-## Phase 1 — verified local lakehouse
+## the platform — verified local lakehouse
 
 ![Deployment architecture](../images/architecture/system_deployment_diagram.png)
 
@@ -82,7 +82,7 @@ source collectors -> Kafka -> Bronze/MinIO -> Silver/Gold/Spark
 - DuckDB/DBeaver is a reviewer inspection surface, not a production serving
   layer.
 
-## Phase 2 — accepted LLM evidence system
+## the platform — accepted LLM evidence system
 
 The accepted submission is the 60-row / 100-point LLM track. The 57-row ML
 track is deferred and remains visible as `design_only` in the rubric matrix.
@@ -109,7 +109,7 @@ truth for those decisions.
 
 1. **Analyst:** the authenticated Next.js product calls the declared edge and
    stores durable user/report/session state in Supabase.
-2. **Phase 1 data:** collectors publish source events, Airflow/Spark build the
+2. **the platform data:** collectors publish source events, Airflow/Spark build the
    local lakehouse, and quality/lineage records accompany the Gold outputs.
 3. **RAG and governance:** source documents are normalized, chunked, embedded,
    versioned, and stored with governance metadata in the approved feature/RAG
@@ -137,8 +137,8 @@ truth for those decisions.
   ServiceAccounts, read-only roots, and an explicit egress allow-list.
 - Secrets are delivered through the configured secret mechanism and sealed
   deployment state; plaintext credentials do not belong in source or docs.
-- Phase 1 writes to `project_metadata`; Phase 2 metadata uses its own schema
-  boundary. No Phase 2 component is allowed to mutate Phase 1 evidence.
+- the platform writes to `ops`; the platform metadata uses its own schema
+  boundary. No the platform component is allowed to mutate the platform evidence.
 
 ## Verification state
 
@@ -156,8 +156,8 @@ after the latest commits and the strict two-repository audit passes.
 
 ## Related source-of-truth documents
 
-- [Accepted Phase 2 coursework](coursework.md)
-- [Phase 2 architecture and cost envelope](phase2/architecture.md)
-- [Phase 2 ADR-010](phase2/adr/adr-010-llm-only-scope-and-platform-simplification.md)
+- [Accepted the platform coursework](coursework.md)
+- [the platform architecture and cost envelope](platform/architecture.md)
+- [the platform ADR-010](platform/adr/adr-010-llm-only-scope-and-platform-simplification.md)
 - [Repository ownership map](architecture/repository-map.md)
 - [Submission reviewer index](submission/README.md)

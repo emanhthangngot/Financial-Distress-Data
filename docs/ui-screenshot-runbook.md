@@ -1,6 +1,6 @@
 # UI Screenshot Capture Runbook
 
-Reproduction steps and checklist for the Phase 2 capture campaign of
+Reproduction steps and checklist for the the platform capture campaign of
 `plans/260814-1223-recsys-format-docs-overhaul/`. GKE plane is captured first
 — it is the perishable resource. Local Docker stack and product plane follow.
 Every row below gets exactly one `docs/pngs/manifest.csv` entry once captured
@@ -40,13 +40,13 @@ contract name (source path recorded in the manifest).
 | 10 | MCP services | one tool call + response | re-capture | **done, indirect** — visible as `feature_mcp.http_request` / `drift_mcp.http_request` spans inside `jaeger_coordinator_trace_roundtrip.png` |
 | 11 | Coordinator agent | full round-trip with feature + drift citations | re-capture | **done** — `jaeger_coordinator_trace_roundtrip.png`: 5-span, 170ms trace, `coordinator-agent` → `feature-agent`/`feature-mcp` and → `drift-agent`/`drift-mcp` |
 | 12 | Prometheus | targets up page | re-capture | **done** — `prometheus_targets_up.png` (9/9 UP) |
-| 13 | Prometheus | agent/tool call + token/latency/PII metric query | re-capture | **done, partial** — `prometheus_llm_tokens_query.png` covers token metrics (`phase2:llm_request_total_tokens_total:sum`); latency and PII metric queries not separately captured this campaign |
+| 13 | Prometheus | agent/tool call + token/latency/PII metric query | re-capture | **done, partial** — `prometheus_llm_tokens_query.png` covers token metrics (`platform:llm_request_total_tokens_total:sum`); latency and PII metric queries not separately captured this campaign |
 | 14 | Grafana | dashboard list / one dashboard per rubric claim | re-capture | **blocked** — Grafana requires login; entering credentials into any field is a prohibited action regardless of source, and reading the admin secret to do so was denied by policy. Capture needs the user to authenticate interactively, or an anonymous-viewer URL if one is configured. |
 | 15 | Jaeger | discoverable services list | re-capture | **done** — `jaeger_search_services.png` (6 services) |
 | 16 | Jaeger | one end-to-end trace | re-capture | **done** — `jaeger_coordinator_trace_roundtrip.png` (same image serves rows 11 and 16) |
 | 17 | Ingress/NGINX | routing + auth challenge on a hidden service | re-capture | **gap** — not attempted this campaign |
 
-### Local Phase 1 stack
+### Local the platform stack
 
 | # | Subsystem | Target capture | Disposition | Outcome |
 |---|---|---|---|---|
@@ -106,7 +106,7 @@ Kill every `port-forward` (`kill %1 %2 ...` or `pkill -f "kubectl.*port-forward"
 scoped to this session's PIDs only) once the capture set for that service is
 done — do not leave forwards running past the campaign.
 
-## Capture — local Phase 1 stack
+## Capture — local the platform stack
 
 See `AGENTS.md` for the Flink opt-in flag. Existing captures already satisfy
 rows 18–21 and 25–27 (reuse-copy); rows 22–24 need the stack brought up fresh
@@ -114,8 +114,8 @@ if a re-capture is chosen instead of leaving them as documented gaps.
 
 ## Capture — product plane
 
-`scripts/capture_ui_screenshots.py` extended per Phase 2 requirements, or
-reuse existing `docs/phase2/evidence/product/*.png` Playwright captures
+`scripts/capture_ui_screenshots.py` extended per the platform requirements, or
+reuse existing `docs/platform/evidence/product/*.png` Playwright captures
 (already contract-quality: state, role, viewport encoded in filename).
 
 ## Redaction pass (blocking gate before commit)

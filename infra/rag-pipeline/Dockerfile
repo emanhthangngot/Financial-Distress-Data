@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Runs dags/phase2/phase2_rag_ingest.py's callable
+# Runs dags/platform/phase2_rag_ingest.py's callable
 # (src.llm.rag_pipeline.run_ingestion_task) as a standalone deployable —
 # same code the Airflow PythonOperator calls, packaged separately per
 # phase-04-implementation-notes.md section 2's "two processes, two images"
@@ -24,7 +24,7 @@ COPY sql ./sql
 # paths that RagIngestionPipeline.fetch_documents reads directly at
 # runtime (no live network fetch — see configs/rag-sources.yaml's header) —
 # the image must carry them or every ingestion run fails FileNotFoundError.
-COPY tests/phase2/fixtures/rag_corpus ./tests/phase2/fixtures/rag_corpus
+COPY tests/platform/fixtures/rag_corpus ./tests/platform/fixtures/rag_corpus
 
 ENV PYTHONPATH=/app
 

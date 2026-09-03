@@ -63,7 +63,7 @@ services:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     command: webserver
     depends_on:
       airflow-init:
@@ -85,7 +85,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      STAGE1_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -102,7 +102,7 @@ services:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     depends_on:
       - postgres
     command: >
@@ -123,7 +123,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      STAGE1_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -138,7 +138,7 @@ services:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     command: scheduler
     depends_on:
       - airflow-webserver
@@ -155,7 +155,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      STAGE1_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}

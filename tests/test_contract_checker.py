@@ -25,12 +25,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTRACTS_DOC = REPO_ROOT / "docs" / "07_data_contracts.md"
-SCHEMA_DOC = REPO_ROOT / "docs" / "02_schema_design.md"
+SCHEMA_DOC = REPO_ROOT / "docs" / "architecture/data-model.md"
 CONTRACT_CHECKER_MODULE = "src.quality.contract_checker"
 DAG_FILE = REPO_ROOT / "dags" / "09_data_governance.py"
 EVIDENCE_DIR = REPO_ROOT / "docs" / "evidence" / "governance"
 
-# Every Gold table name from docs/02_schema_design.md that must be covered.
+# Every Gold table name from docs/architecture/data-model.md that must be covered.
 EXPECTED_GOLD_TABLES = {
     "dim_company",
     "dim_date",
@@ -60,7 +60,7 @@ def _read(path: Path) -> str:
 
 
 def _list_gold_tables_from_schema_doc() -> set[str]:
-    """Extract every Gold table name referenced in ``docs/02_schema_design.md``."""
+    """Extract every Gold table name referenced in ``docs/architecture/data-model.md``."""
     text = _read(SCHEMA_DOC)
     found: set[str] = set()
     for folder_match in re.finditer(r"gold/(?P<name>[a-z_]+)/", text):
@@ -77,7 +77,7 @@ def test_contract_doc_exists_and_lists_all_gold_tables() -> None:
     missing = expected - set(re.findall(r"`([a-z_]+)`", text))
     assert not missing, (
         f"docs/07_data_contracts.md must reference every Gold table from "
-        f"docs/02_schema_design.md; missing: {sorted(missing)}"
+        f"docs/architecture/data-model.md; missing: {sorted(missing)}"
     )
 
 

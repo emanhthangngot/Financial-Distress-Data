@@ -33,7 +33,7 @@ Deploying v2 clones a new PVC and revision rather than mutating v1's — the
 staged rollout preserves v1 the whole time. GitOps audit trail: PRs #31
 (clone PVCs), #32 (immutable revision rotation), #33 (readiness probes), #34
 (Configuration-backed v1). Full evidence:
-[`LLM-a-b-testing-when-you-deploy-a-new-model.md`](../../phase2/evidence/llm/LLM-a-b-testing-when-you-deploy-a-new-model.md).
+[`LLM-a-b-testing-when-you-deploy-a-new-model.md`](../../platform/evidence/llm/LLM-a-b-testing-when-you-deploy-a-new-model.md).
 
 ## Part II — Traffic split and readiness
 
@@ -50,10 +50,10 @@ $ curl <stable-route>/v1/models -> succeeds, pod MODEL_VERSION=v1
 $ curl <canary-route>/v1/models -> succeeds, pod MODEL_VERSION=v2
 ```
 
-`phase2-ab-dashboard`, `fd-agent-model-v1`, and `fd-agent-model-v2` are all
+`platform-ab-dashboard`, `fd-agent-model-v1`, and `fd-agent-model-v2` are all
 present, giving both a dashboard resource and per-version agent model
 configs to evaluate the split against. Full evidence:
-[`LLM-a-b-testing-perform-a-b-test-for-different.md`](../../phase2/evidence/llm/LLM-a-b-testing-perform-a-b-test-for-different.md).
+[`LLM-a-b-testing-perform-a-b-test-for-different.md`](../../platform/evidence/llm/LLM-a-b-testing-perform-a-b-test-for-different.md).
 
 ## Limitations
 
