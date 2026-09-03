@@ -253,26 +253,26 @@ def test_schema_erd_image_exists() -> None:
 
 
 def test_dim_scd2_documented() -> None:
-    text = _read(DOCS / "02_schema_design.md").lower()
+    text = _read(DOCS / "architecture/data-model.md").lower()
     assert "valid_from_ts" in text and "is_current" in text, "SCD2 columns not documented"
 
 
 def test_feat_table_columns_documented() -> None:
-    text = _read(DOCS / "02_schema_design.md").lower()
+    text = _read(DOCS / "architecture/data-model.md").lower()
     assert (
         "event_timestamp" in text and "created" in text
     ), "feat table event_timestamp/created not documented"
 
 
 def test_dim_fact_relationship_documented() -> None:
-    text = _read(DOCS / "02_schema_design.md").lower()
+    text = _read(DOCS / "architecture/data-model.md").lower()
     assert "relationship" in text or ("dim_" in text and "fact_" in text)
 
 
 def test_naming_convention_documented() -> None:
-    # W22 added naming convention section to README and 02_schema_design.md
+    # W22 added naming convention section to README and architecture/data-model.md
     readme = _read(README).lower()
-    schema = _read(DOCS / "02_schema_design.md").lower()
+    schema = _read(DOCS / "architecture/data-model.md").lower()
     assert "naming convention" in readme, "README missing naming convention section"
     assert "dim_" in schema and "fact_" in schema, "Naming prefixes not in schema doc"
 

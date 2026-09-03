@@ -1,10 +1,10 @@
 # Submission reviewer index
 
-Human-facing index into `docs/phase2/evidence/llm/` — not a relocation.
+Human-facing index into `docs/platform/evidence/llm/` — not a relocation.
 `scripts/audit_phase2_evidence.py`'s `_audit_matrix` pins every row's
-`evidence_path` under `docs/phase2/evidence/`; these pages link to that
+`evidence_path` under `docs/platform/evidence/`; these pages link to that
 canonical location, they don't hold the evidence itself. See
-`docs/phase2/evidence-contract.md` for what counts as proof.
+`docs/platform/evidence-contract.md` for what counts as proof.
 
 Status (2026-08-13): **60 of 60 LLM rows are logically covered (100/100
 points)** and the live runtime has been verified. The final submission freeze
@@ -33,11 +33,11 @@ source of truth.
 
 | Rubric row | Executed artifact | Canonical evidence |
 |---|---|---|
-| `LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a` | [`notebooks/agent-understanding-demo.ipynb`](../../notebooks/agent-understanding-demo.ipynb) | [evidence](../phase2/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a.md) |
-| `LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra` | [`notebooks/agent-mcp-demo.ipynb`](../../notebooks/agent-mcp-demo.ipynb) | [evidence](../phase2/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra.md) |
-| `LLM-novel-ideas-idea-1` | [`src/llm/embedding_registry.py`](../../src/llm/embedding_registry.py) | [evidence](../phase2/evidence/llm/LLM-novel-ideas-idea-1.md) |
-| `LLM-novel-ideas-idea-2` | [`src/llm/citation_guard.py`](../../src/llm/citation_guard.py) | [evidence](../phase2/evidence/llm/LLM-novel-ideas-idea-2.md) |
-| `LLM-documentation-low-level-ml-design` | [`docs/phase2/low-level-design.md`](../phase2/low-level-design.md) | [evidence](../phase2/evidence/llm/LLM-documentation-low-level-ml-design.md) |
+| `LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a` | [`notebooks/agent-understanding-demo.ipynb`](../../notebooks/agent-understanding-demo.ipynb) | [evidence](../platform/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a.md) |
+| `LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra` | [`notebooks/agent-mcp-demo.ipynb`](../../notebooks/agent-mcp-demo.ipynb) | [evidence](../platform/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra.md) |
+| `LLM-novel-ideas-idea-1` | [`src/llm/embedding_registry.py`](../../src/llm/embedding_registry.py) | [evidence](../platform/evidence/llm/LLM-novel-ideas-idea-1.md) |
+| `LLM-novel-ideas-idea-2` | [`src/llm/citation_guard.py`](../../src/llm/citation_guard.py) | [evidence](../platform/evidence/llm/LLM-novel-ideas-idea-2.md) |
+| `LLM-documentation-low-level-ml-design` | [`docs/platform/low-level-design.md`](../platform/low-level-design.md) | [evidence](../platform/evidence/llm/LLM-documentation-low-level-ml-design.md) |
 
 ## Grader and operator access
 
@@ -54,8 +54,8 @@ Every Routing & Gateway and Observability row is captured live and linked from
 [routing_gateway.md](./routing_gateway.md) and [observability.md](./observability.md).
 The two final Observability artifacts are:
 
-- [per-request token, latency, and PII metrics](../phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md)
-- [per-agent and per-MCP-tool call/failure metrics](../phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md)
+- [per-request token, latency, and PII metrics](../platform/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md)
+- [per-agent and per-MCP-tool call/failure metrics](../platform/evidence/llm/LLM-observability-agent-tool-call-metrics.md)
 
 The GitOps repository (`financial-distress-gitops`) stays private because its
 working tree carries operational state that must not be published. A scrubbed
@@ -79,6 +79,6 @@ credential is stored in this repository.
 Sections without a dedicated page here (inference, model config, registry,
 RAG, feature/RAG API, drift/MCP, agent understanding, coordinator, warm-up,
 data generator, A/B, documentation, novel ideas) are covered directly by
-their `docs/phase2/evidence/llm/*.md` files and `docs/phase2/rubric-matrix.csv`
+their `docs/platform/evidence/llm/*.md` files and `docs/platform/rubric-matrix.csv`
 — no separate reviewer index needed at this scale (60 LLM rows, 20 acceptance
 IDs).

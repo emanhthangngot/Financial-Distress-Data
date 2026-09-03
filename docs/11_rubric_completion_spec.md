@@ -2,29 +2,29 @@
 
 ## Objective
 
-This document is the final Phase 1 mini-coursework completion spec. It maps
+This document is the final the platform mini-coursework completion spec. It maps
 every row in `docs/Coursework Tracking (Public) - rubic (mini-coursework).csv`
 to concrete repository work, checked-in proof, and a verification command.
 
 Target score: **100/100**.
 
 The goal is not to claim enterprise production readiness. The goal is to make
-the local-first Phase 1 submission easy to grade: a reviewer can open the
+the local-first the platform submission easy to grade: a reviewer can open the
 README, specs, evidence JSON, screenshots, and tests, then confirm each rubric
 row without reverse-engineering the repository.
 
 ## Active Phase
 
 ```text
-PHASE: Phase 1 mini-coursework
-SCOPE: 01_data_generator.md and 02_schema_design.md plus rubric evidence
+PHASE: the platform mini-coursework
+SCOPE: 01_data_generator.md and architecture/data-model.md plus rubric evidence
 ```
 
 Out of scope:
 
 - Live external market API dependency.
 - Managed cloud services.
-- Phase 2 ML training, drift monitoring, serving, or model registry.
+- the platform ML training, drift monitoring, serving, or model registry.
 - Claims that require a live DataHub, Spark UI, or Flink UI service when the
   checked-in evidence is a local evidence view generated from artifacts.
 
@@ -33,7 +33,7 @@ Out of scope:
 - `AGENTS.md`
 - `docs/mini_coursework.md`
 - `docs/01_data_generator.md`
-- `docs/02_schema_design.md`
+- `docs/architecture/data-model.md`
 - `docs/Coursework Tracking (Public) - rubic (mini-coursework).csv`
 
 ## Commands
@@ -65,7 +65,7 @@ Reviewer -> opens this spec -> sees every rubric section mapped to work, proof, 
 Reviewer -> opens docs/evidence/reviewer_screenshots/*.png -> sees visual proof for the previously weak UI-heavy rubric rows.
 Rubric audit runner -> runs scripts/audit_rubric_coverage.py -> reports 100 covered points.
 Quality gate runner -> runs scripts/run_stage1_quality_gates.py -> tests, lint, formatting, Docker Compose config, and evidence audit pass.
-Student -> submits repository -> can truthfully claim Phase 1 local-first evidence, not enterprise/live-service evidence.
+Student -> submits repository -> can truthfully claim the platform local-first evidence, not enterprise/live-service evidence.
 ```
 
 ## Engineering Fundamentals - 2 Points
@@ -490,7 +490,7 @@ Work completed:
 
 Proof:
 
-- `docs/02_schema_design.md`
+- `docs/architecture/data-model.md`
 - `images/schema/schema_evidence_erd.png`
 - `tests/test_naming_convention.py`
 

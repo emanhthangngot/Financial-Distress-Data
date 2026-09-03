@@ -51,7 +51,7 @@ stored-bytes reduction measured there.
 Full evidence:
 [`docs/evidence/duckdb_index_benchmark.json`](../../evidence/duckdb_index_benchmark.json).
 The equivalent selective composite index
-(`project_metadata.source_request_log(run_id, request_status,
+(`ops.source_request_log(run_id, request_status,
 requested_at DESC)`) is proven separately by
 `sql/postgres-index-benchmark.sql`: a 250,000-row workload shows `EXPLAIN
 (ANALYZE, BUFFERS)` changing from `Seq Scan` to `Index Scan`, execution time

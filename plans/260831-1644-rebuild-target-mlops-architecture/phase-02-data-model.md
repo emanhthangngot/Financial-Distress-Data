@@ -322,7 +322,7 @@ DECIMAL and is exact under scale 0. It never required precision 38.
 
 The repo currently runs three timestamp suffix conventions simultaneously (measured 2026-09-02 over
 `sql/*.sql` + `schema_registry.py`): `_ts` 21 uses, `_timestamp` 19 uses, `_at` ~20 uses — with `ops`
-(`project_metadata`) on `_at` and `ml` (`ml_metadata`) on `_ts`. mini row 43 is scored on naming
+(`ops`) on `_at` and `ml` (`ml`) on `_ts`. mini row 43 is scored on naming
 convention, and its **full** text has two clauses, not one:
 
 ```
@@ -337,7 +337,7 @@ today. Two readings exist: strict (tables need `raw_`/`stg_`) and loose (the zon
 in the object path, which is "or similar"). This plan takes the **strict** reading: six renames
 inside a phase that is already rewriting `sql/` and `src/io/paths.py`, against 2 points at risk.
 
-`ml_metadata` is already the better half on every axis P2 touches: `TIMESTAMPTZ`, `_ts` suffix, a real
+`ml` is already the better half on every axis P2 touches: `TIMESTAMPTZ`, `_ts` suffix, a real
 FK (`rag_chunk.document_hash → rag_document`, `init_ml_metadata.sql:55`), and composite natural PKs.
 The migration direction is therefore **pull `ops` up to `ml`'s standard**, not meet in the middle.
 
@@ -387,7 +387,7 @@ Renames this convention forces:
 |---|---|---|
 | `gold.distress_labels` | `gold.fact_distress_label` | mini row 43 — no prefix, and plural among singular peers |
 | `gold.distress_holdout_v1` | `gold.distress_holdout` | version belongs in the Iceberg tag `holdout-v1`, which P4 already creates. One version source, not two |
-| `ml_metadata.label_table` | `ml.distress_label` | "table" inside a table name |
+| `ml.label_table` | `ml.distress_label` | "table" inside a table name |
 | `ops.*_at` (8 columns) | `ops.*_ts` | one suffix, project-wide |
 | `bronze.companies` | `bronze.raw_companies` | mini row 43 clause 2 (F18) |
 | `bronze.financial_statements` | `bronze.raw_financial_statements` | mini row 43 clause 2 (F18) |
@@ -415,7 +415,7 @@ ops.schema_version_registry   + partial unique index on (dataset_name) WHERE is_
 ops.backfill_request
 ops.collector_checkpoint
 
-ml.distress_label             ← renamed from ml_metadata.label_table (F9)
+ml.distress_label             ← renamed from ml.label_table (F9)
 ml.feast_registry_revision
 ml.stream_feature_checkpoint
 ml.rag_document / rag_chunk / rag_quarantine / rag_ingestion_run
@@ -689,7 +689,7 @@ supports partition evolution, so `month` → `day` stays available without a rew
    `TIMESTAMPTZ` via explicit `AT TIME ZONE 'UTC'`, the 8 `ops` `_at` → `_ts` renames in the same
    migration, merged `data_quality_result` with PK `check_id` + `track` CHECK enum + `(track,
    checked_ts)` index, four foreign keys, deterministic `check_id`, partial unique index on
-   `is_current`, `ml_metadata.label_table` → `ml.distress_label`.
+   `is_current`, `ml.label_table` → `ml.distress_label`.
 7. **Naming convention: write it and lint it** (0.5 d) — the §Naming Convention block into
    `docs/architecture/data-model.md`; `scripts/lint_naming_convention.py` asserts gold prefixes,
    singular gold table names, plural bronze/silver, `_ts`/`_date` suffixes with the two reserved

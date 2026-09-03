@@ -27,14 +27,14 @@ The **current state** is a Phase 1 local-first data lakehouse (verified, Docker 
 
 | Unit | Service Image/Type | Role | Evidence |
 |---|---|---|---|
-| Postgres 16 | `postgres:16` | Phase 1 metadata; `project_metadata` schema | `docker-compose.yml:1-30` |
+| Postgres 16 | `postgres:16` | Phase 1 metadata; `ops` schema | `docker-compose.yml:1-30` |
 | MinIO | `minio/minio:RELEASE.2025-04-22T22-12-26Z` | S3A-compatible durable object store for Bronze/Silver/Gold Parquet | `docker-compose.yml:31-42` |
 | Kafka KRaft | `apache/kafka:3.9.0` | Single-node broker for price/news/alert events | `docker-compose.yml:58-89`, `infra/kafka/kafka_init_topics.sh` |
 | Airflow Webserver | `financial-distress-airflow:stage1` (built locally) | DAG UI + execution controller | `docker-compose.yml:108-150`, `infra/airflow/Dockerfile` |
 | Airflow Scheduler | Same image | Schedules DP1/DP2/DP3 DAGs | `docker-compose.yml:180-210` |
 | Flink (opt-in) | `financial-distress-flink:stage1` (built locally) | Optional event-time streaming; profile="flink" | `docker-compose.yml:212-260`, `infra/flink/Dockerfile` |
 | Phase2-Redis | `redis:7-alpine` | Feast online store; profile="phase2" | `docker-compose.yml:263-282` |
-| Phase2-Postgres | `pgvector/pgvector:pg16` | PGVector + ml_metadata schema; profile="phase2" | `docker-compose.yml:283-307` |
+| Phase2-Postgres | `pgvector/pgvector:pg16` | PGVector + ml schema; profile="phase2" | `docker-compose.yml:283-307` |
 
 **Launch:** `docker compose up` starts Phase 1 + product only. `ENABLE_FLINK=1 docker compose --profile flink --profile phase2 up` adds Flink + Phase 2.
 
@@ -58,7 +58,7 @@ The **current state** is a Phase 1 local-first data lakehouse (verified, Docker 
 | **platform-agentgateway** | agentgateway-system | agentgateway AI routing backend (least-privilege NetworkPolicy boundary per plan 260818-0028) | `argocd/applications/platform-agentgateway.yaml`, `platform/agentgateway/` |
 | **platform-agents-crds** | kagent | kagent CRDs (Agent, ModelConfig, MCP tool specs) | `argocd/applications/platform-agents-crds.yaml` |
 | **platform-agents** | kagent, agents-sandbox | Coordinator agent, feature specialist, drift specialist; sandbox with restricted PSS + tokenless SA + read-only root + default-deny NetworkPolicy (security boundary per plan) | `argocd/applications/platform-agents.yaml`, `platform/agents/agent-deployments.yaml`, `platform/agents/agent-sandbox.yaml` |
-| **platform-data** | phase2-data | Redis (Feast online), PGVector Postgres (ml_metadata + RAG embeddings), RAG pipeline CronJob (suspend: true outside capture windows) | `argocd/applications/platform-data.yaml`, `platform/data/{redis,postgres-pgvector,pipeline-deployments}.yaml` |
+| **platform-data** | phase2-data | Redis (Feast online), PGVector Postgres (ml + RAG embeddings), RAG pipeline CronJob (suspend: true outside capture windows) | `argocd/applications/platform-data.yaml`, `platform/data/{redis,postgres-pgvector,pipeline-deployments}.yaml` |
 | **platform-llm** | phase2-llm | LLM-specific orchestration/routing (details in GitOps manifests) | `argocd/applications/platform-llm.yaml` |
 | **platform-observability** | monitoring | Prometheus, Grafana, Loki, Jaeger, OpenTelemetry Collector (live-verified 2026-08-13) | `argocd/applications/platform-observability.yaml`, `platform/observability/` |
 | **platform-security** | — | Sealed Secrets, GHCR pull credentials, ClusterIssuers (Let's Encrypt) | `argocd/applications/platform-security.yaml`, `platform/security/` |
@@ -89,7 +89,7 @@ The **current state** is a Phase 1 local-first data lakehouse (verified, Docker 
 | `agentgateway-system` | **our choice** | agentgateway AI backend routing | **Least-privilege egress scoping:** ModelConfig routes through this namespace, agents' NetworkPolicy allows egress here only (not direct to KServe) |
 | `kagent` | **our choice** | kagent CRDs, agent controllers (coordinator, feature, drift) | Agent control plane |
 | `agents-sandbox` | **our choice**, **security boundary** | Agent runtime pods (coordinator instance, feature/drift instance) | Pod Security Standards: restricted; tokenless ServiceAccount; read-only root; default-deny NetworkPolicy egress scoped to `agentgateway-system` (ADR-010 closure path) |
-| `phase2-data` | **our choice** | Redis (online feature store), PGVector Postgres (ml_metadata, RAG embeddings), Feast definitions, RAG pipeline CronJob | Feature & data layer |
+| `phase2-data` | **our choice** | Redis (online feature store), PGVector Postgres (ml, RAG embeddings), Feast definitions, RAG pipeline CronJob | Feature & data layer |
 | `monitoring` | **our choice** | Prometheus, Grafana, Loki, Jaeger, OTel Collector | Observability & telemetry |
 
 **Critical architectural fact (locked in 260818-0028-namespace-convention-alignment/plan.md:77-115):** The split of `agentgateway-system`, `kagent`, and `agents-sandbox` into three namespaces is **not accidental vendor-component fragmentation**. It is a deliberate **least-privilege NetworkPolicy boundary design**: the sandbox's `default-deny` egress NetworkPolicy scopes egress to `agentgateway-system` by `namespaceSelector`, making the namespace split load-bearing for security isolation. Merging `agentgateway-system` and `kagent` would narrow egress scoping, which is a regression. `agents-sandbox` provides the only tokenless, read-only isolation tier in the cluster and must not be merged.
@@ -156,7 +156,7 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 |---|---|---|---|
 | **Feast** | Feature store; offline (Postgres/Iceberg) + online (Redis) definitions | 🟡 Partially (feature_repo/ structure defined locally; GKE materialization untested) | `feature_repo/`, `src/ml/feast/` (local definitions); no Feast control plane in GitOps |
 | **Redis** | Online feature store cache + model serving cache | ✅ Implemented (`phase2-redis` Deployment in `platform/data/redis.yaml`, GitOps Application: platform-data) | `platform/data/redis.yaml`, `docker-compose.yml` profile="phase2" |
-| **Postgres** | Offline feature store + project/ml_metadata | ✅ Implemented (phase2-postgres PGVector in `platform/data/postgres-pgvector.yaml`, GitOps) | `platform/data/postgres-pgvector.yaml` |
+| **Postgres** | Offline feature store + project/ml | ✅ Implemented (phase2-postgres PGVector in `platform/data/postgres-pgvector.yaml`, GitOps) | `platform/data/postgres-pgvector.yaml` |
 
 ### Layer 6: Model Serving + LLM
 
@@ -191,7 +191,7 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 |---|---|---|---|---|
 | **Kubeflow Pipelines** | None; phase-05-deliver-ml-track.md plan exists but unexecuted | ❌ **MISSING** | (source plan only) | ML track deferred; requires K8s Operator install + Trainer CRD |
 | **Ray Cluster** | None; not mentioned in detail plans | ❌ **MISSING** | — | Distributed training backend; must coexist with Kubeflow |
-| **MLflow Server** | None; phase-05 plan only | ❌ **MISSING** | — | Requires ml_metadata Postgres (which exists); Helm chart absent |
+| **MLflow Server** | None; phase-05 plan only | ❌ **MISSING** | — | Requires ml Postgres (which exists); Helm chart absent |
 | **Iceberg** | None; Phase 1 uses Parquet only | ❌ **MISSING** | source repo | Schema-on-write table format; requires Spark catalog + MinIO setup |
 | **Spark on K8s** | Local PySpark only; no Spark Operator CRD | 🟡 **PARTIAL** | `src/transforms/` + (missing GitOps) | Jobs run locally; K8s executor model undefined |
 | **Trino** | None | ❌ **MISSING** | — | SQL federation layer over MinIO/Iceberg; requires Catalog config |
@@ -548,7 +548,7 @@ No Kubeflow, MLflow, Spark-on-K8s, Trino, Superset tests exist in source or veri
 ```
 LOCAL DEVELOPMENT (Docker Compose)
 ├── Phase 1 Lakehouse (verified, reproducible)
-│   ├── Postgres:16 (project_metadata)
+│   ├── Postgres:16 (ops)
 │   ├── MinIO (Bronze/Silver/Gold Parquet)
 │   ├── Kafka:3.9.0 (KRaft, event topics)
 │   ├── Airflow (DP1/DP2/DP3 DAGs, LocalExecutor)
@@ -560,7 +560,7 @@ LOCAL DEVELOPMENT (Docker Compose)
 │
 └── Phase 2 Optional (profile="phase2")
     ├── Redis (Feast online store, `phase2-redis`)
-    └── PGVector Postgres (ml_metadata, RAG, `phase2-postgres`)
+    └── PGVector Postgres (ml, RAG, `phase2-postgres`)
 
 GKE CLUSTER (financial-distress-gitops, asia-southeast1-b, 48 vCPU target)
 ├── Argo CD Namespace (argocd)
@@ -582,7 +582,7 @@ GKE CLUSTER (financial-distress-gitops, asia-southeast1-b, 48 vCPU target)
 │
 ├── Data & Feature Layer (phase2-data)
 │   ├── Redis Deployment (Feast online store)
-│   ├── PGVector Postgres (ml_metadata, RAG embeddings)
+│   ├── PGVector Postgres (ml, RAG embeddings)
 │   ├── RAG pipeline CronJob (suspend: true outside capture windows)
 │   └── Network policies (default-deny ingress/egress, allow-list based)
 │

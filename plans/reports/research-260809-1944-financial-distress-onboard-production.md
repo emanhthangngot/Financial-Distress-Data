@@ -42,7 +42,7 @@ Thông điệp production nên dùng:
 | Deterministic input | `VnstockFixtureAdapter`, configurable generator and streaming problem factory | Implemented for CI/smoke/evidence |
 | Bronze/Silver/Gold | MinIO Parquet paths, Python helpers and Spark-compatible transforms | Implemented and tested; local runtime evidence exists |
 | Streaming | Kafka topics, event contracts, micro-batch consumer and Bronze partitions | Implemented as local contract/runtime path |
-| DQ/metadata | PostgreSQL `project_metadata`, in-memory writer, critical/warning semantics | Implemented |
+| DQ/metadata | PostgreSQL `ops`, in-memory writer, critical/warning semantics | Implemented |
 | Feature correctness | PIT joins based on `report_release_date`/`event_timestamp` | Implemented contract and validation |
 | Distress labels | Rule-based Altman Z''-inspired labeler with warnings, confidence and rule version | Implemented; not an ML model |
 | RAG | Chunking, hash dedupe, governance, embedding backend and PGVector store | Additive Phase 2 code; default evidence path still uses committed text fixtures |
@@ -189,7 +189,7 @@ Typical checks:
 - freshness SLA;
 - volume/retention change.
 
-`project_metadata` records pipeline runs, DQ results, dataset freshness, schema
+`ops` records pipeline runs, DQ results, dataset freshness, schema
 versions, failed records, backfill requests, source request logs and collector
 checkpoints. This is what makes a data result operationally explainable.
 

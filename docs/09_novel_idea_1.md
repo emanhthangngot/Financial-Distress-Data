@@ -7,9 +7,9 @@ new view is added under `sql/duckdb_create_views.sql` with a typo in the
 layer prefix (e.g. `gold_dim_company_x` instead of
 `gold_dim_company_x_v2`), the failure is silent: the view parses,
 DBeaver can browse it, and the downstream DuckDB queries keep
-returning data - just the wrong data. Phase 1 already standardises
+returning data - just the wrong data. the platform already standardises
 the *physical* layer (`gold/`) and the *logical* layer (dim/fact/obt/feat)
-in `docs/02_schema_design.md`, but the link between the two has to be
+in `docs/architecture/data-model.md`, but the link between the two has to be
 remembered by humans. We need a machine-checkable contract so a typo
 becomes a CI failure rather than a production incident.
 
@@ -94,6 +94,6 @@ the convention; no rework needed.
 1. Wire the runner into the data quality DAG (`dags/09_data_contracts.py`
    or equivalent) so the evidence is regenerated on every run.
 2. Extend the allowed prefix set to include `silver_*` once Silver
-   views are added in Phase 2.
+   views are added in the platform.
 3. Add a pre-commit hook that runs the runner on staged changes to
    `sql/duckdb_create_views.sql`.

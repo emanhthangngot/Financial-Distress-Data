@@ -151,11 +151,11 @@ Ba identifier, một trục thời gian. `phase-05:61` lại dùng `feature.know
 
 | Suffix | Số lần | Ở đâu |
 |---|---|---|
-| `_ts` | 21 (`created_ts`, `updated_ts`, `fetched_ts`, `quarantined_ts`, `last_event_ts`…) | `ml_metadata`, gold tables |
+| `_ts` | 21 (`created_ts`, `updated_ts`, `fetched_ts`, `quarantined_ts`, `last_event_ts`…) | `ml`, gold tables |
 | `_timestamp` | 19 (`event_timestamp`, `feature_event_timestamp`, `latest_event_timestamp`) | Feast-mandated + gold |
-| `_at` | ~20 (`created_at`, `checked_at`, `started_at`, `ended_at`, `requested_at`) | `project_metadata` |
+| `_at` | ~20 (`created_at`, `checked_at`, `started_at`, `ended_at`, `requested_at`) | `ops` |
 
-Tức `ops` (tên mới của `project_metadata`) dùng `_at`, `ml` (`ml_metadata`) dùng `_ts`. P2 thống nhất
+Tức `ops` (tên mới của `ops`) dùng `_at`, `ml` (`ml`) dùng `_ts`. P2 thống nhất
 **type** (TIMESTAMPTZ, `phase-02:45`) nhưng **không** thống nhất **tên**. Rồi thêm `known_from` không
 suffix = cái thứ tư.
 
@@ -440,7 +440,7 @@ composite PK, đúng grain, có version axis. Chỉ tên là dở.
 
 **Đề xuất:** `ml.distress_label`. Giữ nguyên PK.
 
-Ghi chú tích cực: `ml_metadata` nhìn chung **tốt hơn** `project_metadata` ở mọi mặt P2 định sửa —
+Ghi chú tích cực: `ml` nhìn chung **tốt hơn** `ops` ở mọi mặt P2 định sửa —
 đã TIMESTAMPTZ, đã `_ts` suffix, đã có FK thật (`rag_chunk.document_hash → rag_document`,
 `:55`), đã có composite natural PK. Hướng migration đúng là kéo `ops` về chuẩn của `ml`, không phải
 gặp nhau ở giữa.

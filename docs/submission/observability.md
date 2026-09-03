@@ -16,12 +16,12 @@ Jaeger trace).
 
 | Row | Status | Evidence |
 |---|---|---|
-| Collect + visualize metrics (Prometheus + Grafana) | executed | [LLM-observability-collect-v-visualize-metrics-v-.md](../phase2/evidence/llm/LLM-observability-collect-v-visualize-metrics-v-.md) |
-| Web API metrics | executed | [LLM-observability-web-api-metrics.md](../phase2/evidence/llm/LLM-observability-web-api-metrics.md) |
-| Logs (same request, queried live) | executed | [LLM-observability-t-ng-t-cho-logs.md](../phase2/evidence/llm/LLM-observability-t-ng-t-cho-logs.md) |
-| Traces (same request, JSON persisted) | executed | [LLM-observability-t-ng-t-cho-traces.md](../phase2/evidence/llm/LLM-observability-t-ng-t-cho-traces.md) |
-| Token/TTFT/PII-catch metrics | executed | [LLM-observability-m-b-o-t-nh-t-c-c-metrics.md](../phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md) |
-| Agent/MCP-tool call metrics | executed | [LLM-observability-agent-tool-call-metrics.md](../phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md) |
+| Collect + visualize metrics (Prometheus + Grafana) | executed | [LLM-observability-collect-v-visualize-metrics-v-.md](../platform/evidence/llm/LLM-observability-collect-v-visualize-metrics-v-.md) |
+| Web API metrics | executed | [LLM-observability-web-api-metrics.md](../platform/evidence/llm/LLM-observability-web-api-metrics.md) |
+| Logs (same request, queried live) | executed | [LLM-observability-t-ng-t-cho-logs.md](../platform/evidence/llm/LLM-observability-t-ng-t-cho-logs.md) |
+| Traces (same request, JSON persisted) | executed | [LLM-observability-t-ng-t-cho-traces.md](../platform/evidence/llm/LLM-observability-t-ng-t-cho-traces.md) |
+| Token/TTFT/PII-catch metrics | executed | [LLM-observability-m-b-o-t-nh-t-c-c-metrics.md](../platform/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md) |
+| Agent/MCP-tool call metrics | executed | [LLM-observability-agent-tool-call-metrics.md](../platform/evidence/llm/LLM-observability-agent-tool-call-metrics.md) |
 
 ## Bugs found and fixed during capture
 
@@ -51,8 +51,8 @@ Jaeger trace).
 
 ## Verification
 
-- `.venv-phase2/bin/python -m pytest tests/phase2/requirements/ -k llm -q` — 31 passed.
-- `.venv-phase2/bin/python scripts/audit_phase2_evidence.py --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 --gitops-root <gitops-repo> --phase1-base <sha>` — zero named cuts; 60/60 LLM rows and 100/100 points.
+- `.venv-platform/bin/python -m pytest tests/platform/requirements/ -k llm -q` — 31 passed.
+- `.venv-platform/bin/python scripts/audit_phase2_evidence.py --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 --gitops-root <gitops-repo> --lakehouse-base <sha>` — zero named cuts; 60/60 LLM rows and 100/100 points.
 - Live Prometheus target health, Grafana datasource-proxy query, Loki
   `query_range`, and Jaeger `api/traces/<id>` responses are reproduced verbatim
   in each linked evidence file.

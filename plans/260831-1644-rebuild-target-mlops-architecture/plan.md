@@ -65,7 +65,7 @@ This plan replaces the 2026-08-31 arbiter version. Three user decisions drive th
 |---|---|---|---|
 | **N-5** "No changes to Phase 1 Bronze/Silver/Gold Parquet semantics (Iceberg runs parallel)" | previous `plan.md:87` | **REVOKED** | Directly contradicts G-2 "one table format (Iceberg); zero shims". A parallel Parquet path is a shim. Both cannot hold. |
 | **G-3** "Phase 1 data contracts immutable" | previous `plan.md:72` | **AMENDED** | Now: *contracts are immutable **after P2 exit***. The current contracts contain defects that block rubric rows and defeat the project's own leakage guard (see §Data Model Findings). |
-| **AGENTS.md** "`project_metadata` (Phase 1) vs `ml_metadata` (Phase 2) — don't cross-write" | `AGENTS.md:11` | **REVOKED** | The split is the phase boundary being erased. Replaced by one database, two renamed schemas, with real foreign keys. |
+| **AGENTS.md** "`ops` (Phase 1) vs `ml` (Phase 2) — don't cross-write" | `AGENTS.md:11` | **REVOKED** | The split is the phase boundary being erased. Replaced by one database, two renamed schemas, with real foreign keys. |
 | **AGENTS.md** "Dedupe by business key + latest `created_ts`" | `AGENTS.md:10` | **AMENDED** | Now: dedupe on the business key **including the vintage axis**; `is_latest_vintage` is a derived flag. The old rule destroys restatement history. |
 | **N-2** "Kyverno and Linkerd stay archived" | previous `plan.md:84` | **RETAINED** | Istio is in the target image and the image must be live. Linkerd stays archived. |
 
@@ -142,8 +142,8 @@ All verified in-repo on 2026-09-01. Full audit:
 | D-9 | `report_period` + `fiscal_year` + `fiscal_quarter` encode one fact three times with no enforced consistency. | `schema_registry.py:108-117` |
 | D-10 | Money is `DOUBLE`. Market-wide aggregates over ~1600 companies in VND exceed 2^53, so `assets = liabilities + equity` has no principled DQ tolerance. **Amended 2026-09-02b (U-1, measured): target is `DECIMAL(18,0)`.** vnstock statements arrive in whole đồng at 1,000đ granularity (`explorer/kbs/financial.py:572,369,259`), so scale 0 loses nothing. Measured: 9.36 B/value at precision 18 vs 16.66 at 38 (pyarrow 25.0.0); Spark 4.2.0 promotes `SUM(DECIMAL(18,0))` → `DECIMAL(28,0)` while `DECIMAL(38,2)` **cannot promote**. The earlier `DECIMAL(38,2)` and `DECIMAL(20,2)` targets are both superseded | `schema_evidence.sql:14-15,22,44,72`; `docs/07_data_contracts.md:120-124`; vnstock 4.0.7 wheel |
 | D-11 | `check_id TEXT PRIMARY KEY` = `uuid4()`. The PK constrains nothing and DQ writes are not idempotent. | `init_project_metadata.sql:18`; `metadata_writer.py:357` |
-| D-12 | `project_metadata` has **zero** foreign keys; three `run_id` columns reference `pipeline_run_log` by naming convention only. | `sql/init_project_metadata.sql` |
-| D-13 | Naive `TIMESTAMP` in `project_metadata` vs `TIMESTAMPTZ` in `ml_metadata` → a 7-hour silent error class on a UTC+7 domain. | both `sql/init_*.sql` |
+| D-12 | `ops` has **zero** foreign keys; three `run_id` columns reference `pipeline_run_log` by naming convention only. | `sql/init_project_metadata.sql` |
+| D-13 | Naive `TIMESTAMP` in `ops` vs `TIMESTAMPTZ` in `ml` → a 7-hour silent error class on a UTC+7 domain. | both `sql/init_*.sql` |
 | D-14 | `schema_version_registry.is_current` has no partial unique index; two rows can both be current. | `init_project_metadata.sql:40-48` |
 | D-15 | Canonical layout is **one file per dataset**, no partitioning, against a 10-50M row target. | `src/io/paths.py:13-14` |
 | D-16 | The graded ERD declares six FKs on `company_version_key` that the pipeline never writes; its generator inserts two hardcoded rows, leaves all fact tables **empty**, and asserts `foreign_key_count >= 4` from `information_schema`. It cannot fail because of pipeline behavior. | `sql/schema_evidence.sql:63,70,77`; `scripts/build_schema_evidence.py:19-24,73-80` |
@@ -185,8 +185,8 @@ Surface measured 2026-09-01: **~90 paths** carry `phase1`/`phase2`/`stage1` in t
 | ns `phase2-data` | ns `dataflow` | |
 | ns `phase2-llm` | dissolved into `kserve` | |
 | ns `monitoring` | ns `observability` | |
-| Postgres schema `project_metadata` | schema `ops` | |
-| Postgres schema `ml_metadata` | schema `ml` | |
+| Postgres schema `ops` | schema `ops` | |
+| Postgres schema `ml` | schema `ml` | |
 | Terraform/GKE label `phase=phase2` | `component=unified-platform` | |
 | `docs/evidence/stage1_*.json` | regenerated under the unified tree | deleted, not renamed |
 
@@ -200,7 +200,7 @@ schema audit, and they are owned by **P2**, not P1 — P2 already rewrites `sql/
 |---|---|---|
 | `gold.distress_labels` | `gold.fact_distress_label` | mini row 43 clause 1 — no prefix, plural among singular peers |
 | `gold.distress_holdout_v1` | `gold.distress_holdout` | version lives in the Iceberg tag `holdout-v1` only |
-| `ml_metadata.label_table` | `ml.distress_label` | "table" inside a table name |
+| `ml.label_table` | `ml.distress_label` | "table" inside a table name |
 | `bronze.{companies,financial_statements,market_prices_daily}` | `bronze.raw_*` | mini row 43 clause 2 (D-20) |
 | `silver.{companies,financial_statements,market_prices_daily}` | `silver.stg_*` | mini row 43 clause 2 (D-20) |
 | `ops.*_at` (8 columns) | `ops.*_ts` | one timestamp suffix project-wide |

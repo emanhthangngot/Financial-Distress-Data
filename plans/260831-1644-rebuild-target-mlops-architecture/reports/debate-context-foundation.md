@@ -9,7 +9,7 @@
 
 ## Loaded project rules
 
-- Repository `AGENTS.md`: Bronze append-only; Silver/Gold idempotent affected-partition overwrite only; dedupe by business key plus latest `created_ts`; critical DQ failures halt downstream; warnings route to `project_metadata.failed_records`; `project_metadata` and `ml_metadata` remain separate.
+- Repository `AGENTS.md`: Bronze append-only; Silver/Gold idempotent affected-partition overwrite only; dedupe by business key plus latest `created_ts`; critical DQ failures halt downstream; warnings route to `ops.failed_records`; `ops` and `ml` remain separate.
 - Repository `AGENTS.md`: acceptance criteria use `WHO -> ACTION -> RESULT`; any code implementation later must pass `scripts/run_stage1_quality_gates.py`.
 - Global development rules: KISS/YAGNI/DRY order, real behavior, scoped changes, current docs, focused verification, no secrets.
 - Sibling GitOps `AGENTS.md`: Argo CD is the only managed-namespace mutator; source may commit only immutable digest bumps; images use `@sha256`; Terraform is reviewed; GitOps validation is `make validate`.

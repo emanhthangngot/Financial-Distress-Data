@@ -63,7 +63,7 @@ working as designed and are out of scope.
 - MFA/TOTP enrollment (explicitly deferred by the AAL2 relaxation decision).
 - Admin UI for editing other users' roles (role changes stay SQL/service-role).
 - Password reset by email, OAuth providers, magic links.
-- Any change to Phase 1 pipelines, DAGs, or the `project_metadata` schema.
+- Any change to Phase 1 pipelines, DAGs, or the `ops` schema.
 
 ## Phases
 

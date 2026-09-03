@@ -156,7 +156,7 @@ Impact:
 Recommendation:
 
 - Persist failed rows with dataset, reason, raw payload, run ID, and timestamp.
-- Add an integration test verifying rejected Bronze input appears in `project_metadata.failed_records` before the task completes.
+- Add an integration test verifying rejected Bronze input appears in `ops.failed_records` before the task completes.
 
 ### 4. Freshness Check Uses A Fixed Historical Reference
 

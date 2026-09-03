@@ -25,7 +25,7 @@ def test_compose_defines_init_services_and_host_kafka_listener():
 
 
 def test_market_price_schema_seed_matches_python_contract():
-    sql = Path("sql/init_project_metadata.sql").read_text(encoding="utf-8")
+    sql = Path("sql/init_ops.sql").read_text(encoding="utf-8")
     contract = InMemorySchemaRegistry().get_current("market_prices_daily")
 
     for nullable_field in contract.nullable:

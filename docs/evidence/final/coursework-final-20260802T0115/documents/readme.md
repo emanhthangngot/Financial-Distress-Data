@@ -33,7 +33,7 @@ The platform is a **local-first financial-distress data lakehouse** for Vietname
 Primary users:
 
 - **Data engineer** — owns the Airflow DAGs, Kafka topics, PySpark transforms, MinIO layout, and PostgreSQL metadata.
-- **ML engineer** — consumes Gold features and `obt_company_quarter_risk` to train, score, and monitor financial-distress models (Phase 2).
+- **ML engineer** — consumes Gold features and `obt_company_quarter_risk` to train, score, and monitor financial-distress models (the platform).
 - **Analyst / reviewer** — opens DBeaver or DuckDB against the local lakehouse to validate row counts, SCD2 history, lineage, and data contracts.
 
 Why it matters: a missed early warning on a stressed issuer costs downstream capital and credit decisions. The platform compresses that feedback loop by putting curated, quality-checked, lineage-tracked data one query away from the consumer.
@@ -42,7 +42,7 @@ Why it matters: a missed early warning on a stressed issuer costs downstream cap
 
 Each node in the diagram below is a **deployable unit**: Airflow, Kafka, Flink (opt-in), PySpark (local mode), MinIO, PostgreSQL, DuckDB, and DBeaver run as separate processes or containers. Arrows follow the data flow direction; solid arrows are the primary Stage 1 paths, dashed arrows mark optional or profile-gated flows (for example the Flink streaming path, which is started with `--profile flink`).
 
-DuckDB is used only as a local, single-node SQL inspection engine for DBeaver and reviewer evidence over MinIO Parquet. It is not a horizontally scalable serving layer, and pipeline correctness does not depend on DuckDB; governance records are stored in PostgreSQL `project_metadata` with MinIO Parquet evidence mirrors.
+DuckDB is used only as a local, single-node SQL inspection engine for DBeaver and reviewer evidence over MinIO Parquet. It is not a horizontally scalable serving layer, and pipeline correctness does not depend on DuckDB; governance records are stored in PostgreSQL `ops` with MinIO Parquet evidence mirrors.
 
 ![Stage 1 architecture diagram — Airflow, Kafka, Flink opt-in, PySpark, MinIO, PostgreSQL, DuckDB, DBeaver](images/architecture/architecture-stage-1.png)
 
@@ -76,7 +76,7 @@ The latest committed evidence package reports `status: pass` in
 |---|---|
 | Airflow pipeline | `stage1_real_e2e_pipeline` finished successfully in `docs/evidence/stage1_real_airflow_dag_test.txt` |
 | Kafka streaming | Offsets exist for `financial.price_events`, `financial.news_events`, and `financial.alert_events` |
-| MinIO lakehouse | 436 objects across Bronze, Silver, Gold, and `evidence/stage1/` prefixes |
+| MinIO lakehouse | 436 objects across Bronze, Silver, Gold, and `evidence/lakehouse/` prefixes |
 | PostgreSQL metadata | `pipeline_run_log`, `data_quality_result`, `dataset_freshness`, `backfill_request`, `source_request_log`, and `collector_checkpoint` exported in `docs/evidence/stage1_real_postgres_summary.json` |
 | DuckDB validation | Gold row counts, duplicate checks, distress-label distribution, and PIT leakage checks exported in `docs/evidence/stage1_real_duckdb_validation.json` |
 | DQ failure handling | Critical DQ failure probe confirms failure is persisted before halt |
@@ -108,10 +108,10 @@ the local pipeline when needed.
 
 ## API Surface
 
-There is no REST/FastAPI service in Phase 1. This mini-coursework focuses on
+There is no REST/FastAPI service in the platform. This mini-coursework focuses on
 local data engineering evidence: collectors, Kafka contracts, Bronze/Silver/Gold
 lakehouse transforms, PostgreSQL metadata, DQ, and DuckDB/DBeaver inspection.
-API serving is documented only as a Phase 2 or optional extension in
+API serving is documented only as a the platform or optional extension in
 `docs/coursework.md`, so OpenAPI/Swagger docs are not part of the current
 submission scope.
 
@@ -162,8 +162,8 @@ The README only summarizes the project. Detailed design notes, contracts, and ru
 - [Business problem and dataset scope](docs/idea.md) — Phase 0 problem discovery.
 - [Nexlab SDD operating model](docs/spec.md) — spec-driven development workflow and phase gates.
 - [Data generator contract (W17 knobs, evidence)](docs/01_data_generator.md) — how the fixture-backed adapter shapes the offline and streaming inputs.
-- [Schema design (Medallion, SCD2, feature tables)](docs/02_schema_design.md) — Bronze / Silver / Gold layout, naming convention, and the `obt_company_quarter_risk` contract.
-- [Schema design evidence and ERD](docs/schema-design.md) — DBeaver/DuckDB visualization of all zones.
+- [Schema design (Medallion, SCD2, feature tables)](docs/architecture/data-model.md) — Bronze / Silver / Gold layout, naming convention, and the `obt_company_quarter_risk` contract.
+- [Schema design evidence and ERD](docs/architecture/data-model.md) — DBeaver/DuckDB visualization of all zones.
 - [Storage optimization (compaction, Z-order, DuckDB indexes)](docs/05_storage_optimization.md) — Gold-zone small-file compaction, Z-order clustering, and DuckDB index benchmarks.
 - [Spark and storage optimization evidence](docs/spark-and-storage-optimization.md) — baseline vs optimized Spark results.
 - [Flink stream processing evidence](docs/flink-stream-processing.md) — burst, late arrival, duplicate, and window processing.
@@ -212,7 +212,7 @@ s3a://financial-distress-lake/gold/distress_labels/
 
 `distress_labels` is the only Gold folder that does not use the
 `dim_/fact_/obt_/feat_` family because it carries the label targets
-that the Phase 2 ML training reads; it is intentionally a single
+that the the platform ML training reads; it is intentionally a single
 top-level folder so the labels are easy to discover and audit.
 
 ### Bronze and Silver
@@ -301,13 +301,13 @@ PostgreSQL, and DuckDB.
 ```bash
 .venv/bin/python scripts/run_stage1_real_e2e.py \
   --execution-date 2026-06-06T10:04:00+00:00 \
-  --export-evidence /tmp/stage1-e2e
+  --export-evidence /tmp/lakehouse-e2e
 ```
 
 Generate a machine-readable audit summary for the E2E artifacts.
 
 ```bash
-.venv/bin/python scripts/audit_stage1_evidence.py /tmp/stage1-e2e
+.venv/bin/python scripts/audit_stage1_evidence.py /tmp/lakehouse-e2e
 ```
 
 Validate the checked-in submission evidence without regenerating files.
@@ -327,14 +327,14 @@ Prove critical DQ failures are persisted before the pipeline halts.
 
 ```bash
 .venv/bin/python scripts/run_stage1_dq_failure_probe.py \
-  --run-id stage1-dq-failure-probe \
-  --export-evidence /tmp/stage1-dq-failure-probe
+  --run-id lakehouse-dq-failure-probe \
+  --export-evidence /tmp/lakehouse-dq-failure-probe
 ```
 
 For a no-service payload check:
 
 ```bash
-.venv/bin/python scripts/run_stage1_evidence.py --dry-run --evidence-dir /tmp/stage1-evidence
+.venv/bin/python scripts/run_stage1_evidence.py --dry-run --evidence-dir /tmp/lakehouse-evidence
 ```
 
 Run the primary Airflow evidence DAG once from the CLI.
@@ -346,7 +346,7 @@ docker compose exec airflow-scheduler airflow dags test stage1_local_evidence_pi
 Runtime evidence artifacts are written to MinIO:
 
 ```txt
-financial-distress-lake/evidence/stage1/run_id=.../
+financial-distress-lake/evidence/lakehouse/run_id=.../
 ```
 
 Expected files:
@@ -424,22 +424,22 @@ PostgreSQL metadata checks:
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, status, count(*) from project_metadata.pipeline_run_log group by dataset_name, status order by dataset_name, status;"
+"select dataset_name, status, count(*) from ops.pipeline_run_log group by dataset_name, status order by dataset_name, status;"
 ```
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, check_name, status, severity, count(*) from project_metadata.data_quality_result group by dataset_name, check_name, status, severity order by dataset_name, check_name;"
+"select dataset_name, check_name, status, severity, count(*) from ops.data_quality_result group by dataset_name, check_name, status, severity order by dataset_name, check_name;"
 ```
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, status, freshness_lag_minutes, sla_minutes from project_metadata.dataset_freshness;"
+"select dataset_name, status, freshness_lag_minutes, sla_minutes from ops.dataset_freshness;"
 ```
 
 ```bash
 docker compose exec postgres psql -U airflow -d financial_distress -c \
-"select dataset_name, start_date, end_date, status, requested_by from project_metadata.backfill_request order by created_at desc limit 20;"
+"select dataset_name, start_date, end_date, status, requested_by from ops.backfill_request order by created_at desc limit 20;"
 ```
 
 DuckDB validation output is generated at:

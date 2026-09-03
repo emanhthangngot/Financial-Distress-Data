@@ -26,7 +26,7 @@ half that no rubric row scores:
 | SLOs as burn-rate alerts | `slo` appears in phases 2 and 5 as latency targets, never as an alerting contract |
 | NetworkPolicy beyond the agent sandbox | `networkpolicy` only in phase 6 |
 | Vault single-node, auto-unseal via KMS, no HA / no rotation policy | phase-04 step 7 |
-| Postgres single instance carrying `project_metadata`, `ml_metadata`, Iceberg REST catalog, Feast offline store, DataHub and (phase 9) the web app | phase 4 + phase 9 |
+| Postgres single instance carrying `ops`, `ml`, Iceberg REST catalog, Feast offline store, DataHub and (phase 9) the web app | phase 4 + phase 9 |
 
 That last row is the real single point of failure: one Postgres is simultaneously the
 lakehouse catalog, the feature store's offline half, the governance store and the app

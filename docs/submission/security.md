@@ -14,7 +14,7 @@ mesh-free design (Istio dropped, see phase-03 Scope Changes).
 - No service-account key JSON anywhere; Workload Identity for in-cluster
   GCP access, `gcloud auth application-default login` for Terraform.
 - Restricted-PSS sandbox namespace: executed evidence is recorded in the
-  canonical agent sandbox rows under `docs/phase2/evidence/llm/`.
+  canonical agent sandbox rows under `docs/platform/evidence/llm/`.
 
 Status: the security rows are executed in the canonical matrix. Gateway
 authentication and viewer-route captures are indexed separately under Routing

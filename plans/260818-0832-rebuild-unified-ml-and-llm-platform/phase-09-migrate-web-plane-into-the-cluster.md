@@ -70,7 +70,7 @@ browser ─HTTPS─▶ NGINX Ingress ─▶ web (Next.js, Helm, Argo CD)
 
 Supabase leaves entirely. The two things it provided — Postgres and an auth layer —
 are both already in the cluster: PostgreSQL is running for Feast offline, DataHub
-and `ml_metadata`, and session handling moves into the app against a `webapp`
+and `ml`, and session handling moves into the app against a `webapp`
 database of its own, consistent with the existing no-cross-write schema rule.
 
 Vercel leaves with it. The app becomes an ordinary deployable: image built by

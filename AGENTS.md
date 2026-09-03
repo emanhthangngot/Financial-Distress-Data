@@ -26,9 +26,9 @@ does not own.** Phase file ownership is listed in `plan.md` §File ownership.
   never full-table overwrite.
 - Dedupe by business key + latest `created_ts`. **This destroys restatement history** — it is a
   known defect (plan D-3), not a rule to preserve. Do not build new logic that depends on it.
-- DQ results go to `project_metadata.data_quality_result`; critical failures halt downstream tasks;
-  warning-level failures route rows to `project_metadata.failed_records` and may continue.
-- PostgreSQL schemas are still split `project_metadata` / `ml_metadata`. The cross-write ban is
+- DQ results go to `ops.data_quality_result`; critical failures halt downstream tasks;
+  warning-level failures route rows to `ops.failed_records` and may continue.
+- PostgreSQL schemas are still split `ops` / `ml`. The cross-write ban is
   **revoked** by the plan but the schemas are not merged yet — do not cross-write until P2 lands.
 - Money is still `DOUBLE`. Do not add new `DOUBLE` money columns; if you must add one now, add it as
   `DECIMAL(18,0)` so P2's migration has nothing to fix.

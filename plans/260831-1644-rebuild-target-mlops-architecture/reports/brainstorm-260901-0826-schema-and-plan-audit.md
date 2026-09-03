@@ -229,7 +229,7 @@ DBeaver or similar tools) — 2 điểm"**. Đây chính là row mà fixture gi�
 | 4 | Mã hoá dư thừa không ràng buộc | `schema_registry.py:108-117` | `report_period`("2024Q1") + `fiscal_year` + `fiscal_quarter` — ba cột cho một sự kiện, không gì bắt chúng nhất quán |
 | 5 | Tiền là `DOUBLE` | `sql/schema_evidence.sql:14-15,22,44,72`, `docs/07_data_contracts.md:120-124` | Double chỉ chính xác nguyên đến 2^53≈9.0e15. Tổng tài sản một ngân hàng VN ≈ 2e15 VND — còn 4.5× dư địa. **Tổng toàn thị trường ~1600 công ty vượt 2^53.** Hệ quả cụ thể: đẳng thức `assets = liabilities + equity` cho residual khác 0, nên DQ check phải chọn một tolerance tuỳ tiện không có cơ sở |
 | 6 | `check_id TEXT PRIMARY KEY` = `uuid4()` | `sql/init_project_metadata.sql:18`, `src/metadata/metadata_writer.py:357` | PK không ràng buộc gì (uuid4 không bao giờ đụng). Ghi DQ **không idempotent** — chạy lại cùng `run_id` nhân đôi dòng. Khoá đúng phải là `(run_id, dataset_name, check_name)` |
-| 7 | `project_metadata` có **zero** foreign key | `sql/init_project_metadata.sql` toàn bộ | `run_id` trong `data_quality_result`, `failed_records`, `source_request_log` tham chiếu `pipeline_run_log` **chỉ bằng quy ước đặt tên** |
+| 7 | `ops` có **zero** foreign key | `sql/init_project_metadata.sql` toàn bộ | `run_id` trong `data_quality_result`, `failed_records`, `source_request_log` tham chiếu `pipeline_run_log` **chỉ bằng quy ước đặt tên** |
 | 8 | `schema_version_registry.is_current` không có ràng buộc | `init_project_metadata.sql:40-48` | Không gì ngăn hai dòng cùng `is_current=TRUE` cho một dataset. Cần partial unique index |
 | 9 | `TIMESTAMP` naive vs `TIMESTAMPTZ` | `init_project_metadata.sql` vs `init_ml_metadata.sql` | Domain là VN (UTC+7), pipeline chạy UTC → **lớp lỗi 7 giờ âm thầm**, rơi đúng vào `freshness_lag_minutes` và mọi so sánh PIT |
 | 10 | `status`/`severity`/`request_status` là free text | `init_project_metadata.sql`, `dq_checks.py:18-19` | Không CHECK, không enum. Tập giá trị hợp lệ chỉ tồn tại trong đầu người viết code |
@@ -242,7 +242,7 @@ DBeaver or similar tools) — 2 điểm"**. Đây chính là row mà fixture gi�
 ### Phương án A — Chạy plan như đã duyệt, sửa schema sau
 
 - **Chi phí sửa tăng đơn điệu theo từng phase.** Sau P2 là migrate lakehouse; sau P3 thêm Kafka
-  topic schema + Flink state + Feast registry (`ml_metadata.feast_registry_revision` giữ
+  topic schema + Flink state + Feast registry (`ml.feast_registry_revision` giữ
   `registry_digest` và `feature_view_count` — đổi schema là vô hiệu cả hai); sau P9 là regenerate
   evidence tree **lần thứ hai**.
 - **Plan đang cấm chính cái sửa đó** (G-3, N-5). Bạn sẽ dành 82–119 ngày thực thi một plan có
@@ -393,7 +393,7 @@ minh toàn vẹn tham chiếu trên dữ liệu thật.
 
 ---
 
-## 7. Gộp `project_metadata` và `ml_metadata`
+## 7. Gộp `ops` và `ml`
 
 **Cái gì thực sự vỡ khi gộp thô:**
 
@@ -401,7 +401,7 @@ minh toàn vẹn tham chiếu trên dữ liệu thật.
    `check_id TEXT PRIMARY KEY`. Gộp vào một namespace → đụng PK. Khác nhau đúng một điểm:
    `TIMESTAMP DEFAULT CURRENT_TIMESTAMP` vs `TIMESTAMPTZ DEFAULT now()`.
 2. **Lệch kiểu timestamp toàn bộ bề mặt** — xem §3.5 #9. **Đây là thứ sẽ thực sự cắn bạn.**
-3. **Hai instance Postgres vật lý.** `ml_metadata` chạy trên `pgvector/pgvector:pg16`. Gộp đòi
+3. **Hai instance Postgres vật lý.** `ml` chạy trên `pgvector/pgvector:pg16`. Gộp đòi
    instance sống sót phải có `pgvector` và di chuyển vector 384 chiều + HNSW index.
 4. **`AGENTS.md:11` cấm cross-write.** **Đã kiểm tra: chỉ được thực thi bằng văn xuôi** —
    `AGENTS.md:11` và `docs/project-file-map.md:386`. **Không có test hay code nào enforce.**
@@ -410,8 +410,8 @@ minh toàn vẹn tham chiếu trên dữ liệu thật.
 
 **Gộp an toàn tối thiểu:**
 
-- **Một database, hai schema** — không phải một schema phẳng. Đổi tên `project_metadata` → `ops`,
-  `ml_metadata` → `ml`. Được một connection, FK xuyên schema, một truy vấn lineage; giữ được tách
+- **Một database, hai schema** — không phải một schema phẳng. Đổi tên `ops` → `ops`,
+  `ml` → `ml`. Được một connection, FK xuyên schema, một truy vấn lineage; giữ được tách
   biệt namespace và quyền sở hữu. Đổi tên cũng xoá luôn từ vựng "phase" — đó chính là mục đích.
 - **TIMESTAMPTZ khắp nơi, UTC, không ngoại lệ.** Migrate cột `ops` bằng
   `AT TIME ZONE 'UTC'` **tường minh**, không bao giờ `ALTER TYPE` trần (cast trần diễn giải lại giá
@@ -438,7 +438,7 @@ minh toàn vẹn tham chiếu trên dữ liệu thật.
 **Việc chia đôi có bào chữa được không?** Trước đây có — hai instance, hai vòng đời độc lập, khi
 các phase là hai deliverable riêng. **Bây giờ thì không**, trong một bài nộp mà luận điểm là một
 platform thống nhất. Việc chia đôi *chính là* ranh giới phase bạn muốn xoá, nhúng vào tầng dữ liệu;
-người chấm mở hai file DDL sẽ thấy `-- Phase 2 ml_metadata schema` ở dòng comment đầu tiên.
+người chấm mở hai file DDL sẽ thấy `-- Phase 2 ml schema` ở dòng comment đầu tiên.
 
 ---
 

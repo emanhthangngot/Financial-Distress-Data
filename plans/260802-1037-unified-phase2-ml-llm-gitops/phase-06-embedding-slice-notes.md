@@ -161,7 +161,7 @@ nothing in this slice blocks it.
 
 `EmbeddingRegistryService` (`src/llm/contracts.py:42-61`) is abstract-only; no
 concrete class exists (`src/llm/` holds only `contracts.py`), and
-`ml_metadata.rag_chunk` does not exist until phase-04 slice 4A. Implementing
+`ml.rag_chunk` does not exist until phase-04 slice 4A. Implementing
 `register_version` here would mean building the registry, the table, and the
 hot-swap path — all phase-06/novel-idea scope.
 
@@ -205,7 +205,7 @@ registry gets its inputs for free when it lands.
       <- {"data":[{"embedding":[384 floats]},...],"usage":{...}}
       |
   -> assert len == 384, assert ||v|| ~ 1.0
-  -> rag_pipeline.write_vectors -> PGVector ml_metadata.rag_chunk (phase-04 4B)
+  -> rag_pipeline.write_vectors -> PGVector ml.rag_chunk (phase-04 4B)
 ```
 
 Failure modes on this path, and where each is handled:

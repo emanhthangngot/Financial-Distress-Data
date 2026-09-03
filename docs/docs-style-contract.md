@@ -29,7 +29,7 @@ Two hard rules enforced by `scripts/check_documentation.py`
 
 One invariant enforced by `scripts/audit_phase2_evidence.py`: every
 `evidence_path` cell in the rubric matrix must start with
-`docs/phase2/evidence/` (checked at `scripts/audit_phase2_evidence.py:319`;
+`docs/platform/evidence/` (checked at `scripts/audit_phase2_evidence.py:319`;
 the same prefix is asserted again in the diff-scope check around
 `scripts/audit_phase2_evidence.py:655` and the secret-scan sweep around
 `scripts/audit_phase2_evidence.py:790`). Narrative docs never move or rename
@@ -39,8 +39,8 @@ files under that prefix — they link into it.
 
 ```text
 Layer 1 — canonical evidence (immutable location)
-  docs/phase2/evidence/llm/*.md        60 rows, audit-gate pinned prefix
-  docs/evidence/**                     Phase 1 generated artifacts
+  docs/platform/evidence/llm/*.md        60 rows, audit-gate pinned prefix
+  docs/evidence/**                     the platform generated artifacts
       ^ never moved, never hand-edited
 
 Layer 2 — narrative (reviewer-facing)
@@ -143,7 +143,7 @@ docs state limitations in their own closing paragraph.
   `docs/pngs/` under a contract-conformant name; the original stays at its
   audit-pinned path. The copy gets a manifest row recording the source path.
 - No narrative doc reaches sideways into `docs/evidence/screenshots/` or
-  `docs/phase2/evidence/**/screenshots/` — it reads from `docs/pngs/` only.
+  `docs/platform/evidence/**/screenshots/` — it reads from `docs/pngs/` only.
 
 ## 10. Worked example (structure, not content)
 

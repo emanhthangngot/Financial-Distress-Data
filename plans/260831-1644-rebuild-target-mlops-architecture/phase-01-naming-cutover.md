@@ -76,8 +76,8 @@ foreign-key gap (D-12) permanent.
 | ns `phase2-data` | ns `dataflow` |
 | ns `phase2-llm` | dissolved into `kserve` |
 | ns `monitoring` | ns `observability` |
-| Postgres schema `project_metadata` | schema `ops` |
-| Postgres schema `ml_metadata` | schema `ml` |
+| Postgres schema `ops` | schema `ops` |
+| Postgres schema `ml` | schema `ml` |
 | Terraform/GKE label `phase=phase2` | `component=unified-platform` |
 | env var `PHASE2_PG_DSN` | `PLATFORM_PG_DSN` |
 | env var `PHASE2_REQUIRE_PG` | `PLATFORM_REQUIRE_PG` |
@@ -112,7 +112,7 @@ directory name changes.
    folded into `pyproject.toml`, `.venv-phase2` → `.venv-platform`, env-var names. Update
    `docker-compose.yml` and `.githooks/pre-commit`. Recreate the platform venv from
    `pyproject.toml`. Commit atomically.
-4. **Rename class C — SQL schemas** (1 d) — `project_metadata` → `ops`, `ml_metadata` → `ml` in
+4. **Rename class C — SQL schemas** (1 d) — `ops` → `ops`, `ml` → `ml` in
    `sql/init_*.sql` (renamed to `sql/init_ops.sql`, `sql/init_ml.sql`) and in every Python caller.
    Write a forward migration using `ALTER SCHEMA ... RENAME TO ...`. **The physical merge into one
    database, the timestamp conversion, and the foreign keys are P2 work — not here.** Commit atomically.
@@ -139,8 +139,8 @@ directory name changes.
       clean on `src dags tests scripts`
 - [ ] AC-P1-4: GitOps operator → runs `make validate` in `financial-distress-gitops` → passes; no
       Argo Application targets a `phase2-*` namespace
-- [ ] AC-P1-5: DBA → connects to Postgres → schemas `ops` and `ml` exist; `project_metadata` and
-      `ml_metadata` do not; every Python caller resolves against the new names
+- [ ] AC-P1-5: DBA → connects to Postgres → schemas `ops` and `ml` exist; `ops` and
+      `ml` do not; every Python caller resolves against the new names
 - [ ] AC-P1-6: Reader → opens `docs/architecture/data-model.md` → finds exactly one statement about
       whether facts carry `company_version_key`, and it matches `src/transforms/gold/`
 - [ ] AC-P1-7: Engineer → greps `supabase/migrations/` → filenames unchanged; ADR-019 records the

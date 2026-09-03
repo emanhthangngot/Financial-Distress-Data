@@ -69,7 +69,7 @@ $ kubectl exec sandbox-negative-probe -n agents-sandbox -- curl -fsS -X POST \
 ```
 
 Full evidence:
-[`LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n.md`](../../phase2/evidence/llm/LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n.md).
+[`LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n.md`](../../platform/evidence/llm/LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n.md).
 
 #### Image proof
 
@@ -93,7 +93,7 @@ $ kubectl exec -n kagent deploy/agentregistry -- python -c "..." /v1/agents/coor
 ```
 
 Full evidence:
-[`LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry.md`](../../phase2/evidence/llm/LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry.md).
+[`LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry.md`](../../platform/evidence/llm/LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry.md).
 
 #### Image proof
 

@@ -19,11 +19,11 @@ _phase1_mutation_from_changed = _MODULE._phase1_mutation_from_changed
 
 
 def test_new_ml_metadata_sql_is_not_flagged() -> None:
-    assert _phase1_mutation_from_changed(["sql/init_ml_metadata.sql"]) == []
+    assert _phase1_mutation_from_changed(["sql/init_ml.sql"]) == []
 
 
 def test_phase1_project_metadata_sql_is_still_flagged() -> None:
-    errors = _phase1_mutation_from_changed(["sql/init_project_metadata.sql"])
+    errors = _phase1_mutation_from_changed(["sql/init_ops.sql"])
     assert errors and "sql/" in errors[0]
 
 

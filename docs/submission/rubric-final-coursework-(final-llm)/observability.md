@@ -24,8 +24,8 @@ model `qwen2.5-0.5b-instruct`.
 
 ```text
 $ curl -sS http://127.0.0.1:19090/api/v1/targets
-serviceMonitor/phase2-data/feature-mcp/0  up
-serviceMonitor/phase2-data/drift-mcp/0    up
+serviceMonitor/platform-data/feature-mcp/0  up
+serviceMonitor/platform-data/drift-mcp/0    up
 
 $ curl -sS -b <grafana-session> -G ".../api/datasources/proxy/uid/prometheus/api/v1/query" \
   --data-urlencode 'query=sum by (service,route,status) (rate(fd_web_api_requests_total{service=~".+"}[5m]))'
@@ -37,16 +37,16 @@ carried no `app.kubernetes.io/name` label, so the chart's bundled
 `ServiceMonitor` matched zero Services — every endpoint was silently dropped
 at the relabel step. Fixed by adding the label and re-vendoring the
 `fastapi-service` subchart. Full evidence:
-[`LLM-observability-collect-v-visualize-metrics-v-.md`](../../phase2/evidence/llm/LLM-observability-collect-v-visualize-metrics-v-.md).
+[`LLM-observability-collect-v-visualize-metrics-v-.md`](../../platform/evidence/llm/LLM-observability-collect-v-visualize-metrics-v-.md).
 
 #### Image proof
 
 ![Prometheus scrape targets, 9/9 UP](../../pngs/prometheus_targets_up.png)
 
 *Image note:* live Prometheus targets page (2026-08-14) shows 9/9 UP for
-`serviceMonitor/agents-sandbox/phase2-agents/0` (drift-agent, feature-agent,
+`serviceMonitor/agents-sandbox/platform-agents/0` (drift-agent, feature-agent,
 coordinator). It proves the agent-plane targets are scraped successfully. It
-is a different serviceMonitor than the `phase2-data` MCP targets quoted
+is a different serviceMonitor than the `platform-data` MCP targets quoted
 above, shown to demonstrate the same scrape mechanism independently.
 
 ### 2. Web API request-rate/latency/status metrics
@@ -62,30 +62,30 @@ the capture window. All four canonical families
 `_request_errors_total`, `_in_flight`) are declared once in
 `src/observability/telemetry.py:Telemetry.canonical_metric_names` and shared
 by both services under the same registry. Full evidence:
-[`LLM-observability-web-api-metrics.md`](../../phase2/evidence/llm/LLM-observability-web-api-metrics.md).
+[`LLM-observability-web-api-metrics.md`](../../platform/evidence/llm/LLM-observability-web-api-metrics.md).
 
 ## Part II — Per-agent/tool and per-request LLM metrics
 
 ### 3. Per-agent and per-MCP-tool call/failure series
 
 ```text
-query=phase2:agent_calls_total:rate5m
+query=platform:agent_calls_total:rate5m
   feature-agent, coordinator, drift-agent — all non-zero after one live call
-query=phase2:mcp_tool_calls_total:rate5m
+query=platform:mcp_tool_calls_total:rate5m
   feature-mcp/lookup_feature_context, drift-mcp/build_realtime_drift_report
-query=phase2:agent_invocation_failures_total:rate5m
+query=platform:agent_invocation_failures_total:rate5m
   zero for the successful correlated request's own operations
 ```
 
 Full evidence:
-[`LLM-observability-agent-tool-call-metrics.md`](../../phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md).
+[`LLM-observability-agent-tool-call-metrics.md`](../../platform/evidence/llm/LLM-observability-agent-tool-call-metrics.md).
 
 #### Image proof
 
 ![Prometheus query: per-agent LLM token totals](../../pngs/prometheus_llm_tokens_query.png)
 
 *Image note:* live Prometheus query (2026-08-14) for
-`phase2:llm_request_total_tokens_total:sum` shows drift-agent=8309,
+`platform:llm_request_total_tokens_total:sum` shows drift-agent=8309,
 feature-agent=1881 — real cumulative token counters, not from this doc's
 specific correlated request but the same metric family. It proves the
 per-agent token-total recording rule is live and populated. It does not
@@ -106,7 +106,7 @@ fd_llm_pii_safety_catches_total{finding_type=email}                       -> 1, 
 ```
 
 Full evidence:
-[`LLM-observability-m-b-o-t-nh-t-c-c-metrics.md`](../../phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md).
+[`LLM-observability-m-b-o-t-nh-t-c-c-metrics.md`](../../platform/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md).
 
 ## Part III — Correlated logs and traces for the same request
 
@@ -143,8 +143,8 @@ landing in the built layer (import failure, no spans ever created), and
 that silently dropped every application log line before it reached Loki.
 Both fixed by rebuilding/redeploying the images and correcting the collector
 config. Full evidence:
-[`LLM-observability-t-ng-t-cho-logs.md`](../../phase2/evidence/llm/LLM-observability-t-ng-t-cho-logs.md),
-[`LLM-observability-t-ng-t-cho-traces.md`](../../phase2/evidence/llm/LLM-observability-t-ng-t-cho-traces.md).
+[`LLM-observability-t-ng-t-cho-logs.md`](../../platform/evidence/llm/LLM-observability-t-ng-t-cho-logs.md),
+[`LLM-observability-t-ng-t-cho-traces.md`](../../platform/evidence/llm/LLM-observability-t-ng-t-cho-traces.md).
 
 ## Limitations
 

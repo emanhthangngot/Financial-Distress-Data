@@ -102,7 +102,7 @@ runs; one is not:
 | Dependency | Decision | Why |
 |---|---|---|
 | Kafka | **Reuse** the existing cluster, separate topic prefix and consumer groups | Saves ~2-3 vCPU, and see the emitter note below — this is the decision that makes DataHub's scale-to-zero safe |
-| Database | **Reuse** the existing PostgreSQL, in its own `datahub` database | DataHub supports Postgres, not only MySQL. A separate database (not merely a schema) keeps it clear of `project_metadata` and `ml_metadata`, consistent with the existing no-cross-write rule |
+| Database | **Reuse** the existing PostgreSQL, in its own `datahub` database | DataHub supports Postgres, not only MySQL. A separate database (not merely a schema) keeps it clear of `ops` and `ml`, consistent with the existing no-cross-write rule |
 | Search index | **Deploy fresh Elasticsearch**, single node, replicas 0, small heap | Unavoidable. Loki is log aggregation with its own index and no Elasticsearch API — it cannot serve as DataHub's search backend, despite both being "the logging/search stack" |
 | Graph index | **Elasticsearch**, `graph_service_impl` set away from Neo4j | DataHub's own recommendation for lighter deployments; removes a whole database |
 

@@ -5,7 +5,7 @@ Terraform-provisioned GKE evidence cluster + GCE VM
 
 - Plan/apply/cost output: the executed Terraform evidence is linked from the
   canonical `LLM-iac-d-ng-terraform-setup-gke-ho-c-` row in
-  `docs/phase2/rubric-matrix.csv`.
+  `docs/platform/rubric-matrix.csv`.
 - Repository split (`terraform/gcp/apis.tf`, `network.tf`, `gke.tf`, `vm.tf`,
   `registry.tf`, `iam.tf`, `outputs.tf`, `variables.tf`, `versions.tf`) —
   one file per service, per canonical row 67's `để ý cách chia folder theo
