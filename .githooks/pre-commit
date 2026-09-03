@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Phase 1 is a frozen contract.  This hook is intentionally path based: it
+# the platform lakehouse is a frozen contract.  This hook is intentionally path based: it
 # runs before a commit is created, so an accidental edit to a protected
 # package is rejected before it can be hidden in a large implementation PR.
 protected=(
@@ -29,11 +29,11 @@ is_exception() {
 while IFS= read -r -d '' path; do
   for prefix in "${protected[@]}"; do
     if [[ "${path}" == "${prefix}"* ]] && ! is_exception "${path}"; then
-      echo "pre-commit: staged edit touches Phase 1 protected path: ${path}" >&2
-      echo "Use a reviewed Phase 1 hygiene change and update the frozen baseline." >&2
+      echo "pre-commit: staged edit touches platform protected path: ${path}" >&2
+      echo "Use a reviewed platform hygiene change and update the frozen baseline." >&2
       exit 1
     fi
   done
 done < <(git diff --cached --name-only -z --)
 
-echo "pre-commit: Phase 1 protected-path check passed"
+echo "pre-commit: platform protected-path check passed"

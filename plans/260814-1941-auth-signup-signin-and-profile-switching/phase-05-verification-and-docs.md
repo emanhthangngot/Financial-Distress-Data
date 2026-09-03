@@ -24,7 +24,7 @@ Functional:
 
 Non-functional:
 
-- [x] Phase 1 repository gate still green (no Phase 1 regression)
+- [x] platform .epository gate still green (no platform .egression)
 - [x] Docs state the AAL2 relaxation as a deliberate demo-environment decision with its revert path
 
 ## Architecture
@@ -55,8 +55,8 @@ of `plans/reports/debugger-260814-1924-real-ui-chrome.md`.
 
 - Create: `apps/web/e2e/auth-lifecycle.spec.ts`
 - Modify: `apps/web/e2e/live-env.ts` (demo-account env plumbing)
-- Modify: `docs/phase2/product.md` (auth contract: signup open, roles, switching, logout)
-- Modify: `docs/phase2/low-level-design.md` (cookie + refresh + step-up decision)
+- Modify: `docs/platform/product.md` (auth contract: signup open, roles, switching, logout)
+- Modify: `docs/platform/low-level-design.md` (cookie + refresh + step-up decision)
 - Create: `plans/reports/<type>-<ts>-auth-flow-verification.md`
 
 ## Implementation Steps
@@ -65,7 +65,7 @@ of `plans/reports/debugger-260814-1924-real-ui-chrome.md`.
 2. `pnpm --filter @distresslens/contracts test` for the authorization change.
 3. Write and run `auth-lifecycle.spec.ts` against live Supabase.
 4. Re-run the existing roles and a11y suites; fix fallout rather than relaxing assertions.
-5. `.venv/bin/python scripts/run_stage1_quality_gates.py` — Phase 1 must be untouched.
+5. `.venv/bin/python scripts/run_stage1_quality_gates.py` — platform .ust be untouched.
 6. Manual pass on `https://distresslens.duckdns.org`: guest -> signup -> switch -> signout, with screenshots.
 7. Update the two docs; state the AAL2 relaxation, the revert path (`meets_step_up()` + `STEP_UP_REQUIRED`), and the fact that sign-out now revokes upstream.
 8. Write the verification report; list any account or credential handling left manual.
@@ -77,7 +77,7 @@ of `plans/reports/debugger-260814-1924-real-ui-chrome.md`.
 - [x] Contracts test suite green with the new step-up contract asserted explicitly
 - [x] Stage 1 quality gate green
 - [ ] Deployed host: a fresh visitor completes signup -> use -> switch -> signout with screenshot evidence -- **blocked**: ingress Basic Auth credential not available in this session (see verification report, unresolved question 1)
-- [x] `docs/phase2/product.md` and `low-level-design.md` describe the shipped contract, not the superseded one
+- [x] `docs/platform/product.md` and `low-level-design.md` describe the shipped contract, not the superseded one
 
 ## Risk Assessment
 

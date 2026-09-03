@@ -1,5 +1,5 @@
 ---
-title: "Architecture feedback validation — unified Phase 2 plan"
+title: "Architecture feedback validation — unified platform .lan"
 date: 2026-08-02
 status: complete
 input: "/home/pearspringmind/.codex/attachments/899865c3-7b03-4b32-9f85-710e8741dba3/pasted-text.txt"
@@ -70,7 +70,7 @@ With automated sync enabled, rollback is a Git revert or a new Git commit refere
 The previous outline contained eight phases numbered 0-7, not seven. The saved execution plan now uses eight conventional phases numbered 1-8 so AK tooling, humans and evidence paths agree.
 
 The original `docs/coursework.md` said AWS/Kubernetes/LLM were optional or
-excluded. It has now been rewritten for explicit Phase 2 while immutable Phase
+excluded. It has now been rewritten for explicit platform .hile immutable Phase
 1 boundaries remain in `docs/mini_coursework.md` and `AGENTS.md`.
 
 The repo-mandated project skill `financial-distress-sdd` could not be found under `.codex/skills/` or the available skill catalog. No replacement skill was fabricated; the plan used the available `ak:plan` and `ak:devops` workflows. This is a tooling/configuration gap, not an architecture blocker.
@@ -117,7 +117,7 @@ The follow-up audit also required the promotion gate to enforce the reviewed
 implementation map rather than relying only on the generated CSV. The auditor
 now compares every canonical row with `EXPLICIT_IMPLEMENTATION`, maps Vault
 secret management to `platform/security/vault-external-secrets.yaml`, rejects
-dirty source or GitOps worktrees, and verifies that the frozen Phase 1 baseline
+dirty source or GitOps worktrees, and verifies that the frozen platform .aseline
 is a real commit ancestor. Phases 5 and 6 explicitly create the per-acceptance
 test files used by each row's behavior command; metadata-only contract tests
 cannot satisfy the runtime gate.

@@ -20,10 +20,10 @@ source data -> Bronze raw evidence -> Silver canonical data -> Gold facts/featur
 
 Project có hai lớp:
 
-1. **Phase 1 — verified local-first lakehouse:** Airflow, Kafka, MinIO,
+1. **platform . verified local-first lakehouse:** Airflow, Kafka, MinIO,
    PostgreSQL, PySpark, DuckDB/DBeaver và PyTest.
-2. **Phase 2 — additive AI/product direction:** RAG, feature serving, drift,
-   agents/MCP, product UI và GitOps/evidence plane. Phase 2 không được làm thay
+2. **platform . additive AI/product direction:** RAG, feature serving, drift,
+   agents/MCP, product UI và GitOps/evidence plane. platform .hông được làm thay
    đổi semantic của Phase 1.
 
 Thông điệp production nên dùng:
@@ -45,7 +45,7 @@ Thông điệp production nên dùng:
 | DQ/metadata | PostgreSQL `ops`, in-memory writer, critical/warning semantics | Implemented |
 | Feature correctness | PIT joins based on `report_release_date`/`event_timestamp` | Implemented contract and validation |
 | Distress labels | Rule-based Altman Z''-inspired labeler with warnings, confidence and rule version | Implemented; not an ML model |
-| RAG | Chunking, hash dedupe, governance, embedding backend and PGVector store | Additive Phase 2 code; default evidence path still uses committed text fixtures |
+| RAG | Chunking, hash dedupe, governance, embedding backend and PGVector store | Additive platform .ode; default evidence path still uses committed text fixtures |
 | Product UI | Next.js app with fixture/Supabase data ports and honest cached/offline states | UI/product contracts exist; do not call fixture screens live production data |
 | Agent platform | Documentation/rubric describe agents and MCP; `src/agents/` is not present in the current checkout | Target/partial Phase 2, not claim as fully deployed |
 
@@ -80,7 +80,7 @@ warning and research.
 - **Platform/operator:** manages runtime, access, cost, observability and
   deployment state.
 
-## 3. Current Phase 1 architecture
+## 3. Current platform architecture
 
 ### Ingestion
 
@@ -159,7 +159,7 @@ source and rule version.
 
 ### Labeling logic
 
-Phase 1 uses a transparent rule-based proxy, not learned inference:
+platform .ses a transparent rule-based proxy, not learned inference:
 
 - Altman Z''-inspired ratios;
 - high debt-to-asset;
@@ -277,7 +277,7 @@ fetch -> parse -> normalize -> chunk -> content-hash dedupe
       -> license/access/PII governance -> embedding -> PGVector/versioned store
 ```
 
-The existing Phase 2 RAG code already models this shape: source metadata,
+The existing platform data,
 parser version, content hash, access class, governance/quarantine and embedding
 version are explicit. The production connector should replace the committed
 fixture fetcher without changing chunk/dedupe/write contracts.
@@ -362,9 +362,9 @@ Track at least:
 - PIT leakage count (must be zero);
 - data version, source version, model/embedding version and run ID.
 
-## 6. Phase 2 production narrative
+## 6. platform .roduction narrative
 
-The intended Phase 2 story is two planes:
+The intended platform .tory is two planes:
 
 - **Persistent product plane:** Next.js + Supabase; analyst searches companies,
   views risk/provenance and sees cached results when live AI is unavailable.
@@ -406,7 +406,7 @@ metadata.
 ### Slide 6 — Risk output
 
 Show `obt_company_quarter_risk`, ratios, rule-based label, reason, confidence,
-training eligibility and provenance. State clearly that Phase 1 is not ML.
+training eligibility and provenance. State clearly that platform .s not ML.
 
 ### Slide 7 — Production source evolution
 
@@ -461,7 +461,7 @@ No. The current `vnstock_adapter.py` is intentionally a fixture-backed
 boundary. Implementing a live adapter is a production hardening step.
 
 **Q: Is the project production-ready today?**  
-The Phase 1 data contracts and local evidence path are production-shaped; the
+The platform data contracts and local evidence path are production-shaped; the
 full production source integration, stakeholder review controls and cloud
 deployment still require delivery and evidence. The honest claim is “verified
 foundation and production migration design,” not “fully deployed production.”
@@ -477,5 +477,5 @@ foundation and production migration design,” not “fully deployed production.
 - What is the formal distress outcome definition and prediction horizon?
 - What retention, consent, PII and licensing policy applies to internal notes,
   transcripts and uploaded documents?
-- Which Phase 2 platform decision is final for the actual deployment: the latest
+- Which platform .latform decision is final for the actual deployment: the latest
   GKE plan or an older EKS/k3d evidence document?

@@ -35,7 +35,7 @@ deliberately deferred (see below). 9 commits on `dev`, none pushed/merged.
   denied by policy), KServe round-trip curl, dedicated MCP tool listing,
   Kafka/MinIO/DuckDB local captures, product chat, Supabase RLS/users.
 - **Reused, not re-captured:** 11 images from `docs/evidence/screenshots/`,
-  `docs/evidence/reviewer_screenshots/`, and `docs/phase2/evidence/product/`
+  `docs/evidence/reviewer_screenshots/`, and `docs/platform/evidence/product/`
   — every reuse-copy verified byte-identical to its source in the Phase 7
   integrity sweep.
 
@@ -44,8 +44,8 @@ deliberately deferred (see below). 9 commits on `dev`, none pushed/merged.
 Nothing. The plan's own Phase 7 step 1 ("inbound-link sweep... only then
 delete") surfaced a blast radius bigger than anticipated:
 
-- `docs/mini_coursework.md` — the Phase 1 spec authority, explicitly in
-  `AGENTS.md`'s "Don't Touch" zone — references the numbered Phase 1 docs
+- `docs/mini_coursework.md` — the platform .pec authority, explicitly in
+  `AGENTS.md`'s "Don't Touch" zone — references the numbered platform .ocs
   (`01_data_generator.md`, `02_schema_design.md`, etc.) 5 times.
 - The old flat `docs/submission/{ci_cd,iac,observability,routing_gateway,
   security,validation_verification,cost}.md` are still linked from the old
@@ -65,7 +65,7 @@ reference question with the user, since that file is spec authority.
 ## Rubric row whose evidence is weaker than its narrative might suggest
 
 None identified beyond what each doc's own Limitations section already
-states. Every narrative claim traces to a canonical `docs/phase2/evidence/
+states. Every narrative claim traces to a canonical `docs/platform/evidence/
 llm/*.md` row, a `docs/evidence/**` artifact, or a live capture taken this
 session — no claim outruns its cited evidence.
 
@@ -83,7 +83,7 @@ index-table diff (README vs Phase 4/5 indexes)   0 drift
 ## Follow-ups not done this session
 
 - SHA restamp (`scripts/stamp_phase2_evidence.py`) — not run. No file under
-  `docs/phase2/evidence/**` was modified this session (only linked into),
+  `docs/platform/evidence/**` was modified this session (only linked into),
   so the existing stamps remain valid; restamping is only needed after an
   evidence-file edit, which didn't happen here.
 - PR to `dev`/`main` — not opened. Awaiting explicit go-ahead.
@@ -91,9 +91,9 @@ index-table diff (README vs Phase 4/5 indexes)   0 drift
 
 ## Unresolved questions
 
-- Should the numbered Phase 1 docs (`docs/01_data_generator.md` etc.) stay
+- Should the numbered platform data_generator.md` etc.) stay
   dual-tracked (spec + narrative absorb) indefinitely, or should
   `docs/mini_coursework.md` itself be edited to point at the new narrative
   docs so retirement becomes possible? That edit is out of this plan's
-  scope as written and touches Phase 1 spec authority — needs an explicit
+  scope as written and touches platform .pec authority — needs an explicit
   user decision, not an agent judgment call.

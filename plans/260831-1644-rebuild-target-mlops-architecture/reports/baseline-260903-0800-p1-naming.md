@@ -1,4 +1,4 @@
-# Phase 1 Naming Cutover Baseline
+# platform .aming Cutover Baseline
 
 **Captured:** 2026-09-03
 **Tool:** `scripts/verify_naming_cutover.py`
@@ -31,7 +31,7 @@ exit code:          1
 ```
 
 Drop: 207 hits (-25%). All 17 scripts/ renames, dags/ flatten + stage1 rename,
-`src/governance/phase2_lineage.py`, `tests/phase2/`→`tests/platform/`,
+`src/governance/phase2_lineage.py`, `tests/platform/`→`tests/platform/`,
 `apps/web/scripts/phase2/`→`platform/`, `outputs/phase2/`→`evidence/` landed
 with `git mv`. Identifier updates in scripts/dags/src/tests + authorized docs
 hrefs. Fast pytest: 318 passed, 0 skipped, 1.52s.
@@ -44,10 +44,10 @@ hrefs. Fast pytest: 318 passed, 0 skipped, 1.52s.
 | `AGENTS.md` | 38+ | AGENTS.md rewrite |
 | `requirements-phase2.txt` | 4 (file + content) | B |
 | `pyproject.toml` | ≥1 | B |
-| `tests/phase2/**` | path + content | A ✅ |
+| `tests/platform/**` | path + content | A ✅ |
 | `dags/phase2/**`, `dags/stage1_*.py` | path + content | A ✅ |
 | `scripts/*phase2*`, `scripts/*stage1*` | path + content | A ✅ |
-| `sql/init_project_metadata.sql`, `sql/init_ml_metadata.sql` | file + content | C |
+| `sql/init_ops.sql`, `sql/init_ml.sql` | file + content | C |
 | `infra/phase1-cluster/**` | path | D |
 | `apps/web/scripts/phase2/**` | path | A ✅ |
 | `outputs/phase2/**` | path | A ✅ |
@@ -60,8 +60,8 @@ hrefs. Fast pytest: 318 passed, 0 skipped, 1.52s.
 | `AGENTS.md` | rewrite | full prose rewrite, separate step |
 | `requirements-phase2.txt` | B | rename to `requirements-platform.txt` + content |
 | `pyproject.toml` | B | pytest markers, package paths, optional-deps |
-| `sql/init_project_metadata.sql` → `sql/init_ops.sql` | C | schema rename |
-| `sql/init_ml_metadata.sql` → `sql/init_ml.sql` | C | schema rename |
+| `sql/init_ops.sql` → `sql/init_ops.sql` | C | schema rename |
+| `sql/init_ml.sql` → `sql/init_ml.sql` | C | schema rename |
 | `infra/phase1-cluster/` → `infra/lakehouse-cluster/` | D | path rename |
 | `.github/workflows/phase2-*.yaml` | rewrite | prefix drop |
 | Postgres schema names referenced in Python (class C) | C | forward migration required |

@@ -42,8 +42,8 @@ is a Debezium/Flink-CDC contract; `src/governance/datahub_emitter.py` is a DataH
 `src/ml/leakage_guard.py`, `src/ml/ab_router.py` and `src/ml/feast/` are the ML contracts. None
 imports a real client — `pyproject.toml` declares no `ray`, `mlflow`, `kfp`, `feast`,
 `pyiceberg` or `trino` dependency. These are deliberate dependency-light contracts with
-existing unit harnesses (`tests/phase2/pipelines/test_lakehouse_catalog.py`,
-`tests/phase2/verification/test_contract_implementations.py`, and 11 sibling suites). The work
+existing unit harnesses (`tests/platform/pipelines/test_lakehouse_catalog.py`,
+`tests/platform/verification/test_contract_implementations.py`, and 11 sibling suites). The work
 is **binding contracts to runtimes**, which means each binding arrives with its acceptance
 harness already written.
 
@@ -75,7 +75,7 @@ puts a stop-and-escalate gate in front of everything that provisions.
    format for the rebuilt lakehouse (Iceberg), one service-mesh authorization plane (Istio),
    and zero shims, aliases or dual paths. Superseded workflows, manifests and ADR text are
    deleted, not deprecated.
-3. **G-3 Locks preserved.** Phase 1 data contracts (`AGENTS.md:7-11`), Argo-CD-only mutation of
+3. **G-3 Locks preserved.** platform data contracts (`AGENTS.md:7-11`), Argo-CD-only mutation of
    managed namespaces, digest-only GitOps promotion, two repositories, and the three-namespace
    least-privilege agent boundary all survive unchanged.
 4. **G-4 Capacity honesty.** Component residency is scheduled, not assumed. Every phase states
@@ -98,8 +98,8 @@ puts a stop-and-escalate gate in front of everything that provisions.
 3. **N-3** No namespace merging of `agentgateway-system`, `kagent`, `agents-sandbox`.
 4. **N-4** No replacement of GitHub as the source host. The image draws Developer → GitHub →
    Webhook Trigger → Jenkins. Only GitHub **Actions** is removed.
-5. **N-5** No changes to Phase 1 Bronze/Silver/Gold semantics. Iceberg is a parallel write
-   path; the Phase 1 Parquet pipeline and its regression suite stay green throughout.
+5. **N-5** No changes to platform .ronze/Silver/Gold semantics. Iceberg is a parallel write
+   path; the platform .arquet pipeline and its regression suite stay green throughout.
 6. **N-6** No fixing of the tracked-Terraform-state exposure. It is recorded as a standing
    concern (§9, C25) but sits outside the target image and outside this transformation.
 7. **N-7** No implementation in this document. Planning only.
@@ -271,7 +271,7 @@ existing `apps/feature-mcp/`, `apps/drift-mcp/`, `apps/feature-api/`, `apps/drif
 | **ADR-009** (NGINX sole entry) | **No change** | Image confirms NGINX is the only external ingress; Istio Gateway is ClusterIP |
 | **ADR-002** (two repos) | **No change** | Image retains `financial-distress-gitops` |
 | `docs/coursework.md`, `docs/system-architecture.md` | Rewrite to target state at P9 | Currently describe the superseded baseline |
-| `docs/mini_coursework.md` | **Authority retained**; no lock conflict found | Phase 1 contracts unchanged by this plan |
+| `docs/mini_coursework.md` | **Authority retained**; no lock conflict found | platform .ontracts unchanged by this plan |
 
 `AGENTS.md:24` names `.github/workflows/ci.yml` as the CI that runs the definition-of-done gate;
 P8 must update that line when the workflows are deleted.
@@ -296,7 +296,7 @@ Class A and D are cheap and de-risk everything downstream; they front-load.
 
 ### 4.2 Parallel-write, never in-place, for data
 
-Iceberg lands as a **parallel** namespace alongside the Phase 1 Parquet tables. The Phase 1
+Iceberg lands as a **parallel** namespace alongside the platform .arquet tables. The Phase 1
 pipeline, its DAGs and `scripts/run_stage1_quality_gates.py` stay green for the whole
 transformation. Cutover of readers happens once, at P7, when Trino/Superset/dbt point at Iceberg
 and nothing still reads the Parquet Gold path. Only then are the Parquet Gold readers removed —
@@ -330,7 +330,7 @@ window; Spark, Ray and Locust burst inside those windows only.
 **Source repo (`Financial-Distress-Data`) — new:**
 
 ```
-docs/phase2/adr/adr-016-unified-ml-llm-target-architecture.md   # supersedes ADR-010
+docs/platform/adr/adr-016-unified-ml-llm-target-architecture.md   # supersedes ADR-010
 docs/target-architecture.md                                     # target-state runtime doc
 docs/rubric-matrix-unified.csv                                  # 161 rows, mini+ML+LLM
 src/lakehouse/rest_catalog.py                                    # real Lakekeeper REST client
@@ -356,14 +356,14 @@ configs/debezium_source.yaml
 configs/trino_catalogs.yaml
 scripts/run_unified_evidence_capture.py
 scripts/verify_target_architecture.py                             # component-coverage assertion
-tests/phase2/pipelines/test_iceberg_rest_catalog.py
-tests/phase2/pipelines/test_debezium_connector_contract.py
-tests/phase2/pipelines/test_postgres_offline_store.py
-tests/phase2/pipelines/test_kfp_pipeline_contract.py
-tests/phase2/pipelines/test_ray_trainer_contract.py
-tests/phase2/pipelines/test_promotion_gate.py
-tests/phase2/pipelines/test_dbt_gold_mart_contract.py
-tests/phase2/verification/test_target_component_coverage.py
+tests/platform/pipelines/test_iceberg_rest_catalog.py
+tests/platform/pipelines/test_debezium_connector_contract.py
+tests/platform/pipelines/test_postgres_offline_store.py
+tests/platform/pipelines/test_kfp_pipeline_contract.py
+tests/platform/pipelines/test_ray_trainer_contract.py
+tests/platform/pipelines/test_promotion_gate.py
+tests/platform/pipelines/test_dbt_gold_mart_contract.py
+tests/platform/verification/test_target_component_coverage.py
 Jenkinsfile                                                       # app-ci lane
 Jenkinsfile.promote                                               # model-promote lane
 ```
@@ -431,16 +431,16 @@ archive/ml-track/platform/data-phase1/{minio,postgres}.yaml     -> platform/lake
 **Existing files modified (not created):**
 
 Source: `pyproject.toml` (real clients), `AGENTS.md:24` (CI driver), `docs/coursework.md`,
-`docs/system-architecture.md`, `docs/phase2/adr/adr-{005,013,014}-*.md` (amendments),
-`docs/phase2/adr/adr-006-mlflow-promotion.md` (un-defer),
-`docs/phase2/adr/adr-010-*.md` (superseded banner), `docs/phase2/rubric-matrix.csv` (→ unified),
+`docs/system-architecture.md`, `docs/platform/adr/adr-{005,013,014}-*.md` (amendments),
+`docs/platform/adr/adr-006-mlflow-promotion.md` (un-defer),
+`docs/platform/adr/adr-010-*.md` (superseded banner), `docs/platform/rubric-matrix.csv` (→ unified),
 `scripts/_phase2_rubric_items.py`, `src/lakehouse/{catalog,tables,snapshots}.py`,
 `src/cdc/{config,flink_cdc_job}.py`, `src/ml/{mlflow_registry,label_pipeline}.py`,
 `src/ml/pipelines/{training_pipeline,distributed_training}.py`, `src/ml/feast/*`,
 `feature_repo/structured/feature_store.cluster.yaml`, `docker-compose.yml`.
 
 **Existing files deleted (clean cutover):** `.github/workflows/ci.yml` and the 11
-`.github/workflows/phase2-*.yml` (at P8), `docs/evidence/` and `docs/phase2/evidence/` trees (at
+`.github/workflows/phase2-*.yml` (at P8), `docs/evidence/` and `docs/platform/evidence/` trees (at
 P1, per decision #1), `argocd/applications/platform-llm.yaml` and
 `platform/llm/` (namespace dissolved), `platform/inference/vendored/03-net-kourier.yaml` **only
 if** Gate G6 selects net-istio.
@@ -474,11 +474,11 @@ days quota-approval lag (submit day 1, `plan.md:38`).
 
 Normalize the mini rubric CSV (`docs/Coursework Tracking (Public) - rubic (mini-coursework).csv`,
 raw export with unnamed columns and multi-line quoted cells) into the 19-column schema of
-`docs/phase2/rubric-matrix.csv`; merge with the existing 60 LLM + 57 ML rows into
+`docs/platform/rubric-matrix.csv`; merge with the existing 60 LLM + 57 ML rows into
 `docs/rubric-matrix-unified.csv` (161 rows). Write ADR-016 superseding ADR-010; amend ADR-005,
 ADR-013, ADR-014; un-defer ADR-006; leave ADR-002/004/009/012 untouched. Delete both evidence
 trees. Add `scripts/verify_target_architecture.py` and
-`tests/phase2/verification/test_target_component_coverage.py` — the component-coverage assertion
+`tests/platform/verification/test_target_component_coverage.py` — the component-coverage assertion
 that every later phase is measured against.
 
 No cluster mutation. Resident cost: 0. Effort: 4-6 days.
@@ -684,7 +684,7 @@ group exists precisely so a rollback blast radius equals one group.
 |---|---|---|
 | P0 | Nothing applied. Discard the branch record. | Fully |
 | P1 | Revert source commits. Evidence-tree deletion is recovered from git history. | Fully |
-| P2 | Delete `platform-lakehouse` / `platform-orchestration` Applications. Iceberg tables are a **parallel** namespace; Phase 1 Parquet is untouched and its gate stays green. | Fully, except namespace rename (needs the P2 snapshot) |
+| P2 | Delete `platform-lakehouse` / `platform-orchestration` Applications. Iceberg tables are a **parallel** namespace; platform .arquet is untouched and its gate stays green. | Fully, except namespace rename (needs the P2 snapshot) |
 | P3 | Delete `platform-streaming` / `platform-features`. Debezium replication slot must be dropped explicitly — an orphaned slot pins Postgres WAL and will fill the disk. Named as a mandatory rollback step. | Fully, with the slot-drop step |
 | P4 | Set `istio-injection` labels off, revert `platform-istio`; mTLS returns to no-mesh. Vault: revert `platform-vault`; sealed-secrets is still present and authoritative until P8, so no consumer breaks. | Fully |
 | P5 | Delete `platform-kubeflow` / `platform-tracking` / `platform-serving-ml`. MLflow's Postgres and MinIO artifacts persist for re-attach. | Fully |
@@ -717,19 +717,19 @@ All criteria in `WHO -> ACTION -> RESULT` per `AGENTS.md:43,51`.
 
 **P1 — Contracts and evidence**
 - AC-P1-1: Data engineer -> normalizes the mini rubric CSV -> `docs/rubric-matrix-unified.csv` has 161 data rows with all 19 columns populated and zero `design_only` values remaining as the terminal state.
-- AC-P1-2: Architect -> writes ADR-016 -> `docs/phase2/adr/adr-010-*.md` carries a `Superseded by ADR-016` banner and ADR-016 lists Istio, Vault, Jenkins, Argo Rollouts and the ML track as restored.
+- AC-P1-2: Architect -> writes ADR-016 -> `docs/platform/adr/adr-010-*.md` carries a `Superseded by ADR-016` banner and ADR-016 lists Istio, Vault, Jenkins, Argo Rollouts and the ML track as restored.
 - AC-P1-3: Architect -> amends ADR-005/013/014 -> each names its superseding decision, its date, and the `plan.md` line locking it.
 - AC-P1-4: `scripts/verify_target_architecture.py` -> is run against an empty cluster -> exits non-zero and lists every target component as missing (proving the assertion is live, not vacuous).
 - AC-P1-5: `pytest tests` -> runs the full suite after the evidence-tree deletion -> passes with zero skips.
 
 **P2 — Lakehouse**
 - AC-P2-1: Argo CD -> syncs `platform-lakehouse` -> Lakekeeper, MinIO, Spark Operator and source Postgres report `Synced/Healthy`.
-- AC-P2-2: `src/lakehouse/rest_catalog.py` -> lists tables against the live Lakekeeper endpoint -> returns the registered Bronze/Silver/Gold identifiers, and `tests/phase2/pipelines/test_lakehouse_catalog.py` still passes unchanged against the local contract.
+- AC-P2-2: `src/lakehouse/rest_catalog.py` -> lists tables against the live Lakekeeper endpoint -> returns the registered Bronze/Silver/Gold identifiers, and `tests/platform/pipelines/test_lakehouse_catalog.py` still passes unchanged against the local contract.
 - AC-P2-3: Spark-on-K8s `iceberg_silver_to_gold` job -> writes an affected partition twice -> row count and content are identical after the second write (idempotent, `AGENTS.md:8`).
 - AC-P2-4: Bronze Iceberg writer -> receives a duplicate business key -> appends only, never updates in place, and dedupe resolves to latest `created_ts` (`AGENTS.md:7,9`).
 - AC-P2-5: Data engineer -> tags the holdout table -> `gold.distress_holdout_v1` resolves at tag `holdout-v1` and a time-travel read at that tag returns a byte-identical row set across two calls.
 - AC-P2-6: Generator -> runs at target scale -> Bronze holds 10-50M rows / 5-20 GB (`plan.md:43`).
-- AC-P2-7: `scripts/run_stage1_quality_gates.py` -> runs after the Iceberg path exists -> passes, proving the Phase 1 Parquet path is unaffected.
+- AC-P2-7: `scripts/run_stage1_quality_gates.py` -> runs after the Iceberg path exists -> passes, proving the platform .arquet path is unaffected.
 
 **P3 — CDC, streaming, features**
 - AC-P3-1: Debezium connector -> is registered against source Postgres -> Kafka Connect reports `RUNNING` and the configured topic receives an initial-snapshot record set matching the source row count.
@@ -908,7 +908,7 @@ therefore rests on an unbuilt pool. *Refute by:* a `spot = true` node pool in th
 
 **C5.** **ADR-004 is a KServe 0.18 pin**, accepted 2026-08-02, and ADR-010's afternoon amendment
 "restored KServe `InferenceService` + Knative Serving + an llm-d router — this pin is back in
-effect for those three" — `docs/phase2/adr/adr-004-kserve-018-pin.md:1-15`. The 0.18 migration
+effect for those three" — `docs/platform/adr/adr-004-kserve-018-pin.md:1-15`. The 0.18 migration
 therefore closes implementation drift against an accepted ADR rather than overturning one, and
 llm-d is already the decided router. This contradicts the packet at lines 264, 301, 598 and 948.
 *Refute by:* ADR-004 text pinning 0.14.1 or rejecting llm-d.
@@ -959,31 +959,31 @@ any of them in source.
 
 **C14.** ADR-012 already accepts Lakekeeper as the Iceberg REST catalog and names `src/lakehouse/`
 as its dependency-light local contract with `ICEBERG_CATALOG_URI` supplied at runtime —
-`docs/phase2/adr/adr-012-iceberg-catalog-choice.md:1-14`; Lakekeeper manifests exist at
+`docs/platform/adr/adr-012-iceberg-catalog-choice.md:1-14`; Lakekeeper manifests exist at
 `archive/ml-track/platform/data/lakehouse/`. No Iceberg catalog design decision is open.
 *Refute by:* ADR-012 selecting a different catalog or being unaccepted.
 
 **C15.** ADR-013 specifies Flink CDC reading Postgres logical replication **directly**, with no
-Debezium or Kafka hop — `docs/phase2/adr/adr-013-cdc-ingestion-path.md:1-14`. The target image
+Debezium or Kafka hop — `docs/platform/adr/adr-013-cdc-ingestion-path.md:1-14`. The target image
 and `plan.md:42` specify `Debezium → Kafka → Flink`. ADR-013 must be amended, and doing so is a
 P1 deliverable ahead of P3. *Refute by:* ADR-013 text naming Debezium and Kafka.
 
 **C16.** ADR-005, as amended by ADR-010, sets the Feast **offline** store to local object storage
-— `docs/phase2/adr/adr-005-feast-stores.md:1-13`. The image labels the offline store Postgres and
+— `docs/platform/adr/adr-005-feast-stores.md:1-13`. The image labels the offline store Postgres and
 `plan.md:42` locks Postgres offline. ADR-005 must be amended. *Refute by:* ADR-005 already naming
 Postgres for the offline store.
 
 **C17.** ADR-014 scopes distributed training to a Kubeflow **Trainer** `submit_kubeflow` HTTP
-boundary — `docs/phase2/adr/adr-014-kubeflow-trainer-scope.md:1-13`. The target image routes
+boundary — `docs/platform/adr/adr-014-kubeflow-trainer-scope.md:1-13`. The target image routes
 `Kubeflow Pipeline ─distributed training─► Ray Cluster`, and `plan.md:40` locks Ray. ADR-014 must
 be amended to a Ray-backed executor. *Refute by:* ADR-014 already naming Ray.
 
 **C18.** ADR-006 (MLflow promotion) is deferred but textually unchanged and explicitly "stays
 valid and unchanged for the post-deadline ML retrofit" —
-`docs/phase2/adr/adr-006-mlflow-promotion.md:1-8`. It needs un-deferring, not rewriting.
+`docs/platform/adr/adr-006-mlflow-promotion.md:1-8`. It needs un-deferring, not rewriting.
 *Refute by:* ADR-006 requiring substantive edits for the target.
 
-**C19.** `docs/phase2/rubric-matrix.csv` contains 60 LLM and 57 ML rows with 57 `design_only`
+**C19.** `docs/platform/rubric-matrix.csv` contains 60 LLM and 57 ML rows with 57 `design_only`
 occurrences, and contains **no** mini-coursework rows. *Refute by:* different track counts from
 `awk -F, 'NR>1{print $2}' | sort | uniq -c`.
 
@@ -991,7 +991,7 @@ occurrences, and contains **no** mini-coursework rows. *Refute by:* different tr
 `docs/Coursework Tracking (Public) - rubic (mini-coursework).csv` in raw exported form (unnamed
 leading columns, multi-line quoted cells, 84 physical lines). The packet's "mini rubric matrix
 location unsourced" gap therefore reduces to a **normalization** task into the 19-column schema
-of `docs/phase2/rubric-matrix.csv`, not a discovery task. *Refute by:* that file being absent or
+of `docs/platform/rubric-matrix.csv`, not a discovery task. *Refute by:* that file being absent or
 already normalized.
 
 **C21.** The target image nests a hatched `Sandbox` boundary inside `ns: agents` containing the
@@ -1048,7 +1048,7 @@ CSV normalization task.
 It preserves every lock: the three-namespace agent isolation boundary survives because the image
 itself nests a `Sandbox` box inside `ns: agents`; Argo CD remains the sole mutator with Jenkins
 restricted to digest-only `bump-gitops`; Bronze/Silver/Gold semantics are unchanged and Iceberg
-lands as a parallel path with the Phase 1 gate green throughout. **Zero `BREAKS-LOCK`
+lands as a parallel path with the platform .ate green throughout. **Zero `BREAKS-LOCK`
 declarations.** Six decision gates (quota, cost, spot, KServe 0.18 CRDs, native sidecars, vLLM
 CPU) plus a phase-local Knative-net-layer gate front-load the branch decisions, and rollback is
 per-Argo-Application with exactly three non-reversible steps enumerated and each given a

@@ -209,7 +209,7 @@ before declaring done.
 - `scripts/run_flink_benchmark.py` requires `ENABLE_FLINK=1` and the `flink` compose profile — skip
   unless the task is Flink streaming evidence. `tests/test_flink_integration.py` pins the Flink
   client and DAG opt-in behaviour with `urllib` fakes and `monkeypatch`, by design.
-- `-m "postgres"` selects `tests/phase2/product/*`, which spins an ephemeral Postgres cluster per
+- `-m "postgres"` selects `tests/platform/product/*`, which spins an ephemeral Postgres cluster per
   session via local `initdb`/`pg_ctl` (skips without them, unless `PHASE2_REQUIRE_PG=1`, which CI
   sets). Markers select; they never skip.
 - `--strict-markers` catches an unregistered marker used via `@pytest.mark.foo`, **not** a typo in an

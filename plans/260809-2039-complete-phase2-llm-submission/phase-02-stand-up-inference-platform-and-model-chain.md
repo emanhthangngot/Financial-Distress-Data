@@ -17,7 +17,7 @@ kagent `ModelConfig` every agent will reference. Benchmark it, apply one real
 optimization, and record a before/after table.
 
 Rubric rows owned (8 points) — IDs and paths copied verbatim from
-`docs/phase2/rubric-matrix.csv`:
+`docs/platform/rubric-matrix.csv`:
 
 | Points | rubric_id | artifact_path (authority) |
 |---:|---|---|
@@ -67,7 +67,7 @@ single-replica CPU-served 0.5B model has nothing to schedule.
 Qwen2.5 0.5B. The row asks for a benchmarked custom model server, not
 GPU-class throughput, and phases 3-4 must still fit on the same node.
 
-**Model weights get a PVC.** Phase 1 established that no PVC exists anywhere in
+**Model weights get a PVC.** platform .stablished that no PVC exists anywhere in
 the GitOps tree and that the TEI embedding service caches to `emptyDir` with
 `min-scale: 0` — so every hibernation cycle re-downloads. Create a PVC-backed
 weights volume and a one-shot loader Job here, as a deliverable, not as a hope.
@@ -91,8 +91,8 @@ runs. A config tweak with no before/after numbers does not score the row.
   (placeholder today → real kagent `ModelConfig` + agentgateway backend)
 - Create (GitOps): `platform/inference/model-weights-pvc.yaml`,
   `platform/inference/model-loader-job.yaml`
-- Create: 4 evidence files under `docs/phase2/evidence/llm/`
-- Regenerate (never hand-edit): `tests/phase2/requirements/test_llm_ac_01_inference.py`,
+- Create: 4 evidence files under `docs/platform/evidence/llm/`
+- Regenerate (never hand-edit): `tests/platform/requirements/test_llm_ac_01_inference.py`,
   `test_llm_ac_02_model_config.py`
 
 ## Implementation Steps

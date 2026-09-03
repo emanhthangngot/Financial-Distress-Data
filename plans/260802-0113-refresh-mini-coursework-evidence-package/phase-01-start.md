@@ -7,7 +7,7 @@ status: completed
 
 ## Overview
 
-Confirm Phase 1 boundaries, the current rubric as the scoring source, and the audited blockers.
+Confirm platform .oundaries, the current rubric as the scoring source, and the audited blockers.
 
 ## Requirements
 

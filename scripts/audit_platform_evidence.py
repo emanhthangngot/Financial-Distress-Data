@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Phase 2 evidence auditor — rubric-matrix linter and evidence validator.
+"""the platform evidence auditor — rubric-matrix linter and evidence validator.
 
 Usage:
   python scripts/audit_platform_evidence.py --matrix-only --strict
   python scripts/audit_platform_evidence.py --matrix-only --matrix PATH
   python scripts/audit_platform_evidence.py --require-executed --run-validations \
-    --phase1-base "$PHASE1_BASE_SHA" --gitops-root ../financial-distress-gitops \
+    --platform-base "$PHASE1_BASE_SHA" --gitops-root ../financial-distress-gitops \
     --ml 100 --llm 100
 
 Modes:
@@ -58,7 +58,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-PHASE1_PROTECTED = [
+PLATFORM_PROTECTED = [
     "src/collectors/",
     "src/transforms/",
     "src/quality/",
@@ -80,22 +80,22 @@ PHASE1_PROTECTED = [
     "docs/architecture/data-model.md",
 ]
 
-# Carve-outs inside a PHASE1_PROTECTED prefix that hold no Phase 1 pipeline
+# Carve-outs inside a PLATFORM_PROTECTED prefix that hold no platform lakehouse pipeline
 # behavior. `src/streaming/flink/jobs/` is the opt-in W26 Flink job home: by
 # design (see its README) it holds no burst/late-arrival/dedup logic — that
 # lives in `kafka_to_bronze_consumer.py`, which stays fully protected. A diff
-# confined to this carve-out is not a Phase 1 behavior mutation.
-# `sql/init_ml_metadata.sql` is the Phase 2 `ml` schema (plan-pinned:
+# confined to this carve-out is not a platform behavior mutation.
+# `sql/init_ml.sql` is the the platform ml schema (plan-pinned:
 # phase-04-implementation-notes.md section 1) — a new file, never touching
-# `sql/init_project_metadata.sql` or any other Phase 1 SQL.
-PHASE1_PROTECTED_EXCEPTIONS = [
+# `sql/init_ops.sql` or any other platform .QL.
+PLATFORM_PROTECTED_EXCEPTIONS = [
     "src/streaming/flink/jobs/",
-    "sql/init_ml_metadata.sql",
-    # Shared package carve-outs: these helpers are owned by Phase 2 and may
+    "sql/init_ml.sql",
+    # Shared package carve-outs: these helpers are owned by platform .nd may
     # evolve without weakening protection for the rest of the package.
     "src/io/paths.py",
     "src/governance/lineage.py",
-    # Phase 2 lakehouse contracts are additive files in a shared package; the
+    # platform lakehouse contracts are additive files in a shared package; the
     # existing compaction spine and all other lakehouse files remain protected.
     "src/lakehouse/catalog.py",
     "src/lakehouse/tables.py",
@@ -103,12 +103,12 @@ PHASE1_PROTECTED_EXCEPTIONS = [
 ]
 
 REQUIRED_DOCS = [
-    "docs/phase2/requirements.md",
-    "docs/phase2/acceptance-criteria.md",
-    "docs/phase2/architecture.md",
-    "docs/phase2/evidence-contract.md",
-    "docs/phase2/low-level-design.md",
-    "docs/phase2/novel-ideas.md",
+    "docs/platform/requirements.md",
+    "docs/platform/acceptance-criteria.md",
+    "docs/platform/architecture.md",
+    "docs/platform/evidence-contract.md",
+    "docs/platform/low-level-design.md",
+    "docs/platform/novel-ideas.md",
 ]
 
 VALID_EVIDENCE_TYPES = {"executed", "design_only", "stretch"}
@@ -124,7 +124,7 @@ SOURCE_ARTIFACT_ROOTS = (
     ".github/workflows/",
     "notebooks/",
     "tests/platform/requirements/",
-    "docs/phase2/",
+    "docs/platform/",
 )
 GITOPS_ARTIFACT_ROOTS = (
     ".github/workflows/",
@@ -143,7 +143,7 @@ CANONICAL_RUBRICS = {
 EXPECTED_ROW_COUNTS = {"ML": 57, "LLM": 60}
 TRACKS = ("ML", "LLM")
 
-# Per-artifact metadata required by docs/phase2/evidence-contract.md. A file
+# Per-artifact metadata required by docs/platform/evidence-contract.md. A file
 # that exists but lacks any of these cannot prove a rubric point.
 EVIDENCE_REQUIRED_KEYS = [
     "rubric_id",
@@ -173,7 +173,7 @@ def _read_matrix(matrix_path: Path | None = None) -> list[dict[str, str]] | None
 
 def _acceptance_ids() -> set[str]:
     """Return all declared acceptance IDs from the normative catalog."""
-    path = REPO_ROOT / "docs/phase2/acceptance-criteria.md"
+    path = REPO_ROOT / "docs/platform/acceptance-criteria.md"
     if not path.exists():
         return set()
     return set(re.findall(r"`((?:ML|LLM)-AC-[A-Z0-9-]+)`", path.read_text(encoding="utf-8")))
@@ -316,8 +316,8 @@ def _audit_matrix(
             owners_seen.add(owner)
 
         epath = row.get("evidence_path", "")
-        if epath and enforce_evidence_prefix and not epath.startswith("docs/phase2/evidence/"):
-            errors.append(f"{rid}: evidence_path '{epath}' not under docs/phase2/evidence/")
+        if epath and enforce_evidence_prefix and not epath.startswith("docs/platform/evidence/"):
+            errors.append(f"{rid}: evidence_path '{epath}' not under docs/platform/evidence/")
 
         if re.search(r"row[-_]?\d+$", rid):
             errors.append(f"{rid}: ID looks like a spreadsheet line number, use semantic slug")
@@ -398,46 +398,46 @@ def _audit_matrix(
 def _audit_phase1_no_mutation(matrix: list[dict[str, str]]) -> list[str]:
     errors: list[str] = []
     blob = "\n".join(",".join(row.values()) for row in matrix).lower()
-    for path in PHASE1_PROTECTED:
+    for path in PLATFORM_PROTECTED:
         if path.lower() in blob:
-            errors.append(f"Matrix references Phase 1 protected path '{path}'")
+            errors.append(f"Matrix references platform protected path '{path}'")
     for row in matrix:
         for value in row.values():
             lowered = value.lower()
             if "dags/" in lowered and "dags/" not in lowered:
-                errors.append(f"{row.get('rubric_id', '?')}: matrix references a Phase 1 DAG path")
+                errors.append(f"{row.get('rubric_id', '?')}: matrix references a platform .AG path")
                 break
     return errors
 
 
 def _phase1_mutation_from_changed(changed: list[str]) -> list[str]:
-    """Return errors when a git diff touches Phase 1 protected paths.
+    """Return errors when a git diff touches platform protected paths.
 
     `changed` is a list of repo-relative paths (e.g. from `git diff --name-only`).
-    The working tree or branch must not modify Phase 1 collectors, transforms,
+    The working tree or branch must not modify platform .ollectors, transforms,
     quality, catalog, metadata, streaming, generator, dags, sql, or their docs.
     """
     errors: list[str] = []
-    for path in PHASE1_PROTECTED:
+    for path in PLATFORM_PROTECTED:
         matched = [entry for entry in changed if entry == path or entry.startswith(path)]
         unexcepted = [
             entry
             for entry in matched
-            if not any(entry.startswith(exc) for exc in PHASE1_PROTECTED_EXCEPTIONS)
+            if not any(entry.startswith(exc) for exc in PLATFORM_PROTECTED_EXCEPTIONS)
         ]
         if unexcepted:
-            errors.append(f"Git diff modifies Phase 1 protected path '{path}'")
+            errors.append(f"Git diff modifies platform protected path '{path}'")
     if any(entry.startswith("dags/") and not entry.startswith("dags/") for entry in changed):
-        errors.append("Git diff modifies Phase 1 protected DAG path 'dags/'")
+        errors.append("Git diff modifies platform protected DAG path 'dags/'")
     return errors
 
 
 def _audit_phase1_git_diff(base: str) -> list[str]:
-    """Run the Phase 1 no-mutation gate and fail closed when unverifiable.
+    """Run the platform .o-mutation gate and fail closed when unverifiable.
 
     Compares the working tree against ``<base>`` (default ``origin/dev``) and
     also lists untracked files, because ``git diff --name-only`` never reports
-    brand-new files. A Phase 1 path touched by *either* source is a failure.
+    brand-new files. A platform .ath touched by *either* source is a failure.
 
     Fail-closed: if the baseline cannot be resolved (missing ref, git error,
     non-zero exit) the gate returns an error instead of silently passing, so an
@@ -447,9 +447,9 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
     below, after the baseline has been resolved and the diff computed — a
     missing/unresolvable baseline still fails closed regardless of this var.
     It exists for Phase 1's own architecture-hygiene work (moving/renaming
-    Phase 1 files without changing Phase 1 behavior), which this gate cannot
-    distinguish from a Phase 2 task mutating Phase 1 — it only sees changed
-    paths, not intent. Unset by default so a real Phase 2 task is still
+    platform .iles without changing platform behavior), which this gate cannot
+    distinguish from a platform .ask mutating platform . it only sees changed
+    paths, not intent. Unset by default so a real platform .ask is still
     blocked.
     """
     import subprocess
@@ -652,7 +652,7 @@ def _only_evidence_sha_lines_changed(root: Path, revision: str, head: str) -> bo
             continue
         elif line.startswith(("+", "-")):
             saw_change = True
-            if not current_path.startswith("docs/phase2/evidence/") or not allowed_line.match(line):
+            if not current_path.startswith("docs/platform/evidence/") or not allowed_line.match(line):
                 return False
     return saw_change
 
@@ -787,7 +787,7 @@ def _audit_evidence_secrets(rid: str, evidence_path: str, text: str) -> list[str
 def _audit_all_evidence_bodies() -> list[str]:
     """Scan every committed evidence markdown body, including accepted cuts."""
     errors: list[str] = []
-    evidence_root = REPO_ROOT / "docs/phase2/evidence"
+    evidence_root = REPO_ROOT / "docs/platform/evidence"
     if not evidence_root.is_dir():
         return errors
     for path in sorted(evidence_root.rglob("*.md")):
@@ -822,7 +822,7 @@ def _audit_executed(
     design_only or stretch has *not* been executed and cannot claim a rubric
     point, so it is a failure. For every executed row the evidence file must
     exist, reference its rubric_id, carry every metadata key from
-    docs/phase2/evidence-contract.md with a *non-empty* value, and satisfy the
+    docs/platform/evidence-contract.md with a *non-empty* value, and satisfy the
     per-field format contract (ISO-8601 timestamp, git SHAs/refs, a
     reproduction command, and expected/actual results). A design claimed as
     executed but recorded as a mere placeholder — keys present but values
@@ -1006,7 +1006,7 @@ def _audit_behavior_validations(matrix: list[dict[str, str]]) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Audit Phase 2 rubric evidence contract")
+    parser = argparse.ArgumentParser(description="Audit platform .ubric evidence contract")
     parser.add_argument(
         "--matrix-only", action="store_true", help="Validate the rubric matrix only (phase-01)"
     )
@@ -1014,7 +1014,7 @@ def main(argv: list[str] | None = None) -> int:
         "--matrix",
         type=Path,
         default=None,
-        help="Path to a rubric-matrix CSV to audit (defaults to docs/phase2/rubric-matrix.csv). "
+        help="Path to a rubric-matrix CSV to audit (defaults to docs/platform/rubric-matrix.csv). "
         "Used for fixture-based tests.",
     )
     parser.add_argument(
@@ -1058,20 +1058,20 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         metavar="RUBRIC_ID[,RUBRIC_ID...]",
         help="Name pending design-only rows for an interim audit; during final promotion "
-        "(--phase1-base or --run-validations), these become documented unearned cuts",
+        "(--platform-base or --run-validations), these become documented unearned cuts",
     )
     parser.add_argument("--ml", type=int, default=100, help="Expected ML total points")
     parser.add_argument("--llm", type=int, default=100, help="Expected LLM total points")
     parser.add_argument(
         "--git-base",
         default="origin/dev",
-        help="Base ref for the matrix-only Phase 1 no-mutation check "
+        help="Base ref for the matrix-only platform .o-mutation check "
         "(default: origin/dev; an unresolvable baseline fails the gate)",
     )
     parser.add_argument(
-        "--phase1-base",
+        "--platform-base",
         default=None,
-        help="Frozen 40-hex Phase 1 baseline commit required by the promotion gate",
+        help="Frozen 40-hex platform .aseline commit required by the promotion gate",
     )
     args = parser.parse_args(argv)
 
@@ -1091,7 +1091,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     if matrix is None:
-        errors.append("💀 docs/phase2/rubric-matrix.csv not found or unreadable")
+        errors.append("💀 docs/platform/rubric-matrix.csv not found or unreadable")
     else:
         errors.extend(
             _audit_matrix(
@@ -1151,7 +1151,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"WARNING: {rid}: {label}; no rubric points claimed")
             if args.matrix is None and final_promotion:
                 if not args.phase1_base or not _is_full_git_sha(args.phase1_base):
-                    errors.append("final promotion requires --phase1-base as a frozen 40-hex SHA")
+                    errors.append("final promotion requires --platform-base as a frozen 40-hex SHA")
                 else:
                     errors.extend(_audit_phase1_git_diff(args.phase1_base))
                     errors.extend(_audit_frozen_revisions(scoped, args.gitops_root))
@@ -1168,13 +1168,13 @@ def main(argv: list[str] | None = None) -> int:
         elif args.matrix is not None:
             errors.append("--run-validations is allowed only for the canonical matrix")
         elif not args.phase1_base or not _is_full_git_sha(args.phase1_base):
-            errors.append("--run-validations requires --phase1-base as a frozen 40-hex SHA")
+            errors.append("--run-validations requires --platform-base as a frozen 40-hex SHA")
         elif scoped is not None:
             errors.extend(_audit_behavior_validations(scoped))
 
     if args.matrix_only:
         errors.extend(_audit_required_docs())
-        # Phase 1 must not be mutated in the repository diff either.
+        # platform .ust not be mutated in the repository diff either.
         errors.extend(_audit_phase1_git_diff(args.git_base))
 
     # ── Output ────────────────────────────────────────────────────────
@@ -1187,7 +1187,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n{len(errors)} finding(s) — {'FAIL' if fail else 'exit 0 (non-strict)'}")
         return 1 if fail else 0
 
-    print("✅ Phase 2 rubric matrix is complete and consistent.")
+    print("✅ platform .ubric matrix is complete and consistent.")
     return 0
 
 

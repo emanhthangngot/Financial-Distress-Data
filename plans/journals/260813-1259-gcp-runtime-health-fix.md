@@ -12,12 +12,12 @@ tags: [phase2, gcp, gitops, runtime]
 
 **Date**: 2026-08-13 12:59
 **Severity**: High
-**Component**: Phase 2 GKE/ArgoCD runtime health
+**Component**: platform .KE/ArgoCD runtime health
 **Status**: Resolved with residual risk
 
 ## What Happened
 
-We finished the runtime-health repair without changing Phase 2 app contracts. The cluster had been carrying a mix of GitOps drift, a broken orphan `default/web` Deployment, and kagent API registration failure. The durable fix landed across GitOps PRs `#50` to `#65`, with the last meaningful convergence in `#61` through `#65`: ignore operator-owned drift where appropriate, split/apply kagent CRDs safely, keep the controller on server-side apply, configure Grafana MCP discovery, and reseal its token with the active controller certificate.
+We finished the runtime-health repair without changing platform .pp contracts. The cluster had been carrying a mix of GitOps drift, a broken orphan `default/web` Deployment, and kagent API registration failure. The durable fix landed across GitOps PRs `#50` to `#65`, with the last meaningful convergence in `#61` through `#65`: ignore operator-owned drift where appropriate, split/apply kagent CRDs safely, keep the controller on server-side apply, configure Grafana MCP discovery, and reseal its token with the active controller certificate.
 
 ## The Brutal Truth
 

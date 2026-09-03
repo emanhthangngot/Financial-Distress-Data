@@ -7,7 +7,7 @@ effort: "2d"
 dependencies: [2]
 ---
 
-> **CANCELLED 2026-08-14 (user decision, ML track dropped).** Zero LLM rubric rows reference cosign/SBOM/SLSA attestation (measured against docs/phase2/rubric-matrix.csv, 2026-08-14). This closed only ML rows (~5 pts). The fork-PR login guard fix this phase produced was kept (folded into the LLM-relevant CI commit); the cosign/SBOM/SLSA steps were reverted out of the shared `phase2-ci.yaml` because it also builds LLM deployables and the missing GHCR `write:packages` scope would have broken their CI runs too.
+> **CANCELLED 2026-08-14 (user decision, ML track dropped).** Zero LLM rubric rows reference cosign/SBOM/SLSA attestation (measured against docs/platform/rubric-matrix.csv, 2026-08-14). This closed only ML rows (~5 pts). The fork-PR login guard fix this phase produced was kept (folded into the LLM-relevant CI commit); the cosign/SBOM/SLSA steps were reverted out of the shared `phase2-ci.yaml` because it also builds LLM deployables and the missing GHCR `write:packages` scope would have broken their CI runs too.
 > Body below is kept as the historical record of what was planned/built; nothing further is executed against it. See `plan.md` Overview.
 
 # Phase 3: Supply chain — sign, attest, SBOM
@@ -62,9 +62,9 @@ caller workflows, so signing is added once there and every deployable inherits i
 - Modify: `.github/workflows/phase2-ci.yaml` — signing, attestation, SBOM steps
 - Create: `configs/phase2-deployables.yaml` — deployable catalog
 - Create: `scripts/phase2_ci/__init__.py`, `catalog.py`, `gitops_paths.py`
-- Create: `tests/phase2/test_deployable_catalog.py`
+- Create: `tests/platform/test_deployable_catalog.py`
 - Create: `scripts/verify_supply_chain.py`
-- Create: `docs/phase2/adr/adr-011-supply-chain-provenance.md`
+- Create: `docs/platform/adr/adr-011-supply-chain-provenance.md`
 - Modify: `requirements-phase2.txt` — add `pyyaml`-based catalog deps if needed
 
 ## Implementation Steps
@@ -76,7 +76,7 @@ caller workflows, so signing is added once there and every deployable inherits i
 2. Create `scripts/phase2_ci/` as tested Python — the `RecSys-MLops` lesson that
    CI decisions belong in unit-tested code, not YAML. Provide catalog parsing,
    GitOps path resolution and digest-bump patch construction.
-3. Add `tests/phase2/test_deployable_catalog.py` asserting that every
+3. Add `tests/platform/test_deployable_catalog.py` asserting that every
    `gitops_values_path` and `gitops_chart` in the catalog resolves inside the
    GitOps checkout. **This is the unit test that would have caught the
    `platform/ml/` vs `platform/llm/` drift** at commit time rather than at

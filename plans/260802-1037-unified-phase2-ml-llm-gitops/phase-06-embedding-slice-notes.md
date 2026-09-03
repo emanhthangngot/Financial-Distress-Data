@@ -27,7 +27,7 @@ Verification basis (re-verified live 2026-08-08):
 | `make gcp-up` scales **primary-pool only**, to 1 node | `financial-distress-gitops/Makefile:32-36` |
 | Installed KServe = **v0.14.1** | `platform/inference/VERSIONS.md:14`; `vendored/05-kserve-cluster-resources.yaml:12` image `kserve/huggingfaceserver:v0.14.1` |
 | KServe v0.14.1 has **no `LLMInferenceService` CRD** | full CRD list in `vendored/04-kserve.yaml`: `inferenceservices`, `inferencegraphs`, `servingruntimes`, `clusterservingruntimes`, `trainedmodels`, `localmodelcache(s)`, `localmodelnodegroups`, `localmodelnodes`, `clusterstoragecontainers` — nothing llm-d-related |
-| `platform/inference/model-server.yaml` is a rubric-pinned artifact | `docs/phase2/rubric-matrix.csv:9`, rubric_id `LLM-a-llm-inference-platform--llm-inference-platform-setup-c`, `artifact_path=platform/inference/model-server.yaml` |
+| `platform/inference/model-server.yaml` is a rubric-pinned artifact | `docs/platform/rubric-matrix.csv:9`, rubric_id `LLM-a-llm-inference-platform--llm-inference-platform-setup-c`, `artifact_path=platform/inference/model-server.yaml` |
 | Argo already reconciles `platform/inference/` recursively | `argocd/applications/platform-inference.yaml` — `path: platform/inference`, `directory.recurse: true`, `exclude: "*.md"`, `automated{prune,selfHeal}`, `ServerSideApply=true` |
 | Knative routes through Kourier | `platform/inference/06-config-network-patch.yaml` sets `config-network.ingress-class=kourier...` |
 | PGVector column is `vector(384)` | `phase-04-implementation-notes.md:343` |
@@ -69,7 +69,7 @@ Fine for coursework; must not be described as OSS.
 
 ### D-E2 — New file `platform/inference/embedding-server.yaml`; do **not** touch `model-server.yaml`
 
-`docs/phase2/rubric-matrix.csv:9` pins `platform/inference/model-server.yaml` as
+`docs/platform/rubric-matrix.csv:9` pins `platform/inference/model-server.yaml` as
 the gitops `artifact_path` for `LLM-AC-01-INFERENCE` ("Deploy a LLM inference
 platform … + setup custom model", 2 pts). `phase-06-...md:165` also reserves it
 for the chat model's `InferenceService`.
@@ -94,7 +94,7 @@ Not a preference — a hard version fact. llm-d integrates with KServe through t
 llm-d-shaped surface to configure.
 
 This also surfaces a **real ADR/reality conflict that must be recorded**:
-`docs/phase2/adr/adr-004-kserve-018-pin.md:24` pins KServe **0.18**;
+`docs/platform/adr/adr-004-kserve-018-pin.md:24` pins KServe **0.18**;
 `ADR-010:88-93` restores "llm-d router → KServe InferenceService" on that
 assumption; phase-03 actually vendored **0.14.1**. See Open Question **QE-1** —
 this belongs to phase-06 proper (it affects whether canonical row 2 lands "as
@@ -140,7 +140,7 @@ normalizes by default; the HNSW index is already `vector_cosine_ops`
 
 ### D-E6 — Evidence run reaches the endpoint by `kubectl port-forward`, not a public route
 
-Airflow is Phase 1 and local (`AGENTS.md` boundary); it is not in GKE. So the
+Airflow is platform .nd local (`AGENTS.md` boundary); it is not in GKE. So the
 RAG pipeline is a client **outside** the cluster. Two concrete options:
 
 | Option | Verdict |
@@ -409,7 +409,7 @@ Files owned (repo `Financial-Distress-Data`, branch `feat/embedding-http-backend
 |---|---|
 | `src/llm/rag/embedding.py` | NEW-or-EXTEND — D5's protocol + a **third** impl `TeiHttpEmbedder` |
 | `configs/embedding-backends.yaml` | NEW — the D-E7 pin file |
-| `tests/phase2/pipelines/test_embedding_http.py` | NEW — unit tests, no network |
+| `tests/platform/pipelines/test_embedding_http.py` | NEW — unit tests, no network |
 | `scripts/smoke_embedding_endpoint.py` | NEW — the live smoke test (Phase E4) |
 
 If phase-04 slice 4B has not run yet, this phase **creates** `src/llm/rag/embedding.py`
@@ -454,7 +454,7 @@ Contract details that matter:
 
 Verify: `.venv/bin/python -m pytest tests -k embedding`, then the full
 `AGENTS.md` gate `.venv/bin/python scripts/run_stage1_quality_gates.py` before
-declaring done (the new module must not break the Phase 1 fast loop — that is
+declaring done (the new module must not break the platform .ast loop — that is
 D4's whole point).
 
 ### Phase E4 — Verification / evidence (1h)
@@ -487,7 +487,7 @@ Blockers: E1, E3.
    idempotency meaningful.
 4. Write a short runbook note (endpoint, port-forward command, Host header,
    cold-start numbers, image + model digests) — into this file's §5, **not** into
-   `docs/phase2/evidence/llm/`. Evidence files belong to rubric rows; this slice
+   `docs/platform/evidence/llm/`. Evidence files belong to rubric rows; this slice
    claims none (D-E2).
 
 ### Phase E5 — Hibernate (10 min) — **HARD-TO-REVERSE, CONFIRM FIRST**
@@ -526,7 +526,7 @@ start, and the persistent LB IP that stays billed while hibernated.
 ## 4. Backwards compatibility & rollback
 
 **Compatibility:** additive everywhere.
-- No Phase 1 file, DAG, or docker-compose service is touched.
+- No platform .ile, DAG, or docker-compose service is touched.
 - No existing gitops file changes except `VERSIONS.md` (append-only rows).
 - `model-server.yaml`, `llm-d-router.yaml` untouched / not created.
 - PGVector `vector(384)` unchanged (D-E4). Rows produced by this backend carry a
@@ -552,13 +552,13 @@ one, that is out of scope and needs its own confirmation.
 
 | Level | What | Where | Needs cluster? |
 |---|---|---|---|
-| Unit | prefix applied; batching splits at 32; 384-dim assertion raises on wrong dims; norm assertion raises; retry fires on 503/timeout and **not** on 400; Host header always sent | `tests/phase2/pipelines/test_embedding_http.py`, `requests` stubbed | no |
+| Unit | prefix applied; batching splits at 32; 384-dim assertion raises on wrong dims; norm assertion raises; retry fires on 503/timeout and **not** on 400; Host header always sent | `tests/platform/pipelines/test_embedding_http.py`, `requests` stubbed | no |
 | Unit | `configs/embedding-backends.yaml` parses; `digest` recomputes to the committed value | same file | no |
 | Contract | manifest is valid against the live API | `kubectl apply --dry-run=server` | yes |
 | Integration | ISVC reaches `READY=True`; `/health` 200 | E1 gate | yes |
 | E2E | Vietnamese `/v1/embeddings` → 384-dim, normalized, semantically sane | `scripts/smoke_embedding_endpoint.py` | yes |
 | E2E | scale 0→1→0 observed; cold vs warm latency recorded | E4 step 2 | yes |
-| Regression | Phase 1 gate still green | `scripts/run_stage1_quality_gates.py` | no |
+| Regression | platform .ate still green | `scripts/run_stage1_quality_gates.py` | no |
 
 The unit layer must run in `.venv` with **no** network and **no** new
 dependency — that is the gate `AGENTS.md` calls definition of done.
@@ -589,8 +589,8 @@ dependency — that is the gate `AGENTS.md` calls definition of done.
 - [ ] Smoke script -> POSTs two Vietnamese sentences to `/v1/embeddings` through the port-forward with the Knative `Host` header -> HTTP 200, 2 vectors, each exactly 384 floats, L2 norm within 1e-3 of 1.0, and the two Vietnamese sentences more cosine-similar to each other than to an English control.
 - [ ] Operator -> lets the revision scale to zero, then issues one request -> observes replicas `0 -> 1`, records cold-start seconds and warm-call milliseconds as two distinct numbers.
 - [ ] `TeiHttpEmbedder` -> embeds the same text twice -> returns byte-identical 384-float vectors.
-- [ ] Developer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> passes, proving the new module did not leak a dependency into the Phase 1 fast loop.
-- [ ] Reviewer -> greps `platform/inference/model-server.yaml` and `docs/phase2/evidence/llm/` -> finds the placeholder unchanged and **no** new evidence file, confirming this slice claimed zero rubric rows.
+- [ ] Developer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> passes, proving the new module did not leak a dependency into the platform .ast loop.
+- [ ] Reviewer -> greps `platform/inference/model-server.yaml` and `docs/platform/evidence/llm/` -> finds the placeholder unchanged and **no** new evidence file, confirming this slice claimed zero rubric rows.
 - [ ] Platform operator -> runs `make gcp-down` after user confirmation -> `make gcp-status` shows both pools at 0.
 
 ---

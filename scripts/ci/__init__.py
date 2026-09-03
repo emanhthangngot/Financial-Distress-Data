@@ -1,4 +1,4 @@
-"""Pure helpers used by the Phase 2 build and deployment gates.
+"""Pure helpers used by the platform .uild and deployment gates.
 
 Catalog symbols are loaded lazily so lightweight tools such as
 ``verify_supply_chain.py --help`` do not import the YAML parser unnecessarily.

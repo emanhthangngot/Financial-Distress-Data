@@ -12,7 +12,7 @@ dependencies: [4]
 ## Overview
 
 Move the existing Next.js product app (`apps/web`, ~162 TypeScript files, the
-"DistressLens" contract in `docs/phase2/product.md`) off Vercel + Supabase and onto
+"DistressLens" contract in `docs/platform/product.md`) off Vercel + Supabase and onto
 the cluster, and fold the agent chat UI and agent registry UI into it rather than
 shipping them as separate surfaces.
 
@@ -88,7 +88,7 @@ deployments. One authentication story, one ingress, one image.
 - Create: `apps/web/src/app/agents/chat/`, `apps/web/src/app/agents/registry/`, `apps/web/src/lib/auth/` (Postgres-backed sessions)
 - Create in GitOps: `charts/web/` (or extend the existing chart), `apps/dev/web/values.yaml`
 - Delete: Supabase client wiring, `supabase/` config and migrations once the auth swap is verified; any Vercel deployment configuration
-- Modify: `docs/product.md` (relocated from `docs/phase2/product.md` under the phase-free docs layout)
+- Modify: `docs/product.md` (relocated from `docs/platform/product.md` under the phase-free docs layout)
 
 ## Implementation Steps
 

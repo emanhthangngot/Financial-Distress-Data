@@ -1,6 +1,6 @@
 ---
 title: "Full system and browser QA"
-description: "Run the repository's full Phase 1/Phase 2 test contracts plus detailed Chrome DevTools and Playwright QA for user-facing flows."
+description: "Run the repository's full Phase 1/platform .est contracts plus detailed Chrome DevTools and Playwright QA for user-facing flows."
 status: completed
 priority: P1
 effort: ""
@@ -12,13 +12,13 @@ created: 2026-08-13
 
 ## Overview
 
-Validate the implemented coursework surface without changing product code: backend contracts, web unit/integration tests, build/type/lint gates, existing Playwright suites, live Phase 2 service readiness, and detailed browser behavior.
+Validate the implemented coursework surface without changing product code: backend contracts, web unit/integration tests, build/type/lint gates, existing Playwright suites, live platform .ervice readiness, and detailed browser behavior.
 
 ## Goals
 
 | # | Goal | Priority |
 |---|------|----------|
-| 1 | Validate Phase 1 and Phase 2 automated contracts and coverage | P1 |
+| 1 | Validate platform .nd platform .utomated contracts and coverage | P1 |
 | 2 | Validate all documented web pages, role boundaries, assistant flows, accessibility, responsive behavior, and error states | P1 |
 | 3 | Record reproducible evidence, failures, skips, and unresolved questions | P1 |
 
@@ -40,7 +40,7 @@ Validate the implemented coursework surface without changing product code: backe
 
 ## Acceptance criteria
 
-- Repository test suite -> executes Phase 1 and Phase 2 contracts -> results include pass/fail/skip counts and failure diagnostics.
+- Repository test suite -> executes platform .nd platform .ontracts -> results include pass/fail/skip counts and failure diagnostics.
 - Web package -> runs typecheck, lint, build, Vitest, and Playwright -> all completed results are recorded without suppressing failures.
 - Browser QA -> visits documented analyst, company, assistant, operations, registry, and error routes -> each route has functional, console, network, and responsive evidence.
 - Accessibility/performance checks -> run against critical pages -> violations and budgets are recorded with severity.

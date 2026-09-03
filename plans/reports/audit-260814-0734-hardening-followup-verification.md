@@ -19,7 +19,7 @@ under-reported.
 | Full tests 311 passed | `.venv/bin/python -m pytest tests` -> 311 passed, 1.46s |
 | Ruff / Black | ruff PASS; black 328 files unchanged |
 | Docker Compose config | PASS |
-| Phase 2 gate + GitOps | 72 passed, 1 skipped; kubeconform 302 resources, 190 valid, 0 invalid/errors; Helm lint 6 charts, terraform fmt/validate PASS |
+| platform .ate + GitOps | 72 passed, 1 skipped; kubeconform 302 resources, 190 valid, 0 invalid/errors; Helm lint 6 charts, terraform fmt/validate PASS |
 | Strict real-digest gate fails on 4 API values | exact: `apps/dev/{drift,feature}-api/values.yaml`, `charts/{drift,feature}-api/values.yaml`, all `sha256:0000…` |
 | ML gate 57 `design_only` | confirmed (59 findings = 57 design_only + 2 missing-arg) |
 | Matrix strict | `--matrix-only --strict` PASS |
@@ -65,19 +65,19 @@ SHAs, re-run — but until then the reports' green LLM line is not defensible.
 Beyond the 57 `design_only` rows, 2 rows fail with:
 
 ```
-behavior validation failed with exit 4 — ERROR: file or directory not found: tests/phase2/requirements/test_ml_ac_01_web_api.py
+behavior validation failed with exit 4 — ERROR: file or directory not found: tests/platform/requirements/test_ml_ac_01_web_api.py
 ```
 
-3 rows in `docs/phase2/rubric-matrix.csv` reference that file; it does not exist
-(`tests/phase2/requirements/` holds only `test_llm_ac_*`). This is an in-repo
+3 rows in `docs/platform/rubric-matrix.csv` reference that file; it does not exist
+(`tests/platform/requirements/` holds only `test_llm_ac_*`). This is an in-repo
 gap fixable now, not an external blocker — the report frames the ML failure as
 entirely `design_only`-driven.
 
 ### 3. "Full tests: 311 passed" is mislabeled
 
-`tests/phase2` collects **zero** tests under `.venv` (Phase 2 deps live in
-`.venv-phase2`). Real Phase 2 coverage: `.venv-phase2 -m pytest tests/phase2` ->
-**557 passed, 35 skipped in 55s**. The 311 figure is the Phase 1 suite only, and
+`tests/phase2` collects **zero** tests under `.venv` (platform .eps live in
+`.venv-phase2`). Real platform .overage: `.venv-phase2 -m pytest tests/phase2` ->
+**557 passed, 35 skipped in 55s**. The 311 figure is the platform .uite only, and
 the 72-passed gate figure is a gate subset, not the phase-2 suite. Neither is
 wrong; the label "Full tests" is.
 
@@ -94,7 +94,7 @@ fabricated evidence, cluster mutation, or inflated checkbox counts — the
 1. Commit source + GitOps working trees on their branches, re-stamp evidence
    `source_sha`/`gitops_sha`, re-run the strict LLM gate. Until this is green,
    do not report the LLM invariant as held.
-2. Add `tests/phase2/requirements/test_ml_ac_01_web_api.py` or repoint those 3
+2. Add `tests/platform/requirements/test_ml_ac_01_web_api.py` or repoint those 3
    matrix rows — removes 2 ML findings without any external dependency.
 3. Relabel verification tables: state the venv and the selection for each
    pytest number.

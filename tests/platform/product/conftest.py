@@ -1,4 +1,4 @@
-"""Ephemeral Postgres cluster for Phase 2 RLS/RBAC tests.
+"""Ephemeral Postgres cluster for platform .LS/RBAC tests.
 
 Docker networking is unavailable in this sandbox (veth pair creation fails),
 so `supabase start` cannot be used here. This fixture drives the native

@@ -67,7 +67,7 @@ src/lib/data/fixtures/**   # data, not logic
 - Create: `apps/web/src/components/shell/disclaimer-banner.test.tsx` — renders `DISCLAIMER_TEXT` on every surface in `DISCLAIMER_SURFACES`
 - Create: `apps/web/src/components/shell/nav-rail.test.tsx` — role-scoped items; an analyst never sees platform navigation
 - Modify: `.github/workflows/ci.yml` — run coverage, upload the summary
-- Modify: `docs/phase2/product.md` — the testing contract: what unit, component and Playwright each own
+- Modify: `docs/platform/product.md` — the testing contract: what unit, component and Playwright each own
 
 ## Implementation Steps
 
@@ -144,5 +144,5 @@ src/lib/data/fixtures/**   # data, not logic
 
 ### T4.6 — CI + docs + full gates
 
-- **Files:** Modify `.github/workflows/ci.yml` (the `contracts` job already runs `pnpm test`; add the coverage summary upload or a `coverage` step that fails on the same thresholds — confirm the coverage JSON artifact is published); Modify `docs/phase2/product.md` (the testing contract: what unit, component and Playwright each own).
+- **Files:** Modify `.github/workflows/ci.yml` (the `contracts` job already runs `pnpm test`; add the coverage summary upload or a `coverage` step that fails on the same thresholds — confirm the coverage JSON artifact is published); Modify `docs/platform/product.md` (the testing contract: what unit, component and Playwright each own).
 - **Verify:** `pnpm test && pnpm typecheck && pnpm lint && pnpm --filter @distresslens/web e2e && pnpm --filter @distresslens/web e2e:roles`.

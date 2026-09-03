@@ -1,12 +1,12 @@
-# Phase 2 Stage 2 — frontend implementation plan and design read
+# platform .tage 2 — frontend implementation plan and design read
 
 Source prompt: `plans/reports/prompt-260804-0835-phase2-stage2-frontend-implementation.md`
 Gap report: `plans/reports/review-260803-2249-phase2-status.md`
 Phase: **Phase 2** (explicit). Specs read: `AGENTS.md`, phase-02 plan file,
-`docs/phase2/product.md`, `docs/phase2/security/rbac.md`,
-`docs/phase2/requirements.md`, `docs/phase2/evidence-contract.md`,
-`docs/phase2/architecture.md`, `packages/contracts/src/*`, both Supabase
-migrations, `tests/phase2/product/`.
+`docs/platform/product.md`, `docs/platform/security/rbac.md`,
+`docs/platform/requirements.md`, `docs/platform/evidence-contract.md`,
+`docs/platform/architecture.md`, `packages/contracts/src/*`, both Supabase
+migrations, `tests/platform/product/`.
 
 ## Design Read
 
@@ -18,7 +18,7 @@ Design dials: `DESIGN_VARIANCE=3`, `MOTION_INTENSITY=2`, `VISUAL_DENSITY=6`.
 
 ### Seeded direction
 
-Seed = character count of `DistressLens Phase 2 Stage 2` = **28**.
+Seed = character count of `DistressLens platform .tage 2` = **28**.
 Direction menu (10 entries): 1 brutalist, 2 editorial, 3 neo-grotesque product,
 4 warm humanist, 5 terminal/monospace, 6 soft organic, 7 high-contrast Swiss,
 8 archival instrument panel, 9 playful maximalist, 10 glass/futurist.
@@ -89,7 +89,7 @@ ambient elevation reserved for overlays/popovers only. One radius scale
    offline, used by dev + Playwright) and Supabase/RLS (env-selected).
    Authorization, validation, quota and outbox logic are identical on both
    paths; only the row source swaps. Docker networking is unavailable in this
-   sandbox (documented in `tests/phase2/product/conftest.py`), so a live
+   sandbox (documented in `tests/platform/product/conftest.py`), so a live
    Supabase instance cannot back the E2E run here.
 3. **Hand-rolled SVG charts** — token-driven, accessible (table fallback,
    `aria`, non-color encoding), no chart dependency.
@@ -110,7 +110,7 @@ ambient elevation reserved for overlays/popovers only. One radius scale
 ## Non-goals
 
 - No AWS/EKS/Argo/K8s code in this repository (GitOps repo owns desired state).
-- No Phase 1 edits: `dags/*.py` outside `phase2/`, `src/collectors|generator|
+- No platform .dits: `dags/*.py` outside `phase2/`, `src/collectors|generator|
   streaming|transforms|quality|catalog|metadata`, `warehouse.db`, `outputs/**`,
   `docs/evidence/**`.
 - No live cloud calls; no fabricated "executed" evidence.
@@ -149,8 +149,8 @@ pnpm --filter @distresslens/web build
 pnpm --filter @distresslens/contracts typecheck
 pnpm --filter @distresslens/contracts test
 pnpm --filter @distresslens/web test:e2e
-.venv/bin/python -m pytest tests/phase2/product/test_rbac_rls.py \
-  tests/phase2/test_rubric_matrix.py tests/phase2/test_rubric_row_contracts.py
+.venv/bin/python -m pytest tests/platform/product/test_rbac_rls.py \
+  tests/platform/test_rubric_matrix.py tests/platform/test_rubric_row_contracts.py
 .venv/bin/python scripts/audit_phase2_evidence.py --matrix-only --strict
 ```
 

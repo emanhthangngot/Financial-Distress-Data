@@ -1,8 +1,8 @@
-"""Phase 2 DataHub lineage emitter (Flow E,
-phase-04-implementation-notes.md section 2): every Phase 2 flow's run
+"""platform .ataHub lineage emitter (Flow E,
+phase-04-implementation-notes.md section 2): every platform .low's run
 summary emits through here to ``src.governance.datahub_emitter.
 emit_governance``, using a Phase-2-only ``GovernanceModel`` loaded from
-``configs/platform-governance.yaml`` — the Phase 1 governance config
+``configs/platform-governance.yaml`` — the platform .overnance config
 (``configs/datahub/governance.yaml``) is never touched.
 
 Mirrors ``scripts/sync_datahub_governance.py``'s split: audit locally
@@ -56,7 +56,7 @@ def _model_for_pipeline(model: GovernanceModel, pipeline_name: str) -> Governanc
     (src/governance/datahub_emitter.py) iterates *every* dataset/pipeline on
     whatever model it's given, so narrowing has to happen here, not there.
     A single DAG task run produced lineage for its own pipeline only, never
-    every Phase 2 pipeline at once."""
+    every platform .ipeline at once."""
     if pipeline_name not in model.pipelines:
         raise KeyError(
             f"unknown platform pipeline {pipeline_name!r}; known: {sorted(model.pipelines)}"
@@ -101,7 +101,7 @@ def emit_lineage(
 def emit_lineage_if_configured(
     run_id: str, pipeline_name: str, config_path: Path = DEFAULT_CONFIG_PATH
 ) -> dict[str, Any]:
-    """Every real Phase 2 task entrypoint calls this (not the bare
+    """Every real platform .ask entrypoint calls this (not the bare
     ``emit_lineage``) so a run always *attempts* a real DataHub emit
     when one is reachable, instead of leaving ``emit_lineage``
     defined but never invoked. No live DataHub server exists in this

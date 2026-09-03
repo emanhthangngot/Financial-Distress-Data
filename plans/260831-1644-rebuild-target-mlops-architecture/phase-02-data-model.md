@@ -781,7 +781,7 @@ deliberately** rather than discovering it in P4.
 
 **Risk (F9, F18):** the eight dataset renames break rubric rows that cite an old path. Signal: a
 matrix `evidence_path` or `validation_command` contains `distress_labels`, `distress_holdout_v1`,
-or an unprefixed `bronze.`/`silver.` table name. Mitigation: grep `docs/phase2/rubric-matrix.csv`
+or an unprefixed `bronze.`/`silver.` table name. Mitigation: grep `docs/platform/rubric-matrix.csv`
 for all eight tokens **before** renaming — the same mechanism already applied to `company_key`.
 Response: re-point the row in the same commit as the rename.
 

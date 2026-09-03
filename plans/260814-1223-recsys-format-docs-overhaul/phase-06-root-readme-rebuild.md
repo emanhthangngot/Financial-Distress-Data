@@ -49,7 +49,7 @@ Target section order, with what changes versus the current README:
 ## 🚀 Quickstart                 short; links to the runbook
 ## 📌 Project Status             keep the honest status table
 MOVED OUT -> docs/operator-runbook.md:
-  Local Setup, Running in Docker, Product and Phase 2 Checks, Service URLs,
+  Local Setup, Running in Docker, Product and platform .hecks, Service URLs,
   Run Stage 1 Evidence, Validation Commands, Useful Inspection Queries,
   Stop Services, Naming Convention details
 ```
@@ -57,7 +57,7 @@ MOVED OUT -> docs/operator-runbook.md:
 The Demo section is the one reference element that needs a decision: the
 reference embeds a GIF linking to an MP4. Produce one only if the product +
 coordinator round-trip can be recorded cleanly while the cluster is up
-(Phase 2 window). If not recorded, omit the section — do not ship a placeholder.
+(platform .indow). If not recorded, omit the section — do not ship a placeholder.
 
 ## Related Code Files
 

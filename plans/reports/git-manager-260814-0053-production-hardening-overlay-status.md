@@ -10,8 +10,8 @@ Date: 2026-08-14
 - Upstream: none configured for this branch. `HEAD` is also currently at `dev` and `origin/dev`.
 - Index: clean; no staged files.
 - Worktree: dirty, with 6 modified tracked files and a broad untracked implementation/evidence scope.
-- Modified tracked files: `.github/workflows/phase2-ci.yaml`, `plans/260811-1627-close-llm-rubric-to-100/plan.md`, `scripts/audit_phase2_evidence.py`, `tests/phase2/pipelines/test_phase2_dags_import.py`, `tests/phase2/pipelines/test_workflows_phase2.py`, `uv.lock`.
-- Untracked scope includes `.githooks/`, two Phase 2 workflow files, `apps/drift-api/`, `apps/feature-api/`, configs, two Phase 2 DAGs, four ADRs plus evidence README, `infra/phase1-cluster/`, notebook, production-hardening plan/reports, evidence scripts, `scripts/phase2_ci/`, CDC/lakehouse/ML source modules, and multiple Phase 2 tests.
+- Modified tracked files: `.github/workflows/phase2-ci.yaml`, `plans/260811-1627-close-llm-rubric-to-100/plan.md`, `scripts/audit_phase2_evidence.py`, `tests/platform/pipelines/test_phase2_dags_import.py`, `tests/platform/pipelines/test_workflows_phase2.py`, `uv.lock`.
+- Untracked scope includes `.githooks/`, two platform .orkflow files, `apps/drift-api/`, `apps/feature-api/`, configs, two platform .AGs, four ADRs plus evidence README, `infra/phase1-cluster/`, notebook, production-hardening plan/reports, evidence scripts, `scripts/phase2_ci/`, CDC/lakehouse/ML source modules, and multiple platform .ests.
 - `git diff --check`: passed for tracked unstaged changes.
 
 The changes are not a safe single commit candidate yet: the worktree contains many unrelated-looking files across application code, infrastructure, docs, plans, reports, and tests, and the branch has no upstream tracking configuration. A conventional commit may be prepared only after explicit user approval of the intended file set and commit split (likely separate code/config, tests, and docs/evidence commits). No staging, commit, push, reset, or revert was performed.

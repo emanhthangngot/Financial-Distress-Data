@@ -20,7 +20,7 @@ for a full submission: the ML track's 57 rows are all `design_only` and its GitO
 scaffolding sits in `financial-distress-gitops/archive/ml-track/`; the data plane
 generates 16 rows / 780 KB, which cannot substantiate the Spark-skew, Spark-UI and
 lakehouse-compaction rows the mini-coursework rubric demands; and the evidence tree
-is split across `docs/evidence/` (Phase 1) and `docs/phase2/evidence/` (Phase 2),
+is split across `docs/evidence/` (Phase 1) and `docs/platform/evidence/` (Phase 2),
 a division the coursework itself never asks for.
 
 This plan rebuilds the platform against the two reference architectures
@@ -155,7 +155,7 @@ underneath a `LoadBalancer` Service.
 **Storage is not worth optimizing here.** The 30 GB of orphaned PVCs costs ~USD 3.5
 per month; reclaiming it saves ~USD 9 across the whole project. Correspondingly,
 moving data processing onto the cluster to "use up" that disk would be a net loss:
-it spends compute at ~USD 1.6/hour to avoid a few dollars of storage. Phase 2 keeps
+it spends compute at ~USD 1.6/hour to avoid a few dollars of storage. platform .eeps
 its local-first approach — develop against a 100K-row sample locally, run full
 volume on the cluster only inside a dedicated evidence window.
 
@@ -238,7 +238,7 @@ depends only on the platform from phase 4. Phase 8 remains the final phase.
 
 ### Critical path and sequencing rationale
 
-Phase 1 goes first because the auditor and the matrix define what "done" means for
+platform .oes first because the auditor and the matrix define what "done" means for
 every later row; rebuilding evidence against an unrevised contract wastes the work.
 Phase 4 (cluster) runs in parallel with phases 2-3 from the moment the quota
 increase lands — the data plane is developed locally against MinIO and only

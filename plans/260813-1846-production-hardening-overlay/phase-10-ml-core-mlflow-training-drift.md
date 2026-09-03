@@ -66,8 +66,8 @@ Source repo (all new or currently missing from disk):
 - Create: `apps/feature-api/app/main.py`, `apps/drift-api/app/main.py`
 - Create: `notebooks/ml-training.ipynb`
 - Create: `dags/phase2/phase2_drift_monitoring.py` (thin wrapper)
-- Create: `tests/phase2/requirements/test_ml_ac_04_validation.py`
-- Create: `docs/phase2/adr/adr-014-kubeflow-trainer-scope.md`
+- Create: `tests/platform/requirements/test_ml_ac_04_validation.py`
+- Create: `docs/platform/adr/adr-014-kubeflow-trainer-scope.md`
 - Modify: `requirements-phase2.txt` — `scikit-learn`, `xgboost`, `mlflow`, `scipy`
 
 GitOps repo:
@@ -104,7 +104,7 @@ missing. This phase is where that 38-point source-side backlog is consumed.
 ## Verification
 
 ```bash
-.venv/bin/python -m pytest tests/phase2/requirements -k ml_ac
+.venv/bin/python -m pytest tests/platform/requirements -k ml_ac
 .venv/bin/python -m pytest tests -m "not slow"
 .venv/bin/ruff check src dags tests scripts
 .venv/bin/python scripts/audit_phase2_evidence.py --check-artifacts \

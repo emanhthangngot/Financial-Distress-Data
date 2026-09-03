@@ -16,11 +16,11 @@
 | Ruff | **PASS** |
 | Black | **326 files unchanged** |
 | `docker compose config` | **PASS** |
-| Phase 2 matrix strict | **PASS**, 117 rows; LLM 60 rows/100 points, ML 57 rows/100 points |
+| platform .atrix strict | **PASS**, 117 rows; LLM 60 rows/100 points, ML 57 rows/100 points |
 | LLM `--require-executed` | **PASS**, 60/60 rows executed |
 | ML `--require-executed` | **FAIL**, 57/57 rows `design_only` |
 | `--check-artifacts` | **PASS**, missing artifact count 0 (design-only rows vẫn không phải executed evidence) |
-| Source Phase 2 quality gate | **PASS**, 72 passed / 1 skipped |
+| Source platform .uality gate | **PASS**, 72 passed / 1 skipped |
 | GitOps default validation | **PASS**, kubeconform unavailable nên skipped |
 | GitOps strict real-digest mode | **FAIL**, 7 zero-placeholder digests |
 | Ansible syntax | **PASS** (deprecation warnings only) |
@@ -47,7 +47,7 @@ Cả 12 phase files vẫn `status: in_progress`; acceptance checklist có **0 ch
 4. **Phase 6:** ESO rotation, SecretSynced, Linkerd mTLS and denial evidence absent.
 5. **Phase 7:** Lakekeeper live REST registration, concurrent commit, time travel and schema evolution absent.
 6. **Phase 8:** Flink CDC live inserts/updates/deletes and Bronze reconciliation absent.
-7. **Phase 9:** Phase 1 cluster parity/admission/run evidence absent.
+7. **Phase 9:** platform .luster parity/admission/run evidence absent.
 8. **Phase 10:** MLflow/Kubeflow distributed run and live drift/retrain evidence absent; ML executed gate fails all 57 rows.
 9. **Phase 11:** Argo canary/rollback, KEDA load soak, gateway security and dashboards not demonstrated.
 10. **Phase 12:** checklist has only 3 generic sections and 0 screenshot declarations; no final concurrent soak/evidence freeze.
@@ -57,7 +57,7 @@ Cả 12 phase files vẫn `status: in_progress`; acceptance checklist có **0 ch
 - “100/100” currently means **rubric matrix totals**, not completion of all implementation/live acceptance criteria.
 - GitOps local validator intentionally grandfathered zero digests; CI strict mode correctly exposes 7 unresolved image digests.
 - Rollout capture cannot succeed in this environment because `kubectl-argo-rollouts` is not installed.
-- The audit initially reproduced a Ruff import-order failure in `tests/phase2/pipelines/test_cdc_reconciliation.py`; import ordering was corrected and the full suite was rerun successfully.
+- The audit initially reproduced a Ruff import-order failure in `tests/platform/pipelines/test_cdc_reconciliation.py`; import ordering was corrected and the full suite was rerun successfully.
 
 ## Recommendations
 

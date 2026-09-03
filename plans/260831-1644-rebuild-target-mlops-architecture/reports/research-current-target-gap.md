@@ -9,7 +9,7 @@ scope: "Full repository topology, target image components, current implementatio
 # Research: Current State vs Target Architecture Gap Analysis
 
 **Researcher:** RuntimeArchitectureFacts  
-**Peer coordination:** ContractMigrationFacts (Phase 2 ADR/contract analysis)  
+**Peer coordination:** ContractMigrationFacts (platform .DR/contract analysis)  
 **Foundation document:** `debate-context-foundation.md` (locked decisions, phase split, ADR-010, rebuild plan 260818)  
 **GitOps authority:** `financial-distress-gitops/AGENTS.md`, `plans/260818-0028-namespace-convention-alignment/plan.md`
 
@@ -17,17 +17,17 @@ scope: "Full repository topology, target image components, current implementatio
 
 ## Executive Summary
 
-The **current state** is a Phase 1 local-first data lakehouse (verified, Docker Compose) plus a Phase 2 LLM-only system (live-verified on GKE 2026-08-13, 60/100 points, evidence freeze pending). The **target architecture** in `images/architecture/fdd-architecture-full-4k.png` depicts a unified **ML + LLM** platform on GKE with Kubeflow/Ray/MLflow/KServe, Kafka/Debezium/Flink, MinIO/Iceberg, Postgres/Trino/Superset, Feast/Redis, and optional Istio/Vault/Jenkins. **Current GitOps is confirmed present** (10 Argo Applications, 13/13 synced): Argo CD, NGINX Ingress, cert-manager, KServe/Knative (0.14.1), agentgateway, kagent agents, Redis, PGVector Postgres, observability stack, and RAG pipeline. **The gap:** No Kubeflow, Ray, MLflow, Iceberg, Spark-K8s, Trino, Superset, Debezium, Flink-K8s, Istio, Vault, Jenkins, or Argo Rollouts are deployed. ML track is unbuilt (design-only). The namespace structure deliberately separates `agentgateway-system`, `kagent`, and `agents-sandbox` as **intentional least-privilege NetworkPolicy security boundaries**, not accidental splits.
+The **current state** is a platform data lakehouse (verified, Docker Compose) plus a platform .LM-only system (live-verified on GKE 2026-08-13, 60/100 points, evidence freeze pending). The **target architecture** in `images/architecture/fdd-architecture-full-4k.png` depicts a unified **ML + LLM** platform on GKE with Kubeflow/Ray/MLflow/KServe, Kafka/Debezium/Flink, MinIO/Iceberg, Postgres/Trino/Superset, Feast/Redis, and optional Istio/Vault/Jenkins. **Current GitOps is confirmed present** (10 Argo Applications, 13/13 synced): Argo CD, NGINX Ingress, cert-manager, KServe/Knative (0.14.1), agentgateway, kagent agents, Redis, PGVector Postgres, observability stack, and RAG pipeline. **The gap:** No Kubeflow, Ray, MLflow, Iceberg, Spark-K8s, Trino, Superset, Debezium, Flink-K8s, Istio, Vault, Jenkins, or Argo Rollouts are deployed. ML track is unbuilt (design-only). The namespace structure deliberately separates `agentgateway-system`, `kagent`, and `agents-sandbox` as **intentional least-privilege NetworkPolicy security boundaries**, not accidental splits.
 
 ---
 
 ## 1. Current Deployable/Runtime Units — Verified Inventory
 
-### 1.1 Phase 1 Local Lakehouse (Docker Compose, verified, in-source)
+### 1.1 platform .ocal Lakehouse (Docker Compose, verified, in-source)
 
 | Unit | Service Image/Type | Role | Evidence |
 |---|---|---|---|
-| Postgres 16 | `postgres:16` | Phase 1 metadata; `ops` schema | `docker-compose.yml:1-30` |
+| Postgres 16 | `postgres:16` | platform data; `ops` schema | `docker-compose.yml:1-30` |
 | MinIO | `minio/minio:RELEASE.2025-04-22T22-12-26Z` | S3A-compatible durable object store for Bronze/Silver/Gold Parquet | `docker-compose.yml:31-42` |
 | Kafka KRaft | `apache/kafka:3.9.0` | Single-node broker for price/news/alert events | `docker-compose.yml:58-89`, `infra/kafka/kafka_init_topics.sh` |
 | Airflow Webserver | `financial-distress-airflow:stage1` (built locally) | DAG UI + execution controller | `docker-compose.yml:108-150`, `infra/airflow/Dockerfile` |
@@ -36,15 +36,15 @@ The **current state** is a Phase 1 local-first data lakehouse (verified, Docker 
 | Phase2-Redis | `redis:7-alpine` | Feast online store; profile="phase2" | `docker-compose.yml:263-282` |
 | Phase2-Postgres | `pgvector/pgvector:pg16` | PGVector + ml schema; profile="phase2" | `docker-compose.yml:283-307` |
 
-**Launch:** `docker compose up` starts Phase 1 + product only. `ENABLE_FLINK=1 docker compose --profile flink --profile phase2 up` adds Flink + Phase 2.
+**Launch:** `docker compose up` starts platform . product only. `ENABLE_FLINK=1 docker compose --profile flink --profile phase2 up` adds Flink + Phase 2.
 
-**Tests:** 123 test files (PyTest), ~9 Phase 2 test suites covering ML/drift/LLM/product/agents. Phase 1 regression suite is primary verification gate.
+**Tests:** 123 test files (PyTest), ~9 platform .est suites covering ML/drift/LLM/product/agents. platform .egression suite is primary verification gate.
 
-**CI:** `.github/workflows/ci.yml` (Phase 1 quality gate), plus 11 Phase 2 workflow YAML files (GitHub Actions based).
+**CI:** `.github/workflows/ci.yml` (platform .uality gate), plus 11 platform .orkflow YAML files (GitHub Actions based).
 
 ---
 
-### 1.2 Phase 2 GKE Evidence Plane (Separate GitOps Repo, Live-Verified 2026-08-13)
+### 1.2 platform .KE Evidence Plane (Separate GitOps Repo, Live-Verified 2026-08-13)
 
 **Note:** All Kubernetes cluster state lives in private `financial-distress-gitops` repository (now locally available at `/home/pearspringmind/Studying/FSDS/financial-distress-gitops`).
 
@@ -137,7 +137,7 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 
 | Component | Visual Role | Current Status | Evidence |
 |---|---|---|---|
-| **Kafka** | Event broker (price, news, alert, CDC from Postgres) | ✅ Phase 1 local; K8s version absence unclear | `src/streaming/events.py`, `docker-compose.yml`, not in active GitOps Argo Applications |
+| **Kafka** | Event broker (price, news, alert, CDC from Postgres) | ✅ platform .ocal; K8s version absence unclear | `src/streaming/events.py`, `docker-compose.yml`, not in active GitOps Argo Applications |
 | **Debezium** | CDC (Change Data Capture) connector → Kafka | ❌ **Not in source or GitOps** | — |
 | **Flink** | Event-time streaming, late arrival routing, dedup | 🟡 Partially (opt-in local profile; no K8s Flink Job manifests in active GitOps) | `src/streaming/flink/jobs/`, Docker Compose profile="flink" |
 
@@ -145,8 +145,8 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 
 | Component | Visual Role | Current Status | Evidence |
 |---|---|---|---|
-| **MinIO** | S3-compatible object store for tables | ✅ Implemented (Phase 1 local, K8s version in GitOps; exact manifest not inspected) | `docker-compose.yml`, `platform/data/` (mounted but details not confirmed) |
-| **Iceberg** | Transactional table format (transaction log, time travel) | ❌ **Not in source; Phase 1 uses Parquet** | Phase 1 generates `.parquet` files only |
+| **MinIO** | S3-compatible object store for tables | ✅ Implemented (platform data/` (mounted but details not confirmed) |
+| **Iceberg** | Transactional table format (transaction log, time travel) | ❌ **Not in source; platform .ses Parquet** | platform .enerates `.parquet` files only |
 | **Spark** | Bronze→Silver→Gold transforms; offline feature writes | ✅ Implemented (local PySpark, no K8s Spark Operator in active GitOps Applications) | `src/transforms/`, local Spark session; no Spark executor config for K8s |
 | **Trino** | SQL query engine over data lake (Iceberg/MinIO) | ❌ **Not in source or GitOps** | — |
 
@@ -163,7 +163,7 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 | Component | Visual Role | Current Status | Evidence |
 |---|---|---|---|
 | **KServe/Knative + llm-d** | ML inference service operator; LLM router (llm-d for llama2-style LLM) | 🟡 Partial (KServe 0.14.1 deployed; llm-d router role unclear; agentgateway used as substitute per ADR-010) | `argocd/applications/platform-inference.yaml`, `platform/inference/vendored/04-kserve.yaml` (0.14.1 pinned) |
-| **TensorRT / NVIDIA llm-d** | LLM inference optimization (vLLM, llama.cpp on CPU) | 🟡 Partial (vLLM/llama.cpp CPU server exists; no GPU, free-trial GPU quota is 0) | `docs/phase2/adr/adr-010-llm-only-scope-and-platform-simplification.md:branch-B` |
+| **TensorRT / NVIDIA llm-d** | LLM inference optimization (vLLM, llama.cpp on CPU) | 🟡 Partial (vLLM/llama.cpp CPU server exists; no GPU, free-trial GPU quota is 0) | `docs/platform/adr/adr-010-llm-only-scope-and-platform-simplification.md:branch-B` |
 | **Argo Rollouts** | Canary rollout, traffic splitting (champion/candidate A/B) | ❌ **Not in active GitOps Applications** | No Argo Rollouts application manifest visible |
 | **Kiali + Istio** | Service mesh visualization + mTLS/authorization | ❌ **Dropped by ADR-010 for cost fit** | Not in GitOps; plan 260818 mentions optional mesh-partial injection (3-4 vCPU recovery) |
 | **HashiCorp Vault** | Secrets management + rotation | ❌ **Dropped by ADR-010; GitHub Actions secrets used instead** | Not in GitOps; plan 260818 lists as rebuild requirement |
@@ -192,7 +192,7 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 | **Kubeflow Pipelines** | None; phase-05-deliver-ml-track.md plan exists but unexecuted | ❌ **MISSING** | (source plan only) | ML track deferred; requires K8s Operator install + Trainer CRD |
 | **Ray Cluster** | None; not mentioned in detail plans | ❌ **MISSING** | — | Distributed training backend; must coexist with Kubeflow |
 | **MLflow Server** | None; phase-05 plan only | ❌ **MISSING** | — | Requires ml Postgres (which exists); Helm chart absent |
-| **Iceberg** | None; Phase 1 uses Parquet only | ❌ **MISSING** | source repo | Schema-on-write table format; requires Spark catalog + MinIO setup |
+| **Iceberg** | None; platform .ses Parquet only | ❌ **MISSING** | source repo | Schema-on-write table format; requires Spark catalog + MinIO setup |
 | **Spark on K8s** | Local PySpark only; no Spark Operator CRD | 🟡 **PARTIAL** | `src/transforms/` + (missing GitOps) | Jobs run locally; K8s executor model undefined |
 | **Trino** | None | ❌ **MISSING** | — | SQL federation layer over MinIO/Iceberg; requires Catalog config |
 | **Superset** | None | ❌ **MISSING** | — | BI analytics UI; optional but shown in target image |
@@ -210,7 +210,7 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 | **Agents + MCP** | Live-verified 2026-08-13 | ✅ **PRESENT** | `argocd/applications/platform-agents.yaml`, `src/agents/`, `apps/drift-mcp/`, `apps/feature-mcp/` | Coordinator + feature + drift; 10 agents ready; 5-span trace live |
 | **Observability** | Prometheus, Grafana, Loki, Jaeger, OTel live | ✅ **PRESENT** | `argocd/applications/platform-observability.yaml` | All healthy 2026-08-13 |
 | **NGINX Ingress OSS** | F5 Active NGINX Controller (ADR-009) | ✅ **PRESENT** | `argocd/applications/nginx-ingress.yaml`, `platform/ingress/` | Sole external entry point behind basic-auth |
-| **Kafka** | Phase 1 local KRaft; K8s version deployment status unclear | 🟡 **PARTIAL** | `docker-compose.yml` + (unclear if replicated in K8s) | Event broker exists locally; GitOps Kafka deployment not confirmed in Argo Applications list |
+| **Kafka** | platform .ocal KRaft; K8s version deployment status unclear | 🟡 **PARTIAL** | `docker-compose.yml` + (unclear if replicated in K8s) | Event broker exists locally; GitOps Kafka deployment not confirmed in Argo Applications list |
 
 ---
 
@@ -269,7 +269,7 @@ Parsed from `images/architecture/fdd-architecture-full-4k.png` (4000×4088 px, c
 
 ### 5.1 Data Flow (Source → Gold → Serving)
 
-**Current (Phase 1 local → Phase 2 LLM-only GKE):**
+**Current (platform .ocal → platform .LM-only GKE):**
 ```
 FixtureAdapter or OnlineAPI → Kafka (price/news/alert events)
   → Airflow DP1 (collect_to_bronze)
@@ -308,7 +308,7 @@ OnlineAPI / Postgres CDC (Debezium) → Kafka event log
 
 ### 5.2 Control Flow (CI/CD & GitOps)
 
-**Current (Phase 2 LLM-only):**
+**Current (platform .LM-only):**
 ```
 source repo commit
   → GitHub Actions CI (test, build, scan, sign digest)
@@ -331,11 +331,11 @@ source repo commit
 - No Jenkins controller or groovy pipelines
 - No Argo Rollouts canary/traffic-split config
 - No Kubernetes native-sidecar config for Job termination (Istio/Knative workaround)
-- Phase 2 CI workflows (11 files) target GitHub Actions; Jenkins retargeting is wholesale rewrite
+- platform .I workflows (11 files) target GitHub Actions; Jenkins retargeting is wholesale rewrite
 
 ### 5.3 Model Flow (Training → Serving → Monitoring)
 
-**Current (Phase 2 LLM-only):**
+**Current (platform .LM-only):**
 ```
 LLM model (vLLM or llama.cpp, CPU-only) → agentgateway routing
   → agents (coordinator, feature, drift) → MCP tools
@@ -405,13 +405,13 @@ Analyst → Next.js (in-cluster, behind NGINX, phase 9)
 
 | Layer | Path | File Count | Status |
 |---|---|---|---|
-| **Phase 1 Lakehouse** | `src/collectors/`, `src/transforms/`, `src/streaming/`, `src/quality/`, `src/metadata/`, `src/catalog/`, `src/io/`, `src/jobs/` | ~150 py files | ✅ Verified |
-| **Phase 1 Orchestration** | `dags/` | ~20 DAG files | ✅ Verified |
-| **Phase 1 Evidence** | `scripts/`, `tests/` | ~30 scripts, 123 tests | ✅ Verified |
-| **Phase 2 ML/Drift** | `src/ml/`, `src/drift/`, `src/governance/` | ~30 py files | 🟡 Partial (fixtures, not trained) |
-| **Phase 2 LLM/Agents** | `src/llm/`, `src/agents/`, `src/cdc/`, `src/observability/` | ~60 py files | ✅ Live-verified |
-| **Phase 2 Product** | `apps/web/`, `apps/feature-api/`, `apps/feature-mcp/`, `apps/drift-api/`, `apps/drift-mcp/` | ~400 TS/TSX files | ✅ Live-verified |
-| **Phase 2 Feature Store** | `feature_repo/`, `src/ml/feast/` | ~10 feature definitions | 🟡 Partial (local; online/offline untested on K8s) |
+| **platform data/`, `src/catalog/`, `src/io/`, `src/jobs/` | ~150 py files | ✅ Verified |
+| **platform .rchestration** | `dags/` | ~20 DAG files | ✅ Verified |
+| **platform .vidence** | `scripts/`, `tests/` | ~30 scripts, 123 tests | ✅ Verified |
+| **platform .L/Drift** | `src/ml/`, `src/drift/`, `src/governance/` | ~30 py files | 🟡 Partial (fixtures, not trained) |
+| **platform .LM/Agents** | `src/llm/`, `src/agents/`, `src/cdc/`, `src/observability/` | ~60 py files | ✅ Live-verified |
+| **platform .roduct** | `apps/web/`, `apps/feature-api/`, `apps/feature-mcp/`, `apps/drift-api/`, `apps/drift-mcp/` | ~400 TS/TSX files | ✅ Live-verified |
+| **platform .eature Store** | `feature_repo/`, `src/ml/feast/` | ~10 feature definitions | 🟡 Partial (local; online/offline untested on K8s) |
 | **CI/CD** | `.github/workflows/` | 11 GitHub Actions YAML files | ✅ Working |
 | **Docker Compose** | `docker-compose.yml`, `infra/` | 1 compose + 3 Dockerfiles | ✅ Working |
 | **Configuration** | `configs/`, `sql/`, `pyproject.toml`, `package.json` | ~40 config files | ✅ Working |
@@ -450,7 +450,7 @@ Analyst → Next.js (in-cluster, behind NGINX, phase 9)
 
 ## 7. Tests & Verification Evidence
 
-### 7.1 Phase 1 Verification (Verified, Repeatable)
+### 7.1 platform .erification (Verified, Repeatable)
 
 | Test Category | Count | Evidence |
 |---|---|---|
@@ -461,9 +461,9 @@ Analyst → Next.js (in-cluster, behind NGINX, phase 9)
 | Quality gates (critical DQ failures halt) | 1 gate | `scripts/run_stage1_quality_gates.py`, enforced by AGENTS.md rules |
 | Regression suite | Continuous | CI workflow `ci.yml` on every push |
 
-**Result:** Phase 1 pipeline is verified end-to-end on local Docker Compose.
+**Result:** platform .ipeline is verified end-to-end on local Docker Compose.
 
-### 7.2 Phase 2 Verification (LLM track live-verified, ML track untested)
+### 7.2 platform .erification (LLM track live-verified, ML track untested)
 
 | Test Category | Count | Status |
 |---|---|---|
@@ -471,14 +471,14 @@ Analyst → Next.js (in-cluster, behind NGINX, phase 9)
 | Agent tests (coordinator, MCP, sandbox) | ~10 | ✅ Live 2026-08-13 (5-span trace, 170ms, all agents Ready) |
 | LLM track evidence (60 rows / 100 pts) | 60 | 🟡 Logically covered; SHA freeze pending |
 | ML track evidence (57 rows / 100 pts) | 57 | ❌ Design-only (ADR-010 deferral) |
-| Phase 2 quality gates | Partial | LLM audit gate works; ML gate untested |
+| platform .uality gates | Partial | LLM audit gate works; ML gate untested |
 | Observability traces (agent coordinator) | Verified | Jaeger live 2026-08-13 (traces visible, Prometheus targets healthy) |
 | Argo CD reconciliation | 13 resources | ✅ 10 Applications, 13/13 Synced/Healthy 2026-08-13 |
 | RBAC/RLS boundary tests (agent sandbox) | ~3 negative tests | ✅ Agents cannot reach model server directly (NetworkPolicy verified) |
 
 **Result:** LLM track is live-verified; ML track is unbuilt.
 
-### 7.3 Phase 2 ML Track Tests (Absent)
+### 7.3 platform .L Track Tests (Absent)
 
 No Kubeflow, MLflow, Spark-on-K8s, Trino, Superset tests exist in source or verified on cluster.
 
@@ -509,7 +509,7 @@ No Kubeflow, MLflow, Spark-on-K8s, Trino, Superset tests exist in source or veri
 |---|---|---|
 | Does `src/ml/` include Spark trainer + PyTorch trainer CRDs? | ML training path | Not inspected in detail |
 | Does `src/drift/` include Flink-based drift detection (not just generator)? | Streaming drift | Not inspected in detail |
-| Are Phase 1 DAGs refactored to run on Spark-K8s (vs local)? | Executor model migration | Not planned in current commits |
+| Are platform .AGs refactored to run on Spark-K8s (vs local)? | Executor model migration | Not planned in current commits |
 | Is label table schema updated with `label_event_ts` for frozen holdout? | MLflow holdout gate | Not in current schema |
 | Does `feature_repo/` define both structured + RAG features for K8s? | Feature definitions | Not inspected in detail |
 | Are MCP tool definitions (feature-mcp, drift-mcp) wired to Feast? | Feature/drift data path | Live-verified connection; exact Feast integration not inspected |
@@ -547,18 +547,18 @@ No Kubeflow, MLflow, Spark-on-K8s, Trino, Superset tests exist in source or veri
 
 ```
 LOCAL DEVELOPMENT (Docker Compose)
-├── Phase 1 Lakehouse (verified, reproducible)
+├── platform .akehouse (verified, reproducible)
 │   ├── Postgres:16 (ops)
 │   ├── MinIO (Bronze/Silver/Gold Parquet)
 │   ├── Kafka:3.9.0 (KRaft, event topics)
 │   ├── Airflow (DP1/DP2/DP3 DAGs, LocalExecutor)
 │   └── Optional: Flink (event-time streaming)
 │
-├── Phase 2 Base (always running when phase2 profile active)
+├── platform .ase (always running when phase2 profile active)
 │   ├── Next.js (Vercel, external)
 │   └── Supabase (managed, external)
 │
-└── Phase 2 Optional (profile="phase2")
+└── platform .ptional (profile="phase2")
     ├── Redis (Feast online store, `phase2-redis`)
     └── PGVector Postgres (ml, RAG, `phase2-postgres`)
 
@@ -672,9 +672,9 @@ NOT IN ACTIVE GITOPS (Confirmed Absent)
 ### Findings Summary
 
 1. **Current verified state:**  
-   - Phase 1 lakehouse: 100% complete, reproducible, locally verified  
-   - Phase 2 LLM: 60/100 points live-verified on GKE (2026-08-13), evidence freeze pending  
-   - Phase 2 ML: design-only (unbuilt, deferred by ADR-010)  
+   - platform lakehouse: 100% complete, reproducible, locally verified  
+   - platform .LM: 60/100 points live-verified on GKE (2026-08-13), evidence freeze pending  
+   - platform .L: design-only (unbuilt, deferred by ADR-010)  
    - GitOps: 10 Argo Applications, 11 namespaces, **intentional least-privilege NetworkPolicy boundaries** (not accidental vendor splits)
 
 2. **Target image scope:**  
@@ -695,8 +695,8 @@ NOT IN ACTIVE GITOPS (Confirmed Absent)
 
 5. **Test coverage:**  
    - Phase 1: ~100 tests, all passing  
-   - Phase 2 LLM: live-verified, evidence freeze pending  
-   - Phase 2 ML: untested, unbuilt
+   - platform .LM: live-verified, evidence freeze pending  
+   - platform .L: untested, unbuilt
 
 ---
 
@@ -705,7 +705,7 @@ NOT IN ACTIVE GITOPS (Confirmed Absent)
 **Status:** `DONE`
 
 **Summary:**
-This report inventories the **verified current state** (Phase 1 locally complete, Phase 2 LLM live-verified on GKE with 10 Argo Applications + 11 intentional-boundary namespaces), parses the **target image** into 24+ components, maps each to current evidence or gap status, identifies **7 major architectural conflicts** between ADR-010 (LLM-only) and Plan 260818 (unified ML+LLM rebuild), documents all **data/control/model/user flows**, records **8+ GitOps unknowns** (now mostly verifiable since GitOps repo is locally accessible), and flags the **namespace structure as load-bearing** for least-privilege NetworkPolicy security isolation. Phase 1 is verified. Phase 2 LLM is live-verified but evidence freeze-pending. Phase 2 ML is unbuilt and deferred. The rebuild requires Kubeflow, Ray, MLflow, Iceberg, Spark-K8s, Trino, Debezium, Flink, Jenkins, and resolution of 7 architectural conflicts without merging security-critical namespace boundaries.
+This report inventories the **verified current state** (platform data/control/model/user flows**, records **8+ GitOps unknowns** (now mostly verifiable since GitOps repo is locally accessible), and flags the **namespace structure as load-bearing** for least-privilege NetworkPolicy security isolation. platform .s verified. platform .LM is live-verified but evidence freeze-pending. platform .L is unbuilt and deferred. The rebuild requires Kubeflow, Ray, MLflow, Iceberg, Spark-K8s, Trino, Debezium, Flink, Jenkins, and resolution of 7 architectural conflicts without merging security-critical namespace boundaries.
 
 **Concerns/Blockers:**
 

@@ -11,7 +11,7 @@ requested `/sign-out` but received `404`. The new route clears the existing
 `sb-access-token` cookie and redirects to `/sign-in`.
 
 The supported authentication flow now passes in a real browser. Registration
-is intentionally not implemented: the Phase 2 auth contract provisions one
+is intentionally not implemented: the platform .uth contract provisions one
 demo/grader account and explicitly excludes sign-up, password reset, and
 account management. The live browser test verifies that `/sign-up` is not
 exposed and that the sign-in page contains no registration affordance.

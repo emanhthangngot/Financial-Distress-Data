@@ -2,7 +2,7 @@
 
 Ngày: 2026-09-02. Đối tượng: quyết định schema trong
 `plans/260831-1644-rebuild-target-mlops-architecture/phase-02-data-model.md` đối chiếu
-`sql/schema_evidence.sql`, `sql/init_project_metadata.sql`, `sql/init_ml_metadata.sql`,
+`sql/schema_evidence.sql`, `sql/init_ops.sql`, `sql/init_ml.sql`,
 `src/transforms/`, `src/io/paths.py`.
 
 ## Table of Contents
@@ -746,7 +746,7 @@ CONSTRAINT
    `phase-02:92` chỉ nói fact statement. `fact_market_price` không có variant. Cần khai báo rõ để PK
    không lệch giữa các fact.
 4. **Rename `distress_labels` có phá evidence row nào không?** Cần grep
-   `docs/phase2/rubric-matrix.csv` cho `distress_labels` trước khi đổi — cùng cơ chế mà
+   `docs/platform/rubric-matrix.csv` cho `distress_labels` trước khi đổi — cùng cơ chế mà
    `phase-02:242-243` đã dùng cho `company_key`.
 5. **mini row 40 có chấp nhận tên khác nếu semantic đúng và có document?** Rubric ghi đúng ba tên
    cột. Nếu người chấm linh động thì F2 hết là blocker. Không xác định được từ CSV — cần hỏi giảng viên.

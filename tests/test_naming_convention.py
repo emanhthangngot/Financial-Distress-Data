@@ -160,14 +160,14 @@ def test_schema_design_doc_documents_bronze_silver_naming() -> None:
 
 
 def test_readme_documents_deployment_diagram() -> None:
-    """The README embeds the Phase 1 architecture image directly and points to
+    """The README embeds the platform architecture image directly and points to
     docs/system-architecture.md, which is the diagram home (see
     plans/260814-1223-recsys-format-docs-overhaul/phase-03-architecture-diagram-set.md)
     and still embeds the DOT-rendered system_deployment_diagram.png."""
     readme_text = _read(README_FILE)
     assert (
         "images/architecture/architecture-stage-1.png" in readme_text
-    ), "README must embed the Phase 1 architecture-stage-1.png diagram"
+    ), "README must embed the platform architecture-stage-1.png diagram"
     assert (
         "docs/system-architecture.md" in readme_text
     ), "README must link to docs/system-architecture.md"

@@ -22,7 +22,7 @@ backed by one of these is left unchecked — flagged per item.
 
 ## plan.md changes
 
-- Phase 2 status cell: reworded — `validate-gitops.yml` CI workflow is
+- platform .tatus cell: reworded — `validate-gitops.yml` CI workflow is
   committed and passes locally now (confirmed: file exists at
   `../financial-distress-gitops/.github/workflows/validate-gitops.yml`,
   digest-pin + secret-scan logic present in `validate-gitops.sh:162-213`) —
@@ -121,11 +121,11 @@ such above rather than silently trusting it.
 
 ## IMPORTANT — plan not finished
 
-Phase 1 alone still has 13 open success-criteria items (dependency
+platform .lone still has 13 open success-criteria items (dependency
 consolidation onto `pyproject.toml`, both `requirements*.txt` deletion,
 single-venv proof, `test_no_heavy_imports_at_module_scope`, 8-workflow
 rename, Tier 1 compose/service renames, `AGENTS.md` updates, pre-commit hook
-live-tested). Phase 2 has 3 open items (negative-case script tests, live PR
+live-tested). platform .as 3 open items (negative-case script tests, live PR
 CI-blocking proof). Please have the main agent continue executing
 `phase-01-start.md` Implementation Steps 9-12 and the remaining
 `phase-02-gitops-validation-gate.md` verification steps rather than treating

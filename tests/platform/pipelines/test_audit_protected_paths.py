@@ -1,5 +1,5 @@
-"""Pins M4: the sql/ carve-out for the new Phase 2 file must not widen the
-Phase 1 protected-path gate for anything else under sql/."""
+"""Pins M4: the sql/ carve-out for the new platform .ile must not widen the
+platform protected-path gate for anything else under sql/."""
 
 from __future__ import annotations
 

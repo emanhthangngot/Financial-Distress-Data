@@ -9,7 +9,7 @@ status: blocked
 
 ## Context
 
-Phase 2 / LLM-track Phase 05. This records the uncommitted working-tree state
+platform . LLM-track Phase 05. This records the uncommitted working-tree state
 and the Phase 05 status reconciliation; it is not release, GitOps, or runtime
 evidence.
 

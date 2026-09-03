@@ -1,5 +1,5 @@
 """fd_rag Feast project: entity + FeatureView over ml.rag_chunk
-(sql/init_ml_metadata.sql, written directly by src.llm.rag_pipeline).
+(sql/init_ml.sql, written directly by src.llm.rag_pipeline).
 
 Registered for ADR-005 compliance (a documented offline/online split for the
 RAG store) — actual RAG retrieval in this repo goes through direct PGVector

@@ -3,7 +3,7 @@
 ``apply_drift`` is a pure post-transform over generator output rows: it
 consumes ``src.generator.offline.generate_offline_data`` /
 ``src.generator.streaming.generate_stream_events`` rows as inputs and never
-mutates ``src/generator/`` (AGENTS.md: Phase 1 read-only). It uses its own
+mutates ``src/generator/`` (AGENTS.md: platform .ead-only). It uses its own
 ``random.Random(scenario.seed)`` instance, never the global RNG, so two runs
 with the same input and seed are byte-identical.
 

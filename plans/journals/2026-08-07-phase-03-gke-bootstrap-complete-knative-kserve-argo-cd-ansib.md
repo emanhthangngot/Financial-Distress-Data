@@ -37,7 +37,7 @@ already-provisioned GKE cluster (`fsds-evidence`, project
   **Idempotency proven**: run 1 `changed=4 failed=0`, run 2 `changed=0
   failed=0` — exact match to the plan's success criterion.
 - **`docs/submission/`** reviewer index scaffolded (7 pages) in the source
-  repo, linking into `docs/phase2/evidence/` per the evidence contract
+  repo, linking into `docs/platform/evidence/` per the evidence contract
   (index, not relocation).
 - Updated phase-03's success-criteria checkboxes: 9 of 12 now checked with
   evidence notes; 3 remain (CI/image-digest pipeline needs phase-07, direct-

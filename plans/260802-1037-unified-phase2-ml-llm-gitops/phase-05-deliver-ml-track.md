@@ -12,8 +12,8 @@ estimate: "8-12 days standalone / 4-5 days as retrofit after the LLM track ships
 > executed evidence, the submission delivers the LLM track only. This file stays
 > in place unchanged in substance: it is the retrofit backlog, not dead work.
 >
-> **Do not churn the ML rows** in `docs/phase2/rubric-matrix.csv`,
-> `scripts/_phase2_rubric_items.py`, or `docs/phase2/acceptance-criteria.md`.
+> **Do not churn the ML rows** in `docs/platform/rubric-matrix.csv`,
+> `scripts/_phase2_rubric_items.py`, or `docs/platform/acceptance-criteria.md`.
 > The 4-5 day retrofit estimate holds only while those 57 rows stay frozen, and
 > the phase-08 auditor's canonical-coverage check requires all 117 rows present
 > regardless of which track is submitted.
@@ -109,7 +109,7 @@ Deliver the full 100-point ML track: a Feast-backed training notebook and Kubefl
 9. Route real-time drift events through Knative Broker/Trigger to the drift service and KServe prediction path. Separately execute the scheduled Airflow drift DAG: pull Feast offline data, join proxy/ground-truth reference, compute Evidently metrics, push them through Pushgateway to Grafana, then call the Kubeflow Pipelines API when threshold is exceeded. Persist idempotency key, decision, KFP run ID/status; a recommendation alone is not sufficient.
 10. Add A/B split for two inference revisions and dashboards for traffic, latency, errors, prediction distribution and proxy outcome metrics.
 11. Generate Locust HTML for the feature API with accepted SLA: p95 latency, throughput, error rate and concurrency; include test parameters.
-12. Implement the feature-specific gates in `tests/phase2/requirements/test_ml_ac_01_web_api.py` through `test_ml_ac_18_novel.py`; every scored row's exact `validation_command` must select an assertion for that row, not only the metadata contract test.
+12. Implement the feature-specific gates in `tests/platform/requirements/test_ml_ac_01_web_api.py` through `test_ml_ac_18_novel.py`; every scored row's exact `validation_command` must select an assertion for that row, not only the metadata contract test.
 
 ## Test Gates
 

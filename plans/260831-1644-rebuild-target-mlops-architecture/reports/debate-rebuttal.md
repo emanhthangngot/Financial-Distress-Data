@@ -15,7 +15,7 @@ Both were done in this round rather than argued around:
 | Check | Command / action | Where the result lands |
 |---|---|---|
 | Exhaustive 26-path audit | imported `scripts/_phase2_rubric_items.py`, resolved every `artifact_repo == "gitops"` path against `../financial-distress-gitops/` then `archive/ml-track/` | C9, C10, gap 2 |
-| Rubric matrix parse | `csv.DictReader` over `docs/phase2/rubric-matrix.csv`, counted `track` / `evidence_type` | C19, gap 3 |
+| Rubric matrix parse | `csv.DictReader` over `docs/platform/rubric-matrix.csv`, counted `track` / `evidence_type` | C19, gap 3 |
 | Mini rubric parse | `csv.reader` over `docs/Coursework Tracking (Public) - rubic (mini-coursework).csv` | C20, gap 3 |
 | Namespace-literal grep | scanned every `evidence_path`, `artifact_path`, `validation_command`, `behavioral_assertion` cell for `phase2-data` / `monitoring` | C22, invariant 2, gap 4 |
 | Target image OCR + region crops | `magick` crop of `images/architecture/fdd-architecture-full-4k.png` (4000×4088) + `tesseract`, then direct visual read of two crops | C8, C23, invariant 3, gaps 1 and 5 |
@@ -159,7 +159,7 @@ audit's reasoning at `debate-audit.md:15`:
 ### 2.4 C19 — rubric matrix composition · `REBUT`
 
 The audit asked for the awk (`debate-audit.md:25,117`). Equivalent CSV parse of
-`docs/phase2/rubric-matrix.csv` (118 physical lines, 19 columns, 117 data rows):
+`docs/platform/rubric-matrix.csv` (118 physical lines, 19 columns, 117 data rows):
 
 ```
 track:         {'LLM': 60, 'ML': 57}          → 0 mini rows
@@ -324,7 +324,7 @@ not the proposer's to reopen. Two facts bound the exposure:
 
 1. **Re-earning is a re-run, not a re-design.** All 117 rows — including all 60 LLM rows — carry a
    populated `validation_command`, `behavioral_assertion` and `evidence_path`
-   (`docs/phase2/rubric-matrix.csv`, verified: 60/60 on each field, 117/117 across the matrix).
+   (`docs/platform/rubric-matrix.csv`, verified: 60/60 on each field, 117/117 across the matrix).
    The regeneration is executing 60 recorded commands against a rebuilt cluster and re-capturing
    output. What decision #1 destroys is the *captures*, not the *contracts*.
 2. **The purge is not optional even if it were unlocked.** `plan.md:36` gives the reason: the data
@@ -490,7 +490,7 @@ GitOps artifacts** — `platform/inference/model-server.yaml`, `platform/llm/ab-
 `platform/agents/*` (counted from `_phase2_rubric_items.py`). The existing LLM evidence corpus is
 built on live serving measurements: cold-start / warm-start / TTFT captures against a running
 `InferenceService`
-(`docs/phase2/evidence/llm/LLM-c-i-t-h-th-ng-ch-warm-up-…md:15`). Delivering 60 LLM rows without
+(`docs/platform/evidence/llm/LLM-c-i-t-h-th-ng-ch-warm-up-…md:15`). Delivering 60 LLM rows without
 model serving is not possible.
 
 Two further inconsistencies in the same block: line 84 deploys Argo Rollouts in P0-P7 while line 87

@@ -63,7 +63,7 @@ working as designed and are out of scope.
 - MFA/TOTP enrollment (explicitly deferred by the AAL2 relaxation decision).
 - Admin UI for editing other users' roles (role changes stay SQL/service-role).
 - Password reset by email, OAuth providers, magic links.
-- Any change to Phase 1 pipelines, DAGs, or the `ops` schema.
+- Any change to platform .ipelines, DAGs, or the `ops` schema.
 
 ## Phases
 
@@ -117,9 +117,9 @@ Dependencies: 2 depends on 1 (role/identity shape); 3 depends on 1 and 2
 - [x] `pnpm --filter web test` (Vitest) green, new auth paths covered
 - [x] `pnpm --filter web typecheck && lint && build` green
 - [~] Live Playwright auth suite: `live-smoke.spec.ts` 6/6 green; `auth-lifecycle.spec.ts` 5/6 green, case 1 blocked by hosted SMTP rate limit at verification time (see verification report -- behavior independently confirmed by direct probe + unit tests)
-- [x] `.venv/bin/python scripts/run_stage1_quality_gates.py` still green (no Phase 1 regression)
+- [x] `.venv/bin/python scripts/run_stage1_quality_gates.py` still green (no platform .egression)
 - [x] Migration applies forward and its rollback restores the prior AAL2 policy
-- [x] `docs/phase2/product.md` records the new auth contract and the AAL2 downgrade
+- [x] `docs/platform/product.md` records the new auth contract and the AAL2 downgrade
 
 ## Risks
 

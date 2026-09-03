@@ -1,1 +1,1 @@
-"""Tests for Phase 2 FastAPI and MCP applications."""
+"""Tests for platform .astAPI and MCP applications."""

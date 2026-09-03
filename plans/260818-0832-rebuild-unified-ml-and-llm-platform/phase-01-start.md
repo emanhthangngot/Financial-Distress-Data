@@ -22,7 +22,7 @@ Functional:
 - [ ] A single `docs/rubric-matrix.csv` generated from all three rubric CSVs, totalling 161 rows / 300 points
 - [ ] Every row carries `rubric_id`, `track`, `section`, `points`, `requirement`, `proof`, `validation_command`, `evidence_path`, `artifact_repo`, `artifact_path`, `acceptance_id`
 - [ ] `scripts/audit_rubric_evidence.py` replaces `audit_phase2_evidence.py` and `audit_mini_coursework_rubric.py`
-- [ ] All evidence under `docs/evidence/` and `docs/phase2/evidence/` deleted; new empty tree keyed by rubric section
+- [ ] All evidence under `docs/evidence/` and `docs/platform/evidence/` deleted; new empty tree keyed by rubric section
 - [ ] GCP quota increase request for `CPUS_ALL_REGIONS` submitted and tracked (target 48)
 - [ ] Domain registered, nameservers pointed at Cloudflare, zone resolving, scoped API token created and stored in the secret path Vault will serve
 
@@ -69,7 +69,7 @@ regenerable rather than hand-curated.
 
 - Create: `scripts/generate_rubric_matrix.py`, `scripts/_rubric_rows.py`, `scripts/audit_rubric_evidence.py`, `docs/rubric-matrix.csv`, `docs/rubric-matrix.md`, `docs/evidence-contract.md`
 - Modify: `AGENTS.md` (drop the phase-scope section, replace read order), `CLAUDE.md`
-- Delete: `scripts/audit_phase2_evidence.py`, `scripts/audit_mini_coursework_rubric.py`, `scripts/_phase2_rubric_items.py`, `scripts/_rubric_items.py`, `scripts/generate_phase2_matrix.py`, `docs/phase2/rubric-matrix.{csv,md}`, `docs/evidence/**`, `docs/phase2/evidence/**`, `docs/submission/**`
+- Delete: `scripts/audit_phase2_evidence.py`, `scripts/audit_mini_coursework_rubric.py`, `scripts/_phase2_rubric_items.py`, `scripts/_rubric_items.py`, `scripts/generate_phase2_matrix.py`, `docs/platform/rubric-matrix.{csv,md}`, `docs/evidence/**`, `docs/platform/evidence/**`, `docs/submission/**`
 
 ## Implementation Steps
 

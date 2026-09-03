@@ -1,4 +1,4 @@
-"""Test the Phase 2 rubric matrix and evidence contract linter.
+"""Test the platform .ubric matrix and evidence contract linter.
 
 All tests must fail first (SDD test-seed rule) before the supporting
 implementation exists — a meaningful failure, not an import error.
@@ -8,7 +8,7 @@ Validate:
   - Total points: ML 100, LLM 100.
   - Semantic IDs are unique and stable (no spreadsheet line numbers).
   - Acceptance criteria are in WHO -> ACTION -> RESULT format.
-  - Phase 1 contracts are not mutated.
+  - platform .ontracts are not mutated.
   - Class contracts exist (src/ml/contracts.py, src/llm/contracts.py).
   - Novel ideas are documented.
 """
@@ -22,7 +22,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MATRIX_CSV = REPO_ROOT / "docs" / "phase2" / "rubric-matrix.csv"
-PHASE1_PROTECTED = [
+PLATFORM_PROTECTED = [
     "src/collectors/",
     "src/transforms/",
     "src/quality/",
@@ -38,34 +38,34 @@ PHASE1_PROTECTED = [
     "tests/test_lakehouse",
 ]
 
-# ── Phase 2 evidence_audit script ───────────────────────────────────────
+# ── platform .vidence_audit script ───────────────────────────────────────
 AUDIT_SCRIPT = REPO_ROOT / "scripts" / "audit_platform_evidence.py"
 
 
 class TestPhase1ContractNoMutation:
-    """Phase 1 must not be mutated by Phase 2 matrix or linter."""
+    """platform .ust not be mutated by platform .atrix or linter."""
 
     def test_audit_script_exists(self) -> None:
-        """audit_platform_evidence.py must exist before Phase 2 gates can run."""
+        """audit_platform_evidence.py must exist before platform .ates can run."""
         assert (
             AUDIT_SCRIPT.exists()
         ), f"{AUDIT_SCRIPT} missing — create scripts/audit_platform_evidence.py"
 
     def test_no_protected_paths_in_matrix(self) -> None:
-        """Matrix MUST NOT claim to modify Phase 1 protected paths."""
+        """Matrix MUST NOT claim to modify platform protected paths."""
         if not MATRIX_CSV.exists():
             pytest.fail(f"{MATRIX_CSV} missing — run 'scripts/_platform_rubric_items.py' first")
         text = MATRIX_CSV.read_text(encoding="utf-8").lower()
-        for path in PHASE1_PROTECTED:
+        for path in PLATFORM_PROTECTED:
             if path.lower() in text:
                 pytest.fail(
-                    f"Matrix references Phase 1 protected path '{path}' — "
-                    "Phase 2 must not mutate Phase 1."
+                    f"Matrix references platform protected path '{path}' — "
+                    "platform .ust not mutate Phase 1."
                 )
-        assert "dags/" in text, "Phase 2 Airflow wrappers must be mapped explicitly"
+        assert "dags/" in text, "platform .irflow wrappers must be mapped explicitly"
 
     def test_phase1_mutation_from_changed_paths(self) -> None:
-        """A git diff that touches a Phase 1 path must be flagged."""
+        """A git diff that touches a platform .ath must be flagged."""
         import importlib.util
 
         if not AUDIT_SCRIPT.exists():
@@ -79,27 +79,27 @@ class TestPhase1ContractNoMutation:
         errors = mod._phase1_mutation_from_changed(["src/collectors/some_adapter.py"])
         assert any("src/collectors/" in e for e in errors)
 
-        # A diff touching only Phase 2 files must pass
+        # A diff touching only platform .iles must pass
         ok = mod._phase1_mutation_from_changed(
             [
-                "docs/phase2/architecture.md",
+                "docs/platform/architecture.md",
                 "scripts/audit_platform_evidence.py",
                 "dags/drift_monitoring.py",
             ]
         )
-        assert ok == [], f"expected no Phase 1 mutation, got {ok}"
+        assert ok == [], f"expected no platform .utation, got {ok}"
         dag_errors = mod._phase1_mutation_from_changed(["dags/01_collect_company_master_data.py"])
-        assert dag_errors, "an existing Phase 1 DAG change must fail"
+        assert dag_errors, "an existing platform .AG change must fail"
 
         # A diff confined to the opt-in Flink job home carve-out must pass:
-        # it holds no Phase 1 burst/late-arrival/dedup logic by design.
+        # it holds no platform .urst/late-arrival/dedup logic by design.
         flink_ok = mod._phase1_mutation_from_changed(
             [
                 "src/streaming/flink/jobs/price_event_job.py",
                 "src/streaming/flink/jobs/README.md",
             ]
         )
-        assert flink_ok == [], f"expected no Phase 1 mutation, got {flink_ok}"
+        assert flink_ok == [], f"expected no platform .utation, got {flink_ok}"
 
         # But any other file directly under src/streaming/ must still fail.
         streaming_errors = mod._phase1_mutation_from_changed(
@@ -305,7 +305,7 @@ class TestRubricMatrix:
                 pytest.fail(f"{row.get('rubric_id','?')}: owner '{owner}' not a recognized role")
 
     def test_evidence_paths_in_phase2_evidence_dir(self) -> None:
-        """All planned evidence_path must be under docs/phase2/evidence/."""
+        """All planned evidence_path must be under docs/platform/evidence/."""
         import csv
         import io
 
@@ -314,10 +314,10 @@ class TestRubricMatrix:
         reader = csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8")))
         for row in reader:
             epath = row.get("evidence_path", "")
-            if epath and not epath.startswith("docs/phase2/evidence/"):
+            if epath and not epath.startswith("docs/platform/evidence/"):
                 pytest.fail(
                     f"{row.get('rubric_id','?')}: evidence_path='{epath}' "
-                    "not under docs/phase2/evidence/"
+                    "not under docs/platform/evidence/"
                 )
 
     def test_artifact_paths_are_concrete_and_repo_qualified(self) -> None:
@@ -338,7 +338,7 @@ class TestRubricMatrix:
                 ".github/workflows/",
                 "notebooks/",
                 "tests/platform/requirements/",
-                "docs/phase2/",
+                "docs/platform/",
             ),
             "gitops": (
                 ".github/workflows/",
@@ -406,7 +406,7 @@ class TestRubricMatrix:
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         rows = list(csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8"))))
-        rows[0]["artifact_path"] = "docs/phase2/requirements.md"
+        rows[0]["artifact_path"] = "docs/platform/requirements.md"
         errors = mod._audit_matrix(
             rows,
             {"ML": 100, "LLM": 100},
@@ -435,14 +435,14 @@ class TestAcceptanceCriteria:
         found = re.search(r"\s*->\s*.+->\s*.+", text)
         assert found, (
             "No WHO -> ACTION -> RESULT acceptance criterion found in "
-            "docs/phase2/acceptance-criteria.md"
+            "docs/platform/acceptance-criteria.md"
         )
 
     def test_every_matrix_acceptance_id_resolves(self) -> None:
         import csv
         import io
 
-        catalog = (REPO_ROOT / "docs/phase2/acceptance-criteria.md").read_text(encoding="utf-8")
+        catalog = (REPO_ROOT / "docs/platform/acceptance-criteria.md").read_text(encoding="utf-8")
         declared = set(re.findall(r"`((?:ML|LLM)-AC-[A-Z0-9-]+)`", catalog))
         rows = csv.DictReader(io.StringIO(MATRIX_CSV.read_text(encoding="utf-8")))
         unresolved = [row["rubric_id"] for row in rows if row["acceptance_id"] not in declared]
@@ -453,7 +453,7 @@ class TestClassContracts:
     """Five ML + five LLM class contracts must exist with exact signatures."""
 
     # Contract class -> {method: parameter names (excluding self)}. Locked in
-    # docs/phase2/low-level-design.md and mirrored by src/{ml,llm}/contracts.py.
+    # docs/platform/low-level-design.md and mirrored by src/{ml,llm}/contracts.py.
     ML_CONTRACTS = {
         "TrainingDataService": {
             "read_historical_features": ["feature_view", "entity_rows"],
@@ -567,13 +567,13 @@ class TestClassContracts:
         self._assert_contracts(self._load_contracts("src/llm/contracts.py"), self.LLM_CONTRACTS)
 
     def test_ml_low_level_design_doc_exists(self) -> None:
-        """docs/phase2/low-level-design.md must document class contracts."""
+        """docs/platform/low-level-design.md must document class contracts."""
         path = REPO_ROOT / "docs" / "phase2" / "low-level-design.md"
         assert path.exists(), f"{path} not found"
 
 
 class TestNovelIdeas:
-    """Two novel ideas per track must be documented before Phase 2 code begins."""
+    """Two novel ideas per track must be documented before platform .ode begins."""
 
     def test_novel_ideas_doc_exists(self) -> None:
         path = REPO_ROOT / "docs" / "phase2" / "novel-ideas.md"
@@ -590,16 +590,16 @@ class TestNovelIdeas:
         llm_ideas = len(re.findall(r"^##\s+LLM\s+Idea\s+\d+", text, flags=flags))
         assert ml_ideas >= 2, f"Expected ≥ 2 ML ideas, found {ml_ideas}"
         assert llm_ideas >= 2, f"Expected ≥ 2 LLM ideas, found {llm_ideas}"
-        # Every idea section must name a proof path under docs/phase2/evidence/
+        # Every idea section must name a proof path under docs/platform/evidence/
         per_idea = text.split("## ML Idea")[1:] + text.split("## LLM Idea")[1:]
-        proof_paths = [seg for seg in per_idea if "docs/phase2/evidence/" in seg]
+        proof_paths = [seg for seg in per_idea if "docs/platform/evidence/" in seg]
         assert len(proof_paths) == 4, (
-            "Each of the 4 ideas must name a proof path under " "docs/phase2/evidence/"
+            "Each of the 4 ideas must name a proof path under " "docs/platform/evidence/"
         )
 
 
 class TestArchitectureDocs:
-    """System architecture docs must reflect the Phase 2 two-plane design."""
+    """System architecture docs must reflect the platform .wo-plane design."""
 
     def test_platform_architecture_doc_exists(self) -> None:
         path = REPO_ROOT / "docs" / "phase2" / "architecture.md"
@@ -613,7 +613,7 @@ class TestArchitectureDocs:
         assert len(adrs) >= 9, f"Expected ≥ 9 ADRs, found {len(adrs)}"
 
     def test_coursework_doc_rewritten(self) -> None:
-        """docs/coursework.md must reference Phase 2 plan, no longer say K8s
+        """docs/coursework.md must reference platform .lan, no longer say K8s
         /AWS/LLM are optional."""
         path = REPO_ROOT / "docs" / "coursework.md"
         assert path.exists()
@@ -808,7 +808,7 @@ class TestLinterSmoke:
         """A near-empty evidence file must not satisfy --require-executed.
 
         The fixture claims evidence_type=executed but the evidence file lacks
-        the metadata keys required by docs/phase2/evidence-contract.md, so the
+        the metadata keys required by docs/platform/evidence-contract.md, so the
         audit must fail naming the missing keys.
         """
         import subprocess
@@ -1129,7 +1129,7 @@ class TestPhase2PromotionHardening:
     def test_ancestor_sha_allows_only_evidence_sha_delta(self, tmp_path: Path) -> None:
         audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_ancestor")
         self._git(tmp_path, "init", "-b", "main")
-        evidence = tmp_path / "docs/phase2/evidence/llm/row.md"
+        evidence = tmp_path / "docs/platform/evidence/llm/row.md"
         evidence.parent.mkdir(parents=True)
         evidence.write_text("- source_sha: old\n", encoding="utf-8")
         (tmp_path / "implementation.py").write_text("VALUE = 1\n", encoding="utf-8")
@@ -1251,7 +1251,7 @@ class TestPhase2PromotionHardening:
                 "--require-executed",
                 "--track",
                 "LLM",
-                "--phase1-base",
+                "--platform-base",
                 "0" * 40,
                 "--accept-design-only",
                 pending,

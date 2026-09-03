@@ -24,7 +24,7 @@ stamp it just produced.
   SHAs; the strict two-repo gate exiting 0 with no `--accept-design-only`; a
   scrubbed GitOps mirror published for the grader; a row-by-row mock grade
   against the canonical CSV.
-- Non-functional: `.venv` untouched; the Phase 1 (stage 1) gate green; no evidence
+- Non-functional: `.venv` untouched; the platform .stage 1) gate green; no evidence
   rewritten to match a claim.
 
 ## Architecture
@@ -32,7 +32,7 @@ stamp it just produced.
 **Why docs come first.** `_audit_frozen_revisions` requires clean worktrees, and
 `_only_evidence_sha_lines_changed` (`scripts/audit_phase2_evidence.py:609-638`)
 requires that every commit after each evidence file's SHA touch only
-`source_sha`/`gitops_sha` lines under `docs/phase2/evidence/`. So any commit of
+`source_sha`/`gitops_sha` lines under `docs/platform/evidence/`. So any commit of
 `cost.md`, `README.md`, `docs/coursework.md`, the window log, or the mock-grade
 report **after** stamping invalidates all 60 rows. Order: write everything →
 commit everything → stamp → gate → stop.
@@ -91,7 +91,7 @@ file, artifact, points a hostile grader would award, one-line reason.
 - Modify: `README.md` (numbered deployment diagram, repo map, TOC), `docs/coursework.md`
 - Create: `plans/260811-1627-close-llm-rubric-to-100/reports/mock-grade-<date>-llm.md`
 - Create: a mirror-publishing script (scripted filter, not a manual copy)
-- Modify (by script only): all `docs/phase2/evidence/llm/*.md` SHA lines
+- Modify (by script only): all `docs/platform/evidence/llm/*.md` SHA lines
 - Read-only: `scripts/stamp_phase2_evidence.py`, `scripts/audit_phase2_evidence.py`
 
 ## Implementation Steps
@@ -114,7 +114,7 @@ file, artifact, points a hostile grader would award, one-line reason.
 5. Verify the ancestor rule on a throwaway commit, then run
    `scripts/stamp_phase2_evidence.py` — GitOps first, then source, one dedicated
    stamp commit each. Never `--amend`.
-6. Run the final gate. Expect `Phase 2 rubric matrix is complete and consistent.`
+6. Run the final gate. Expect `platform .ubric matrix is complete and consistent.`
    Commit nothing afterwards. If a gap appears, fix the system, re-capture that
    scenario, and repeat from step 4 — not by editing a claim.
 7. Re-run the stage 1 gate: `.venv/bin/python scripts/run_stage1_quality_gates.py`

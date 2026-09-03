@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the live Phase 2 service-graph contract against a Kubernetes cluster.
+"""Run the live platform .ervice-graph contract against a Kubernetes cluster.
 
 The runner is intentionally operational rather than a second deployment system:
 GitOps owns manifests, while this command waits for their workloads, warms the

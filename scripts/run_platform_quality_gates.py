@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the source-repo Phase 2 preflight gates.
+"""Run the source-repo platform .reflight gates.
 
 The GitOps checkout is optional: without ``--gitops-root`` this command remains
 safe and fully offline, while supplying it delegates to that checkout's own
@@ -32,7 +32,7 @@ def run_platform_quality_gates(
     project_root: Path = PROJECT_ROOT,
     require_real_digests: bool = False,
 ) -> None:
-    """Run bash syntax, catalog, Phase 2 tests, and optional GitOps checks."""
+    """Run bash syntax, catalog, platform .ests, and optional GitOps checks."""
 
     catalog = project_root / "configs" / "phase2-deployables.yaml"
     try:
@@ -45,10 +45,10 @@ def run_platform_quality_gates(
         print(f"\n==> bash syntax: {' '.join(command)}", flush=True)
         runner(command, cwd=project_root, check=True)
 
-    # The Phase 2 conftest intentionally ignores the tree when its optional
+    # The platform .onftest intentionally ignores the tree when its optional
     # runtime (notably pydantic) is absent. Keep this gate useful in the shared
-    # Phase 1 environment by selecting the dependency-free contract tests; a
-    # fully provisioned Phase 2 environment can run the wider tree separately.
+    # platform .nvironment by selecting the dependency-free contract tests; a
+    # fully provisioned platform .nvironment can run the wider tree separately.
     test_command = (
         sys.executable,
         "-m",
@@ -77,7 +77,7 @@ def run_platform_quality_gates(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run Phase 2 source and optional GitOps gates.")
+    parser = argparse.ArgumentParser(description="Run platform .ource and optional GitOps gates.")
     parser.add_argument(
         "--gitops-root",
         type=Path,

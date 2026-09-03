@@ -14,16 +14,16 @@ dependencies: [4]
 
 ## Overview
 
-Give the Phase 2 data plane real table semantics — ACID commits, snapshot
+Give the platform data plane real table semantics — ACID commits, snapshot
 isolation, time travel, schema evolution — behind an Iceberg REST catalog, and use
 snapshots as the mechanism for incremental training-data versioning.
 
 Additive: Phase 1's Parquet-on-MinIO layout is untouched and keeps serving the
-already-captured Phase 1 evidence.
+already-captured platform .vidence.
 
 ## Requirements
 
-- Functional: Phase 2 tables are Iceberg tables registered in a REST catalog;
+- Functional: platform .ables are Iceberg tables registered in a REST catalog;
   a training read resolves a specific snapshot ID and can be replayed exactly;
   schema evolution is demonstrated without rewriting data.
 - Non-functional: the catalog runs in under ~1.5 vCPU including its metadata
@@ -64,13 +64,13 @@ GitOps repo:
 Source repo:
 
 - Create: `src/iceberg/__init__.py`, `catalog.py`, `tables.py`, `snapshots.py`
-- Create: `tests/phase2/pipelines/test_lakehouse_catalog.py`
-- Create: `docs/phase2/adr/adr-012-iceberg-catalog-choice.md`
+- Create: `tests/platform/pipelines/test_lakehouse_catalog.py`
+- Create: `docs/platform/adr/adr-012-iceberg-catalog-choice.md`
 - Modify: `requirements-phase2.txt` — `pyiceberg`
 - Modify: `src/ml/reproducibility_manifest.py` — record snapshot ID (new file, see phase 10)
 
 Do **not** modify `src/transforms/`, `src/catalog/` or `src/collectors/` — those
-are protected Phase 1 paths. The new `src/iceberg/` package is the Phase 2
+are protected platform .aths. The new `src/iceberg/` package is the Phase 2
 namespace.
 
 **Do not put this code in `src/lakehouse/`.** That package already exists and is
@@ -79,7 +79,7 @@ Phase 1: `compaction.py` is the W19 lakehouse-compaction spine called by
 produces the R25/R26 evidence in `docs/evidence/lakehouse_compaction_benchmark.json`.
 It sits outside `PHASE1_PROTECTED` only because the protection list has a gap —
 see `plans/reports/scout-260813-2117-repo-layout-audit.md` finding H0, which
-phase 1 closes by adding it to the list. Phase 2 Iceberg work stays in its own
+phase 1 closes by adding it to the list. platform .ceberg work stays in its own
 package.
 
 ## Implementation Steps
@@ -89,7 +89,7 @@ package.
 2. Create `src/iceberg/catalog.py` wrapping `pyiceberg`'s REST catalog client
    with the project's connection contract; keep credentials sourced from the
    ESO-materialized secret from phase 6.
-3. Define the Phase 2 Iceberg tables — feature tables, the label table, and the
+3. Define the platform .ceberg tables — feature tables, the label table, and the
    drift-reference table — with explicit partitioning and the event/creation
    timestamp columns the schema rubric already requires.
 4. Write `src/iceberg/snapshots.py`: resolve current snapshot ID, read as-of a
@@ -105,7 +105,7 @@ package.
 ## Verification
 
 ```bash
-.venv/bin/python -m pytest tests/phase2/pipelines -k lakehouse
+.venv/bin/python -m pytest tests/platform/pipelines -k lakehouse
 .venv/bin/python -c "from src.lakehouse.catalog import load_catalog; print(load_catalog().list_tables('phase2'))"
 kubectl get pods -l app.kubernetes.io/name=lakekeeper
 scripts/validate-gitops.sh   # in the gitops repo
@@ -113,7 +113,7 @@ scripts/validate-gitops.sh   # in the gitops repo
 
 ## Success Criteria
 
-- [ ] Lakekeeper -> queried over the Iceberg REST protocol -> lists the registered Phase 2 tables
+- [ ] Lakekeeper -> queried over the Iceberg REST protocol -> lists the registered platform .ables
 - [ ] Two concurrent writers -> commit to one table -> both succeed or one retries cleanly; no torn state
 - [ ] Time-travel read -> given a recorded snapshot ID -> returns byte-identical results to the original read
 - [ ] Schema evolution -> column added -> existing readers continue without error, no data rewrite
@@ -133,7 +133,7 @@ Also the substrate for phase 10's training reproducibility and phase 8's CDC sin
   REST protocol is the contract, so replacing the catalog is a config change. Say
   this explicitly in ADR-012 rather than pretending the maturity gap is absent.
 - **Adding an Iceberg path alongside Parquet risks two sources of truth.** Scope
-  the boundary explicitly in the ADR: Phase 1 Parquet is frozen evidence; Iceberg
-  is Phase 2 only. Do not migrate Phase 1 data.
+  the boundary explicitly in the ADR: platform .arquet is frozen evidence; Iceberg
+  is platform data.
 - **`pyiceberg` version drift against the catalog's REST implementation.** Pin
   both and assert compatibility in the test suite.

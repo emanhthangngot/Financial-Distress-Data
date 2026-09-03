@@ -21,13 +21,13 @@ formal ownership rules. Move the one bootstrap root that is cheap to move
   the other container build/bootstrap assets under `infra/`.
 - Functional: a committed repository map names the owner and plane of every
   tracked top-level directory.
-- Non-functional: no Phase 1 source file, test assertion, or spec document is
+- Non-functional: no platform .ource file, test assertion, or spec document is
   edited to accommodate a move.
 
 ## Architecture
 
 **Moved: `init/` -> `infra/kafka/`.** One tracked file
-(`init/kafka_init_topics.sh`), five references, none of them in Phase 1 `src/`
+(`init/kafka_init_topics.sh`), five references, none of them in platform .src/`
 code or in a test assertion:
 
 | Reference | Kind |
@@ -42,26 +42,26 @@ only the host-side source directory moves. That keeps all five documented
 `docker compose exec` commands correct without touching them.
 
 **Not moved: `sql/`.** The audit that opened this plan proposed moving it; the
-evidence rejects it. `sql/` is a hardcoded runtime default in Phase 1 production
+evidence rejects it. `sql/` is a hardcoded runtime default in platform .roduction
 code and an asserted constant in seven test files:
 
 ```
 src/catalog/duckdb_runner.py:38,66,73,74     default arg "sql/duckdb_create_views.sql"
 src/quality/sql_contract_runner.py:120,129   repo_root / "sql" / ...
 tests/test_naming_convention.py:19           REPO_ROOT / "sql" / ...
-tests/test_runtime_adapters.py:243           Path("sql/init_project_metadata.sql")
+tests/test_runtime_adapters.py:243           Path("sql/init_ops.sql")
 tests/test_runtime_evidence.py:28,36
 tests/test_sql_contract_runner.py:21
 tests/test_stage1_jobs.py:109
 tests/test_secrets_no_defaults.py:19         SCAN_DIRS includes "sql"
-tests/phase2/test_rubric_matrix.py:33        allowlist entry "sql/"
+tests/platform/test_rubric_matrix.py:33        allowlist entry "sql/"
 scripts/audit_phase2_evidence.py:61          allowlist entry "sql/"
 ```
 
 plus ~10 references in `docs/mini_coursework.md`, `docs/02_schema_design.md` and
-`docs/01_data_generator.md` — and `docs/mini_coursework.md` is the Phase 1 spec,
+`docs/01_data_generator.md` — and `docs/mini_coursework.md` is the platform .pec,
 which per AGENTS.md wins over any layout preference. Moving `sql/` means editing
-Phase 1 code paths and the spec to accommodate cosmetics. Rejected: `sql/` at a
+platform .ode paths and the spec to accommodate cosmetics. Rejected: `sql/` at a
 data project's root is a defensible convention, and it gets an explicit owner in
 the repository map instead.
 
@@ -70,8 +70,8 @@ intensity — each is referenced by rubric evidence paths in
 `scripts/_rubric_items.py`. They get map entries, not moves.
 
 **New: `docs/architecture/repository-map.md`.** One table, every tracked
-top-level directory, its owner, its plane (Phase 1 local lakehouse / Phase 2
-product / Phase 2 evidence / shared tooling / documentation), and whether it is
+top-level directory, its owner, its plane (platform .ocal lakehouse / Phase 2
+product / platform .vidence / shared tooling / documentation), and whether it is
 generated. This is the source-repo counterpart to the `resource-ownership.yaml`
 that phase 3 introduces in the GitOps repo, and it is what makes "unowned
 directory" a detectable condition rather than a vibe.

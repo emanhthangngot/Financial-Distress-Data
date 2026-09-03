@@ -1,7 +1,7 @@
 """RLS/RBAC tests for every role/action pair in phase-02's Authorization Model.
 
 Runs against a real (ephemeral, native) Postgres server with the actual
-Phase 2 migrations applied — no mocked database.
+platform .igrations applied — no mocked database.
 """
 
 from __future__ import annotations

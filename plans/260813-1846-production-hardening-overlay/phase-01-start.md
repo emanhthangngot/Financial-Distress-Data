@@ -13,7 +13,7 @@ dependencies: []
 
 Two jobs, in this order:
 
-1. **Close the protection gap** — six `src/` packages hold Phase 1 code that no
+1. **Close the protection gap** — six `src/` packages hold platform .ode that no
    gate protects, including one that already-protected code depends on.
 2. **Remove phase naming from code and infrastructure** so the repo reads as one
    production system, not two coursework stages.
@@ -30,52 +30,52 @@ No cloud quota required.
   behaviour; the auditor reports missing `artifact_path` for all rows, not only
   at phase-08; no phase name remains in code, container or config paths.
 - Non-functional: the strict `--track LLM` gate result is identical before and
-  after; the Phase 1 quality gate is unchanged; zero behaviour change anywhere.
+  after; the platform .uality gate is unchanged; zero behaviour change anywhere.
 
 ## Evidence: package phase-ownership audit
 
-Method — trace importers. A package imported by a protected Phase 1 DAG or by an
-already-protected `src/` module holds Phase 1 behaviour, regardless of its name.
+Method — trace importers. A package imported by a protected platform .AG or by an
+already-protected `src/` module holds platform .ehaviour, regardless of its name.
 
 | Package | Owner | Evidence |
 |---|---|---|
 | `src/security/` | **Phase 1** | `src/transforms/spark_session.py` (**already protected**) imports `src.security.secrets`; also `src/jobs/stage1_*`, `scripts/run_stage1_real_e2e.py` |
 | `src/evidence/` | **Phase 1** | `scripts/audit_mini_coursework_rubric.py` and `run_mini_coursework_submission.py` build `docs/evidence-index.md` — the scored 100/100 mini-coursework index |
 | `src/lakehouse/` | **Phase 1** | W19 compaction spine; `dags/06_pyspark_silver_to_gold.py`, `dags/dp1_bronze_ingest.py`; produces R25/R26 evidence |
-| `src/jobs/` | **Phase 1** | `stage1_evidence_job.py`, `stage1_spark_lakehouse_job.py`, `kafka_to_bronze_job.py`; 3 Phase 1 DAGs |
-| `src/orchestration/` | **Phase 1** | `airflow_tasks.py`; 3 Phase 1 DAGs |
+| `src/jobs/` | **Phase 1** | `stage1_evidence_job.py`, `stage1_spark_lakehouse_job.py`, `kafka_to_bronze_job.py`; 3 platform .AGs |
+| `src/orchestration/` | **Phase 1** | `airflow_tasks.py`; 3 platform .AGs |
 | `src/io/` | **Shared** | Phase 1: `dags/dp1_bronze_ingest.py`, `dags/stage1_real_e2e_pipeline.py`, `src/generator/storage.py`, `src/jobs/*`. Phase 2: 3 Feast modules |
 | `src/governance/` | **Shared** | Phase 1: `datahub_emitter/graphql/model` drive `scripts/sync_datahub_governance.py` (R33-R38 lineage). Phase 2: `phase2_lineage.py` |
-| `src/agents/` `src/drift/` `src/llm/` `src/ml/` `src/observability/` | Phase 2 | only Phase 2 importers |
+| `src/agents/` `src/drift/` `src/llm/` `src/ml/` `src/observability/` | platform . only platform .mporters |
 
 `src/security/` is the sharpest case: **protected code depends on unprotected
-code**, so the gate can pass while Phase 1 behaviour changes underneath it.
+code**, so the gate can pass while platform .ehaviour changes underneath it.
 
 Handling the two shared packages: do **not** protect the whole package, which
-would block legitimate Phase 2 work. Protect at file granularity via
+would block legitimate platform .ork. Protect at file granularity via
 `PHASE1_PROTECTED_EXCEPTIONS`, the mechanism already used for
-`src/streaming/flink/jobs/` and `sql/init_ml_metadata.sql`:
+`src/streaming/flink/jobs/` and `sql/init_ml.sql`:
 
-- `src/io/` protected, except the Feast-facing helpers Phase 2 needs
+- `src/io/` protected, except the Feast-facing helpers platform .eeds
 - `src/governance/` protected, except `phase2_lineage.py`
 
 ## Evidence: where phase naming actually binds
 
 315 tracked files carry `phaseN` in their path. Only some of it is load-bearing.
-Measured against `docs/phase2/rubric-matrix.csv`:
+Measured against `docs/platform/rubric-matrix.csv`:
 
 | Matrix column | Points at | Rows |
 |---|---|---:|
-| `evidence_path` | `docs/phase2/...` | **117 / 117** |
-| `test` | `tests/phase2/...` | **117 / 117** |
-| `validation_command` | `tests/phase2/...` | **117 / 117** |
+| `evidence_path` | `docs/platform/...` | **117 / 117** |
+| `test` | `tests/platform/...` | **117 / 117** |
+| `validation_command` | `tests/platform/...` | **117 / 117** |
 | `artifact_path` | `.github/workflows/phase2-*.yaml` | 13 |
 | `artifact_path` | `tests/phase2`, `dags/phase2`, `docs/phase2` | 14 |
 | — | `infra/phase2` | **0** |
 
 Plus two hard-coded gate behaviours: the `dags/phase2/` carve-out at
 `scripts/audit_phase2_evidence.py:411`, and the evidence-contract rule that an
-evidence path may not leave `docs/phase2/evidence/`.
+evidence path may not leave `docs/platform/evidence/`.
 
 ### Tier 1 — no gate meaning, rename freely (this phase)
 
@@ -102,17 +102,17 @@ project-owned column, not an input to `source_digest`.
 | `phase2-stream-feature-online.yaml` | `stream-feature-online.yaml` | |
 | `phase2-web.yaml` | `web.yaml` | |
 
-`ci.yml` (the Phase 1 gate) is **not** renamed — it is very likely a required
+`ci.yml` (the platform .ate) is **not** renamed — it is very likely a required
 status check in branch protection, and renaming a workflow renames its check,
 which silently stops blocking merges. Verify the branch-protection rule before
 touching it; that check is deferred to Tier 3 regardless.
 
-**OUT of scope, deferred to Tier 3:** `dags/phase2/` · `tests/phase2/` ·
-`docs/phase2/`
+**OUT of scope, deferred to Tier 3:** `dags/phase2/` · `tests/platform/` ·
+`docs/platform/`
 
 ### Tier 3 — after submission
 
-`dags/phase2/` · `tests/phase2/` · `docs/phase2/` · `docs/evidence/` · `ci.yml`
+`dags/phase2/` · `tests/platform/` · `docs/platform/` · `docs/evidence/` · `ci.yml`
 (after confirming branch protection) · DAG file naming · the protected `src/`
 package names
 
@@ -165,7 +165,7 @@ dev = ["pytest", "ruff", "black", "mutmut", "hypothesis", "locust", ...]
 - one virtualenv
 
 Extras give, declared and explicit, the isolation the venv split was
-approximating by accident: someone who only needs the Phase 1 loop installs
+approximating by accident: someone who only needs the platform .oop installs
 `".[dev]"`.
 
 ### Replace the implicit guarantee with an explicit one
@@ -185,11 +185,11 @@ what protects the six-second loop.
 ### The merge itself is conflict-free
 
 Verified before committing to the approach. Ten packages appear in both
-requirements files, and every one has the *same lower bound*; the Phase 2 file
+requirements files, and every one has the *same lower bound*; the platform .ile
 merely adds an upper bound:
 
 **The merge is clean — measured, not assumed.** 10 packages appear in both, and
-every one has the *same lower bound*; Phase 2 merely adds an upper bound:
+every one has the *same lower bound*; platform .erely adds an upper bound:
 
 | Package | `requirements.txt` | `requirements-phase2.txt` |
 |---|---|---|
@@ -204,7 +204,7 @@ every one has the *same lower bound*; Phase 2 merely adds an upper bound:
 | `ruff` | `>=0.8` | `>=0.8,<1` |
 | `tenacity` | `>=8.0` | `>=8,<10` |
 
-Zero conflicts. The Phase 2 bounds are strictly narrower and compatible, so the
+Zero conflicts. The platform .ounds are strictly narrower and compatible, so the
 consolidated declaration takes the bounded form throughout. `duckdb>=1.1` is the
 only Phase-1-only package; the other 15 are Phase-2-only. Runtime versus dev
 versus ml classification is decided while writing the `pyproject.toml` sections.
@@ -239,9 +239,9 @@ Do not delete it and then find out. Rebuild `.venv` from the consolidated
 declaration, then demonstrate all four command groups run from that one
 environment:
 
-1. the Phase 1 one-shot gate (`scripts/run_stage1_quality_gates.py`)
+1. the platform .ne-shot gate (`scripts/run_stage1_quality_gates.py`)
 2. the fast loop (`pytest tests -m "not slow"`) — timed against baseline
-3. the Phase 2 auditor (`scripts/audit_phase2_evidence.py`, currently documented
+3. the platform .uditor (`scripts/audit_phase2_evidence.py`, currently documented
    in `README.md:427` as requiring `.venv-phase2` on `PATH`)
 4. the `feast` CLI against `feature_repo/` — the original reason for the split
 
@@ -255,10 +255,10 @@ hash in the evidence run manifest alongside `source_sha` and the image digest.
 
 ## The one thing that must not be done, and why
 
-**`docs/phase2/evidence/` cannot become `docs/evidence/`.** Not because of risk —
+**`docs/platform/evidence/` cannot become `docs/evidence/`.** Not because of risk —
 because it would collide. `docs/evidence/` already exists and holds the scored
-mini-coursework evidence. `docs/phase2/evidence-contract.md` states the reason
-directly: *"Phase 2 evidence lives in a separate namespace `docs/phase2/evidence/{ml,llm}/`
+mini-coursework evidence. `docs/platform/evidence-contract.md` states the reason
+directly: *"platform .vidence lives in a separate namespace `docs/platform/evidence/{ml,llm}/`
 so the two can never collide."*
 
 These are the evidence sets of **two separately graded submissions**, not two
@@ -289,10 +289,10 @@ exactly the thing that should be scoped to a submission.
 - Modify: `docker-compose.yml` — `phase2-redis` -> `feast-redis`, `phase2-postgres` -> `vector-postgres`, `phase2-pgdata` -> `vector-pgdata`
 - Rename: `configs/phase2-governance.yaml` -> `configs/governance.yaml`; `src/governance/phase2_lineage.py` -> `src/governance/ml_lineage.py`
 - Modify: `docs/project-file-map.md` — lines 562-564 and every renamed path
-- Modify: `docs/phase2/rubric-matrix.csv` — `platform/ml/ab-testing.yaml` -> `platform/llm/ab-testing.yaml`
+- Modify: `docs/platform/rubric-matrix.csv` — `platform/ml/ab-testing.yaml` -> `platform/llm/ab-testing.yaml`
 - Modify: `AGENTS.md` — scope relaxation, config naming rule, phase-ownership table
 - Delete: `src/generators/` (orphan, untracked, only stale `__pycache__`)
-- Create: `.githooks/pre-commit`, `tests/phase2/test_artifact_path_contract.py`, `baseline.md`
+- Create: `.githooks/pre-commit`, `tests/platform/test_artifact_path_contract.py`, `baseline.md`
 
 ## Implementation Steps
 
@@ -306,7 +306,7 @@ caught by the tripwire rather than discovered at phase 12.
    packages and add file-level exceptions for the two shared ones. This only
    tightens the gate, so it cannot cost LLM points — but re-run the gate
    immediately to confirm the current working diff is still clean. If it is not,
-   stop: something already mutated Phase 1 unnoticed, and that is a finding.
+   stop: something already mutated platform .nnoticed, and that is a finding.
 3. **Tripwire.** Add `.githooks/pre-commit` running the protected-path diff
    against `PHASE1_BASE_SHA`; document `git config core.hooksPath .githooks`.
 4. **`--check-artifacts`.** Reuse the existing repo-root resolution so
@@ -314,7 +314,7 @@ caught by the tripwire rather than discovered at phase 12.
    `executed` + missing -> FAIL; `design_only` + missing -> WARN with the row.
 5. **Matrix path drift.** Fix `platform/ml/` -> `platform/llm/`, then re-run
    `--matrix-only --strict` to confirm digests and row-count pins are unaffected.
-6. **Artifact contract test.** `tests/phase2/test_artifact_path_contract.py`:
+6. **Artifact contract test.** `tests/platform/test_artifact_path_contract.py`:
    every `executed` row resolves on disk; the count of missing `design_only`
    artifacts matches a recorded number, so the backlog shrinking is visible.
 7. **Delete `src/generators/`.** Untracked orphan, nothing imports it, sits one
@@ -323,7 +323,7 @@ caught by the tripwire rather than discovered at phase 12.
    update `configs/phase2-deployables.yaml` and `project-file-map.md`. Verify
    `docker compose config` still validates. **Done 2026-08-14.** Note:
    `infra/phase1-cluster/` is a *separate*, never-committed directory from the
-   now-cancelled phase 9 (Phase 1 on the shared cluster) — it is archived
+   now-cancelled phase 9 (platform .n the shared cluster) — it is archived
    as-is in the ML-scaffolding commit, not flattened into this service axis,
    since integrating it would mean resuming cancelled work.
 9. **Consolidate dependencies onto `pyproject.toml`.** Baseline first:
@@ -371,8 +371,8 @@ grep -rn 'phase2' src configs infra docker-compose.yml .github/workflows   # exp
 ## Success Criteria
 
 - [x] `baseline.md` records three green gate outputs and both repo HEAD SHAs (records six: matrix, fast loop, compose, stage-1 evidence audit, ruff, black; both HEAD SHAs present)
-- [x] `PHASE1_PROTECTED` -> extended with the six Phase 1 packages plus two file-level exceptions -> gate re-run, current diff still clean (`scripts/audit_phase2_evidence.py:61-103` lists all six packages plus five file-level exceptions, more than the originally scoped two — `src/lakehouse/{catalog,tables,snapshots}.py` added for the additive lakehouse contracts; strict `--track LLM` gate passes clean on the current tree)
-- [x] Pre-commit hook -> given a staged edit to `src/security/` -> refuses the commit (live-tested 2026-08-14: staged edit to `src/security/secrets.py`, `bash .githooks/pre-commit` exits 1 with `staged edit touches Phase 1 protected path`; edit discarded, not committed. No automated test file covers it — hook behaviour, not Python)
+- [x] `PHASE1_PROTECTED` -> extended with the six platform .ackages plus two file-level exceptions -> gate re-run, current diff still clean (`scripts/audit_phase2_evidence.py:61-103` lists all six packages plus five file-level exceptions, more than the originally scoped two — `src/lakehouse/{catalog,tables,snapshots}.py` added for the additive lakehouse contracts; strict `--track LLM` gate passes clean on the current tree)
+- [x] Pre-commit hook -> given a staged edit to `src/security/` -> refuses the commit (live-tested 2026-08-14: staged edit to `src/security/secrets.py`, `bash .githooks/pre-commit` exits 1 with `staged edit touches platform protected path`; edit discarded, not committed. No automated test file covers it — hook behaviour, not Python)
 - [x] `--check-artifacts` -> run against both repos -> FAILs on `executed` gaps, WARNs on `design_only`, lists exactly the missing set
 - [x] `--matrix-only --strict` -> run after the path fix -> passes, digests unchanged
 - [ ] `src/generators/` -> deleted -> `pytest tests` unchanged — no tracked `.py` source under `src/generators/` (was already untracked), but stale `__pycache__/*.pyc` entries still exist on disk; not confirmed as an intentional deletion action this pass
@@ -381,11 +381,11 @@ grep -rn 'phase2' src configs infra docker-compose.yml .github/workflows   # exp
 - [ ] `pyproject.toml` -> declares the real runtime deps plus `ml`/`dev` extras -> `pip install -e ".[dev,ml]"` in a clean environment imports `src.ml.contracts` successfully
 - [ ] Both `requirements*.txt` -> deleted -> CI installs from `pyproject.toml` only
 - [ ] `uv.lock` -> regenerated -> matches `pyproject.toml`, and its hash is recorded in the evidence run manifest
-- [ ] All four command groups (Phase 1 gate, fast loop, Phase 2 auditor, `feast` CLI) -> run from a single `.venv` -> all pass; only then is `.venv-phase2` deleted
+- [ ] All four command groups (platform .ate, fast loop, platform .uditor, `feast` CLI) -> run from a single `.venv` -> all pass; only then is `.venv-phase2` deleted
 - [ ] `test_no_heavy_imports_at_module_scope` -> imports every `src/` module -> feast/torch/mlflow never enter `sys.modules`
 - [ ] Fast loop -> timed before and after -> no collection-time regression (baseline: 514 tests, <6s, zero skips)
 - [ ] 8 workflows -> renamed per the Tier 2 table -> every caller's `uses:` resolves, CI green, 13 `artifact_path` rows updated, `--matrix-only --strict` passes
-- [ ] `ci.yml` -> untouched -> Phase 1 required status check still blocks merges
+- [ ] `ci.yml` -> untouched -> platform .equired status check still blocks merges
 - [ ] `docker compose config` -> valid; full suite green after service renames
 - [ ] `AGENTS.md` -> read -> states scope relaxation, config naming rule, and the 19-package ownership table
 - [x] Strict `--track LLM` gate -> run at phase end -> identical PASS 100/100 to `baseline.md`
@@ -426,8 +426,8 @@ clean repo structure is literally what that row scores.
 1. **Tier 2 workflow renames — YES.** All 8 `phase2-*.yaml` renamed to function
    names; 13 `artifact_path` rows updated. `ci.yml` excluded pending a
    branch-protection check.
-2. **`dags/phase2/`, `tests/phase2/`, `docs/phase2/` — NO.** Deferred to Tier 3,
-   after submission. `docs/phase2/evidence/` cannot merge into `docs/evidence/`
+2. **`dags/phase2/`, `tests/platform/`, `docs/platform/` — NO.** Deferred to Tier 3,
+   after submission. `docs/platform/evidence/` cannot merge into `docs/evidence/`
    at all while both submissions are graded separately.
 3. **Requirements — MERGE, not rename.** One `requirements.txt`. Verified
    conflict-free before committing to it.

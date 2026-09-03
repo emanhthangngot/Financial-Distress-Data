@@ -1,4 +1,4 @@
--- Phase 2 auth: turn `profiles` into a real user table (identity, not just a
+-- platform .uth: turn `profiles` into a real user table (identity, not just a
 -- role). Adds display_name/email, backfills both from auth.users, and moves
 -- handle_new_user() to copy them on signup. Owner-writable display_name only
 -- is enforced by a column grant + policy so a client cannot self-escalate role
