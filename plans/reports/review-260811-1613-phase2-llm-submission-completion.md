@@ -1,4 +1,4 @@
-# Review — Phase 2 LLM submission completion vs rubric
+# Review — platform .LM submission completion vs rubric
 
 Date: 2026-08-11 · Branch `codex/phase06-llm-submission` (HEAD `d72f15f`, clean)
 Plan: `plans/260809-2039-complete-phase2-llm-submission/`
@@ -14,12 +14,12 @@ audit-clean. 21 points (13 rows) remain `design_only`: Observability 8, Routing
 
 | Check | Command | Result |
 |---|---|---|
-| Matrix rows | `docs/phase2/rubric-matrix.csv` | 117 rows; LLM 47 executed / 13 design_only; ML 57 design_only |
+| Matrix rows | `docs/platform/rubric-matrix.csv` | 117 rows; LLM 47 executed / 13 design_only; ML 57 design_only |
 | LLM points | sum over matrix | total 100, executed **79** |
-| Evidence files | `docs/phase2/evidence/llm/` | 47 canonical `.md` + Locust/warm-up artifacts |
+| Evidence files | `docs/platform/evidence/llm/` | 47 canonical `.md` + Locust/warm-up artifacts |
 | Strict audit (no validations) | `audit_phase2_evidence.py --strict --require-executed --track LLM --gitops-root …` | FAIL — exactly the 13 design_only rows, nothing else |
-| Full gate | same + `--run-validations --ml 100 --llm 100 --phase1-base ddbcbe7… --accept-design-only <13 rows>` | **PASS** — "Phase 2 rubric matrix is complete and consistent." |
-| Phase 1 no-regression | `.venv/bin/python scripts/run_stage1_quality_gates.py` | exit 0, `status: pass` |
+| Full gate | same + `--run-validations --ml 100 --llm 100 --phase1-base ddbcbe7… --accept-design-only <13 rows>` | **PASS** — "platform .ubric matrix is complete and consistent." |
+| platform .o-regression | `.venv/bin/python scripts/run_stage1_quality_gates.py` | exit 0, `status: pass` |
 | Worktrees | source + `~/Studying/FSDS/financial-distress-gitops` | both clean; gitops HEAD `921bdc1` = `gitops_sha` in evidence; `source_sha` `6dc70ba` is ancestor of HEAD (stamp rule satisfied) |
 | Artifacts at declared paths | `src/agents/`, `apps/{feature,drift}-mcp/`, `src/llm/{model_server,benchmark,embedding_registry,citation_guard}.py`, both notebooks | all present |
 
@@ -55,7 +55,7 @@ vs the phase files' `done`). Cosmetic, but it misreports progress.
    Phase-1-protected-path diff is `ddbcbe7bd41ae4883954b8a247efdc67c7329078`
    (`fix(generators): resolve generator package collision`, 2026-08-07); earlier
    bases fail on `src/collectors/`, `src/streaming/`, `docs/evidence/`,
-   `docs/01_data_generator.md`. Record that SHA in `docs/phase2/evidence-contract.md`.
+   `docs/01_data_generator.md`. Record that SHA in `docs/platform/evidence-contract.md`.
 3. **Mock-grade (phase 06 step 10) not done** — no row-by-row grade report against
    the canonical CSV under `plans/.../reports/`.
 4. **`docs/submission/cost.md` incomplete** — per-session credit deltas and final

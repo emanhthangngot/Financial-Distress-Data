@@ -20,7 +20,7 @@ only 3 and marks 18 "Work in progress".
 ## Requirements
 
 - Functional: 21 rubric areas covered. The 60 canonical evidence rows in
-  `docs/phase2/evidence/llm/` are the source of truth; each narrative doc links
+  `docs/platform/evidence/llm/` are the source of truth; each narrative doc links
   to the rows it explains.
 - Functional: every technical claim quotes real code from a repo-relative
   linked file, at the version in the working tree — not paraphrased.
@@ -30,7 +30,7 @@ only 3 and marks 18 "Work in progress".
   (routing, warm-up, retrieval quality, drift latency).
 - Non-functional: each doc ≤ 800 lines; split into `-part2` files rather than
   raising the gate.
-- Non-functional: no evidence file moved out of `docs/phase2/evidence/`.
+- Non-functional: no evidence file moved out of `docs/platform/evidence/`.
 
 ## Architecture
 
@@ -87,8 +87,8 @@ Per-doc skeleton (from `docs/docs-style-contract.md`):
 - Retire (Phase 7): the current flat `docs/submission/{ci_cd,iac,observability,
   routing_gateway,security,validation_verification,cost}.md` after their content
   is absorbed and links are rewired
-- Read only (source of truth): `docs/phase2/evidence/llm/*.md` (60 rows),
-  `docs/phase2/rubric-matrix.csv`, `docs/phase2/evidence-contract.md`,
+- Read only (source of truth): `docs/platform/evidence/llm/*.md` (60 rows),
+  `docs/platform/rubric-matrix.csv`, `docs/platform/evidence-contract.md`,
   `docs/coursework.md`, `docs/Coursework Tracking (Public) - rubic
   final-coursework (final - llm).csv`
 - Read only (code to quote): `src/llm/`, `src/agents/`, `src/drift/`, `apps/`,
@@ -97,7 +97,7 @@ Per-doc skeleton (from `docs/docs-style-contract.md`):
 ## Implementation Steps
 
 1. Build the area→rows→evidence-files map from
-   `docs/phase2/rubric-matrix.csv` and the LLM rubric CSV. Every one of the 60
+   `docs/platform/rubric-matrix.csv` and the LLM rubric CSV. Every one of the 60
    rows must be claimed by exactly one narrative doc. A row claimed twice or
    zero times is a mapping bug — fix before writing.
 2. Write `docs/submission/rubric-final-coursework-(final-llm)/README.md` first:

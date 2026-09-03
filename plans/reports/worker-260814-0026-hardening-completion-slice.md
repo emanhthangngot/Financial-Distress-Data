@@ -32,5 +32,5 @@
 
 - Refresh GitHub auth with `write:packages` and `read:packages`, then rerun the two API workflows or `docker push` commands.
 - Let the workflow sign, attest SPDX SBOM and SLSA provenance, then let the GitOps digest-bump PR update both Helm values.
-- Approve a bounded cluster rollout window and quota increase before applying Phase 1/Phase 2 data-plane manifests.
+- Approve a bounded cluster rollout window and quota increase before applying Phase 1/platform data-plane manifests.
 - Run Kyverno, ESO/Linkerd, Lakekeeper, Flink CDC, MLflow/Kubeflow, KEDA and Argo rollback scenarios; capture only real outputs.

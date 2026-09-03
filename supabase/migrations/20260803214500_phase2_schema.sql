@@ -1,5 +1,5 @@
--- Phase 2 product shell schema: roles, evidence session state machine, outbox,
--- saved reports, audit log. Additive only; does not touch Phase 1 Postgres
+-- platform schema: roles, evidence session state machine, outbox,
+-- saved reports, audit log. Additive only; does not touch platform .ostgres
 -- schemas (ops / ml).
 
 create type app_role as enum (

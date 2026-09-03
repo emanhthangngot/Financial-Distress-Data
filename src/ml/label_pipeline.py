@@ -1,4 +1,4 @@
-"""Phase 2 label table build.
+"""platform .abel table build.
 
 Wraps ``src.transforms.compute_distress_labels.compute_labels`` (Phase 1,
 read-only import — AGENTS.md forbids editing Phase 1) and reshapes its

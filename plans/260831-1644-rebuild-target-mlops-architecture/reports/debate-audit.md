@@ -8,7 +8,7 @@
 | C2 | PASS | `terraform/gcp/variables.tf:33-59` + `terraform/gcp/terraform.tfvars:7-8` | e2-standard-8 (8 vCPU) × 1 + e2-medium (2 vCPU) = 10/12; secondary_pool_node_count defaults to 0 at line 51 |
 | C3 | PASS | `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:103` | Predecessor plan explicitly states "always-on floor of 12-16 vCPU"; exceeds verified 12 vCPU cap |
 | C4 | PASS | `terraform/gcp/gke.tf` (grep: zero matches for spot\|preemptible) | No spot or preemptible node pool defined; line-by-line confirmation that budget plan depends on unbuilt pool |
-| C5 | PASS | `docs/phase2/adr/adr-004-kserve-018-pin.md:1-11` | ADR-004 status line: "Partially revived by ADR-010 (2026-08-07, afternoon amendment)"; line 10 explicitly restores "KServe InferenceService + Knative Serving + an llm-d router" |
+| C5 | PASS | `docs/platform/adr/adr-004-kserve-018-pin.md:1-11` | ADR-004 status line: "Partially revived by ADR-010 (2026-08-07, afternoon amendment)"; line 10 explicitly restores "KServe InferenceService + Knative Serving + an llm-d router" |
 | C6 | PASS | `financial-distress-gitops/platform/inference/VERSIONS.md:13` | Line 13 lists "KServe | `v0.14.1`" |
 | C7 | PASS | `adr-004-kserve-018-pin.md:4-8` | Line 7 states "Envoy Gateway and Envoy AI Gateway stay dropped: the plan routes through agentgateway"; line 8 confirms "half of this ADR does not apply" due to agentgateway routing |
 | C8 | UNPROVEN | (unsourced) | Proposal claims target image shows llm-d Gateway as ClusterIP; image visual inspection not performed; no manifest text confirms LoadBalancer vs ClusterIP type |
@@ -17,12 +17,12 @@
 | C11 | PASS | `src/lakehouse/`, `src/cdc/`, `src/governance/`, `src/ml/`, `feature_repo/` (directory verification) | All named directories exist; spot-check: `src/cdc/` contains `config.py` and `flink_cdc_job.py` per proposal citation; `src/ml/` contains `mlflow_registry.py`, `pipelines/distributed_training.py`, `leakage_guard.py`, `ab_router.py`, and `feast/` subdirectory |
 | C12 | PASS | `pyproject.toml` (grep: zero matches for ray\|mlflow\|kfp\|kubeflow\|feast\|pyiceberg\|trino\|superset\|dbt) | No dependency declarations for any named runtime package; every runtime binding is zero-prior-surface |
 | C13 | PASS | `src/` + `dags/` + `configs/` + `scripts/` (codebase scan) | Grep for Trino, Superset, dbt, KEDA, Triton, Jenkins, Istio, Argo Rollouts returns: DataHub enum `SUPERSET` (not import), `dbt-style` comment in `src/quality/sql_contract_macros.sql:1`, rubric keyword only; no client code or manifest usage of any eight components |
-| C14 | PASS | `docs/phase2/adr/adr-012-iceberg-catalog-choice.md` (exists, dated 2026-08-02) + `financial-distress-gitops/archive/ml-track/platform/data/lakehouse/` | ADR-012 accepts Lakekeeper; archive path confirmed with `lakekeeper.yaml`, `lakekeeper-postgres.yaml` present |
-| C15 | PASS | `docs/phase2/adr/adr-013-cdc-ingestion-path.md` (exists) | ADR-013 specifies direct Flink-CDC, not Debezium → Kafka → Flink; proposal correctly identifies this as needing amendment per image/plan.md:42 |
-| C16 | PASS | `docs/phase2/adr/adr-005-feast-stores.md` (exists) | ADR-005 currently specifies local object storage for offline; proposal correctly identifies Postgres offline requirement as amendment per image + plan.md:42 |
-| C17 | PASS | `docs/phase2/adr/adr-014-kubeflow-trainer-scope.md` (exists) | ADR-014 currently scopes Trainer HTTP boundary; proposal correctly identifies Ray distributed training as requiring amendment per image + plan.md:40 |
-| C18 | PASS | `docs/phase2/adr/adr-006-mlflow-promotion.md:1-8` (exists, status: deferred) | ADR-006 text does not require substantive edits; un-deferral only; promotion contract (holdout gate, smoke test) matches target image flow |
-| C19 | UNPROVEN | `docs/phase2/rubric-matrix.csv` (exists; line count not verified) | File exists; claim of "60 LLM + 57 ML + 0 mini rows" requires CSV parse verification; no awk confirmation run |
+| C14 | PASS | `docs/platform/adr/adr-012-iceberg-catalog-choice.md` (exists, dated 2026-08-02) + `financial-distress-gitops/archive/ml-track/platform/data/lakehouse/` | ADR-012 accepts Lakekeeper; archive path confirmed with `lakekeeper.yaml`, `lakekeeper-postgres.yaml` present |
+| C15 | PASS | `docs/platform/adr/adr-013-cdc-ingestion-path.md` (exists) | ADR-013 specifies direct Flink-CDC, not Debezium → Kafka → Flink; proposal correctly identifies this as needing amendment per image/plan.md:42 |
+| C16 | PASS | `docs/platform/adr/adr-005-feast-stores.md` (exists) | ADR-005 currently specifies local object storage for offline; proposal correctly identifies Postgres offline requirement as amendment per image + plan.md:42 |
+| C17 | PASS | `docs/platform/adr/adr-014-kubeflow-trainer-scope.md` (exists) | ADR-014 currently scopes Trainer HTTP boundary; proposal correctly identifies Ray distributed training as requiring amendment per image + plan.md:40 |
+| C18 | PASS | `docs/platform/adr/adr-006-mlflow-promotion.md:1-8` (exists, status: deferred) | ADR-006 text does not require substantive edits; un-deferral only; promotion contract (holdout gate, smoke test) matches target image flow |
+| C19 | UNPROVEN | `docs/platform/rubric-matrix.csv` (exists; line count not verified) | File exists; claim of "60 LLM + 57 ML + 0 mini rows" requires CSV parse verification; no awk confirmation run |
 | C20 | UNPROVEN | `docs/Coursework Tracking (Public) - rubic (mini-coursework).csv` | File existence not verified; claim that it is raw/unnormalized requires direct inspection |
 | C21 | PASS | (inferred from proposal Section 3.2) | Proposal explicitly reads target image as nesting hatched `Sandbox` box inside `ns: agents`; mapping preserves three namespaces (kagent, agents-sandbox, agentgateway-system) with locked NetworkPolicy scoping per `financial-distress-gitops/plans/260818-0028-namespace-convention-alignment/plan.md:77-115` |
 | C22 | UNPROVEN | `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:35` | Proposal claims decision #1 deletes all evidence artifacts; requires reading full decision text and verifying zero re-stamp cost implication |
@@ -42,7 +42,7 @@
 
 4. **KServe 0.18 CRD migration is conditionally irreversible (C5–C6).** The plan requires migrating from 0.14.1 to 0.18. If the CRD objects are not exported before upgrade, P6 becomes one-way (downgrade requires manual manifests). Rollback becomes a manual recovery, not an Argo resync. **Impact:** if issues surface in 0.18 after P6, the cluster cannot revert to 0.14.1 without manual intervention. **Timeline:** pre-upgrade object export must happen in P6, not skipped.
 
-5. **Evidence purge (decision #1) forfeits 100 verified LLM points (C19, proposal Concerns #4).** The proposal deletes all Phase 2 LLM evidence artifacts (60 rows / 100 points) and regenerates from zero into a unified tree. If the new unified matrix fails to re-achieve 100 LLM points, those points are lost and the evidence score regresses. The credit window is finite (2026-11-06), and re-earning points post-purge carries schedule risk. **Impact:** evidence score down 100 points minimum until re-earned; no guarantee of recovery before expiry. **Timeline:** decision locked by user; auditor notes the risk against the revised capacity picture.
+5. **Evidence purge (decision #1) forfeits 100 verified LLM points (C19, proposal Concerns #4).** The proposal deletes all platform .LM evidence artifacts (60 rows / 100 points) and regenerates from zero into a unified tree. If the new unified matrix fails to re-achieve 100 LLM points, those points are lost and the evidence score regresses. The credit window is finite (2026-11-06), and re-earning points post-purge carries schedule risk. **Impact:** evidence score down 100 points minimum until re-earned; no guarantee of recovery before expiry. **Timeline:** decision locked by user; auditor notes the risk against the revised capacity picture.
 
 ---
 
@@ -83,7 +83,7 @@ The capacity blocker (C1–C3) combined with evidence purge risk (Concerns #4) a
    - Deploy Trino + Superset for BI analytics on existing Gold tables.
    - Deploy Istio + Vault + ESO + Jenkins + Argo Rollouts (control plane only, no training pipelines).
    - **vCPU cost:** ~8–10 vCPU always-on (within 12 cap with 2 vCPU buffer). Selective Istio injection keeps mesh overhead <2 vCPU.
-   - **Deliverable:** unified LLM evidence (60 rows) + mini-coursework (19 rows) = 79 points. Evidence tree regenerated; Phase 1 lakehouse regression suite stays green.
+   - **Deliverable:** unified LLM evidence (60 rows) + mini-coursework (19 rows) = 79 points. Evidence tree regenerated; platform lakehouse regression suite stays green.
    - **Scope:** No ML training pipeline, no Kubeflow, no Ray, no MLflow, no model serving, no Argo Rollouts canary (Triton only).
    - **Evidence gain:** BI/analytics layer live; Kafka/Debezium CDC + Flink streaming proven; data contracts (Iceberg, Feast offline, governance DataHub) integrated.
 
@@ -98,7 +98,7 @@ The capacity blocker (C1–C3) combined with evidence purge risk (Concerns #4) a
 **Acceptance Criteria:**
 
 - P0–P7 completes and evidence passes before 2026-10-31 (4-week buffer before 2026-11-06 expiry).
-- LLM + BI analytics live with 79 points verified; Phase 1 regression suite passes throughout.
+- LLM + BI analytics live with 79 points verified; platform .egression suite passes throughout.
 - All three ADR amendments (005, 013, 014) are complete and accepted before their phases.
 - Jenkins CI/CD and Vault/ESO secrets stack proven in sandbox before production use.
 - If quota increase is granted by 2026-10-15, P8–P10 can begin; otherwise, phase completes at P7 with LLM scope achieved.
@@ -147,7 +147,7 @@ The capacity blocker (C1–C3) combined with evidence purge risk (Concerns #4) a
 1. **BLOCKER — GCP CPUS_ALL_REGIONS quota.** Binding cap is 12 vCPU; 10 committed; plan always-on floor is 12–16 vCPU. No resident subset fits without increase. Gate G0 is a hard stop; no workaround in the proposal.
 2. **BLOCKER — Quota increase timeline unknown.** Proposal does not state when quota request will be approved. Plan execution is contingent on external decision outside the team's control. Counter-proposal defers ML track to remove this dependency from critical path.
 3. **BLOCKER — No spot node pool in Terraform.** Budget depends on one; building it is P0; spot quota is a second gate. If denied, always-on cost jumps to ~USD 280–350/month, exhausting credit in 30 days.
-4. **CONCERN — Evidence purge forfeits 100 verified LLM points.** Decision #1 deletes all Phase 2 evidence; re-earning LLM points inside the credit window carries schedule risk. User has locked this; auditor notes the risk against revised capacity picture.
+4. **CONCERN — Evidence purge forfeits 100 verified LLM points.** Decision #1 deletes all platform .vidence; re-earning LLM points inside the credit window carries schedule risk. User has locked this; auditor notes the risk against revised capacity picture.
 5. **CONCERN — Path audit incomplete (C9).** Claim "all 26 rubric paths resolve, 18 live + 8 archived, 0 missing" requires script verification; spot checks pass but exhaustive count not run.
 6. **CONCERN — Three ADR amendments must land before phases.** ADR-013, ADR-005, ADR-014 must be amended before P1, P3, P5 respectively; delays to amendment completion propagate to phase start dates.
 7. **UNRESOLVED — dbt component role inferred from image orange mark.** Proposal marks identification as `[INFERENCE]`; no confirmation that "Build Gold Data Mart" is dbt vs. other SQL tool.

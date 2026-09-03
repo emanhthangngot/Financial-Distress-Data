@@ -40,7 +40,7 @@ ARTIFACT_ROOTS = {
         ".github/workflows/",
         "notebooks/",
         "tests/platform/requirements/",
-        "docs/phase2/",
+        "docs/platform/",
     ),
     "gitops": (
         ".github/workflows/",
@@ -80,8 +80,8 @@ def test_rubric_row_contract(rid: str) -> None:
         item.evidence_type in VALID_EVIDENCE_TYPES
     ), f"{rid}: evidence_type {item.evidence_type!r} invalid"
     assert item.evidence_path.startswith(
-        "docs/phase2/evidence/"
-    ), f"{rid}: evidence_path {item.evidence_path!r} not under docs/phase2/evidence/"
+        "docs/platform/evidence/"
+    ), f"{rid}: evidence_path {item.evidence_path!r} not under docs/platform/evidence/"
     assert item.acceptance_id, f"{rid}: missing acceptance_id"
     assert item.source_file.startswith("docs/Coursework Tracking"), f"{rid}: source_file invalid"
     assert item.source_row_index > 0, f"{rid}: source_row_index invalid"
@@ -135,7 +135,7 @@ def test_artifact_path_domain_consistency() -> None:
 
     Each rubric_id's artifact_path is derived from the row's owner + content
     domain. This test re-derives the expected root independently so a row
-    mis-mapped to the wrong Phase 2 root (e.g. an agent row parked under
+    mis-mapped to the wrong platform .oot (e.g. an agent row parked under
     src/ml/) fails loudly.
     """
     agent_domains = {

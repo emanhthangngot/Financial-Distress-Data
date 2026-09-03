@@ -1,4 +1,4 @@
-# Test Report — 2026-08-10 — Phase 2 Phase 03 Verification Sidecar
+# Test Report — 2026-08-10 — platform .hase 03 Verification Sidecar
 
 ---
 phase: 3
@@ -12,7 +12,7 @@ environment: .venv-phase2 / Python 3.11.15 / pytest 9.1.1
 - Focused source suite: 11 passed, 0 failed, 0 skipped in 1.61s.
 - Focused source line coverage: 76% (692 statements, 166 missed), below the testing skill's 80% guideline.
 - Generated Phase 03 requirement suite: 0 passed, 0 failed, 15 skipped in 0.13s.
-- All generated cases skipped because their `docs/phase2/evidence/llm/*.md` execution evidence does not yet exist; therefore these tests did not reach artifact existence or behavioral-contract checks.
+- All generated cases skipped because their `docs/platform/evidence/llm/*.md` execution evidence does not yet exist; therefore these tests did not reach artifact existence or behavioral-contract checks.
 - No live services, Docker, Kubernetes, GitOps, or cluster mutation used.
 - No source/config/test files changed. Only this requested report created. Existing user untracked docs preserved.
 
@@ -23,7 +23,7 @@ environment: .venv-phase2 / Python 3.11.15 / pytest 9.1.1
 ```bash
 git status --short
 find apps/drift-mcp apps/feature-mcp src/agents tests/phase2 -type f -print | sort
-find tests/phase2/requirements -maxdepth 1 -type f -name 'test_llm_ac_*.py' -print | sort
+find tests/platform/requirements -maxdepth 1 -type f -name 'test_llm_ac_*.py' -print | sort
 ```
 
 Result: Phase 03 source and focused tests present. Worktree already dirty: `src/llm/contracts.py` modified; Phase 03 app/agent/test trees and unrelated onboarding docs untracked. No mutation performed.
@@ -35,7 +35,7 @@ Result: Phase 03 source and focused tests present. Worktree already dirty: `src/
 ```bash
 PYTHONDONTWRITEBYTECODE=1 COVERAGE_FILE=/tmp/phase03-sidecar.coverage \
   .venv-phase2/bin/python -m pytest -p no:cacheprovider \
-  tests/phase2/apps tests/phase2/agents \
+  tests/platform/apps tests/platform/agents \
   --cov=src/agents \
   --cov=apps/feature-mcp/app \
   --cov=apps/drift-mcp/app \
@@ -61,10 +61,10 @@ Result: exit 0; 11 collected; 11 passed; 0 failed; 0 skipped; 1.61s test time, 2
 ```bash
 PYTHONDONTWRITEBYTECODE=1 .venv-phase2/bin/python -m pytest \
   -p no:cacheprovider -ra \
-  tests/phase2/requirements/test_llm_ac_03_registry.py \
-  tests/phase2/requirements/test_llm_ac_05_feature_rag_api.py \
-  tests/phase2/requirements/test_llm_ac_06_drift_mcp.py \
-  tests/phase2/requirements/test_llm_ac_08_coordinator.py
+  tests/platform/requirements/test_llm_ac_03_registry.py \
+  tests/platform/requirements/test_llm_ac_05_feature_rag_api.py \
+  tests/platform/requirements/test_llm_ac_06_drift_mcp.py \
+  tests/platform/requirements/test_llm_ac_08_coordinator.py
 ```
 
 Result: exit 0; 15 collected; 15 skipped; 0 passed; 0 failed; 0.13s test time, 0.39s command wall time.
@@ -76,7 +76,7 @@ Skip distribution:
 - AC-06 drift/MCP: 6 missing evidence files.
 - AC-08 coordinator: 2 missing evidence files.
 
-Every skip reason was `evidence not yet executed: docs/phase2/evidence/llm/<rubric-id>.md`.
+Every skip reason was `evidence not yet executed: docs/platform/evidence/llm/<rubric-id>.md`.
 
 ## Behavior Coverage Assessment
 

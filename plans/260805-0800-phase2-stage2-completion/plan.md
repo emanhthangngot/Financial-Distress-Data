@@ -1,5 +1,5 @@
 ---
-title: "Phase 2 Stage 2 Completion"
+title: "platform .tage 2 Completion"
 description: "Close every open requirement of unified-phase2 phase-02: AI request path with persisted quota/rate-limit/audit, an outbox worker runtime, a >90% coverage gate on changed code, axe accessibility proof, and committed deterministic evidence."
 status: done
 priority: P1
@@ -11,7 +11,7 @@ blocks: [260802-1037-unified-phase2-ml-llm-gitops]
 created: 2026-08-05
 ---
 
-# Phase 2 Stage 2 Completion
+# platform .tage 2 Completion
 
 ## Overview
 
@@ -24,7 +24,7 @@ product boundary, no worker process behind the outbox, no coverage gate, no
 accessibility assertion, and no committed evidence frames.
 
 This plan closes exactly those gaps. It adds nothing the parent phase did not
-already require, and it does not touch Phase 1 code, the GitOps repo, or any
+already require, and it does not touch platform .ode, the GitOps repo, or any
 phase-03..08 surface.
 
 **Boundary with Phase 6.** The LLM serving chain (kagent -> agentgateway ->
@@ -83,17 +83,17 @@ Each phase file carries a `## Task-Level Breakdown` section with per-task
 specs: files touched, the exact function/signature to add, the test that proves
 it, and the gate command. This board is the ordering view over them.
 
-### Phase 1 — Quota, rate limit and audit persistence (1-2d)
+### platform . Quota, rate limit and audit persistence (1-2d)
 
 | # | Task | Deliverable | Tests | Depends |
 |---|------|-------------|-------|---------|
 | 1.1 | Contracts budget module | `packages/contracts/src/ai-budget.ts` + export in `index.ts` | `ai-budget.test.ts` (window math, `RateLimitState`, resetsAt) | — |
 | 1.2 | Migration + rollback | `supabase/migrations/20260805TNNNNN_phase2_ai_usage_audit.sql` + `rollback/…_down.sql` | RLS pytest cases | — |
-| 1.3 | RLS/atomicity pytest suite | cases in `tests/phase2/product/test_rbac_rls.py` | `.venv/bin/python -m pytest tests/phase2/product -q` | 1.2 |
+| 1.3 | RLS/atomicity pytest suite | cases in `tests/platform/product/test_rbac_rls.py` | `.venv/bin/python -m pytest tests/platform/product -q` | 1.2 |
 | 1.4 | Server RPC wrappers | `apps/web/src/lib/server/ai-budget.ts` | `ai-budget.test.ts` (server) | 1.1, 1.3 |
 | 1.5 | Data port read | `readAiBudget` in `port.ts` + both adapters | vitest adapter tests | 1.4 |
-| 1.6 | Docs + gates | `docs/phase2/security/rbac.md` | full gate set | 1.1-1.5 |
-### Phase 2 — AI request path and SSE transport (2-3d)
+| 1.6 | Docs + gates | `docs/platform/security/rbac.md` | full gate set | 1.1-1.5 |
+### platform . AI request path and SSE transport (2-3d)
 
 | # | Task | Deliverable | Tests | Depends |
 |---|------|-------------|-------|---------|
@@ -104,7 +104,7 @@ it, and the gate command. This board is the ordering view over them.
 | 2.5 | Streaming transport | `apps/web/src/lib/assistant/streaming-transport.ts` | SSE parse, frame -> turn, abort | 2.1 |
 | 2.6 | Provider + panel wiring | `assistant-provider.tsx`, `assistant-panel.tsx`, `assistant-message.tsx` | component tests (phase 4) + e2e | 2.5 |
 | 2.7 | Playwright evidence additions | `apps/web/e2e/analyst-surfaces.spec.ts` + fixture upstream | `pnpm --filter @distresslens/web e2e` | 2.4-2.6 |
-| 2.8 | Docs + gates | `docs/phase2/product.md` | full gate set + e2e | 2.7 |
+| 2.8 | Docs + gates | `docs/platform/product.md` | full gate set + e2e | 2.7 |
 
 ### Phase 3 — Outbox worker runtime (1-2d, parallel to 1/2)
 
@@ -112,8 +112,8 @@ it, and the gate command. This board is the ordering view over them.
 |---|------|-------------|-------|---------|
 | 3.1 | Handler registry | `apps/web/src/lib/server/outbox-handlers.ts` | `outbox-handlers.test.ts` | — |
 | 3.2 | Worker entrypoint | `scripts/phase2/outbox-worker.ts` | signal/backoff (unit-ish, manual) | 3.1 |
-| 3.3 | Lease/fencing integration | pytest `tests/phase2/product/test_outbox_worker.py` | two workers, lease expiry, stale fencing, maxAttempts | 3.2 |
-| 3.4 | Package script + docs + gates | `apps/web/package.json`, `docs/phase2/product.md` | full gate set | 3.3 |
+| 3.3 | Lease/fencing integration | pytest `tests/platform/product/test_outbox_worker.py` | two workers, lease expiry, stale fencing, maxAttempts | 3.2 |
+| 3.4 | Package script + docs + gates | `apps/web/package.json`, `docs/platform/product.md` | full gate set | 3.3 |
 
 ### Phase 4 — Coverage gate and component tests (1-2d)
 
@@ -124,7 +124,7 @@ it, and the gate command. This board is the ordering view over them.
 | 4.3 | Component tests x4 | panel, role button, disclaimer, nav rail `.test.tsx` | `pnpm test` at 90/90 | 4.2 |
 | 4.4 | Contracts thresholds | `packages/contracts/vitest.config.ts` | `pnpm test` | — |
 | 4.5 | Close lib gaps honestly | delete unreachable branches, behavior tests | `pnpm test` | 4.3 |
-| 4.6 | CI + docs + gates | `.github/workflows/ci.yml`, `docs/phase2/product.md` | full gate set + both e2e suites | 4.4, 4.5 |
+| 4.6 | CI + docs + gates | `.github/workflows/ci.yml`, `docs/platform/product.md` | full gate set + both e2e suites | 4.4, 4.5 |
 
 ### Phase 5 — Accessibility proof and evidence publication (1d)
 
@@ -133,9 +133,9 @@ it, and the gate command. This board is the ordering view over them.
 | 5.1 | axe suite + config | `e2e/a11y.spec.ts`, `playwright.a11y.config.ts`, `@axe-core/playwright` | `pnpm --filter @distresslens/web e2e:a11y` | 2.6 |
 | 5.2 | Fix violations + motion/focus | component fixes, reduced-motion + focus-visible assertions | e2e:a11y green | 5.1 |
 | 5.3 | Evidence publication script | `scripts/phase2/publish-evidence.ts` + allowlist | run both evidence suites + publish | 2.7 |
-| 5.4 | Evidence README + a11y doc | `docs/phase2/evidence/product/README.md`, `accessibility.md` | manual review | 5.3 |
+| 5.4 | Evidence README + a11y doc | `docs/platform/evidence/product/README.md`, `accessibility.md` | manual review | 5.3 |
 | 5.5 | Reconcile parent phase-02 | tick boxes / defer in parent file + plan status | manual diff | 5.4 |
-| 5.6 | Full gates incl. Phase 1 | n/a | all gates + `run_stage1_quality_gates.py` | 5.5 |
+| 5.6 | Full gates incl. platform . n/a | all gates + `run_stage1_quality_gates.py` | 5.5 |
 
 ### Critical path
 
@@ -155,13 +155,13 @@ it, and the gate command. This board is the ordering view over them.
 - Tasks that land in `apps/web/src` after phase 4.1 must keep the 90/90 gate
   green; write the component test in the same commit as the component change.
 - Evidence frames (2.7, 5.3) are generated and then published with an explicit
-  command; never edit `docs/phase2/evidence/` by hand.
+  command; never edit `docs/platform/evidence/` by hand.
 
 ## Non-Goals
 
 - Model serving, RAG retrieval, MCP tool execution, agent sandboxing — phase-06.
 - EKS, Terraform, Argo CD, any AWS resource — the separate `financial-distress-gitops` repo.
-- Any change to Phase 1 collectors, DAGs, transforms, quality gates or `warehouse.db`.
+- Any change to platform .ollectors, DAGs, transforms, quality gates or `warehouse.db`.
 - Redesigning approved UI hierarchy. Visual work is limited to states the parent phase already requires.
 - Auth UI (sign-in/sign-up pages). Session resolution already exists in `apps/web/src/lib/server/session.ts`.
 
@@ -202,7 +202,7 @@ outbox_events --claim_outbox_events()--> worker process
 - [ ] Operator -> a transition supersedes an in-flight event -> the worker's completion is refused as stale fencing and the event is marked FAILED without mutating the session.
 - [ ] CI -> runs `pnpm test` -> fails when line or branch coverage on `apps/web/src/lib`, `apps/web/src/components` or `packages/contracts/src` drops below 90%.
 - [ ] Accessibility reviewer -> runs the axe suite at 1440/1024/390 -> finds zero serious or critical violations on every route in the inventory.
-- [ ] Reviewer -> opens `docs/phase2/evidence/product/` -> finds a manifest for every captured frame and committed PNGs for the rubric-named states.
+- [ ] Reviewer -> opens `docs/platform/evidence/product/` -> finds a manifest for every captured frame and committed PNGs for the rubric-named states.
 - [ ] Maintainer -> reads parent `phase-02` -> finds every requirement and success-criterion box ticked with a named artifact or command.
 
 ## Verify Commands
@@ -214,10 +214,10 @@ pnpm lint
 pnpm --filter @distresslens/web e2e         # analyst evidence run, 3 viewports
 pnpm --filter @distresslens/web e2e:roles   # operator/viewer evidence run
 pnpm --filter @distresslens/web e2e:a11y    # axe pass (added in phase 5)
-.venv/bin/python -m pytest tests/phase2/product -q   # RLS role/action pairs
+.venv/bin/python -m pytest tests/platform/product -q   # RLS role/action pairs
 ```
 
-Phase 1 gate stays untouched and must still pass:
+platform .ate stays untouched and must still pass:
 `.venv/bin/python scripts/run_stage1_quality_gates.py`.
 
 ## Risks

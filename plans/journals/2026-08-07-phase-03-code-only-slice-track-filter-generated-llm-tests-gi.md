@@ -19,8 +19,8 @@ Implemented (phase-03 day-1, steps 5-6):
   `_audit_behavior_validations`; matrix-completeness and canonical-coverage
   checks stay unfiltered (always require all 117 rows).
 - New `scripts/generate_phase2_requirement_tests.py`: generates
-  `tests/phase2/requirements/` (conftest.py + 20 files, 60 parametrized
-  cases) from the LLM rows of `docs/phase2/rubric-matrix.csv`. Each case's
+  `tests/platform/requirements/` (conftest.py + 20 files, 60 parametrized
+  cases) from the LLM rows of `docs/platform/rubric-matrix.csv`. Each case's
   node id is the exact `rubric_id` so the row's own `validation_command`
   selects exactly one case; skips (not fails) while `evidence_type` is still
   `design_only`.

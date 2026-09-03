@@ -177,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
 
     run_id = dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ")
     output_dir = (
-        args.output_dir or (REPO_ROOT / "docs/phase2/evidence/captures" / run_id)
+        args.output_dir or (REPO_ROOT / "docs/platform/evidence/captures" / run_id)
     ).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     records = [

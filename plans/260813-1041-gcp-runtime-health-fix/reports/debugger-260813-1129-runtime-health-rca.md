@@ -2,13 +2,13 @@
 
 ## Executive Summary
 - Issue: remaining Argo/runtime signals after the August 13 GitOps fixes.
-- Impact: likely limited to Argo status noise and one possible security app health issue; Phase 2 user path was previously verified live on 2026-08-12.
+- Impact: likely limited to Argo status noise and one possible security app health issue; platform .ser path was previously verified live on 2026-08-12.
 - Root cause: mixed. `platform-agents` and `nginx-ingress` have direct Git evidence for recent drift/CRD fixes; `platform-inference` has operator-owned webhook drift ignore rules; `platform-security` has no matching ignore/health override and is the most plausible real remaining failure. `kagent-grafana-mcp Forbidden` likely RBAC-denied tool behavior, not platform outage.
 - Status: blocked on live cluster/network access from this session. Local `kubectl` cannot reach the API server.
 - Smallest safe remediation: do not change manifests blind. First re-run live Argo/kubectl checks from a network-capable shell; only refresh/sync stale apps or add narrowly-scoped ignore/health handling once the exact offending resource is observed.
 
 ## Timeline
-- 2026-08-12: live Phase 2 E2E report recorded PASS, 14 required workloads ready, traces and Prometheus targets healthy (`plans/reports/e2e-integration-260812-1742-end-to-end-verification.md`).
+- 2026-08-12: live platform .2E report recorded PASS, 14 required workloads ready, traces and Prometheus targets healthy (`plans/reports/e2e-integration-260812-1742-end-to-end-verification.md`).
 - 2026-08-13: GitOps branch contains post-E2E drift fixes for kagent CRDs, operator-managed diff handling, and nginx ingress drift (`financial-distress-gitops` commits `25bb4e3`, `61e6c64`, `14f7763`).
 - 2026-08-13 11:29 ICT: this session attempted live inspection; every `kubectl` call failed with `dial tcp 136.85.120.118:443: socket: operation not permitted`.
 

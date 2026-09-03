@@ -1,4 +1,4 @@
-# Phase 2 Stage 2 — slice delivery report
+# platform .tage 2 — slice delivery report
 
 Branch: `feat/phase2-stage2-frontend-ui-uplift`
 Plan: `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
@@ -150,7 +150,7 @@ plus their manifests.
    executed against the live project, because `apps/web/.env.local` has no keys.
    Needed: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
    `SUPABASE_SERVICE_ROLE_KEY` (worker process only).
-2. **RLS tests for every role/action pair × AAL1/AAL2.** `tests/phase2/product/
+2. **RLS tests for every role/action pair × AAL1/AAL2.** `tests/platform/product/
    test_rbac_rls.py` was not extended; it needs a live database.
 3. **The new migration has never been applied.** It is written against the
    existing schema but unexecuted.
@@ -169,7 +169,7 @@ loading/success/failure states; analyst, registry and admin navigation are
 separate; the disclaimer appears on company, explanation, assistant, comparison
 and export; EKS-off UI is useful and labels cached data; Playwright manifests
 carry route/state/viewport/provenance/redaction; verification commands pass;
-Phase 1 files untouched.
+platform .iles untouched.
 
 Not met: RLS role/action coverage, outbox proof against a real database, cost
 cap and quota enforcement at a live product boundary, and the accessibility

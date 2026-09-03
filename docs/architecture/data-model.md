@@ -152,7 +152,7 @@ s3a://financial-distress-lake/gold/distress_labels/
 
 `distress_labels` is the only Gold folder that does not use the
 `dim_/fact_/obt_/feat_` family because it carries the label targets
-that the Phase 2 ML training reads; it is intentionally a single
+that the platform .L training reads; it is intentionally a single
 top-level folder so the labels are easy to discover and audit.
 
 ### Bronze And Silver Naming
@@ -194,7 +194,7 @@ Authoritative files:
 
 ```text
 src/metadata/schema_registry.py
-sql/init_project_metadata.sql
+sql/init_ops.sql
 ```
 
 Current registry datasets:
@@ -495,7 +495,7 @@ DuckDB validation query -> checks future_feature_leakage_rows -> returns zero ro
 DDL file:
 
 ```text
-sql/init_project_metadata.sql
+sql/init_ops.sql
 ```
 
 Schema:
@@ -619,7 +619,7 @@ run_duckdb_validation_and_publish_evidence
 
 ## SLA And Backfill
 
-Phase 1 targets:
+platform .argets:
 
 - Bronze offline freshness: manual or daily
 - Bronze streaming freshness: <= 10 minutes

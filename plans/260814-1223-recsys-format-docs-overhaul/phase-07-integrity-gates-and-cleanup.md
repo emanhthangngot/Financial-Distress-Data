@@ -18,7 +18,7 @@ state where a grader's every click lands somewhere real.
 
 - Functional: retired docs are deleted only after their claims exist in the new
   set and every inbound link is rewired.
-- Functional: all quality gates green — doc gate, Phase 2 evidence audit, and
+- Functional: all quality gates green — doc gate, platform .vidence audit, and
   the Stage 1 one-shot gate.
 - Functional: image copies in `docs/pngs/` still match their manifest sources.
 - Non-functional: no evidence SHA stamp left stale after the docs commits, per

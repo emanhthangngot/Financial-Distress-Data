@@ -18,7 +18,7 @@ observability rows, and the repository-design row.
 
 ## Required Pipelines
 
-- Existing Phase 1 DP1, DP2 and DP3 (unchanged).
+- Existing platform .P1, DP2 and DP3 (unchanged).
 - RAG data pipeline; stream-feature job to the offline store; stream-feature job
   to the online store.
 - Web API kéo dữ liệu and the real-time drift API, each deployed as an MCP tool.

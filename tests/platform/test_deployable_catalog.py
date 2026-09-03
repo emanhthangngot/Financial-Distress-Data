@@ -1,4 +1,4 @@
-"""Contracts for the Phase 2 deployable catalog and GitOps path guard."""
+"""Contracts for the platform .eployable catalog and GitOps path guard."""
 
 from __future__ import annotations
 

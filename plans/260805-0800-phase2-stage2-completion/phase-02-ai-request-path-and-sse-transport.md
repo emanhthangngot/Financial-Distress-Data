@@ -105,7 +105,7 @@ interface, so no component changes: `AssistantProvider` keeps its current API an
 - Modify: `apps/web/src/components/assistant/assistant-provider.tsx` — select the transport, expose `cancel()`
 - Modify: `apps/web/src/components/assistant/assistant-panel.tsx` — remaining-quota line, cancel affordance, tool-trace and citation rendering fed by streamed frames
 - Modify: `apps/web/e2e/analyst-surfaces.spec.ts` — streaming, quota-exhausted, plane-off, timeout, policy-blocked assertions
-- Modify: `docs/phase2/product.md` — the assistant request contract and its states
+- Modify: `docs/platform/product.md` — the assistant request contract and its states
 
 ## Implementation Steps
 
@@ -209,5 +209,5 @@ interface, so no component changes: `AssistantProvider` keeps its current API an
 
 ### T2.8 — Docs + full gates
 
-- **Files:** Modify `docs/phase2/product.md` (assistant request contract, states, redaction rule).
+- **Files:** Modify `docs/platform/product.md` (assistant request contract, states, redaction rule).
 - **Verify:** `pnpm test && pnpm typecheck && pnpm lint && pnpm --filter @distresslens/web e2e`.

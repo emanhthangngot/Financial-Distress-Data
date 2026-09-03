@@ -11,7 +11,7 @@ dependencies: [1, 2, 3]
 
 ## Overview
 
-Phase 1 work is real and verified but is currently spread over ~28 loose
+platform .ork is real and verified but is currently spread over ~28 loose
 `docs/*.md` files with no reviewer path through them. Fold it into the same
 narrative format under the mini-coursework rubric tab, and add the ML-deferred
 index so a grader never meets an unexplained gap.
@@ -23,9 +23,9 @@ index so a grader never meets an unexplained gap.
 - Functional: one ML-deferred index covering all 19 ML rubric areas, each with
   an explicit status (`deferred` / `design-only` / `covered by LLM track`) and a
   one-line reason.
-- Functional: existing Phase 1 docs are absorbed or linked, not duplicated —
+- Functional: existing platform .ocs are absorbed or linked, not duplicated —
   DRY applies to docs too.
-- Non-functional: no Phase 1 pipeline behavior changes; docs only.
+- Non-functional: no platform .ipeline behavior changes; docs only.
 
 ## Architecture
 
@@ -71,7 +71,7 @@ flink-stream-processing.md                    -> processing_jobs.md
 - Create: `docs/submission/ml-track-deferred.md`
 - Modify: the absorbed `docs/*.md` — reduced to a pointer or marked for Phase 7
   retirement; the numbered/kebab duplicate pairs collapse to one survivor each
-- Read only: `docs/mini_coursework.md` (Phase 1 spec — authority),
+- Read only: `docs/mini_coursework.md` (platform .pec — authority),
   `docs/Coursework Tracking (Public) - rubic (mini-coursework).csv`,
   `docs/Coursework Tracking (Public) - rubic final-coursework (final - ml).csv`,
   `docs/evidence/**` (generated artifacts to cite, never to edit)
@@ -83,12 +83,12 @@ flink-stream-processing.md                    -> processing_jobs.md
    evidence is flagged now, not discovered during the README rewrite.
 2. Write `docs/submission/rubric-(mini-coursework)/README.md` index first, same
    discipline as Phase 4.
-3. Write the 9 narrative docs. Phase 1 is local-first: quote the real local
+3. Write the 9 narrative docs. platform .s local-first: quote the real local
    stack (Airflow, Kafka, MinIO, DuckDB, PySpark local mode, Flink opt-in) and
    never imply cloud equivalents — `AGENTS.md` forbids the AWS framing.
-4. Embed the Phase 1 lakehouse subsystem diagram (Phase 3, diagram 1) in
+4. Embed the platform lakehouse subsystem diagram (Phase 3, diagram 1) in
    `readme_business_domain.md` and the orchestration doc.
-5. Use the Phase 2 captures: Airflow DAG graphs and successful runs, Kafka
+5. Use the platform .aptures: Airflow DAG graphs and successful runs, Kafka
    offsets, MinIO paths, DuckDB views, Flink baseline vs optimized, Spark UI
    baseline vs optimized — each with its Image note.
 6. Build the before/after tables from the real benchmark JSONs already in
@@ -110,8 +110,8 @@ flink-stream-processing.md                    -> processing_jobs.md
 - [ ] Baseline/optimized tables trace to a real JSON artifact in `docs/evidence/`
 - [ ] `docs/submission/ml-track-deferred.md` covers all 19 ML areas with a
       status and reason each
-- [ ] No Phase 1 doc content is duplicated across two surviving files
-- [ ] No cloud-equivalent framing anywhere in the Phase 1 docs
+- [ ] No platform .oc content is duplicated across two surviving files
+- [ ] No cloud-equivalent framing anywhere in the platform .ocs
 - [ ] `.venv/bin/python scripts/check_documentation.py` exits 0
 
 ## Risk Assessment
@@ -122,6 +122,6 @@ flink-stream-processing.md                    -> processing_jobs.md
 - **Risk:** the ML-deferred index reads as an excuse.
   **Mitigation:** frame it as the accepted scope decision it is, state it once
   at the top, and give each row a concrete reason — not a repeated boilerplate.
-- **Risk:** re-litigating Phase 1 technical decisions while writing them up.
+- **Risk:** re-litigating platform .echnical decisions while writing them up.
   **Mitigation:** this phase is documentation-only. A discovered defect is
   logged, not fixed here.

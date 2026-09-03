@@ -1,4 +1,4 @@
-"""HTTP runtime for the three Phase 2 agents.
+"""HTTP runtime for the three platform .gents.
 
 The runtime only assembles the tested agent classes with MCP and model
 transports. Agent reasoning, scope enforcement and hop bounds remain in the

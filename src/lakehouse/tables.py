@@ -1,4 +1,4 @@
-"""Phase 2 Iceberg table definitions and schema-evolution helpers."""
+"""platform Iceberg table definitions and schema-evolution helpers."""
 
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ class TableDefinition:
     partition_spec: tuple[str, ...]
 
 
-PHASE2_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
+PLATFORM_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
     TableDefinition(
-        "phase2.features",
+        "platform.features",
         {
             "ticker": "string",
             "event_timestamp": "timestamp",
@@ -58,7 +58,7 @@ def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebe
     contract drift.
     """
     tables: dict[str, LocalIcebergTable] = {}
-    for definition in PHASE2_TABLE_DEFINITIONS:
+    for definition in PLATFORM_TABLE_DEFINITIONS:
         if definition.identifier in catalog.list_tables("phase2"):
             table = catalog.load_table(definition.identifier)
             if (
@@ -80,11 +80,11 @@ def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebe
 
 def phase2_table_definitions() -> tuple[TableDefinition, ...]:
     """Return immutable definitions for callers that need to inspect them."""
-    return PHASE2_TABLE_DEFINITIONS
+    return PLATFORM_TABLE_DEFINITIONS
 
 
 __all__ = [
-    "PHASE2_TABLE_DEFINITIONS",
+    "PLATFORM_TABLE_DEFINITIONS",
     "TableDefinition",
     "phase2_table_definitions",
     "register_phase2_tables",

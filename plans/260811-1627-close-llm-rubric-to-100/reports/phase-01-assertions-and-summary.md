@@ -1,4 +1,4 @@
-# Phase 1 report — align the contract, the repos and the audit mechanics
+# platform .eport — align the contract, the repos and the audit mechanics
 
 Status: complete. All 10 implementation steps done, all 7 success criteria met.
 
@@ -18,7 +18,7 @@ Status: complete. All 10 implementation steps done, all 7 success criteria met.
 
 ## Step 3: PHASE1_BASE_SHA
 
-Recorded in `docs/phase2/evidence-contract.md`:
+Recorded in `docs/platform/evidence-contract.md`:
 `PHASE1_BASE_SHA=ddbcbe7bd41ae4883954b8a247efdc67c7329078`. Corrected the
 HEAD-equality claim to the actual ancestor rule the auditor enforces
 (`scripts/audit_phase2_evidence.py:595-702`).
@@ -39,13 +39,13 @@ new):
 | `LLM-routing-gateway-service-coi-trace` | `platform/ingress/f5-nginx-values.yaml` | `platform/ingress/routes-viewers.yaml` |
 | `LLM-observability-t-ng-t-cho-traces` | `platform/observability/loki-otel-values.yaml` | `platform/observability/jaeger.yaml` |
 
-Regenerated `docs/phase2/rubric-matrix.{csv,md}` and
-`tests/phase2/requirements/*.py` (22 files rewritten, byte-identical except
+Regenerated `docs/platform/rubric-matrix.{csv,md}` and
+`tests/platform/requirements/*.py` (22 files rewritten, byte-identical except
 the CSV/MD, since the test files parametrize off the matrix at import time).
 `git diff` on the CSV touches exactly these 13 rubric IDs — confirmed via
 `git diff | grep -E '^[+-]LLM-' | sort -u`; the other 47 executed rows are
-untouched. `pytest tests/phase2/test_rubric_matrix.py
-tests/phase2/requirements/` → 95 passed, 30 skipped.
+untouched. `pytest tests/platform/test_rubric_matrix.py
+tests/platform/requirements/` → 95 passed, 30 skipped.
 
 The 4 remaining prometheus-values.yaml rows (visualize-metrics,
 token-metrics, agent-tool-call-metrics, web-api-metrics) were **not**
@@ -58,7 +58,7 @@ assertions at their existing path. Only the 8 rows above genuinely collided.
 All added to `EXECUTED_BEHAVIORAL_ASSERTIONS` in
 `scripts/_phase2_rubric_items.py`, each verified present in its target file
 **today** by a standalone script mirroring
-`tests/phase2/requirements/conftest.py::assert_behavioral_contract` (13/13
+`tests/platform/requirements/conftest.py::assert_behavioral_contract` (13/13
 `OK`, zero failures). Full CSV `requirement` text copied below verbatim
 (includes TTFT and PII-catch frequency on the token-metrics row, per the
 canonical CSV the mock grade scores against, not the plan's paraphrase).

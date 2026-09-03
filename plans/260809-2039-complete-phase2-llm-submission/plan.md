@@ -35,9 +35,9 @@ Read before starting: `AGENTS.md`,
 
 | Fact | Value | Source |
 |---|---|---|
-| LLM rows with a real evidence file | 7 rows / **12 of 100 points** | `docs/phase2/evidence/llm/` |
+| LLM rows with a real evidence file | 7 rows / **12 of 100 points** | `docs/platform/evidence/llm/` |
 | Remaining | 53 rows / **88 points** | rubric matrix vs. filesystem |
-| `evidence_type` of **all 117 rows** | `design_only` — including the 7 with evidence | `docs/phase2/rubric-matrix.csv`; generated from `scripts/_phase2_rubric_items.py:919` |
+| `evidence_type` of **all 117 rows** | `design_only` — including the 7 with evidence | `docs/platform/rubric-matrix.csv`; generated from `scripts/_phase2_rubric_items.py:919` |
 | Matrix consistency | `--matrix-only --strict` passes | `scripts/audit_phase2_evidence.py` |
 | GitOps control repo | `~/Studying/FSDS/financial-distress-gitops`, HEAD `0b2e476`, **PRIVATE** (source repo is PUBLIC) | `gh repo view` |
 | GKE cluster | `fsds-evidence`, `asia-southeast1-b`, both pools at 0 nodes, ingress LB IP `34.21.242.110` retained | `make gcp-status` |
@@ -46,17 +46,17 @@ Read before starting: `AGENTS.md`,
 | Genuinely deployed via GitOps | Terraform GKE + network + registry + IAM, F5 NGINX ingress, cert-manager, Argo CD, Knative + KServe (v0.14.1), **TEI embedding `InferenceService`**, Ansible evidence-VM roles | gitops `platform/`, `terraform/`, `ansible/` |
 | **Placeholder only** (5-line comment, zero content) | `platform/security/sealed-secrets.yaml`, `platform/inference/model-server.yaml`, `platform/agents/{agentregistry,agent-sandbox,global-model-config,warm-pool}.yaml`, `platform/llm/ab-testing.yaml`, `platform/observability/{prometheus,loki-otel}-values.yaml`, `charts/{feature,drift}-mcp/Chart.yaml`, `terraform/envs/evidence/main.tf` | head of each file |
 | Argo coverage | 4 Applications: cert-manager, nginx-ingress, platform-inference, platform-security. **Nothing syncs** `platform/agents`, `platform/llm`, `platform/observability`, `charts/`. `applicationset-dev.yaml` generates from `apps/dev/*`, which does not exist | `argocd/` |
-| Requirement test files | `tests/phase2/requirements/test_llm_ac_01..20.py` exist, **generator-owned** ("do not hand-edit"), and assert only: evidence parses, 9 keys non-empty, `artifact_path` `is_file()` | `scripts/generate_phase2_requirement_tests.py` |
-| Phase 2 dependency manifest | **Does not exist.** `.venv-phase2` is missing `hypothesis`, `mutmut`, `locust`, `mcp`. `requirements.txt` has none of `fastapi`, `feast`, `hypothesis`, `locust`, `mutmut`. `phase2-ci.yaml` installs `requirements.txt` only | import probe; `requirements.txt` |
+| Requirement test files | `tests/platform/requirements/test_llm_ac_01..20.py` exist, **generator-owned** ("do not hand-edit"), and assert only: evidence parses, 9 keys non-empty, `artifact_path` `is_file()` | `scripts/generate_phase2_requirement_tests.py` |
+| platform .ependency manifest | **Does not exist.** `.venv-phase2` is missing `hypothesis`, `mutmut`, `locust`, `mcp`. `requirements.txt` has none of `fastapi`, `feast`, `hypothesis`, `locust`, `mutmut`. `phase2-ci.yaml` installs `requirements.txt` only | import probe; `requirements.txt` |
 | CI | `phase2-ci.yaml` reusable + 3 callers. **No OIDC anywhere** (`grep id-token` → 0); two long-lived PATs (`GHCR_TOKEN`, `GITOPS_PAT`). Digest PR writes `pipelines/<name>/digest.txt`, which nothing consumes. No image signing | `.github/workflows/` |
 | Feast online store | Points at docker-compose DNS (`phase2-redis:6379`, `phase2-postgres`) and a MinIO `s3://` registry. **No Redis/Postgres/MinIO in the cluster** | `feature_repo/*/feature_store.yaml` |
 | `apps/web` | Agent registry route and the whole assistant/chat surface **already exist** (Supabase/fixture-backed). No Dockerfile, no `output: standalone`, nothing deploys it | `apps/web/src/app/agents/registry/`, `src/components/assistant/` |
 | Absent code | `src/agents/`, `apps/feature-mcp/`, `apps/drift-mcp/`, `src/llm/{model_server,benchmark,embedding_registry,citation_guard}.py`, `notebooks/` content | repo |
-| Python envs | `.venv` = Phase 1 gate (never mutate), `.venv-phase2` = Phase 2 deps | repo |
+| Python envs | `.venv` = platform .ate (never mutate), `.venv-phase2` = platform .eps | repo |
 
 ## Path Authority Rule
 
-**`docs/phase2/rubric-matrix.csv`'s `artifact_path` column is the authority for
+**`docs/platform/rubric-matrix.csv`'s `artifact_path` column is the authority for
 where code lives.** The generated requirement tests assert `artifact.is_file()`
 at exactly that path, so a "better" layout costs the row. Build at the declared
 path. Retarget a path in `scripts/_phase2_rubric_items.py::EXPLICIT_IMPLEMENTATION`
@@ -67,7 +67,7 @@ pair: both `LLM-demonstrate-basic-underst-*` rows point at
 
 Never hand-type a `rubric_id` into a plan, a filename, or an evidence file.
 Copy it from the CSV — the IDs are long and silently truncatable, and evidence
-filenames are contractually `docs/phase2/evidence/llm/<rubric_id>.md`.
+filenames are contractually `docs/platform/evidence/llm/<rubric_id>.md`.
 
 ## Goals
 
@@ -93,7 +93,7 @@ filenames are contractually `docs/phase2/evidence/llm/<rubric_id>.md`.
 12 points already executed + 88 planned = 100, in **9 days**, not 7.
 
 **This is an honest re-budget, not padding.** Measured throughput to date is 12
-LLM points since 2026-08-02. Phase 1 grew from 0.5d to 1.5d because five of its
+LLM points since 2026-08-02. platform .rew from 0.5d to 1.5d because five of its
 inputs turned out to be placeholders rather than built work, and phases 3-4 grew
 because `apps/web` must be containerized and a Feast-reachable online store must
 exist in-cluster. If 9 days is not available, execute the cut ladder below
@@ -128,7 +128,7 @@ Dependencies are linear: 1 → 2 → 3 → 4, phase 5 needs 3 and 4, phase 6 nee
 - Project manager -> records the five live Phase 06 artifact proofs ->
   `notebooks/agent-understanding-demo.ipynb`, `notebooks/agent-mcp-demo.ipynb`,
   `src/llm/embedding_registry.py`,
-  `src/llm/citation_guard.py`, and `docs/phase2/low-level-design.md` were
+  `src/llm/citation_guard.py`, and `docs/platform/low-level-design.md` were
   captured -> live artifact capture is complete, while the five canonical
   evidence markdown files and SHA-stamping remain pending commit approval.
 - Project manager -> preserves rubric honesty -> the six
@@ -166,7 +166,7 @@ honest by forcing you to name what you dropped.
 | 5 | Second notebook | 2 | start of phase 6 |
 
 **Never cut:** the test suite, observability, the sandbox negatives, the
-evidence contract, or the Phase 1 no-regression gate — each carries more points
+evidence contract, or the platform .o-regression gate — each carries more points
 across more rows than anything above.
 
 ## Point Ledger — the 88 remaining points
@@ -206,11 +206,11 @@ Two corrections the red team surfaced, both fixed in phase 1:
 
 - `gcp-up` restores **one pool, one node**. Everything in phases 2-4 lands on
   ~7.6 allocatable vCPU alongside Argo CD, cert-manager, sealed-secrets, NGINX,
-  Knative, KServe and the TEI embedding pod. Phase 1 produces a written
+  Knative, KServe and the TEI embedding pod. platform .roduces a written
   CPU/memory budget; without it, phase 3's KEDA scale-out evidence is
   unobtainable because there is nothing to scale into.
 - `gcp-down` never stops the evidence VM, so it bills continuously and holds 2
-  of the 12 project vCPUs. Phase 1 adds `instances stop/start` to the targets.
+  of the 12 project vCPUs. platform .dds `instances stop/start` to the targets.
 
 Record the credit balance before and after every session; `docs/submission/cost.md`
 needs the per-session deltas. Never upgrade the trial billing account.
@@ -230,7 +230,7 @@ Consequences this plan must honor:
 - Phase 6 adds a step granting the grader read access on the GitOps repo, and
   states that in `docs/submission/README.md`.
 - Evidence files must stop asserting `redaction_status: none — public repo` on
-  rows whose artifact lives in the private repo. Phase 1 corrects the two
+  rows whose artifact lives in the private repo. platform .orrects the two
   existing files that say this and fixes the template.
 
 ## Non-Goals
@@ -252,7 +252,7 @@ Consequences this plan must honor:
 - [ ] Auditor -> checks any row's `artifact_path` -> finds a real implementation file there, not a placeholder comment.
 - [ ] Reviewer -> opens any of the 60 LLM evidence files -> finds rubric_id, execution timestamp, 40-hex source and GitOps SHAs, versions, reproduction command, expected result, actual result and an accurate redaction status.
 - [ ] Coursework reviewer -> follows `docs/submission/*.md` -> reaches an executed artifact for every scored section, with read access to the private GitOps repo granted.
-- [ ] Phase 1 maintainer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by Phase 2 dependencies.
+- [ ] platform .aintainer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by platform .ependencies.
 - [ ] Cost owner -> reads `docs/submission/cost.md` -> finds per-session credit deltas including the evidence VM, a final balance, and confirmation the trial account was never upgraded.
 - [ ] ML retrofitter -> resumes phase-05 later -> finds all nine load-bearing decisions intact.
 
@@ -265,7 +265,7 @@ Consequences this plan must honor:
   budget? The threshold is scored text (see `## Red Team Review`), so this is a
   real gate, and the subset is chosen to make it reachable.
 - Does raising `secondary_pool_node_count` to 1 fit the 12-vCPU quota after the
-  evidence VM is stopped (8 + 4 = 12, exactly at cap)? Phase 1 answers this
+  evidence VM is stopped (8 + 4 = 12, exactly at cap)? platform .nswers this
   empirically before phase 3 needs the headroom.
 
 ## Red Team Review
@@ -282,18 +282,18 @@ acceptance; none rests on reviewer assertion alone.
 | # | Finding | Severity | Disposition | Applied To |
 |---|---------|----------|-------------|------------|
 | 1 | 13 rows / 22 pts target `artifact_path` values the plan never created | Critical | Accept | Path Authority Rule; phases 2, 3, 5, 6 |
-| 2 | All 117 rows are `evidence_type: design_only`; no phase flips them, so `--require-executed` fails all 60 | Critical | Accept | Phase 1 |
-| 3 | SHA stamping is non-convergent — `git commit --amend` invalidates the SHA it just stamped | Critical | Accept | Phase 1 (contract fix), phase 6 (execution) |
+| 2 | All 117 rows are `evidence_type: design_only`; no phase flips them, so `--require-executed` fails all 60 | Critical | Accept | platform .
+| 3 | SHA stamping is non-convergent — `git commit --amend` invalidates the SHA it just stamped | Critical | Accept | platform .contract fix), phase 6 (execution) |
 | 4 | `make gcp-up` restores one pool / one 8-vCPU node; no cluster autoscaler; 12-vCPU quota | Critical | Accept | Cost and Capacity Discipline; phase 1 |
 | 5 | Eleven "already deployed / already scaffolded" GitOps files are comment placeholders; no Argo Application covers `platform/agents`, `platform/llm`, `platform/observability`, `charts/` | Critical | Accept | Measured Starting State; phases 1-5 |
 | 6 | Feast online store points at docker-compose DNS and a MinIO registry — unreachable in-cluster, blocking 9 points | Critical | Accept | Phase 3 |
 | 7 | Cut policy contradicts the pass criterion — `--require-executed` is all-or-nothing | Critical | Accept | Cut Ladder; phase 1 (`--accept-design-only`) |
 | 8 | 12 rubric IDs in the phase files were truncated to 49 chars and do not exist | High | Accept | Path Authority Rule; all phase tables regenerated from the CSV |
-| 9 | NetworkPolicy enforcement is off on the cluster, making the sandbox and hide-services proofs inert | High | Accept | Phase 1 |
+| 9 | NetworkPolicy enforcement is off on the cluster, making the sandbox and hide-services proofs inert | High | Accept | platform .
 | 10 | GitOps repo is private while the source repo is public; evidence links 404 for the grader | High | Accept | GitOps Repository Visibility; phases 1, 6 |
-| 11 | No Phase 2 dependency manifest; `.venv-phase2` missing `hypothesis`/`mutmut`/`locust`/`mcp`; CI installs `requirements.txt` only | High | Accept | Phase 1 |
-| 12 | llm-d was already rejected by decision D-E3 and pinned KServe v0.14.1 ships no `LLMInferenceService` | High | Accept | Phase 2 (dropped), phase 5 (A/B on Knative traffic split) |
-| 13 | Requirement tests are generator-owned and assert only file existence — "fill the tests" violates the generator and `--run-validations` is vacuous | High | Accept | Phase 1 (extend the generator), all phases (language corrected) |
+| 11 | No platform .ependency manifest; `.venv-phase2` missing `hypothesis`/`mutmut`/`locust`/`mcp`; CI installs `requirements.txt` only | High | Accept | platform .
+| 12 | llm-d was already rejected by decision D-E3 and pinned KServe v0.14.1 ships no `LLMInferenceService` | High | Accept | platform .dropped), phase 5 (A/B on Knative traffic split) |
+| 13 | Requirement tests are generator-owned and assert only file existence — "fill the tests" violates the generator and `--run-validations` is vacuous | High | Accept | platform .extend the generator), all phases (language corrected) |
 | 14 | `apps/web` agent registry route and assistant chat surface already exist; the app has no Dockerfile and is not deployable | High | Accept | Phase 4 |
 | 15 | Three rubric-text errors: `Mutation score > 80%` is in the scored `requirement` text; phase 4's metric list omitted TTFT and the PII-safety frequency; phase 1 would have claimed OIDC that does not exist | High | Accept | Phases 1, 4, 5 |
 

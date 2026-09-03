@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Commit and stamp Phase 2 evidence without rewriting implementation history.
+"""Commit and stamp platform .vidence without rewriting implementation history.
 
 The workflow is intentionally explicit about paths. It stages only the paths
 provided by the caller, so unrelated worktree changes are never swept into a
@@ -43,7 +43,7 @@ def _assert_sha_only_staged_diff(root: Path, paths: list[str]) -> None:
         elif line.startswith(("diff --git ", "index ", "--- ", "@@")):
             continue
         elif line.startswith(("+", "-")):
-            if not current_path.startswith("docs/phase2/evidence/") or not allowed.match(line):
+            if not current_path.startswith("docs/platform/evidence/") or not allowed.match(line):
                 raise RuntimeError("final evidence commit contains a non-SHA-line change")
 
 
@@ -85,7 +85,7 @@ def stamp_files(evidence_files: list[Path], source_sha: str, gitops_sha: str) ->
 
 
 def canonical_evidence_files(source_root: Path, evidence_dir: Path) -> list[Path]:
-    matrix_path = source_root / "docs/phase2/rubric-matrix.csv"
+    matrix_path = source_root / "docs/platform/rubric-matrix.csv"
     with matrix_path.open(newline="", encoding="utf-8") as handle:
         rows = csv.DictReader(handle)
         paths = sorted(
@@ -110,7 +110,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--gitops-root", type=Path, required=True)
-    parser.add_argument("--evidence-dir", type=Path, default=Path("docs/phase2/evidence/llm"))
+    parser.add_argument("--evidence-dir", type=Path, default=Path("docs/platform/evidence/llm"))
     parser.add_argument("--source-path", action="append", default=[])
     parser.add_argument("--gitops-path", action="append", default=[])
     parser.add_argument(

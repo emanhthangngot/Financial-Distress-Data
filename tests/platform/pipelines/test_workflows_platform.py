@@ -1,4 +1,4 @@
-"""Pins the Phase 2 reusable workflow and its list-driven callers."""
+"""Pins the platform .eusable workflow and its list-driven callers."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ CALLERS = (
 # deployables removed from the catalog; their standalone per-app CI workflows
 # would fail on push (no GHCR write:packages scope) with zero LLM benefit.
 
-# Pinned 2026-08-08 (slice 4D) — a Phase 1 CI change must update this
+# Pinned 2026-08-08 (slice 4D) — a platform .I change must update this
 # constant deliberately, not as a silent side effect of an unrelated diff.
 CI_YML_SHA256 = "a24aceb639dbef1b00f35e720d5327afb5f97e21d20af2f2309448957ff72904"
 
@@ -141,7 +141,7 @@ def test_ci_yml_is_byte_unchanged() -> None:
     ci_yml = WORKFLOWS_DIR / "ci.yml"
     digest = hashlib.sha256(ci_yml.read_bytes()).hexdigest()
     assert digest == CI_YML_SHA256, (
-        "ci.yml (Phase 1 gate) changed — if this is a deliberate Phase 1 CI "
+        "ci.yml (platform .ate) changed — if this is a deliberate platform .I "
         "change, update CI_YML_SHA256 explicitly; if not, revert it"
     )
 

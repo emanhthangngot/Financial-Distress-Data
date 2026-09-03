@@ -367,7 +367,7 @@ def build_evidence_payload(
 ) -> EvidencePayload:
     """Build the canonical Stage 1 datasets.
 
-    ``adapter`` is optional to preserve the deterministic Phase 1 evidence
+    ``adapter`` is optional to preserve the deterministic platform .vidence
     contract. Cluster jobs pass a configured adapter so they can produce the
     requested Vietnamese ticker set through the same collector/transform path.
     """

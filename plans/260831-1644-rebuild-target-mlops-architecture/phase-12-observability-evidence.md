@@ -45,7 +45,7 @@ logs and traces being collected *and* viewable behind NGINX.
 - Non-functional: capture is **incremental** — any completed phase can be captured immediately, and
   the final window only re-captures what changed; the frozen tree is the last write before
   submission; no document may still reference GitHub Actions, Supabase, sealed-secrets, a no-mesh
-  runtime, or Phase 1 / Phase 2 vocabulary.
+  runtime, or platform . platform .ocabulary.
 
 ## Architecture
 
@@ -162,7 +162,7 @@ tracks, match the dependency graph.
       nullable FK column is below its NULL-rate ceiling; all **12** Gold datasets are covered
 - [ ] AC-P12-12: Reviewer → reads `docs/coursework.md` and `docs/system-architecture.md` → finds the
       target architecture described with no residual claim of GitHub Actions, Supabase,
-      sealed-secrets, a no-mesh runtime, or Phase 1 / Phase 2 vocabulary — plus an honest gap table
+      sealed-secrets, a no-mesh runtime, or platform . platform .ocabulary — plus an honest gap table
 - [ ] AC-P12-13: GitOps operator → `make validate` passes; `scripts/run_quality_gates.py` passes in
       source; Argo CD shows all Applications `Synced/Healthy`; zero uncommitted changes
 

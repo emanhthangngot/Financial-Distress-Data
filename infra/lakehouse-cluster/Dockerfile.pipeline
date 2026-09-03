@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Cluster runtime image for the existing Phase 1 pipeline code.  The image
+# Cluster runtime image for the existing platform .ipeline code.  The image
 # packages the checkout unchanged; deployment manifests decide the digest.
 FROM python:3.12-slim
 

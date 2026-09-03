@@ -18,7 +18,7 @@
 ## Locked decisions and authorities
 
 1. Preserve the repository data contracts listed above.
-2. `docs/mini_coursework.md` remains the Phase 1 technical authority unless the new plan explicitly identifies a lock conflict and a human lifts it.
+2. `docs/mini_coursework.md` remains the platform .echnical authority unless the new plan explicitly identifies a lock conflict and a human lifts it.
 3. Existing source/GitOps ownership remains two repositories. The target image explicitly retains `financial-distress-gitops`; `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:45` locks two repositories.
 4. The newer 2026-08-18 user-locked rebuild decisions in `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:31-49` are the planning baseline: all three rubrics; unified regenerated evidence; GKE baseline; Jenkins + Vault; Kubeflow + Ray + MLflow + KServe/Triton; MinIO + Iceberg + Spark + Trino + Superset; Feast + Redis + Postgres + Debezium/Kafka/Flink; 10-50M rows; Istio full sidecar; two repos; CPU-only serving constraints; frozen holdout promotion gate.
 5. The same prior plan records the resource/cost constraint: the full stack cannot remain resident at 48 vCPU and must use scheduled residency (`plan.md:81-124`); its measured cost figures are dated 2026-08-18 and require revalidation before implementation.
@@ -27,7 +27,7 @@
 7. GitOps namespace isolation is a verified security decision: `../financial-distress-gitops/plans/260818-0028-namespace-convention-alignment/plan.md:77-115` records that `agentgateway-system`, `kagent`, and `agents-sandbox` are deliberate least-privilege NetworkPolicy boundaries. Visual/domain alignment must not collapse them unless a seat declares `BREAKS-LOCK`.
 ## Current verified baseline
 
-- `README.md:27-33`: local-first Phase 1 lakehouse; live-verified LLM/RAG and agent/MCP path; Next.js + Supabase product plane; GitHub Actions + Argo CD delivery; OTel/Jaeger/Prometheus/Grafana/Loki.
+- `README.md:27-33`: local-first platform lakehouse; live-verified LLM/RAG and agent/MCP path; Next.js + Supabase product plane; GitHub Actions + Argo CD delivery; OTel/Jaeger/Prometheus/Grafana/Loki.
 - `docs/system-architecture.md:8-19`: current system has local lakehouse, persistent product plane, and disposable GKE evidence plane split across source and GitOps repositories.
 - `docs/system-architecture.md:85-155`: current accepted runtime uses NGINX, Argo CD, agentgateway, KServe/Knative, Supabase, GitHub Actions, and no Istio/Vault; it is a verified baseline, not the target.
 - `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md` is an unfinished overlapping predecessor containing nine phases and detailed architecture/cost assumptions. This debate must reuse verified material, challenge unsupported assumptions, and supersede rather than duplicate it.

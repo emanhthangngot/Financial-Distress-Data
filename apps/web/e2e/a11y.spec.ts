@@ -11,7 +11,7 @@ import { expect, test } from "@playwright/test";
  * must be as accessible as the success state.
  *
  * Zero serious or critical violations is the bar; a moderate violation is
- * accepted only when `docs/phase2/evidence/product/accessibility.md` names it
+ * accepted only when `docs/platform/evidence/product/accessibility.md` names it
  * and says why.
  */
 

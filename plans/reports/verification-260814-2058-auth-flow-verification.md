@@ -25,7 +25,7 @@ DuckDNS host (blocked, see below).
 | `pnpm e2e:a11y-guest` (11 tests, new guest-identity a11y config) | Green |
 | `pnpm e2e:live` — `live-smoke.spec.ts` (6 tests, live Supabase) | Green |
 | `pnpm e2e:live` — `auth-lifecycle.spec.ts` (6 tests, live Supabase) | 5/6 green; case 1 blocked by hosted SMTP rate limit at verification time (see below) |
-| `.venv/bin/python scripts/run_stage1_quality_gates.py` | Green, exit 0 (Phase 1 untouched) |
+| `.venv/bin/python scripts/run_stage1_quality_gates.py` | Green, exit 0 (platform .ntouched) |
 
 ## Code-review pass (before any commit)
 
@@ -69,7 +69,7 @@ follow-ups.
   column access" to write `role`; the grant actually makes that unreachable
   for every `authenticated` caller, admin included -- correct per the plan's
   non-goal (role changes stay SQL/service-role), but the comment was wrong.
-  Corrected in the migration and in `docs/phase2/security/rbac.md`'s
+  Corrected in the migration and in `docs/platform/security/rbac.md`'s
   "Manage roles" column.
 - **M2, L1-L4 (deferred).** `seed-demo-accounts.ts` has a case-sensitivity /
   no-rowcount-check / N+1-listUsers robustness gap (M2); the AAL2 denial
@@ -167,14 +167,14 @@ the account switcher lists all four.
 
 ## Docs updated
 
-- `docs/phase2/product.md` — Authentication boundary section rewritten for
+- `docs/platform/product.md` — Authentication boundary section rewritten for
   open signup, session refresh, guest rendering, profile switching, upstream
   sign-out revoke, and the prefetch fix.
-- `docs/phase2/security/rbac.md` — AAL2/MFA line corrected to the relaxed
+- `docs/platform/security/rbac.md` — AAL2/MFA line corrected to the relaxed
   step-up contract; acceptance-criteria line fixed to match.
-- `docs/phase2/adr/adr-015-aal2-step-up-relaxation.md` — new ADR: the
+- `docs/platform/adr/adr-015-aal2-step-up-relaxation.md` — new ADR: the
   relaxation decision, consequences, and revert path.
-- `docs/phase2/low-level-design.md` — **not** touched. Its actual content is
+- `docs/platform/low-level-design.md` — **not** touched. Its actual content is
   ML/LLM service class contracts, unrelated to web auth; the plan named it
   by assumption. `product.md` + `rbac.md` + the new ADR are the correct
   owning surfaces for this contract, per the repo's existing documentation

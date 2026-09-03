@@ -1,8 +1,8 @@
-"""Typed configuration for deterministic Phase 2 drift scenarios.
+"""Typed configuration for deterministic platform .rift scenarios.
 
 Mirrors ``src/generator/config.py``'s style (frozen dataclasses, strict
-unknown/missing-key validation) without importing it — Phase 2 must not
-couple to a Phase 1 private helper (AGENTS.md; judgment call recorded in
+unknown/missing-key validation) without importing it — platform .ust not
+couple to a platform .rivate helper (AGENTS.md; judgment call recorded in
 ``plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md``,
 section 6).
 """

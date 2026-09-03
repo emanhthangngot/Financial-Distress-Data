@@ -4,7 +4,7 @@ date: 2026-09-01
 type: brainstorm
 status: advisory
 supervisor: kongming
-scope: plans/260831-1644-rebuild-target-mlops-architecture + Phase 1 schema
+scope: plans/260831-1644-rebuild-target-mlops-architecture + platform .chema
 ---
 
 # Audit toàn diện — plan rebuild và data model Phase 1
@@ -40,7 +40,7 @@ chặn bởi một gate quota GCP nằm ngoài tầm kiểm soát.
 
 | Trường | Nội dung |
 |---|---|
-| **Outcome** | Một project thống nhất (bỏ ranh giới Phase 1 / Phase 2) với **một** entity model, **một** trục thời gian, **một** metadata store, **một** evidence tree; ML track và LLM track cùng đọc một bộ bảng Gold. |
+| **Outcome** | Một project thống nhất (bỏ ranh giới platform data store, **một** evidence tree; ML track và LLM track cùng đọc một bộ bảng Gold. |
 | **Constraints** | Cửa sổ credit đóng 2026-11-06 (48 ngày làm việc). Quota GCP hiện tại `CPUS_ALL_REGIONS=12` vs sàn always-on 13–18 vCPU. Một người vận hành. ~100 điểm LLM đã có, không được mất. `AGENTS.md` và `plan.md` hiện đang **cấm** sửa data contract. |
 | **Non-goals** | Không đạt 100% fidelity với `fdd-architecture-full-4k.png`. Không xây registry định danh doanh nghiệp nếu không có nguồn dữ liệu thật. Không viết lại plan từ đầu. |
 | **Acceptance** | (a) Leakage guard **fail** trên một restatement được seed, rồi **pass** sau khi lọc vintage; (b) mọi FK khai báo đều resolve trên bảng **có dữ liệu**, zero orphan; (c) grep `company_version_key` trên toàn bộ bundle nộp bài trả về **một** câu chuyện nhất quán; (d) chạy lại training pin theo knowledge-time cho ra feature byte-identical ở hai ngày khác nhau. |
@@ -64,7 +64,7 @@ Audit C19/C20 trong `debate-audit.md:25-26` để UNPROVEN — nay đã **PROVEN
 ### 2.2 Mâu thuẫn nội tại: G-2 vs N-5
 
 - `plan.md:71` G-2 — "Clean cutover — ... **one table format (Iceberg)**; zero shims"
-- `plan.md:87` N-5 — "No changes to Phase 1 Bronze/Silver/Gold Parquet semantics (**Iceberg runs parallel**)"
+- `plan.md:87` N-5 — "No changes to platform .ronze/Silver/Gold Parquet semantics (**Iceberg runs parallel**)"
 
 Một đường Parquet chạy song song **chính là** một shim. Hai điều khoản này không thể cùng đúng.
 `phase-07-web-analytics.md:50` chỉ gỡ *Gold* Parquet reader — Bronze/Silver Parquet tồn tại vĩnh
@@ -228,8 +228,8 @@ DBeaver or similar tools) — 2 điểm"**. Đây chính là row mà fixture gi�
 | 3 | SCD2 lai không khai báo | `dim_company.py:29` chỉ track `(industry, sector, exchange, delisted_flag)` | `company_name` được lưu nhưng **không** track → âm thầm là type-1 nằm trong dòng type-2 |
 | 4 | Mã hoá dư thừa không ràng buộc | `schema_registry.py:108-117` | `report_period`("2024Q1") + `fiscal_year` + `fiscal_quarter` — ba cột cho một sự kiện, không gì bắt chúng nhất quán |
 | 5 | Tiền là `DOUBLE` | `sql/schema_evidence.sql:14-15,22,44,72`, `docs/07_data_contracts.md:120-124` | Double chỉ chính xác nguyên đến 2^53≈9.0e15. Tổng tài sản một ngân hàng VN ≈ 2e15 VND — còn 4.5× dư địa. **Tổng toàn thị trường ~1600 công ty vượt 2^53.** Hệ quả cụ thể: đẳng thức `assets = liabilities + equity` cho residual khác 0, nên DQ check phải chọn một tolerance tuỳ tiện không có cơ sở |
-| 6 | `check_id TEXT PRIMARY KEY` = `uuid4()` | `sql/init_project_metadata.sql:18`, `src/metadata/metadata_writer.py:357` | PK không ràng buộc gì (uuid4 không bao giờ đụng). Ghi DQ **không idempotent** — chạy lại cùng `run_id` nhân đôi dòng. Khoá đúng phải là `(run_id, dataset_name, check_name)` |
-| 7 | `ops` có **zero** foreign key | `sql/init_project_metadata.sql` toàn bộ | `run_id` trong `data_quality_result`, `failed_records`, `source_request_log` tham chiếu `pipeline_run_log` **chỉ bằng quy ước đặt tên** |
+| 6 | `check_id TEXT PRIMARY KEY` = `uuid4()` | `sql/init_ops.sql:18`, `src/metadata/metadata_writer.py:357` | PK không ràng buộc gì (uuid4 không bao giờ đụng). Ghi DQ **không idempotent** — chạy lại cùng `run_id` nhân đôi dòng. Khoá đúng phải là `(run_id, dataset_name, check_name)` |
+| 7 | `ops` có **zero** foreign key | `sql/init_ops.sql` toàn bộ | `run_id` trong `data_quality_result`, `failed_records`, `source_request_log` tham chiếu `pipeline_run_log` **chỉ bằng quy ước đặt tên** |
 | 8 | `schema_version_registry.is_current` không có ràng buộc | `init_project_metadata.sql:40-48` | Không gì ngăn hai dòng cùng `is_current=TRUE` cho một dataset. Cần partial unique index |
 | 9 | `TIMESTAMP` naive vs `TIMESTAMPTZ` | `init_project_metadata.sql` vs `init_ml_metadata.sql` | Domain là VN (UTC+7), pipeline chạy UTC → **lớp lỗi 7 giờ âm thầm**, rơi đúng vào `freshness_lag_minutes` và mọi so sánh PIT |
 | 10 | `status`/`severity`/`request_status` là free text | `init_project_metadata.sql`, `dq_checks.py:18-19` | Không CHECK, không enum. Tập giá trị hợp lệ chỉ tồn tại trong đầu người viết code |
@@ -256,7 +256,7 @@ DBeaver or similar tools) — 2 điểm"**. Đây chính là row mà fixture gi�
   contract version + regenerate evidence. Không phải dị vật ghép vào — là bắt P1 làm đúng việc
   mà tiêu đề của nó đã hứa.
 - Giải quyết luôn mâu thuẫn G-2/N-5 theo hướng duy nhất tạo ra platform thống nhất: **bỏ N-5**,
-  migrate ngữ nghĩa Phase 1 vào Iceberg, G-2 lần đầu tiên trở nên khả thi.
+  migrate ngữ nghĩa platform .ào Iceberg, G-2 lần đầu tiên trở nên khả thi.
 - P1 giãn thành 9–12 ngày. P2 xây Bronze→Silver→Gold trên contract v2 — **không phải việc thêm**,
   là *cùng khối lượng P2* nhắm vào mục tiêu đã sửa.
 - **Đánh đổi:** phải tuyên bố `BREAKS-LOCK` với N-5 và G-3, mở lại phán quyết Round-4 của arbiter.
@@ -438,7 +438,7 @@ minh toàn vẹn tham chiếu trên dữ liệu thật.
 **Việc chia đôi có bào chữa được không?** Trước đây có — hai instance, hai vòng đời độc lập, khi
 các phase là hai deliverable riêng. **Bây giờ thì không**, trong một bài nộp mà luận điểm là một
 platform thống nhất. Việc chia đôi *chính là* ranh giới phase bạn muốn xoá, nhúng vào tầng dữ liệu;
-người chấm mở hai file DDL sẽ thấy `-- Phase 2 ml schema` ở dòng comment đầu tiên.
+người chấm mở hai file DDL sẽ thấy `-- platform schema` ở dòng comment đầu tiên.
 
 ---
 

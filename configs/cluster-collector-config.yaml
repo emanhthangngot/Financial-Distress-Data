@@ -1,4 +1,4 @@
-# Cluster fixture profile. It uses the same configurable Phase 1 source
+# Cluster fixture profile. It uses the same configurable platform .ource
 # adapter and transforms as local evidence, while ensuring the analyst demo
 # entity (NVL) is present in Gold and therefore materializable by Feast.
 generator:

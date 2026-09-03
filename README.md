@@ -1,6 +1,6 @@
 # Financial Distress Data + AI Engineering Platform
 
-A local-first financial-distress data lakehouse for Vietnamese listed companies, extended with an additive Phase 2 LLM/agent product and a disposable GKE evidence plane — verified end to end, not just designed.
+A local-first financial-distress data lakehouse for Vietnamese listed companies, extended with an additive platform (LLM)/agent product and a disposable GKE evidence plane — verified end to end, not just designed.
 
 ## 📚 Table of Contents
 
@@ -27,8 +27,8 @@ Why it matters: a missed early warning on a stressed issuer costs downstream cap
 ## 📝 System Overview
 
 - **Lakehouse (Phase 1, verified):** a local-first medallion pipeline — `src/collectors`/`src/generator` produce deterministic batch and streaming data, Airflow (`dags/`) orchestrates three DAGs (DP1 source→Bronze, DP2 Bronze→Silver/Gold, DP3 offline features), Kafka (KRaft) carries streaming events, PySpark local mode performs the Bronze→Silver→Gold transform with a measured 1.56x optimization, Flink is an opt-in event-time streaming path, MinIO is the durable S3A lakehouse boundary, PostgreSQL holds operational metadata and DQ results, and DuckDB/DBeaver is the reviewer inspection surface — nothing here talks to AWS.
-- **LLM + RAG (Phase 2, live-verified):** a real OpenAI-compatible model server (llama.cpp on KServe/Knative, Qwen2.5-0.5B, quantization-benchmarked) reached only through `agentgateway`, backing a RAG pipeline (`src/llm/rag_pipeline.py`) that fetches, chunks, governs (licensing/PII/quarantine), embeds, and writes to PGVector with proven idempotency and a real quarantine round-trip.
-- **Agents + MCP (Phase 2, live-verified):** a coordinator agent fans out in parallel to a feature specialist and a drift specialist under a hard hop bound, each calling its own governed MCP tool (`feature-mcp`, `drift-mcp`) inside a sandboxed, tokenless, read-only `agents-sandbox` namespace with default-deny NetworkPolicies — proven live with a 5-span, 170ms Jaeger trace across all three services.
+- **LLM + RAG (platform, live-verified):** a real OpenAI-compatible model server (llama.cpp on KServe/Knative, Qwen2.5-0.5B, quantization-benchmarked) reached only through `agentgateway`, backing a RAG pipeline (`src/llm/rag_pipeline.py`) that fetches, chunks, governs (licensing/PII/quarantine), embeds, and writes to PGVector with proven idempotency and a real quarantine round-trip.
+- **Agents + MCP (platform, live-verified):** a coordinator agent fans out in parallel to a feature specialist and a drift specialist under a hard hop bound, each calling its own governed MCP tool (`feature-mcp`, `drift-mcp`) inside a sandboxed, tokenless, read-only `agents-sandbox` namespace with default-deny NetworkPolicies — proven live with a 5-span, 170ms Jaeger trace across all three services.
 - **Product plane (persistent):** Next.js renders authenticated analyst, report, agent-registry, and chat surfaces; Supabase owns Auth/Postgres/RLS and the evidence-session outbox that bridges the persistent product plane to the disposable evidence plane — the UI never claims a successful live answer before the evidence plane actually returns one.
 - **Platform + observability (GitOps-delivered):** GitHub Actions builds/tests/signs an immutable image digest, opens a GitOps PR, and Argo CD reconciles only the merged desired state (13/13 applications Synced/Healthy); NGINX is the sole external entry point behind basic-auth; OpenTelemetry ships traces/metrics/logs to Jaeger/Prometheus/Grafana/Loki, correlated by `trace_id` across all three systems for a single request.
 
@@ -55,24 +55,24 @@ Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), 
 │   ├── catalog/           - DuckDB catalog and validation helpers
 │   ├── io/                - MinIO and local IO helpers
 │   ├── jobs/               - Runtime evidence job wrappers
-│   ├── ml/                - Phase 2 ML class contracts and adapters (isolated)
-│   ├── drift/              - Phase 2 drift detection + generator-config simulation
-│   ├── llm/                - Phase 2 LLM contracts, RAG pipeline, embedding registry, citation/PII guard
-│   └── agents/             - Phase 2 coordinator/feature/drift agent orchestration
-├── apps/                  - Phase 2 Next.js product app + feature-api/feature-mcp/drift-api/drift-mcp services
+│   ├── ml/                - platform .L class contracts and adapters (isolated)
+│   ├── drift/              - platform .rift detection + generator-config simulation
+│   ├── llm/                - platform (LLM) contracts, RAG pipeline, embedding registry, citation/PII guard
+│   └── agents/             - platform .oordinator/feature/drift agent orchestration
+├── apps/                  - platform .ext.js product app + feature-api/feature-mcp/drift-api/drift-mcp services
 ├── packages/              - Shared TypeScript contracts and UI helpers
-├── supabase/              - Phase 2 migrations, RLS, and outbox schema
+├── supabase/              - platform .igrations, RLS, and outbox schema
 ├── feature_repo/          - Feast structured/RAG feature definitions
 ├── notebooks/             - Agent/MCP demonstration notebooks (LLM evidence track)
 ├── configs/               - Collector, Spark, source, drift, and DQ config files
 ├── sql/                   - PostgreSQL metadata DDL and DuckDB SQL views
-├── tests/                 - PyTest unit, contract, and runtime tests; tests/phase2/ covers Phase 2
+├── tests/                 - PyTest unit, contract, and runtime tests; tests/platform/ covers Phase 2
 ├── docs/                  - Specs, narrative submission docs, architecture, evidence notes
 │   ├── submission/         - Reviewer-facing narrative docs (LLM track, mini-coursework, ML deferred)
 │   ├── architecture/       - Subsystem + composed Mermaid diagram sources
 │   ├── pngs/                - Reviewer screenshot/diagram pool (manifest-tracked)
 │   └── phase2/evidence/    - Canonical, audit-pinned LLM evidence rows (immutable location)
-├── images/                - Phase 1 spec-mandated architecture diagrams
+├── images/                - platform .pec-mandated architecture diagrams
 ├── infra/                 - Container build/bootstrap assets (airflow/, flink/, kafka/)
 ├── scripts/               - Local E2E, DQ-failure, evidence-audit, and doc-gate runners
 ├── plans/                 - Implementation plans, phase files, and reports
@@ -81,7 +81,7 @@ Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), 
 └── README.md              - This file
 ```
 
-Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is additive and never mutates Phase 1 pipeline behavior. The GKE deployment manifests are intentionally **not** in this repository — the separate private control repository [`financial-distress-gitops`](docs/architecture/repository-map.md#separate-deployment-repository) owns Terraform, Helm values, Argo CD applications, image digests, policies, ingress, model serving, agents, and observability desired state. Full ownership map: [`docs/architecture/repository-map.md`](docs/architecture/repository-map.md); Python package boundary details: same doc.
+platform .ode under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is additive and never mutates platform .ipeline behavior. The GKE deployment manifests are intentionally **not** in this repository — the separate private control repository [`financial-distress-gitops`](docs/architecture/repository-map.md#separate-deployment-repository) owns Terraform, Helm values, Argo CD applications, image digests, policies, ingress, model serving, agents, and observability desired state. Full ownership map: [`docs/architecture/repository-map.md`](docs/architecture/repository-map.md); Python package boundary details: same doc.
 
 ## 🗂️ Coursework Documentation
 
@@ -139,14 +139,14 @@ docker compose up -d
 .venv/bin/python scripts/check_stage1_services.py
 ```
 
-Full local setup, Docker Compose profiles (incl. opt-in Flink), product/Phase 2 checks, service URLs, Stage 1 evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.
+Full local setup, Docker Compose profiles (incl. opt-in Flink), product/platform .hecks, service URLs, Stage 1 evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.
 
 ## 📌 Project Status
 
 | Area | State | Meaning |
 |---|---|---|
-| Phase 1 lakehouse | Verified | Collectors, Kafka, Bronze/Silver/Gold, DQ, metadata, DuckDB, MinIO and local evidence are implemented and gated. |
-| Phase 2 LLM track | Logical coverage captured; freeze pending | 60/60 LLM rows and 100/100 logical rubric points are represented by canonical evidence files; SHA restamping and the strict freeze audit remain. ML rows remain deferred. |
+| platform lakehouse | Verified | Collectors, Kafka, Bronze/Silver/Gold, DQ, metadata, DuckDB, MinIO and local evidence are implemented and gated. |
+| platform (LLM) track | Logical coverage captured; freeze pending | 60/60 LLM rows and 100/100 logical rubric points are represented by canonical evidence files; SHA restamping and the strict freeze audit remain. ML rows remain deferred. |
 | Product plane | Implemented and tested | Next.js web app, Supabase auth/RLS, analyst surfaces, agent registry/chat and evidence-plane state handling are covered by product tests and browser checks. |
 | GKE evidence plane | Live-verified | Argo applications, agents, MCP services, model gateway, KServe, telemetry and coordinator round-trip were live-tested; Argo CD's own UI was unreachable via port-forward this session (node-level fault, not fixed by retry) — CLI-verified 13/13 Synced/Healthy stands in for the UI capture. |
 | Submission freeze | Pending | Evidence SHAs must be restamped after the final docs/runtime commits; strict gate must pass before submission. |

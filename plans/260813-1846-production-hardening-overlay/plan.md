@@ -28,7 +28,7 @@ as-is in a clearly labelled archive commit for anyone resuming the ML track
 later, but nothing further is built on them and they are excluded from active
 CI, the deployable catalog, and the strict evidence gate.
 
-Verified before cutting (`docs/phase2/rubric-matrix.csv`, 60 LLM / 57 ML rows):
+Verified before cutting (`docs/platform/rubric-matrix.csv`, 60 LLM / 57 ML rows):
 zero LLM rows mention Kyverno, cosign, Linkerd, ESO, Lakekeeper, Iceberg, Argo
 Rollouts, KEDA, MLflow, or Kubeflow. All 60 LLM rows are already
 `evidence_type=executed`; the strict `--track LLM` gate's only failures are
@@ -39,7 +39,7 @@ missing behaviour. Full breakdown:
 What remains in scope is exactly what phases 1–2 were already building:
 
 1. **Close the protection gap and unify the repo layout** (phase 1) — six
-   `src/` packages hold unprotected Phase 1 behaviour; phase naming leaks into
+   `src/` packages hold unprotected platform .ehaviour; phase naming leaks into
    `infra/`, compose services, and CI workflow names.
 2. **A GitOps offline validation gate** (phase 2) — the control repo gets CI,
    a render/policy/digest-pin script, and agent rules.
@@ -84,11 +84,11 @@ build-out.
 | `PHASE1_HYGIENE_OVERRIDE=1` exists but is **forbidden** in this plan | `scripts/audit_phase2_evidence.py:427` |
 | `docs/mini_coursework.md` is itself protected — relax the local-first rule in `AGENTS.md` only | protected list, line 68 |
 | Spec permits this work: Kubernetes/cloud are out of scope *"unless explicitly requested"* | `docs/mini_coursework.md:16` |
-| Zero LLM rubric rows reference Kyverno / cosign / Linkerd / ESO / Lakekeeper / Iceberg / Argo Rollouts / KEDA / MLflow / Kubeflow | measured 2026-08-14 against `docs/phase2/rubric-matrix.csv`, both tracks |
+| Zero LLM rubric rows reference Kyverno / cosign / Linkerd / ESO / Lakekeeper / Iceberg / Argo Rollouts / KEDA / MLflow / Kubeflow | measured 2026-08-14 against `docs/platform/rubric-matrix.csv`, both tracks |
 | ML track is out of scope for submission — the whole track, not just its HA/DR edges | user decision, 2026-08-14 |
 
 Existing protected-path carve-outs that remain valid: `src/streaming/flink/jobs/`
-and `sql/init_ml_metadata.sql`.
+and `sql/init_ml.sql`.
 
 **Non-goals** (deliberately rejected, with reason):
 
@@ -130,7 +130,7 @@ No cloud quota needed for anything still in scope.
 | 6 | ~~Secrets: ESO + Secret Manager, and Linkerd~~ | — | — | **Cancelled 2026-08-14 — ML-scoped.** See phase file |
 | 7 | ~~Lakehouse: Iceberg + Lakekeeper catalog~~ | — | — | **Cancelled 2026-08-14 — ML-scoped.** See phase file |
 | 8 | ~~Flink CDC parallel ingestion path~~ | — | — | **Cancelled 2026-08-14 — ML-scoped.** See phase file |
-| 9 | ~~Phase 1 data plane onto the cluster~~ | — | — | **Cancelled 2026-08-14 — ML-scoped.** See phase file |
+| 9 | ~~platform data plane onto the cluster~~ | — | — | **Cancelled 2026-08-14 — ML-scoped.** See phase file |
 | 10 | ~~ML core: MLflow, training, distributed, drift~~ | — | — | **Cancelled 2026-08-14 — ML-scoped.** See phase file |
 | 11 | ~~Argo Rollouts, autoscale and observability~~ | — | — | **Cancelled 2026-08-14 — ML-scoped.** See phase file |
 | 12 | ~~Evidence capture system and submission freeze~~ | — | — | **Cancelled 2026-08-14 — was the ML track's freeze; LLM freeze lives in `260811-1627-close-llm-rubric-to-100` phase 6.** See phase file |
@@ -138,7 +138,7 @@ No cloud quota needed for anything still in scope.
 Total: **~5 working days** (phase 1 + phase 2). Phases 3-12 are cancelled —
 see the Overview for what happens to their already-written artifacts.
 
-**Phase 1 runs first by explicit user decision (2026-08-13):** layout unification
+**platform .uns first by explicit user decision (2026-08-13):** layout unification
 before optimisation. That reasoning is now moot for the cancelled phases but
 still holds for phase 1 itself.
 
@@ -149,7 +149,7 @@ Target state after phase 2, LLM track only. New components are marked `+`.
 ```mermaid
 flowchart TB
   subgraph SRC["Source monorepo"]
-    GEN["Phase 1 generator<br/>(protected, unchanged)"]
+    GEN["platform protected, unchanged)"]
     LLM["src/llm/, src/agents/<br/>(unchanged, already executed)"]
   end
 
@@ -174,7 +174,7 @@ flowchart TB
   BUMP --> GITOPS
   ARGO --> APIS
   APIS --> OBS
-  CLUSTER --> EV["+ scripts/capture_phase2_evidence.py<br/>docs/phase2/evidence/"]
+  CLUSTER --> EV["+ scripts/capture_phase2_evidence.py<br/>docs/platform/evidence/"]
 ```
 
 **Why this shape.** Everything ML-scoped from the original diagram (CDC, ML
@@ -188,8 +188,8 @@ evidence capture system, both of which serve the LLM submission directly.
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | A change silently touches a `PHASE1_PROTECTED` path and breaks the unsubmitted LLM gate | Medium | **Critical** | Every phase ends by running the strict `--track LLM` gate; phase 1 adds a pre-commit protected-path check so the failure surfaces before commit |
-| **Phase 1 code sits in packages the gate does not protect** — `src/security/` is imported by the already-protected `src/transforms/spark_session.py`, so protected code depends on unprotected code | **Confirmed, already true** | **Critical** | Phase 1 step 2 extends `PHASE1_PROTECTED` with all six Phase 1 packages and adds file-level exceptions for the two shared ones. Tightening only — cannot cost points |
-| De-phasing renames break a path the rubric matrix declares | Medium | High | Measured before acting: `evidence_path`, `test` and `validation_command` point into `docs/phase2/` and `tests/phase2/` on all 60 LLM rows; `infra/phase2` on **zero**. Phase 1 renames only Tier 1 (no gate meaning) |
+| **platform protected code | **Confirmed, already true** | **Critical** | platform .tep 2 extends `PHASE1_PROTECTED` with all six platform .ackages and adds file-level exceptions for the two shared ones. Tightening only — cannot cost points |
+| De-phasing renames break a path the rubric matrix declares | Medium | High | Measured before acting: `evidence_path`, `test` and `validation_command` point into `docs/platform/` and `tests/platform/` on all 60 LLM rows; `infra/phase2` on **zero**. platform .enames only Tier 1 (no gate meaning) |
 | Committing the archived ML scaffolding accidentally wires it back into active CI or the deployable catalog | Low | Medium | Archive commit touches only files already excluded from `configs/phase2-deployables.yaml` and `.github/workflows/`; verified by re-running `run_phase2_quality_gates.py` after the commit |
 | Evidence captured before this descope goes stale | Medium | Medium | Re-run `--check-artifacts` and the strict LLM gate after every commit in this pass, not only at the end |
 
@@ -197,16 +197,16 @@ evidence capture system, both of which serve the LLM submission directly.
 
 Every phase lands as **one PR on its own branch**, independently revertable.
 
-- **Source repo:** phases are additive — new files under `scripts/`, `infra/`, `configs/`. Revert = revert the PR; no Phase 1 behaviour was touched, so no data migration unwinds. The ML-scaffolding archive commit is a single labelled commit for exactly this reason — `git revert` removes it cleanly if it turns out to interfere with anything.
+- **Source repo:** phases are additive — new files under `scripts/`, `infra/`, `configs/`. Revert = revert the PR; no platform data migration unwinds. The ML-scaffolding archive commit is a single labelled commit for exactly this reason — `git revert` removes it cleanly if it turns out to interfere with anything.
 - **GitOps repo:** Argo CD is declarative — reverting the commit reconciles the cluster back.
-- **Evidence:** `docs/phase2/evidence/` is append-only per phase; a reverted phase's evidence files are removed in the same revert PR so the auditor never sees an orphan.
+- **Evidence:** `docs/platform/evidence/` is append-only per phase; a reverted phase's evidence files are removed in the same revert PR so the auditor never sees an orphan.
 
 Hard invariant for all rollbacks: the strict `--track LLM` gate must pass both
 before and after any revert.
 
 ## Success Criteria
 
-- [x] Strict two-repository auditor passes `--track LLM` at 100/100 on a committed, clean tree with correctly stamped `source_sha`/`gitops_sha` — a real run, not a projected one (`scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 --gitops-root ../financial-distress-gitops --ml 100 --llm 100` -> exit 0, "Phase 2 rubric matrix is complete and consistent"; both trees confirmed clean via `git status --porcelain=v1 --untracked-files=all`)
+- [x] Strict two-repository auditor passes `--track LLM` at 100/100 on a committed, clean tree with correctly stamped `source_sha`/`gitops_sha` — a real run, not a projected one (`scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 --gitops-root ../financial-distress-gitops --ml 100 --llm 100` -> exit 0, "platform .ubric matrix is complete and consistent"; both trees confirmed clean via `git status --porcelain=v1 --untracked-files=all`)
 - [ ] `scripts/capture_phase2_evidence.py` regenerates the full LLM evidence set in one command — script exists and its config was trimmed to LLM-only sections this pass, but a full regeneration run has not been executed/verified in this session
 - [ ] GitOps repo CI is green and blocks a tag-based (non-digest-pinned) image reference and a secret-bearing change — `validate-gitops.yml` and the digest/secret checks in `validate-gitops.sh` exist and pass on current `main`, but no PR was opened to prove the negative case blocks a merge
 - [x] Zero `artifact_path` entries missing from disk for LLM rows (`--check-artifacts` PASS, zero missing; confirmed again by the 100/100 strict run above)

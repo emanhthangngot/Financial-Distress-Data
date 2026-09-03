@@ -1,6 +1,6 @@
 ---
 title: "Unified Rebuild: Target MLOps Architecture + Full Rubric Coverage"
-description: "Single-project rebuild of Financial Distress Data. No Phase 1 / Phase 2 split. Target architecture image fully live AND all 161 rubric rows (300 points) earned with executed evidence. Data model, naming, and paths are in scope."
+description: "Single-project rebuild of Financial Distress Data. No platform . platform .plit. Target architecture image fully live AND all 161 rubric rows (300 points) earned with executed evidence. Data model, naming, and paths are in scope."
 status: pending
 priority: P1
 effort: "111-158 working days gross / 86-122 critical path (see §Schedule Reality)"
@@ -54,7 +54,7 @@ This plan replaces the 2026-08-31 arbiter version. Three user decisions drive th
 1. **Both objectives are binding, not either/or.** The architecture in
    `images/architecture/fdd-architecture-full-4k.png` must be live, **and** all three rubrics must
    be satisfied with executed evidence. Neither is a proxy for the other.
-2. **One project. No Phase 1 / Phase 2 split.** The vocabulary, directory layout, namespaces,
+2. **One project. No platform . platform .plit.** The vocabulary, directory layout, namespaces,
    database schemas, and CI workflow names that encode the split are removed.
 3. **No forbidden areas.** Every previous lock is lifted. The data model, the data contracts, the
    naming, and the paths are all in scope.
@@ -63,8 +63,8 @@ This plan replaces the 2026-08-31 arbiter version. Three user decisions drive th
 
 | Lock | Source | Status | Ground |
 |---|---|---|---|
-| **N-5** "No changes to Phase 1 Bronze/Silver/Gold Parquet semantics (Iceberg runs parallel)" | previous `plan.md:87` | **REVOKED** | Directly contradicts G-2 "one table format (Iceberg); zero shims". A parallel Parquet path is a shim. Both cannot hold. |
-| **G-3** "Phase 1 data contracts immutable" | previous `plan.md:72` | **AMENDED** | Now: *contracts are immutable **after P2 exit***. The current contracts contain defects that block rubric rows and defeat the project's own leakage guard (see §Data Model Findings). |
+| **N-5** "No changes to platform .ronze/Silver/Gold Parquet semantics (Iceberg runs parallel)" | previous `plan.md:87` | **REVOKED** | Directly contradicts G-2 "one table format (Iceberg); zero shims". A parallel Parquet path is a shim. Both cannot hold. |
+| **G-3** "platform data contracts immutable" | previous `plan.md:72` | **AMENDED** | Now: *contracts are immutable **after P2 exit***. The current contracts contain defects that block rubric rows and defeat the project's own leakage guard (see §Data Model Findings). |
 | **AGENTS.md** "`ops` (Phase 1) vs `ml` (Phase 2) — don't cross-write" | `AGENTS.md:11` | **REVOKED** | The split is the phase boundary being erased. Replaced by one database, two renamed schemas, with real foreign keys. |
 | **AGENTS.md** "Dedupe by business key + latest `created_ts`" | `AGENTS.md:10` | **AMENDED** | Now: dedupe on the business key **including the vintage axis**; `is_latest_vintage` is a derived flag. The old rule destroys restatement history. |
 | **N-2** "Kyverno and Linkerd stay archived" | previous `plan.md:84` | **RETAINED** | Istio is in the target image and the image must be live. Linkerd stays archived. |
@@ -93,7 +93,7 @@ Every revocation is recorded as an ADR in P3.
 | LLM | `docs/Coursework Tracking (Public) - rubic final-coursework (final - llm).csv` | 60 | 100 | 100% `executed` — must be re-earned after the evidence purge |
 
 Verified 2026-09-01: the mini CSV has 84 physical lines / 47 logical records / 5 columns → 44 scored
-rows. `docs/phase2/rubric-matrix.csv` has 117 data rows / 19 columns, `track` = 60 LLM + 57 ML,
+rows. `docs/platform/rubric-matrix.csv` has 117 data rows / 19 columns, `track` = 60 LLM + 57 ML,
 `evidence_type` = 60 `executed` + 57 `design_only`.
 
 ---
@@ -142,7 +142,7 @@ All verified in-repo on 2026-09-01. Full audit:
 | D-9 | `report_period` + `fiscal_year` + `fiscal_quarter` encode one fact three times with no enforced consistency. | `schema_registry.py:108-117` |
 | D-10 | Money is `DOUBLE`. Market-wide aggregates over ~1600 companies in VND exceed 2^53, so `assets = liabilities + equity` has no principled DQ tolerance. **Amended 2026-09-02b (U-1, measured): target is `DECIMAL(18,0)`.** vnstock statements arrive in whole đồng at 1,000đ granularity (`explorer/kbs/financial.py:572,369,259`), so scale 0 loses nothing. Measured: 9.36 B/value at precision 18 vs 16.66 at 38 (pyarrow 25.0.0); Spark 4.2.0 promotes `SUM(DECIMAL(18,0))` → `DECIMAL(28,0)` while `DECIMAL(38,2)` **cannot promote**. The earlier `DECIMAL(38,2)` and `DECIMAL(20,2)` targets are both superseded | `schema_evidence.sql:14-15,22,44,72`; `docs/07_data_contracts.md:120-124`; vnstock 4.0.7 wheel |
 | D-11 | `check_id TEXT PRIMARY KEY` = `uuid4()`. The PK constrains nothing and DQ writes are not idempotent. | `init_project_metadata.sql:18`; `metadata_writer.py:357` |
-| D-12 | `ops` has **zero** foreign keys; three `run_id` columns reference `pipeline_run_log` by naming convention only. | `sql/init_project_metadata.sql` |
+| D-12 | `ops` has **zero** foreign keys; three `run_id` columns reference `pipeline_run_log` by naming convention only. | `sql/init_ops.sql` |
 | D-13 | Naive `TIMESTAMP` in `ops` vs `TIMESTAMPTZ` in `ml` → a 7-hour silent error class on a UTC+7 domain. | both `sql/init_*.sql` |
 | D-14 | `schema_version_registry.is_current` has no partial unique index; two rows can both be current. | `init_project_metadata.sql:40-48` |
 | D-15 | Canonical layout is **one file per dataset**, no partitioning, against a 10-50M row target. | `src/io/paths.py:13-14` |
@@ -164,10 +164,10 @@ Surface measured 2026-09-01: **~90 paths** carry `phase1`/`phase2`/`stage1` in t
 
 | Old | New | Note |
 |---|---|---|
-| `docs/phase2/` | `docs/platform/` | ADRs + rubric matrix |
+| `docs/platform/` | `docs/platform/` | ADRs + rubric matrix |
 | `docs/phase1_architecture.md` | `docs/architecture/lakehouse.md` | |
 | `docs/02_schema_design.md`, `docs/schema-design.md` | merged → `docs/architecture/data-model.md` | resolves D-17 |
-| `tests/phase2/` | `tests/platform/` | |
+| `tests/platform/` | `tests/platform/` | |
 | `tests/test_stage1_*.py` | `tests/test_lakehouse_*.py` | |
 | `dags/phase2/*.py` | `dags/` flattened, semantic names | |
 | `dags/stage1_*.py`, `dags/_stage1_dag_utils.py`, `dags/utils/stage1_dag_utils.py` | `dags/lakehouse_*.py`, `dags/utils/dag_utils.py` | |

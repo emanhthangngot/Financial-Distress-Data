@@ -1,6 +1,6 @@
 ---
-title: "Unified Phase 2 ML + LLM GitOps"
-description: "Phase 2 final coursework, LLM track only, delivered on a Terraform-provisioned GKE evidence cluster paid from GCP free-trial credit, with a persistent low-cost product plane. The ML track is deferred to a post-deadline retrofit."
+title: "Unified platform .L + LLM GitOps"
+description: "platform .inal coursework, LLM track only, delivered on a Terraform-provisioned GKE evidence cluster paid from GCP free-trial credit, with a persistent low-cost product plane. The ML track is deferred to a post-deadline retrofit."
 status: pending
 priority: P1
 effort: "7 days to submission (LLM track); ML retrofit a further 4-5 days"
@@ -11,13 +11,13 @@ blocks: [260809-2039-complete-phase2-llm-submission]
 created: 2026-08-02
 ---
 
-# Unified Phase 2 ML + LLM GitOps
+# Unified platform .L + LLM GitOps
 
 ## Overview
 
-Active phase: **explicit Phase 2 final coursework**. Preserve the verified local Phase 1 lakehouse, keep application work in one source monorepo (`src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, and thin `dags/phase2/` wrappers), then deploy rubric evidence through a separate least-privilege GitOps control repository.
+Active phase: **explicit platform .inal coursework**. Preserve the verified local platform lakehouse, keep application work in one source monorepo (`src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, and thin `dags/phase2/` wrappers), then deploy rubric evidence through a separate least-privilege GitOps control repository.
 
-**Scope revision — 2026-08-07.** The coursework accepts one of the two tracks. With 7 days to the deadline and zero executed evidence, this plan delivers the **LLM track only: 60 rows / 100 points**. The 57 ML rows stay in `docs/phase2/rubric-matrix.csv` unchanged and phase-05 stays in place as the retrofit backlog — the phase-08 auditor's canonical-coverage check requires all 117 rows present regardless of which track is submitted, and freezing the ML rows is what keeps the retrofit additive rather than rework. Track selection is enforced by a new `--track` filter on `scripts/audit_phase2_evidence.py`, not by deleting rows. Rationale and the retrofit contract: `phase-05-deliver-ml-track.md`.
+**Scope revision — 2026-08-07.** The coursework accepts one of the two tracks. With 7 days to the deadline and zero executed evidence, this plan delivers the **LLM track only: 60 rows / 100 points**. The 57 ML rows stay in `docs/platform/rubric-matrix.csv` unchanged and phase-05 stays in place as the retrofit backlog — the phase-08 auditor's canonical-coverage check requires all 117 rows present regardless of which track is submitted, and freezing the ML rows is what keeps the retrofit additive rather than rework. Track selection is enforced by a new `--track` filter on `scripts/audit_phase2_evidence.py`, not by deleting rows. Rationale and the retrofit contract: `phase-05-deliver-ml-track.md`.
 
 Read before planning: `AGENTS.md`, `docs/spec.md`, `docs/mini_coursework.md`, `docs/coursework.md`, both final-coursework rubric CSVs, the supplied feedback, and the two supplied system-design books. The project-local `financial-distress-sdd` skill is absent; `ak:plan` and `ak:devops` provide the available workflow.
 
@@ -28,7 +28,7 @@ Validation report: [architecture-feedback-260802-1037-phase2-plan.md](../reports
 | # | Goal | Priority |
 |---|------|----------|
 | 1 | Score every LLM rubric row with executable proof and a named evidence artifact | P0 |
-| 2 | Keep Phase 1 contracts unchanged while publishing versioned features, labels, drift data, and RAG documents | P0 |
+| 2 | Keep platform data, and RAG documents | P0 |
 | 3 | Use GitOps as the sole cluster deployment path with immutable image digests and reversible Git commits | P0 |
 | 4 | Leave the deferred ML track a purely additive 4-5 day retrofit | P1 |
 | 5 | Offer a persistent low-cost analyst product within a bounded, auto-destroyed cloud evidence budget | P1 |
@@ -75,14 +75,14 @@ never the test suite or observability, which carry more points across more rows.
 
 ## Fixed Architecture Decisions
 
-- Product plane: Vercel Hobby + Supabase Free; coursework scale is 50 accounts, 10 concurrent web users, and 2 concurrent AI streams. The product UI is an explicit contract in `docs/phase2/product.md`, with approved references `UI-APPROVED-01..03`; it is not satisfied by a generic shell or a screenshot-only mock.
+- Product plane: Vercel Hobby + Supabase Free; coursework scale is 50 accounts, 10 concurrent web users, and 2 concurrent AI streams. The product UI is an explicit contract in `docs/platform/product.md`, with approved references `UI-APPROVED-01..03`; it is not satisfied by a generic shell or a screenshot-only mock.
 - Evidence plane: a Terraform-provisioned GKE Standard zonal cluster in `asia-southeast1-b`, sized from the real day-0 vCPU quota (8-16 vCPU depending on quota), plus a Terraform-provisioned GCE VM for the Ansible row. Paid entirely from an untouched GCP free-trial credit (USD 300 / 90 days) — **no out-of-pocket spend**, target under USD 100. The local machine has ~7 GB available RAM (measured) and cannot host the ~34 GB stack. `make gcp-up`/`gcp-down` hibernates node pools overnight (PVCs preserved) to keep spend near the low end of that range.
 - Terraform authenticates via `gcloud auth application-default login`; **no service-account key JSON is ever created**. In-cluster workloads use Workload Identity. The trial billing account is never upgraded to paid — an exhausted trial stops rather than billing further.
 - Public edge is active F5 NGINX Ingress Controller OSS (`nginx/kubernetes-ingress`), never retired community ingress-nginx. Backends are `ClusterIP` only, with a default-deny NetworkPolicy. **Istio is dropped** — the rubric section is named "Routing & Gateway (NGINX Ingress Controller)" and no LLM row mentions Istio, mesh, mTLS or TLS.
 - The LLM chain is kagent `Agent` -> kagent `ModelConfig` -> agentgateway AI backend -> a KServe `InferenceService` serving a custom model server on CPU (vLLM-CPU or llama.cpp) behind an llm-d router, running on Knative Serving. **Restored 2026-08-07**: the earlier cut assumed a 16 GB k3d box; GKE has ~43 GB allocatable, and canonical row 2 (2 pts) links a KServe/llm-d deployment guide verbatim. Envoy Gateway and Envoy AI Gateway stay dropped — agentgateway is the gateway the agent rows name. MCP and A2A use agentgateway routes.
 - Helm is the only render tool. **Kustomize is dropped**, so one resource has exactly one owner by construction and the duplicate-owner CI check is unnecessary.
 - Observability is Prometheus + Grafana for metrics, Loki + Grafana Explore for logs, and Jaeger for traces, each exposed as its own gateway-reachable viewer route (canonical rows 40/41/42, 2 pts each). GKE Cloud Logging/Monitoring are disabled — scored via Loki/Grafana, and Cloud Logging bills per GB. **ECK/Kibana is dropped** — the rubric row says "ví dụ Kibana", an example. Secrets are GitHub Actions secrets + OIDC + sealed-secrets; **Vault is dropped**.
-- The single source monorepo owns code, tests, schemas, Dockerfiles, Airflow Phase 2 wrappers, and evidence docs. `emanhthangngot/financial-distress-gitops` is a separate control repo owning Terraform, Ansible, Helm charts, Argo CD applications, policies, and environment values; this is not a microservice-per-repo design.
+- The single source monorepo owns code, tests, schemas, Dockerfiles, Airflow platform .rappers, and evidence docs. `emanhthangngot/financial-distress-gitops` is a separate control repo owning Terraform, Ansible, Helm charts, Argo CD applications, policies, and environment values; this is not a microservice-per-repo design.
 - Ansible evidence is mandatory and now honest work the project needs: a role-based playbook configures the Terraform-provisioned GCE VM (Docker, kubectl, kubeconfig, benchmark client) and proves `changed=0` on a second run.
 - Feast defines an offline store from day one even though only the online store is read this week. This is load-bearing for the phase-05 retrofit; see that file's deferral contract.
 
@@ -101,7 +101,7 @@ never the test suite or observability, which carry more points across more rows.
 - [ ] Analyst -> uses the product when the evidence cluster is off -> sees persisted reports plus an honest evidence-plane state instead of a broken workflow.
 - [ ] Platform operator -> runs `make gcp-down` overnight and `make gcp-up` each morning -> receives a recorded cost delta, node pools resized to zero with PVCs preserved, and never upgrades the trial billing account.
 - [ ] Source CI -> publishes a signed immutable image digest -> opens a checked GitOps PR; only the merged Git change is reconciled by Argo CD.
-- [ ] Phase 1 maintainer -> runs existing quality gates -> observes no change to collectors, Gold contracts, DQ semantics, or local evidence behavior, proving `.venv` was never mutated by Phase 2 dependencies.
+- [ ] platform .aintainer -> runs existing quality gates -> observes no change to collectors, Gold contracts, DQ semantics, or local evidence behavior, proving `.venv` was never mutated by platform .ependencies.
 - [ ] Platform operator -> runs the Ansible evidence-host role twice -> observes a healthy host and `changed=0` on the second run.
 - [ ] ML retrofitter -> resumes phase-05 after the deadline -> finds the Feast offline store defined, the label table present, both Web APIs generic, and the 57 ML rows unchanged, so the remaining work is additive.
 - [ ] Product reviewer -> opens `UI-APPROVED-01`, `UI-APPROVED-02` and `UI-APPROVED-03` -> matches the approved information hierarchy at desktop/tablet/mobile viewports and finds provenance, disclaimer, RBAC and degraded-state proof.
@@ -149,16 +149,16 @@ never the test suite or observability, which carry more points across more rows.
 7. **[Assumptions]** `--matrix-only --strict` yêu cầu cột evidence_path thế nào để phase-01 PASS?
    - Options: Path đã hoạch định | Cho phép trống
    - **Answer:** Path đã hoạch định
-   - **Rationale:** Mỗi row khai evidence_path là đường dẫn sẽ tạo (`docs/phase2/evidence/...`); linter verify parent dir thuộc `docs/phase2/evidence/` chứ không yêu cầu file tồn tại. Check `--require-executed` chỉ bật ở phase-08.
+   - **Rationale:** Mỗi row khai evidence_path là đường dẫn sẽ tạo (`docs/platform/evidence/...`); linter verify parent dir thuộc `docs/platform/evidence/` chứ không yêu cầu file tồn tại. Check `--require-executed` chỉ bật ở phase-08.
 
 #### Confirmed Decisions
 - Semantic ID: slug từ requirement text.
-- Class contracts: Python stub (`src/ml/contracts.py`, `src/llm/contracts.py`) + `docs/phase2/low-level-design.md`.
+- Class contracts: Python stub (`src/ml/contracts.py`, `src/llm/contracts.py`) + `docs/platform/low-level-design.md`.
 - Owner: role-based.
 - AC scope: per deliverable + per class (~20-30 AC).
 - Branch: feature branch `codex/phase2-spec-lock` + PR.
 - Old `docs/coursework.md`: replace hoàn toàn.
-- Evidence path: planned path under `docs/phase2/evidence/`; strict `--require-executed` deferred to phase-08.
+- Evidence path: planned path under `docs/platform/evidence/`; strict `--require-executed` deferred to phase-08.
 
 #### Action Items
 - [x] Phase-01: semantic slug ID cho mọi scored row.
@@ -170,7 +170,7 @@ never the test suite or observability, which carry more points across more rows.
 - [x] Phase-01: linter `--matrix-only --strict` verify planned evidence path; `--require-executed` để dành phase-08.
 
 #### Impact on Phases
-- Phase 1 (phase-01): toàn bộ action items trên.
+- platform .phase-01): toàn bộ action items trên.
 - Phase 8 (phase-08): `--require-executed` chỉ kích hoạt khi evidence đã chạy; không đổi contract matrix.
 
 ### Whole-Plan Consistency Sweep
@@ -180,7 +180,7 @@ and closed these design-level gaps: mandatory role-based Ansible execution,
 actual KFP API retraining after Airflow drift detection, correct kagent
 `ModelConfig` ownership, active F5 NGINX OSS instead of retired ingress-nginx,
 source-row/digest completeness, resolvable acceptance IDs, real repo/file
-artifact ownership, exact 40-hex evidence SHAs, Phase 2 DAG isolation, and a
+artifact ownership, exact 40-hex evidence SHAs, platform .AG isolation, and a
 credential-free S3 evidence return path. Phase 8 still requires real runtime
 evidence before any 100/100 claim is valid.
 
@@ -199,7 +199,7 @@ LLM-only submission and defer phase 5. Supervised by `kongming`.
    nor deleting ML rows fixes it — `EXPECTED_ROW_COUNTS` and
    `_audit_canonical_coverage` both require all 117 rows. A `--track` filter is
    the only correct lever, and it is day-1 blocking work.
-3. `tests/phase2/requirements/` does not exist, yet all 60 LLM rows pin an exact
+3. `tests/platform/requirements/` does not exist, yet all 60 LLM rows pin an exact
    `validation_command` into it that the auditor executes. pytest's exit code 5
    on a zero-match reads as failure.
 4. 29 LLM rows declare `artifact_repo: gitops`, resolving to 14 distinct paths
@@ -208,8 +208,8 @@ LLM-only submission and defer phase 5. Supervised by `kongming`.
    TLS. The rows *do* require an agent sandbox, a reachable log-viewer service
    and a reachable trace-viewer service.
 6. `.venv` holds only `pytest`, `ruff`, `black`, `duckdb`, `pyspark`. Every
-   Phase 2 Python dependency is absent, and installing them into `.venv` risks
-   the Phase 1 gate that phase-08 must re-run clean.
+   platform .ython dependency is absent, and installing them into `.venv` risks
+   the platform .ate that phase-08 must re-run clean.
 7. The local machine has ~5 GB free RAM — insufficient for the platform stack.
 
 **Confirmed decisions:**
@@ -234,11 +234,11 @@ LLM-only submission and defer phase 5. Supervised by `kongming`.
 
 **Action items:**
 
-- [ ] Retarget three artifact paths in **both** `docs/phase2/rubric-matrix.csv`
+- [ ] Retarget three artifact paths in **both** `docs/platform/rubric-matrix.csv`
       and `scripts/_phase2_rubric_items.py::EXPLICIT_IMPLEMENTATION`
       (`llminferenceservice.yaml`, `eck-otel-values.yaml`,
       `vault-external-secrets.yaml`), then re-run `--matrix-only --strict`.
-- [ ] Amend `docs/phase2/acceptance-criteria.md:42` and `:46`, which assert
+- [ ] Amend `docs/platform/acceptance-criteria.md:42` and `:46`, which assert
       Istio mTLS and mesh controls the submission will not demonstrate. Leave
       the ML acceptance lines untouched.
 - [ ] Update `docs/coursework.md` to declare the LLM-only submission scope and
@@ -296,7 +296,7 @@ invalidated the rented-VM/k3d/AWS design from Session 2.
   upgrade the trial billing account.
 - Domain/HTTPS row (46) moves to DuckDNS (free) + cert-manager ACME HTTP-01,
   since the GKE LoadBalancer exposes 80/443 directly.
-- Evidence stays under `docs/phase2/evidence/` (the auditor's path-prefix
+- Evidence stays under `docs/platform/evidence/` (the auditor's path-prefix
   contract is unchanged); add `docs/submission/*.md` as a reviewer-facing index
   linking into it, satisfying the canonical CSV's per-section-doc note without
   touching the machine contract.
@@ -313,7 +313,7 @@ invalidated the rented-VM/k3d/AWS design from Session 2.
 - [ ] Sweep `phase-04` (lines referencing "no AWS cluster"), `phase-07` (day
       slot only), `phase-08` (AWS resource inventory -> GCP cost/hibernate
       evidence, add `docs/submission/` capture step).
-- [ ] Update `docs/phase2/adr/adr-010-*.md`: move KServe/Knative/llm-d from
+- [ ] Update `docs/platform/adr/adr-010-*.md`: move KServe/Knative/llm-d from
       *Dropped* to a new *Restored* section; replace the ephemeral-EKS/rented-VM
       decision with GKE; add the free-credit-only budget constraint.
       `adr-004-kserve-018-pin.md` partially revives — re-mark its status.
@@ -395,7 +395,7 @@ the pre-reorder ordering. Flagged for the next planning session on either file.
 4. The GKE cluster `fsds-evidence` is **hibernated**: both pools resized to 0,
    ingress LB IP `34.21.242.110` retained. Every capture session must
    `make gcp-up` first and `make gcp-down` after.
-5. `tests/phase2/requirements/test_llm_ac_01..20.py` exist as metadata contract
+5. `tests/platform/requirements/test_llm_ac_01..20.py` exist as metadata contract
    tests; the per-row assertions are unfilled. `src/llm/api/`, `src/llm/mcp/`,
    `src/llm/agents/`, `src/drift/api/` and `notebooks/` content do not exist.
 6. User confirmed 7+ days remain and the scope stays **LLM only**; phase-05 ML

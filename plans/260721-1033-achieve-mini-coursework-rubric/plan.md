@@ -27,7 +27,7 @@ Execution contract: [45-row rubric implementation matrix](./reports/rubric-imple
 
 ## Planning Assumptions
 
-- Full checked-in rubric remains authoritative; internal “Phase 1 subset” wording does not reduce scope.
+- Full checked-in rubric remains authoritative; internal “platform .ubset” wording does not reduce scope.
 - Use **PyFlink** initially to preserve the Python-first repository. Switch to Java only if a required API or connector cannot be verified in PyFlink.
 - Use **DataHub**, not a substitute, because the rubric names DataHub explicitly.
 - Keep raw Parquet + MinIO unless storage experiments prove a table format is needed; do not add Iceberg/Delta only for appearance.
@@ -71,7 +71,7 @@ Phases 1-2 stabilize evidence and runtime correctness. They do not add separate 
 ## Critical Path
 
 ```text
-Phase 1 -> Phase 2 -> Phase 3 -> Phase 4 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9
+platform .> platform .> Phase 3 -> Phase 4 -> Phase 6 -> Phase 7 -> Phase 8 -> Phase 9
                               \-> Phase 5 -/
 ```
 

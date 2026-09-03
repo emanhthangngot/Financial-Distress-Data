@@ -12,7 +12,7 @@ owns: ["ALL renames — runs alone, no other phase may be in flight"]
 
 ## Overview
 
-Erase the Phase 1 / Phase 2 split from every path, identifier, namespace, database schema, CI
+Erase the platform database schema, CI
 workflow name and document. Source-only and GitOps-only; no cluster workload changes. **Resident
 cost: 0.**
 
@@ -21,7 +21,7 @@ on every one of them.
 
 Renaming is not cosmetic here. The split is the thing the user is removing, and it is currently
 embedded in the data layer (two Postgres schemas that are forbidden to reference each other), in the
-test layer (`tests/phase2/`), in orchestration (`dags/phase2/`), and in the runtime (`phase2-data`,
+test layer (`tests/platform/`), in orchestration (`dags/phase2/`), and in the runtime (`phase2-data`,
 `phase2-llm` namespaces). Leaving it in place makes O-3 unachievable and keeps the two-schema
 foreign-key gap (D-12) permanent.
 
@@ -47,13 +47,13 @@ foreign-key gap (D-12) permanent.
 
 | Old | New |
 |---|---|
-| `docs/phase2/` | `docs/platform/` |
-| `docs/phase2/adr/` | `docs/platform/adr/` |
+| `docs/platform/` | `docs/platform/` |
+| `docs/platform/adr/` | `docs/platform/adr/` |
 | `docs/phase1_architecture.md` | `docs/architecture/lakehouse.md` |
 | `docs/02_schema_design.md` + `docs/schema-design.md` | merged → `docs/architecture/data-model.md` |
-| `tests/phase2/` | `tests/platform/` |
+| `tests/platform/` | `tests/platform/` |
 | `tests/test_stage1_*.py` | `tests/test_lakehouse_*.py` |
-| `tests/phase2/test_phase1_cluster_parity.py` | `tests/platform/test_lakehouse_cluster_parity.py` |
+| `tests/platform/test_phase1_cluster_parity.py` | `tests/platform/test_lakehouse_cluster_parity.py` |
 | `dags/phase2/phase2_*.py` | `dags/*.py` (flattened, prefix dropped) |
 | `dags/stage1_local_evidence_pipeline.py` | `dags/lakehouse_local_evidence_pipeline.py` |
 | `dags/stage1_real_e2e_pipeline.py` | `dags/lakehouse_real_e2e_pipeline.py` |
@@ -97,7 +97,7 @@ directory name changes.
 - Modify: `.github/workflows/*.yaml`, `.githooks/pre-commit`, `docker-compose.yml`, `.dockerignore`
 - Modify: `financial-distress-gitops` Argo `destination.namespace` fields and Terraform labels
 - Create: `scripts/verify_naming_cutover.py`
-- Delete: `docs/evidence/stage1_*` (13 files), `docs/phase1/`, `docs/phase2/evidence-tree/`
+- Delete: `docs/evidence/stage1_*` (13 files), `docs/phase1/`, `docs/platform/evidence-tree/`
 
 ## Implementation Steps
 
@@ -116,11 +116,11 @@ directory name changes.
    `sql/init_*.sql` (renamed to `sql/init_ops.sql`, `sql/init_ml.sql`) and in every Python caller.
    Write a forward migration using `ALTER SCHEMA ... RENAME TO ...`. **The physical merge into one
    database, the timestamp conversion, and the foreign keys are P2 work — not here.** Commit atomically.
-5. **Rename class D — docs** (1 d) — move `docs/phase2/` → `docs/platform/`,
+5. **Rename class D — docs** (1 d) — move `docs/platform/` → `docs/platform/`,
    `docs/phase1_architecture.md` → `docs/architecture/lakehouse.md`; merge the two contradicting
    schema documents into `docs/architecture/data-model.md`, keeping only what the code actually does
    (`02_schema_design.md:205` is the correct one; `schema-design.md:11-14` is not). Delete
-   `docs/evidence/stage1_*`, `docs/phase1/`, `docs/phase2/evidence-tree/`. Update all cross-links.
+   `docs/evidence/stage1_*`, `docs/phase1/`, `docs/platform/evidence-tree/`. Update all cross-links.
    Commit atomically.
 6. **Rename class E — GitOps and runtime** (1 d) — in `financial-distress-gitops`: namespace
    renames, Argo `destination.namespace`, Terraform labels, workflow names. `make validate` must
@@ -145,7 +145,7 @@ directory name changes.
       whether facts carry `company_version_key`, and it matches `src/transforms/gold/`
 - [ ] AC-P1-7: Engineer → greps `supabase/migrations/` → filenames unchanged; ADR-019 records the
       exception and its reason
-- [ ] AC-P1-8: Reader → opens `AGENTS.md` → finds no Phase 1 / Phase 2 vocabulary and correct
+- [ ] AC-P1-8: Reader → opens `AGENTS.md` → finds no platform . platform .ocabulary and correct
       verify commands
 
 ## Risk Assessment
@@ -164,6 +164,6 @@ re-applies an already-applied migration. Mitigation: the verifier excludes that 
 and ADR-019 states why. Response: restore filenames from git; never rename applied migrations.
 
 **Risk:** the docs merge silently discards a rubric-cited path. Signal: a rubric row's
-`evidence_path` 404s at P3. Mitigation: before deleting, grep `docs/phase2/rubric-matrix.csv` for
+`evidence_path` 404s at P3. Mitigation: before deleting, grep `docs/platform/rubric-matrix.csv` for
 every path under the directories being moved and record redirects. Response: restore the redirect
 table into the merged document.

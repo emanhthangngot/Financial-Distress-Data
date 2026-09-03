@@ -39,7 +39,7 @@ None.
 `scripts/audit_phase2_evidence.py`. But the hook's `exceptions[]` is only:
 
 ```bash
-exceptions=("src/streaming/flink/jobs/" "sql/init_ml_metadata.sql")
+exceptions=("src/streaming/flink/jobs/" "sql/init_ml.sql")
 ```
 
 while the auditor carves out five more:
@@ -108,7 +108,7 @@ Commit #1 cancelled phases 03–12. The checklist retains a section for each:
 Because `_run_section` records a non-zero return code as `status: fail` and the
 driver docstring says a failed command "makes the process fail",
 `scripts/capture_phase2_evidence.py` is now guaranteed to fail for the LLM
-submission. `tests/phase2/test_evidence_capture.py::test_evidence_checklist_covers_all_overlay_phases`
+submission. `tests/platform/test_evidence_capture.py::test_evidence_checklist_covers_all_overlay_phases`
 pins this by asserting `len(sections) >= 12` and the presence of
 `phase11-rollouts` / `phase12-freeze` by name — so the test actively defends the
 inconsistency.
@@ -142,7 +142,7 @@ It is exercised only by its own unit test. New gate, no consumer.
 The file header calls itself "Source-of-truth metadata for the Phase 2
 deployables", but the caller workflows still carry inline `deployables:` JSON,
 and nothing cross-validates the two. The catalog is read only by
-`run_phase2_quality_gates.py` and `tests/phase2/test_deployable_catalog.py`;
+`run_phase2_quality_gates.py` and `tests/platform/test_deployable_catalog.py`;
 CI itself never reads it.
 
 They happen to agree today (I verified all 8 entries against the 8 caller
@@ -191,7 +191,7 @@ The workflow curls three tarballs/zips and `sudo install`s them, in a repo whose
 
 ## Low
 
-- **L1** — `tests/phase2/pipelines/test_workflows_phase2.py::CALLERS` omits
+- **L1** — `tests/platform/pipelines/test_workflows_phase2.py::CALLERS` omits
   `phase2-drift-mcp.yaml` and `phase2-web.yaml`, both present on disk. The
   module docstring claims it pins "its list-driven callers". Pre-existing, but
   the same commit edited this list.
@@ -256,9 +256,9 @@ for awareness.
    code rather than a blocker — but then the hook is unverified scope.
 2. Is `verify_supply_chain.py` still in LLM scope? Phase 03 is cancelled and the
    cosign attest steps were reverted, yet the script and
-   `tests/phase2/test_supply_chain_verifier.py` remain, and the checklist calls
+   `tests/platform/test_supply_chain_verifier.py` remain, and the checklist calls
    it with `--help`.
 3. Should the 9 ML rubric rows' `artifact_path` values be repointed at
-   `archive/ml-track/...` in `docs/phase2/rubric-matrix.csv`? They are harmless
+   `archive/ml-track/...` in `docs/platform/rubric-matrix.csv`? They are harmless
    warnings today, but they are now factually wrong paths in a document that
    claims to be the rubric mapping.

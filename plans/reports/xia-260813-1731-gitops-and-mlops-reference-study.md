@@ -17,7 +17,7 @@ Repo tham khảo được đọc như **dữ liệu**, không thực thi lệnh/
 
 ## 2. Đo hiện trạng trước khi so sánh
 
-Từ `docs/phase2/rubric-matrix.csv` (117 rows):
+Từ `docs/platform/rubric-matrix.csv` (117 rows):
 
 | Track | Rows | Points | evidence_type |
 |---|---:|---:|---|
@@ -36,7 +36,7 @@ Chia theo repo sở hữu artifact:
 - matrix khai `platform/ml/ab-testing.yaml`, repo gitops thực tế có `platform/llm/ab-testing.yaml`
 - `charts/feature-api/`, `charts/drift-api/` chưa tồn tại (gitops chỉ có `feature-mcp`, `drift-mcp`, `fastapi-service`, `web`)
 - `platform/observability/eck-otel-values.yaml`, `platform/security/vault-external-secrets.yaml`, `platform/security/authorization-policies.yaml` chưa có
-- source: `apps/feature-api/`, `apps/drift-api/`, `src/ml/mlflow_registry.py`, `src/ml/leakage_guard.py`, `notebooks/ml-training.ipynb`, `tests/phase2/requirements/test_ml_ac_04_validation.py` …
+- source: `apps/feature-api/`, `apps/drift-api/`, `src/ml/mlflow_registry.py`, `src/ml/leakage_guard.py`, `notebooks/ml-training.ipynb`, `tests/platform/requirements/test_ml_ac_04_validation.py` …
 
 `audit_phase2_evidence.py --require-executed` chỉ bắt cái này ở **phase-08**. Đa số là ML rows nên hôm nay chưa nổ — nhưng nghĩa là ML retrofit đang mù về "còn thiếu file gì".
 
@@ -129,7 +129,7 @@ Ta có `scripts/run_phase5_mutation_gate.py` + `mutants/` + `tests/load/`, nhưn
 | 15-image catalog, multi-node-pool autoscale, KEDA HTTP scaler đầy đủ | Vượt xa 4 deployable của ta. |
 | Istio mTLS + Vault + External Secrets đầy đủ | Ta đã có Sealed Secrets + NetworkPolicy default-deny — đủ cho rows security đang khai. |
 | Triton/ONNX packaging, BST model | Domain khác (recsys sequence model ≠ financial distress). |
-| Superset/dbt/Trino/DataHub full | Phase 1 ta đã có DataHub + DuckDB; không mở rộng. |
+| Superset/dbt/Trino/DataHub full | platform .a đã có DataHub + DuckDB; không mở rộng. |
 
 ---
 
@@ -179,13 +179,13 @@ AC: chạy auditor -> in đúng 20 path còn thiếu / 50 điểm -> ML retrofit
 
 ### P1 — Bọc lại evidence (≈1 ngày)
 
-**P1.1 · `docs/phase2/evidence/README.md` — semantics của reference** (theo RecSys §4.1-D)
+**P1.1 · `docs/platform/evidence/README.md` — semantics của reference** (theo RecSys §4.1-D)
 3 quy ước link + bảng "Current Authoritative Sources" (concern → file). Bổ sung, không thay `evidence-contract.md`.
 
-**P1.2 · Narrative summary mỗi track** — `docs/phase2/evidence/{llm,ml}/00-run-summary.md`
+**P1.2 · Narrative summary mỗi track** — `docs/platform/evidence/{llm,ml}/00-run-summary.md`
 Theo khuôn `35_cd_demo_summary.md`: kể chuỗi fail → nguyên nhân gốc → fix, mỗi bước trỏ đúng file evidence đã có; mục "Known issues" tự khai. Không sinh evidence mới, chỉ index cái đã có.
 
-**P1.3 · Bundle validation & verification** — `docs/phase2/evidence/validation-verification/`
+**P1.3 · Bundle validation & verification** — `docs/platform/evidence/validation-verification/`
 Bảng coverage per-component; `mutation-summary.md` (score/gate/killed/survived/target — `run_phase5_mutation_gate.py` đã có số, chỉ cần render); load test raw + `sla-summary.md` (p95/throughput/failure-rate/SLA/verdict); screenshot checklist.
 
 ### P2 — Kiến trúc CI (≈1-1.5 ngày, mở đường cho ML retrofit)
@@ -194,10 +194,10 @@ Bảng coverage per-component; `mutation-summary.md` (score/gate/killed/survived
 Gom 8 spec deployable đang inline trong workflow thành 1 file: `name`, `dockerfile`, `test_selector`, `lint_paths`, `gitops_chart`, `gitops_values_path`. Workflow đọc từ file.
 
 **P2.2 · Logic CI thành Python có test** (`scripts/phase2_ci/`)
-Module thuần: parse catalog, resolve gitops path, dựng digest-bump patch. Test ở `tests/phase2/` — bao gồm test khẳng định **mọi `gitops_values_path` trong catalog tồn tại trong repo gitops**. Đây là chỗ bắt drift `platform/ml/` vs `platform/llm/` ngay tại unit test.
+Module thuần: parse catalog, resolve gitops path, dựng digest-bump patch. Test ở `tests/platform/` — bao gồm test khẳng định **mọi `gitops_values_path` trong catalog tồn tại trong repo gitops**. Đây là chỗ bắt drift `platform/ml/` vs `platform/llm/` ngay tại unit test.
 
 **P2.3 · Mở rộng one-shot gate**
-`scripts/run_stage1_quality_gates.py` giữ nguyên (Phase 1). Thêm target Phase 2 song song: `bash -n` mọi shell script + gọi validate của repo gitops khi có `--gitops-root`.
+`scripts/run_stage1_quality_gates.py` giữ nguyên (Phase 1). Thêm target platform .ong song: `bash -n` mọi shell script + gọi validate của repo gitops khi có `--gitops-root`.
 
 ### P3 — Cost/quota, mở khoá ML window (≈0.5 ngày)
 

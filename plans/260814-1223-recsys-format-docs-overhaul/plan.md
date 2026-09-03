@@ -40,7 +40,7 @@ Reference format, decoded from the downloaded tarball
 
 Current repo gap: README has no visual story and no per-subsystem diagram set;
 `docs/submission/` holds 7 thin files (17–167 lines) with no image proofs; the
-60 canonical LLM evidence rows sit in `docs/phase2/evidence/llm/` under
+60 canonical LLM evidence rows sit in `docs/platform/evidence/llm/` under
 machine-generated slug filenames that are reviewer-hostile; ~100 real
 screenshots are scattered across 5 directories with no Image notes.
 
@@ -60,13 +60,13 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
   Mermaid/DOT sources tracked so they stay regenerable.
 - **Traceable evidence provenance.** Every narrative image carries an Image note
   *and* a manifest row mapping it back to the canonical
-  `docs/phase2/evidence/**` row or the capture command that produced it.
+  `docs/platform/evidence/**` row or the capture command that produced it.
 
 ## Non-Goals
 
 - No copying of RecSys-MLops prose, diagrams, or ML-track content. Format only.
-- No change to Phase 1 pipeline behavior, DAGs, or data contracts.
-- No relocation of `docs/phase2/evidence/**`. The audit gate hard-pins that
+- No change to platform data contracts.
+- No relocation of `docs/platform/evidence/**`. The audit gate hard-pins that
   prefix (`scripts/audit_phase2_evidence.py:319`, `:655`, `:790`); moving those
   files breaks the submission gate. The new narrative layer links *into* them.
 - No new AWS/K8s code in this repo (`AGENTS.md` → Don't Touch).
@@ -76,7 +76,7 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
 
 | Decision | Choice | Consequence |
 |---|---|---|
-| Live capture | GKE evidence plane is alive | Phase 2 re-captures Argo/kagent/Grafana/Jaeger/gateway fresh instead of reusing stale shots |
+| Live capture | GKE evidence plane is alive | platform .e-captures Argo/kagent/Grafana/Jaeger/gateway fresh instead of reusing stale shots |
 | Image layout | Hybrid | Narrative images live in `docs/pngs/`; canonical evidence images stay at their audit-pinned paths |
 | Docs scope | Full + ML deferred index | Both rubric tabs get narrative doc sets; ML rows get an explicit deferred table |
 
@@ -88,7 +88,7 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
 | 2 | Every rubric area has one narrative doc with numbered steps, quoted real code, repo-relative source links, and Image proof + Image note per screenshot | P1 |
 | 3 | Every subsystem has a small architecture diagram; the system has one composed large diagram; all sources are tracked and regenerable | P1 |
 | 4 | Screenshots show the actual tool UI clearly, are descriptively named, and each states what it proves and what it does not | P1 |
-| 5 | The whole docs tree passes `check_documentation.py` (no broken links, no doc over 800 lines) and the Phase 2 evidence audit stays green | P1 |
+| 5 | The whole docs tree passes `check_documentation.py` (no broken links, no doc over 800 lines) and the platform .vidence audit stays green | P1 |
 | 6 | ML-track rows are presented as an explicit deferred/design-only table, never as unexplained gaps | P2 |
 
 ## Phases
@@ -108,7 +108,7 @@ Dependencies: 1 blocks all. 2 and 3 run in parallel after 1. 4 and 5 need 2+3.
 
 ## Key Invariants
 
-- `docs/phase2/evidence/**` paths are canonical and immutable. Audit gate pins
+- `docs/platform/evidence/**` paths are canonical and immutable. Audit gate pins
   the prefix; narrative docs link in, never out.
 - Generated artifacts (`docs/evidence/**`, `outputs/**`, `warehouse.db`) are
   never hand-edited. Regenerate via the producing script.
@@ -132,7 +132,7 @@ Dependencies: 1 blocks all. 2 and 3 run in parallel after 1. 4 and 5 need 2+3.
       adapted to LLM track, with zero RecSys content copied
 - [ ] `docs/submission/rubric-final-coursework-(final-llm)/` covers all 21 LLM
       rubric areas; no area reads "Work in progress"
-- [ ] `docs/submission/rubric-(mini-coursework)/` covers all 9 Phase 1 areas
+- [ ] `docs/submission/rubric-(mini-coursework)/` covers all 9 platform .reas
 - [ ] `docs/submission/ml-track-deferred.md` lists all 19 ML areas with an
       explicit deferred/design-only reason each
 - [ ] Seven small subsystem diagrams + one composed system diagram exist, with

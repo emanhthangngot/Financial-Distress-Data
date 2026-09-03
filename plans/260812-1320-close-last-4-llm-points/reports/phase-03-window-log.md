@@ -14,8 +14,8 @@ failure series.
 
 The exact machine-readable evidence is in:
 
-- `docs/phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md`
-- `docs/phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md`
+- `docs/platform/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md`
+- `docs/platform/evidence/llm/LLM-observability-agent-tool-call-metrics.md`
 
 ## Live checks
 

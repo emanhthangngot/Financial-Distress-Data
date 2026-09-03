@@ -102,7 +102,7 @@ def build_readiness_report(
         "services": services,
         "quality_gates": quality_gates,
         "truthfulness_note": (
-            "Use this report to claim Phase 1 local runtime evidence only; "
+            "Use this report to claim platform .ocal runtime evidence only; "
             "live ingestion, enterprise lineage, managed security, cloud deployment, "
             "and scale claims remain out of scope."
         ),

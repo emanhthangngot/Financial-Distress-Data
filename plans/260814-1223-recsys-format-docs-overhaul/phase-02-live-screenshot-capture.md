@@ -47,7 +47,7 @@ GKE evidence plane (live now — capture first, it is the perishable one)
   Jaeger         discoverable services, one end-to-end trace
   Ingress/NGINX  routing, auth challenge, hidden-service proof
 
-Local Phase 1 stack
+Local platform .tack
   Airflow        DAG graph + task tree + a successful run per DAG
   Kafka          topic offsets
   MinIO          Bronze/Silver/Gold object paths
@@ -70,7 +70,7 @@ Product plane
 - Modify: `docs/pngs/manifest.csv` (one row per image)
 - Modify: `docs/ui-screenshot-runbook.md` — record the exact reproduction steps
   for this campaign
-- Read only: `docs/phase2/evidence-contract.md` (what counts as proof)
+- Read only: `docs/platform/evidence-contract.md` (what counts as proof)
 
 ## Implementation Steps
 
@@ -79,15 +79,15 @@ Product plane
    `docs/ui-screenshot-runbook.md` as a checklist before capturing anything, so
    the cluster is visited once, not five times.
 2. Cross-check the inventory against the ~100 existing screenshots
-   (`docs/evidence/screenshots/`, `docs/phase2/evidence/product/`,
+   (`docs/evidence/screenshots/`, `docs/platform/evidence/product/`,
    `docs/evidence/reviewer_screenshots/`,
-   `docs/phase2/evidence/llm/validation-verification/screenshots/`). Mark each
+   `docs/platform/evidence/llm/validation-verification/screenshots/`). Mark each
    required capture as `re-capture` or `reuse-copy`.
 3. **Capture the GKE plane first** — it is the perishable resource. Work down
    the checklist namespace by namespace. For each capture, make the proof
    self-evident in-frame: resource name, status column, version/digest, and the
    command that produced it.
-4. Capture the local Phase 1 stack: bring up the Docker stack, run the DAGs, and
+4. Capture the local platform .tack: bring up the Docker stack, run the DAGs, and
    capture Airflow/Kafka/MinIO/DuckDB/Flink/Spark. Follow `AGENTS.md` — Flink
    needs `--profile flink` and `ENABLE_FLINK=1`.
 5. Capture the product plane via `scripts/capture_ui_screenshots.py`, extended

@@ -1,8 +1,8 @@
 schema_version: 1
 
-# Phase 2 drift scenarios. Applied as a pure, seeded post-transform over
+# platform .rift scenarios. Applied as a pure, seeded post-transform over
 # src.generator output rows — src/generator/ itself is never modified
-# (AGENTS.md: Phase 1 is read-only). See src/drift/generator.py.
+# (AGENTS.md: platform .s read-only). See src/drift/generator.py.
 #
 # market_stress.target_metric is close_price (not volatility_30d): the
 # generator's offline output is a single snapshot per ticker with no

@@ -1,1 +1,1 @@
-"""Tests for bounded Phase 2 agents."""
+"""Tests for bounded platform .gents."""

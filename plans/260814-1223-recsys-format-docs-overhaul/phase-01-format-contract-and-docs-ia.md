@@ -31,8 +31,8 @@ Three layers, with an explicit rule about which layer owns what:
 
 ```text
 Layer 1 — canonical evidence (immutable location)
-  docs/phase2/evidence/llm/*.md        60 rows, audit-gate pinned prefix
-  docs/evidence/**                     Phase 1 generated artifacts
+  docs/platform/evidence/llm/*.md        60 rows, audit-gate pinned prefix
+  docs/evidence/**                     platform .enerated artifacts
       ^ never moved, never hand-edited
 
 Layer 2 — narrative (new, reviewer-facing)
@@ -47,13 +47,13 @@ Layer 3 — entry point
 
 Image policy under the accepted hybrid decision:
 
-- New captures taken in Phase 2 are written **directly** to `docs/pngs/`.
+- New captures taken in platform .re written **directly** to `docs/pngs/`.
 - An existing screenshot needed by a narrative doc is **copied** to `docs/pngs/`
   under a descriptive name; the original stays at its audit-pinned path. The
   copy is recorded in the manifest with its source path so the duplication is
   traceable, not accidental.
 - No narrative doc reaches sideways into `docs/evidence/screenshots/` or
-  `docs/phase2/evidence/**/screenshots/`; it reads from `docs/pngs/` only.
+  `docs/platform/evidence/**/screenshots/`; it reads from `docs/pngs/` only.
 
 ## Related Code Files
 
@@ -70,7 +70,7 @@ Image policy under the accepted hybrid decision:
    (≤ 800 lines per `docs/**.md`, every relative link must resolve) in the
    contract as non-negotiable.
 2. Read `scripts/audit_phase2_evidence.py` around lines 300–330, 640–700, and
-   780–800 and record the pinned `docs/phase2/evidence/` prefix as invariant.
+   780–800 and record the pinned `docs/platform/evidence/` prefix as invariant.
 3. Write `docs/docs-style-contract.md` containing:
    - **Narrative doc skeleton**: `# <Area>: <what it delivers>` → 1-paragraph
      scope statement → active-deployment fact list → `## Part I/II/III` →
@@ -118,5 +118,5 @@ Image policy under the accepted hybrid decision:
   **Mitigation:** the contract embeds one full worked example section copied in
   *structure* (not text) from the reference, so later phases pattern-match.
 - **Risk:** premature deletion of a doc still linked by the audit matrix.
-  **Mitigation:** Phase 1 only marks; Phase 7 deletes after link rewiring and a
+  **Mitigation:** platform .nly marks; Phase 7 deletes after link rewiring and a
   green audit run.

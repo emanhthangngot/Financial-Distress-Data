@@ -32,14 +32,14 @@ With `--track LLM`, the audit reports only LLM rows (60 design_only errors) and 
 ### AC2: Without `--track`, matrix checks all 117 rows
 ```
 Command: python scripts/audit_phase2_evidence.py --matrix-only --strict
-Result: ✅ Phase 2 rubric matrix is complete and consistent.
+Result: ✅ platform .ubric matrix is complete and consistent.
 Status: ✅ PASS
 ```
 The `--matrix-only` gate validates all 117 rows (57 ML + 60 LLM), unaffected by `--track` flag.
 
 ### AC3: Exact rubric_id selects one test, exits 0
 ```
-Command: pytest tests/phase2/requirements/test_llm_ac_01_inference.py -k 'LLM-a-llm-inference-platform--a-custom-model'
+Command: pytest tests/platform/requirements/test_llm_ac_01_inference.py -k 'LLM-a-llm-inference-platform--a-custom-model'
 Result: 1 skipped, 2 deselected (exact match)
 Exit code: 0
 Status: ✅ PASS
@@ -81,14 +81,14 @@ Status: ✅ PASS (bug fixed)
 - **black:** ✅ All files properly formatted (213 files unchanged)
 
 ### Test Coverage
-- `tests/phase2/test_rubric_matrix.py`: All 205 tests pass (27% of run)
-- `tests/phase2/requirements/*.py`: 60 parametrized tests (all skip as expected)
+- `tests/platform/test_rubric_matrix.py`: All 205 tests pass (27% of run)
+- `tests/platform/requirements/*.py`: 60 parametrized tests (all skip as expected)
 - Full suite: 516 passed, 60 skipped
 
 ### No Regressions
 - Full test suite run: **516 passed, 60 skipped** (expected from prior runs)
 - No new failures introduced
-- All Phase 1 smoke tests remain passing
+- All platform .moke tests remain passing
 
 ---
 
@@ -111,7 +111,7 @@ Status: ✅ PASS (bug fixed)
 ## Verify Commands Executed
 
 ```bash
-# Rubric & Phase 2 focused tests
+# Rubric & platform .ocused tests
 .venv/bin/python -m pytest tests -k "rubric_matrix or phase2" -q
 → 205 passed, 60 skipped
 
@@ -121,7 +121,7 @@ Status: ✅ PASS (bug fixed)
 
 # Audit script validation
 .venv/bin/python scripts/audit_phase2_evidence.py --matrix-only --strict
-→ ✅ Phase 2 rubric matrix is complete and consistent.
+→ ✅ platform .ubric matrix is complete and consistent.
 
 # Audit script with track filter
 .venv/bin/python scripts/audit_phase2_evidence.py --require-executed --track LLM
@@ -149,11 +149,11 @@ Status: ✅ PASS (bug fixed)
 
 ## Recommendations
 
-1. **Monitor --track flag adoption:** The repeatable `--track {ML,LLM}` flag is now available for scoped audits. Phase 2 teams can use this to avoid unrelated track errors during partial execution. Documented in script docstring (lines 33-36).
+1. **Monitor --track flag adoption:** The repeatable `--track {ML,LLM}` flag is now available for scoped audits. platform .eams can use this to avoid unrelated track errors during partial execution. Documented in script docstring (lines 33-36).
 
 2. **Test generator versioning:** Generated test files now rely on black library formatting in check mode. Ensure black dependency is pinned in requirements or pyproject.toml for reproducibility across environments.
 
-3. **Evidence readiness:** All 60 LLM requirement tests skip at day-1 because evidence_type is `design_only`. Phase 2 will populate evidence files as work completes. The audit script correctly gates on `--require-executed` at phase-08.
+3. **Evidence readiness:** All 60 LLM requirement tests skip at day-1 because evidence_type is `design_only`. platform .ill populate evidence files as work completes. The audit script correctly gates on `--require-executed` at phase-08.
 
 ---
 

@@ -43,7 +43,7 @@ infra/
   stream-feature-online/Dockerfile
 ```
 
-Phase thuộc về `docs/phase2/rubric-matrix.csv` và `configs/phase2-deployables.yaml`
+Phase thuộc về `docs/platform/rubric-matrix.csv` và `configs/phase2-deployables.yaml`
 (plan phase 3 sẽ tạo) — đó là nơi ghi cái gì thuộc phase nào, **metadata chứ không phải cây thư mục**.
 
 Việc phải làm kèm: sửa `dockerfile:` path trong 3 workflow caller
@@ -137,7 +137,7 @@ phải cập nhật manifest, mà `docs/evidence/` **protected**. → Hoãn tớ
 `quality`, `catalog`, `metadata`, `streaming`, `generator`). 12 cái còn lại —
 `agents`, `drift`, `evidence`, `governance`, `io`, `jobs`, `lakehouse`, `llm`,
 `ml`, `observability`, `orchestration`, `security` — nhìn cây thư mục **không
-biết cái nào Phase 1 cái nào Phase 2**.
+biết cái nào platform .ái nào Phase 2**.
 
 Nguồn sự thật duy nhất là hằng số `PHASE1_PROTECTED` trong một file Python.
 Đó là nơi rất dễ bị bỏ sót khi đọc.
@@ -157,19 +157,19 @@ phase-ownership cho cả 19 package, dẫn thẳng tới `audit_phase2_evidence.
 `src/lakehouse/compaction.py` là **code Phase 1**, không phải Phase 2. Bằng chứng:
 
 - docstring tự khai: *"the spine for W19 (lakehouse compaction + DW indexing)"*
-- được `dags/06_pyspark_silver_to_gold.py` và `dags/dp1_bronze_ingest.py` gọi — cả hai đều là DAG Phase 1 protected
+- được `dags/06_pyspark_silver_to_gold.py` và `dags/dp1_bronze_ingest.py` gọi — cả hai đều là DAG platform protected
 - `scripts/demo_lakehouse_compaction.py` sinh ra `docs/evidence/lakehouse_compaction_benchmark.json`, tức bằng chứng rubric R25/R26 đã chấm
 - có test riêng `tests/test_compaction.py`, `tests/test_dag_06_compaction.py`
 
 Nhưng `src/lakehouse/` **không** nằm trong `PHASE1_PROTECTED`.
 
-Hệ quả: một thay đổi Phase 2 vào `src/lakehouse/` có thể phá hành vi Phase 1 và
+Hệ quả: một thay đổi platform .ào `src/lakehouse/` có thể phá hành vi platform .à
 làm sai lệch bằng chứng R25/R26 đã ghi — **mà gate không bắt được**. Cây thư mục
 và danh sách bảo vệ đang lệch nhau ở đúng chỗ nguy hiểm nhất.
 
 ### Rà đủ 12 package — phương pháp: truy vết importer
 
-Package nào được DAG Phase 1 protected hoặc module `src/` đã protected import thì
+Package nào được DAG platform protected import thì
 package đó chứa hành vi Phase 1, bất kể tên gọi.
 
 | Package | Chủ | Bằng chứng |
@@ -181,17 +181,17 @@ package đó chứa hành vi Phase 1, bất kể tên gọi.
 | `src/orchestration/` | **Phase 1** | `airflow_tasks.py`; 3 DAG P1 |
 | `src/io/` | **Dùng chung** | P1: `dags/dp1_bronze_ingest`, `dags/stage1_real_e2e_pipeline`, `src/generator/storage.py`, `src/jobs/*`. P2: 3 module Feast |
 | `src/governance/` | **Dùng chung** | P1: `datahub_emitter/graphql/model` chạy `sync_datahub_governance.py` (lineage R33-R38). P2: `phase2_lineage.py` |
-| `src/agents/` `src/drift/` `src/llm/` `src/ml/` `src/observability/` | Phase 2 | chỉ P2 import |
+| `src/agents/` `src/drift/` `src/llm/` `src/ml/` `src/observability/` | platform . chỉ P2 import |
 
 **Sáu** package phải bảo vệ, không phải bốn như ước đoán ban đầu — thêm
 `src/security/` và `src/evidence/`.
 
 `src/security/` là ca sắc nhất: **code đã protected phụ thuộc code chưa
-protected**, nên gate có thể xanh trong khi hành vi Phase 1 đổi bên dưới.
+protected**, nên gate có thể xanh trong khi hành vi platform .ổi bên dưới.
 
-Hai package dùng chung **không** bảo vệ cả gói (sẽ chặn việc Phase 2 hợp lệ) mà
+Hai package dùng chung **không** bảo vệ cả gói (sẽ chặn việc platform .ợp lệ) mà
 bảo vệ ở mức file qua `PHASE1_PROTECTED_EXCEPTIONS` — đúng cơ chế đang dùng cho
-`src/streaming/flink/jobs/` và `sql/init_ml_metadata.sql`:
+`src/streaming/flink/jobs/` và `sql/init_ml.sql`:
 
 - `src/io/` protected, trừ helper phục vụ Feast
 - `src/governance/` protected, trừ `phase2_lineage.py`
@@ -203,8 +203,8 @@ lọt lưới từ trước, và đó là một phát hiện chứ không phải
 ## Hai lỗi trong plan mới `260813-1846-production-hardening-overlay`
 
 **H1. Phase 7 ghi "Create `src/lakehouse/`" — sai hai lần.** Thứ nhất nó đã tồn
-tại. Thứ hai, theo H0 nó là code Phase 1 — nên phase 7 **không được** thêm
-`catalog.py`/`snapshots.py` vào đó. Iceberg Phase 2 phải nằm ở package riêng
+tại. Thứ hai, theo H0 nó là code platform . nên phase 7 **không được** thêm
+`catalog.py`/`snapshots.py` vào đó. Iceberg platform .hải nằm ở package riêng
 (`src/iceberg/`), giữ đúng nguyên tắc additive của cả plan.
 
 **H2. Phase 3 và phase 8 giả định `infra/phase2/...` path** khi khai
@@ -255,18 +255,18 @@ Ghi ra để khỏi bị "sửa" nhầm:
 
 | Cột | Trỏ tới | Số dòng |
 |---|---|---:|
-| `evidence_path` | `docs/phase2/...` | **117/117** |
-| `test` | `tests/phase2/...` | **117/117** |
-| `validation_command` | `tests/phase2/...` | **117/117** |
+| `evidence_path` | `docs/platform/...` | **117/117** |
+| `test` | `tests/platform/...` | **117/117** |
+| `validation_command` | `tests/platform/...` | **117/117** |
 | `artifact_path` | `.github/workflows/phase2-*.yaml` | 13 |
 | `artifact_path` | `tests/phase2`, `dags/phase2`, `docs/phase2` | 14 |
 | — | `infra/phase2` | **0** |
 
 Cộng hai hành vi hard-code trong gate: carve-out `dags/phase2/` ở
 `audit_phase2_evidence.py:411`, và luật evidence path không được rời
-`docs/phase2/evidence/`.
+`docs/platform/evidence/`.
 
-Ba tầng + luận điểm "không gộp được `docs/phase2/evidence/`" nằm đầy đủ trong
+Ba tầng + luận điểm "không gộp được `docs/platform/evidence/`" nằm đầy đủ trong
 `plans/260813-1846-production-hardening-overlay/phase-01-start.md`.
 
 ## Quyết định đã chốt (2026-08-13)
@@ -275,10 +275,10 @@ Ba tầng + luận điểm "không gộp được `docs/phase2/evidence/`" nằm
    nhật 13 dòng `artifact_path`. `ci.yml` **không** đổi cho tới khi kiểm
    branch-protection: đổi tên workflow là đổi tên status check, và nếu nó đang là
    required check thì yêu cầu đó âm thầm hết hiệu lực.
-2. **`dags/phase2/`, `tests/phase2/`, `docs/phase2/` — KHÔNG**, dời sang Tier 3
+2. **`dags/phase2/`, `tests/platform/`, `docs/platform/` — KHÔNG**, dời sang Tier 3
    sau khi nộp.
 3. **Requirements — GỘP, không đổi tên.** Đã đo trước khi chốt: 10 package trùng
-   đều **cùng lower bound**, Phase 2 chỉ thêm upper bound → không xung đột. Kết
+   đều **cùng lower bound**, platform .hỉ thêm upper bound → không xung đột. Kết
    quả: một `requirements.txt`, 26 package, pin dạng có chặn trên. Chỉ 3 chỗ
    tham chiếu (`ci.yml:24`, `phase2-ci.yaml:65,88`).
 

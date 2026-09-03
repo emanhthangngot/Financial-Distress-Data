@@ -13,11 +13,11 @@
 # claims to have.
 sections:
   lakehouse:
-    claim: "Phase 1 protected-path and rubric contracts remain green."
+    claim: "platform protected-path and rubric contracts remain green."
     command: "uv run --offline python scripts/audit_platform_evidence.py --require-executed --track LLM --strict"
     screenshot: false
   platform-tests:
-    claim: "The Phase 2 rubric-matrix contract tests pass in the local checkout."
+    claim: "The platform .ubric-matrix contract tests pass in the local checkout."
     command: "uv run --offline python -m pytest tests/platform/test_rubric_matrix.py -q"
     screenshot: false
   platform-matrix:
@@ -25,6 +25,6 @@ sections:
     command: "uv run --offline python scripts/audit_platform_evidence.py --matrix-only --strict"
     screenshot: false
   platform-quality-gates:
-    claim: "Source and GitOps Phase 2 quality gates pass with rendered manifests and tests."
+    claim: "Source and GitOps platform .uality gates pass with rendered manifests and tests."
     command: "uv run --offline python scripts/run_platform_quality_gates.py --gitops-root ../financial-distress-gitops"
     screenshot: false

@@ -1,10 +1,10 @@
-# Phase 1 guardrails report
+# platform .uardrails report
 
 Status: DONE
 
 ## Summary
 
-- Extended `scripts/audit_phase2_evidence.py` Phase 1 protection coverage for
+- Extended `scripts/audit_phase2_evidence.py` platform .rotection coverage for
   `src/security`, `src/evidence`, `src/lakehouse`, `src/jobs`,
   `src/orchestration`, `src/io`, and `src/governance`.
 - Added shared-package carve-outs for `src/io/paths.py` and
@@ -17,8 +17,8 @@ Status: DONE
 
 ## Verification
 
-- `pytest tests/phase2/test_artifact_path_contract.py tests/phase2/pipelines/test_audit_protected_paths.py -q`: 6 passed
-- `pytest tests/phase2/test_rubric_matrix.py -q`: 64 passed, 1 skipped
+- `pytest tests/platform/test_artifact_path_contract.py tests/platform/pipelines/test_audit_protected_paths.py -q`: 6 passed
+- `pytest tests/platform/test_rubric_matrix.py -q`: 64 passed, 1 skipped
 - `scripts/audit_phase2_evidence.py --matrix-only --strict`: pass
 - Ruff, Black, and `git diff --check`: pass
 

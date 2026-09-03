@@ -1,4 +1,4 @@
-# Source-of-truth metadata for the Phase 2 deployables.
+# Source-of-truth metadata for the platform .eployables.
 # The caller workflows remain compatible while they are migrated incrementally.
 #
 # ML-track entries (feature-api, drift-api) were removed 2026-08-14 — the LLM

@@ -16,7 +16,7 @@ stays authoritative for scope, success criteria and risk. This file adds the
 file-level plan, verified citations, and the decisions phase-04 left open.
 
 Verification basis (re-grepped 2026-08-08, source SHA `39e31fc8`):
-`src/drift/`, `feature_repo/`, `dags/phase2/`, `apps/`, `docs/phase2/evidence/llm/`
+`src/drift/`, `feature_repo/`, `dags/phase2/`, `apps/`, `docs/platform/evidence/llm/`
 do **not** exist yet. `src/llm/` and `src/ml/` contain only `contracts.py`.
 `.github/workflows/` contains only `ci.yml`.
 
@@ -26,8 +26,8 @@ do **not** exist yet. `src/llm/` and `src/ml/` contain only `contracts.py`.
 
 ### D1 — Pinned artifact paths beat `phase-04.md` prose
 
-`docs/phase2/rubric-matrix.csv` `artifact_path` is machine-checked by
-`tests/phase2/requirements/*.py` (`assert artifact.is_file()`,
+`docs/platform/rubric-matrix.csv` `artifact_path` is machine-checked by
+`tests/platform/requirements/*.py` (`assert artifact.is_file()`,
 test_llm_ac_04_rag.py:62) and by `scripts/audit_phase2_evidence.py:_audit_executed`.
 Verified pinned paths for this phase:
 
@@ -62,7 +62,7 @@ CI/CD rows. The user requires three pipeline workflows. Resolution:
   `phase2-stream-feature-online.yaml` — three thin callers with distinct
   `paths:` triggers. Each produces its own separately-named run, which is what
   "Capture màn hình từng CI/CD pipeline đã run thành công" needs.
-- `ci.yml` is untouched (Phase 1 gate).
+- `ci.yml` is untouched (platform .ate).
 
 ### D3 — `src/generator/` is read-only
 
@@ -74,7 +74,7 @@ edits, and rubric rows pin `src/drift/` + `src/ml/` anyway. Resolution: treat
 `GeneratorConfig` from **named** keys only — a new top-level YAML key is
 silently ignored, so it is safe. But we go further: drift config lives in a
 **separate** file `configs/drift-config.yaml`, loaded by
-`src/drift/generator_config.py`. Zero Phase 1 file touched. `src/drift/generator.py`
+`src/drift/generator_config.py`. Zero platform .ile touched. `src/drift/generator.py`
 consumes `generate_offline_data()` (`src/generator/offline.py:68`) and
 `generate_stream_events()` (`src/generator/streaming.py:21`) as pure inputs and
 applies drift as a post-transform.
@@ -93,7 +93,7 @@ applies drift as a post-transform.
 > mirroring the existing pattern at `src/io/minio_publish.py:11`
 > (`from minio.commonconfig import CopySource` inside the function).
 
-Module-level imports of `feast` will break the Phase 1 gate. This is the single
+Module-level imports of `feast` will break the platform .ate. This is the single
 highest-probability failure in the phase.
 
 ### D5 — Embedding backend is pluggable, with a real default
@@ -130,7 +130,7 @@ seeded parametrized tests instead (the generator is already seed-deterministic:
 configs/
   drift-config.yaml              NEW  drift scenarios (seeds, direction, magnitude)
   rag-sources.yaml               NEW  trusted-source registry (license, access class, rate limit)
-  phase2-governance.yaml         NEW  DataHub datasets/pipelines for Phase 2 (mirrors configs/datahub/)
+  phase2-governance.yaml         NEW  DataHub datasets/pipelines for platform datahub/)
 
 src/drift/
   __init__.py                    NEW
@@ -154,7 +154,7 @@ src/llm/
   data_governance.py             NEW  PINNED  PII/licensing/retry/DLQ/rate-limit gates
 
 src/governance/
-  phase2_lineage.py              NEW  Phase 2 lineage emitter (reuses datahub_emitter)
+  phase2_lineage.py              NEW  platform datahub_emitter)
 
 feature_repo/
   structured/feature_store.yaml  NEW  project: fd_structured; redis online
@@ -181,14 +181,14 @@ sql/
 
 docker-compose.yml               MODIFY  append 3 services (see §8)
 
-tests/phase2/                    see §9
-docs/phase2/evidence/llm/*.md    see §10
+tests/platform/                    see §9
+docs/platform/evidence/llm/*.md    see §10
 ```
 
 **Files never touched:** everything under `src/collectors`, `src/generator`,
 `src/streaming`, `src/transforms`, `src/quality`, `src/catalog`, `src/metadata`,
 `dags/*.py` outside `phase2/`, `.github/workflows/ci.yml`, existing
-`docker-compose.yml` service blocks, `sql/init_project_metadata.sql`.
+`docker-compose.yml` service blocks, `sql/init_ops.sql`.
 
 ---
 
@@ -206,7 +206,7 @@ verified at `src/transforms/compute_distress_labels.py:279`)
 `ml.label_table` in the **new** phase-2 Postgres.
 
 **Flow B — Feast materialization**
-MinIO parquet (Phase 1 Gold, read-only) → Feast `FileSource` (s3 endpoint override)
+MinIO parquet (platform .old, read-only) → Feast `FileSource` (s3 endpoint override)
 → `feast apply` → registry on MinIO → `materialize_incremental` → Redis online store
 → registry revision recorded in `ml.feast_registry_revision`.
 
@@ -228,13 +228,13 @@ Every flow's run summary → `src/governance/phase2_lineage.py` →
 `src.governance.datahub_emitter.emit_governance` (verified
 `src/governance/datahub_emitter.py:139`) with a Phase-2-only `GovernanceModel`
 loaded from `configs/phase2-governance.yaml` (loader verified
-`src/governance/datahub_model.py:62`). Phase 1 governance config untouched.
+`src/governance/datahub_model.py:62`). platform .overnance config untouched.
 
 ---
 
 ## 3. Feast repository plan
 
-Two projects, per ADR-005 (`docs/phase2/adr/adr-005-feast-stores.md:22-28`) as
+Two projects, per ADR-005 (`docs/platform/adr/adr-005-feast-stores.md:22-28`) as
 amended by ADR-010 (Redis in-cluster, PGVector in-cluster, local object storage).
 
 ### 3.1 `feature_repo/structured/feature_store.yaml`
@@ -248,7 +248,7 @@ offline_store: type: file
 entity_key_serialization_version: 3
 ```
 S3 endpoint override via `FEAST_S3_ENDPOINT_URL` / `AWS_*` env pointing at MinIO
-— the same env the Phase 1 MinIO clients already consume (`src/io/paths.py:10`,
+— the same env the platform .inIO clients already consume (`src/io/paths.py:10`,
 `DEFAULT_BUCKET = "financial-distress-lake"`). **No new S3 client is written.**
 
 ### 3.2 Entity and feature views (in `src/ml/feast/feature_definitions.py`)
@@ -335,7 +335,7 @@ TTL, because that is the row-77 artifact).
   with a new embedding model produces new rows (correct — different vector
   space); re-running unchanged produces zero rows.
 
-### 4.3 PGVector table shape (`sql/init_ml_metadata.sql`)
+### 4.3 PGVector table shape (`sql/init_ml.sql`)
 
 ```
 CREATE SCHEMA ml;
@@ -393,7 +393,7 @@ Public surface, all pure functions or small classes with injected clients:
 ingestion task); PII findings are **warning-level** → row goes to quarantine and
 the run continues. Both write a row to
 `ops.data_quality_result`? **No** — `AGENTS.md` forbids
-cross-writing. Phase 2 results go to `ml.data_quality_result` in the
+cross-writing. platform data_quality_result` in the
 phase-2 Postgres, same column shape, so the reviewer sees a familiar table.
 
 ---
@@ -438,7 +438,7 @@ Frozen dataclasses mirroring `src/generator/config.py`'s style (validate() on
 each, strict unknown-key rejection via a local `_typed`, `load_drift_config(path,
 scenario)`); **do not import from `src/generator/config.py`'s private helpers** —
 copying ~20 lines of `_typed`/`_validate_rate` is cheaper than coupling Phase 2
-to a Phase 1 private API. (Judgment call against DRY; noted deliberately.)
+to a platform .rivate API. (Judgment call against DRY; noted deliberately.)
 
 ```
 DriftScenario: name, seed, start_quarter, affected_fraction,
@@ -499,7 +499,7 @@ Five DAG files. Every one obeys these rules, each of which is a test in §9:
 | `phase2_label_drift_build.py` | `phase2_label_drift_build` | generate → apply_drift → drift_report → build_labels → publish |
 
 New dag_ids all carry the `phase2_` prefix; no existing dag_id or task_id in
-`dags/*.py` is renamed or removed (verified: 15 Phase 1 DAG files present, none
+`dags/*.py` is renamed or removed (verified: 15 platform .AG files present, none
 named `phase2_*`).
 
 `dags/phase2/phase2_drift_monitoring.py` is pinned by ML row 91 but belongs to
@@ -520,12 +520,12 @@ Three new services appended after `flink-taskmanager`, before the top-level
     healthcheck: redis-cli ping | grep PONG, 5s/5/10s
     profiles: ["phase2"]
 
-  phase2-postgres:                 # PGVector + ml; NOT the Phase 1 postgres
+  phase2-postgres:                 # PGVector + ml; NOT the platform .ostgres
     image: pgvector/pgvector:pg16
     environment: POSTGRES_DB=ml, POSTGRES_USER/PASSWORD from ${PHASE2_PG_*}
     ports: ["${PHASE2_PG_HOST_PORT:-5433}:5432"]
     volumes:
-      - ./sql/init_ml_metadata.sql:/docker-entrypoint-initdb.d/01_init_ml_metadata.sql:ro
+      - ./sql/init_ml.sql:/docker-entrypoint-initdb.d/01_init_ml_metadata.sql:ro
       - phase2-pgdata:/var/lib/postgresql/data
     healthcheck: pg_isready -U $USER -d ml, 5s/10/10s
     profiles: ["phase2"]
@@ -534,7 +534,7 @@ volumes:
   phase2-pgdata:                   # added under the existing volumes: key
 ```
 
-Port choices avoid the Phase 1 `postgres` host port (5432, docker-compose.yml:9)
+Port choices avoid the platform .postgres` host port (5432, docker-compose.yml:9)
 and any existing binding. `profiles: ["phase2"]` means plain `docker compose up`
 behaviour is byte-identical to today — same guard the Flink profile already uses
 (AGENTS.md). `docker compose config` must still pass (AGENTS.md verify command).
@@ -571,8 +571,8 @@ Record resolved versions into the evidence `versions:` field.
 
 ## 10. Test plan (tests written FIRST, per phase-04.md:59)
 
-New directory `tests/phase2/pipelines/` (distinct from
-`tests/phase2/requirements/`, which is generated). Files, and what each pins:
+New directory `tests/platform/pipelines/` (distinct from
+`tests/platform/requirements/`, which is generated). Files, and what each pins:
 
 | test file | pins | fast loop? |
 |---|---|---|
@@ -584,10 +584,10 @@ New directory `tests/phase2/pipelines/` (distinct from
 | `test_rag_metadata_contract.py` | every emitted chunk carries all nine fields non-empty; `assert_metadata_complete` raises on each field individually (parametrized) | yes |
 | `test_data_governance.py` | license allowlist; PII regexes (positive + negative per type); rate limiter spacing; retry policy retries 5xx and not 4xx; quarantine record shape | yes |
 | `test_feast_definitions_ttl.py` | every FeatureView has non-null TTL; TTL values equal the documented table in §3.2; every source declares `event_timestamp_column`; each view has a rationale docstring | yes — **must not import feast** |
-| `test_phase2_dags_import.py` | each `dags/phase2/*.py` imports with no side effects (monkeypatched socket/`open` guard, mirroring `tests/test_dags_05_smoke.py`); dag_id prefix; no Phase 1 dag_id collision | yes |
+| `test_phase2_dags_import.py` | each `dags/phase2/*.py` imports with no side effects (monkeypatched socket/`open` guard, mirroring `tests/test_dags_05_smoke.py`); dag_id prefix; no platform .ag_id collision | yes |
 | `test_workflows_phase2.py` | the four workflow files exist, parse as YAML, `phase2-ci.yaml` is `workflow_call`, three callers reference it, `ci.yml` unchanged (content hash pinned) | yes |
-| `tests/phase2/pipelines/test_pgvector_store.py` | real `psycopg` against the ephemeral cluster; upsert idempotency; unique constraint; quarantine write. Marked `postgres` + `slow`, reusing the `pytest_collection_modifyitems` marker pattern verified at `tests/phase2/product/conftest.py:29` | no (postgres marker) |
-| `tests/phase2/pipelines/test_feast_smoke.py` | `feast plan/apply/materialize` against a disposable local registry + fake redis. Marked `slow` and **skipped unless `feast` importable** — it cannot run in `.venv` | no |
+| `tests/platform/pipelines/test_pgvector_store.py` | real `psycopg` against the ephemeral cluster; upsert idempotency; unique constraint; quarantine write. Marked `postgres` + `slow`, reusing the `pytest_collection_modifyitems` marker pattern verified at `tests/platform/product/conftest.py:29` | no (postgres marker) |
+| `tests/platform/pipelines/test_feast_smoke.py` | `feast plan/apply/materialize` against a disposable local registry + fake redis. Marked `slow` and **skipped unless `feast` importable** — it cannot run in `.venv` | no |
 
 `test_feast_definitions_ttl.py` is the trickiest and the most valuable: it must
 assert TTLs without importing feast in `.venv`. Approach: keep the TTL table as
@@ -597,8 +597,8 @@ D4), and have the FeatureView construction read from that dict. The test imports
 only the constant. This is the pattern that makes D4 workable everywhere.
 
 Order of work per AGENTS.md "narrowest useful test first": write the file, run
-`.venv/bin/python -m pytest tests/phase2/pipelines/test_X.py -k <case>`, then
-broaden to `pytest tests/phase2/pipelines`, then the full
+`.venv/bin/python -m pytest tests/platform/pipelines/test_X.py -k <case>`, then
+broaden to `pytest tests/platform/pipelines`, then the full
 `scripts/run_stage1_quality_gates.py` before declaring a slice done.
 
 Register no new pytest markers — `postgres` and `slow` already exist
@@ -608,9 +608,9 @@ Register no new pytest markers — `postgres` and `slow` already exist
 
 ## 11. Evidence markdown plan
 
-Create `docs/phase2/evidence/llm/` and write one file per rubric_id at the
+Create `docs/platform/evidence/llm/` and write one file per rubric_id at the
 matrix's exact `evidence_path`. Contract verified at
-`tests/phase2/requirements/conftest.py:26-36` and
+`tests/platform/requirements/conftest.py:26-36` and
 `scripts/audit_phase2_evidence.py:_audit_executed` — nine keys, all non-empty,
 `rubric_id` mentioned in the body, `artifact_path` must be a real file.
 
@@ -623,16 +623,16 @@ Files to create:
 
 | evidence_path | proves | `command` to record |
 |---|---|---|
-| `docs/phase2/evidence/llm/LLM-rag-rag-data-pipeline.md` | RAG DAG ran; chunks in PGVector; DataHub lineage | `airflow dags test phase2_rag_ingest <ds>` + row-count SQL |
-| `docs/phase2/evidence/llm/LLM-rag-m-b-o-data-governance-cho-pipe.md` | licensing/PII/DLQ/rate-limit/retry all exercised | `.venv/bin/python -m pytest tests/phase2/pipelines/test_data_governance.py -q` + a quarantine-row SQL dump |
-| `docs/phase2/evidence/llm/LLM-improve-the-data-generato-simulate-data-drift.md` | two scenarios, deterministic seed, before/after report | `.venv/bin/python scripts/run_phase2_drift_report.py --scenario financial_deterioration` (twice, same digest) |
-| `docs/phase2/evidence/llm/LLM-improve-the-data-generato-using-generator-configuration.md` | config-driven generation | same script with `--scenario market_stress` + config dump |
-| `docs/phase2/evidence/llm/LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la.md` | label table + join-to-feature screenshot | label build command + the `ticker,label` ⋈ feature SQL |
-| `docs/phase2/evidence/llm/LLM-ci-cd-job-1.md` | offline stream-feature workflow run | `gh run list --workflow phase2-stream-feature-offline.yaml` + run URL |
-| `docs/phase2/evidence/llm/LLM-ci-cd-job-2.md` | online stream-feature workflow run | same for `phase2-stream-feature-online.yaml` |
+| `docs/platform/evidence/llm/LLM-rag-rag-data-pipeline.md` | RAG DAG ran; chunks in PGVector; DataHub lineage | `airflow dags test phase2_rag_ingest <ds>` + row-count SQL |
+| `docs/platform/evidence/llm/LLM-rag-m-b-o-data-governance-cho-pipe.md` | licensing/PII/DLQ/rate-limit/retry all exercised | `.venv/bin/python -m pytest tests/platform/pipelines/test_data_governance.py -q` + a quarantine-row SQL dump |
+| `docs/platform/evidence/llm/LLM-improve-the-data-generato-simulate-data-drift.md` | two scenarios, deterministic seed, before/after report | `.venv/bin/python scripts/run_phase2_drift_report.py --scenario financial_deterioration` (twice, same digest) |
+| `docs/platform/evidence/llm/LLM-improve-the-data-generato-using-generator-configuration.md` | config-driven generation | same script with `--scenario market_stress` + config dump |
+| `docs/platform/evidence/llm/LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la.md` | label table + join-to-feature screenshot | label build command + the `ticker,label` ⋈ feature SQL |
+| `docs/platform/evidence/llm/LLM-ci-cd-job-1.md` | offline stream-feature workflow run | `gh run list --workflow phase2-stream-feature-offline.yaml` + run URL |
+| `docs/platform/evidence/llm/LLM-ci-cd-job-2.md` | online stream-feature workflow run | same for `phase2-stream-feature-online.yaml` |
 
 Optional (ML rows, free because the artifacts exist): the four
-`docs/phase2/evidence/ml/ML-feature-store-*.md` files. Write them only if time
+`docs/platform/evidence/ml/ML-feature-store-*.md` files. Write them only if time
 remains — LLM-only scope does not score them.
 
 `evidence_type` stays `design_only` in the CSV until phase-08 flips it to
@@ -665,11 +665,11 @@ present, currently `7631f720`).
 ### Three callers
 | file | `paths:` trigger | `pipeline_name` | `test_selector` |
 |---|---|---|---|
-| `phase2-rag-pipeline.yaml` | `src/llm/**`, `configs/rag-sources.yaml`, `dags/phase2/phase2_rag_ingest.py` | `rag-pipeline` | `tests/phase2/pipelines -k "rag or governance"` |
-| `phase2-stream-feature-offline.yaml` | `src/ml/feast/offline_job.py`, `src/ml/feast/feature_definitions.py`, `dags/phase2/phase2_stream_feature_offline.py` | `stream-feature-offline` | `tests/phase2/pipelines -k "feast or ttl"` |
+| `phase2-rag-pipeline.yaml` | `src/llm/**`, `configs/rag-sources.yaml`, `dags/phase2/phase2_rag_ingest.py` | `rag-pipeline` | `tests/platform/pipelines -k "rag or governance"` |
+| `phase2-stream-feature-offline.yaml` | `src/ml/feast/offline_job.py`, `src/ml/feast/feature_definitions.py`, `dags/phase2/phase2_stream_feature_offline.py` | `stream-feature-offline` | `tests/platform/pipelines -k "feast or ttl"` |
 | `phase2-stream-feature-online.yaml` | `src/ml/feast/online_job.py`, `src/ml/feast/feature_definitions.py`, `dags/phase2/phase2_stream_feature_online.py` | `stream-feature-online` | same |
 
-`ci.yml` is not modified and its `paths` are not narrowed — Phase 1 keeps
+`ci.yml` is not modified and its `paths` are not narrowed — platform .eeps
 running on every push.
 
 ---
@@ -685,13 +685,13 @@ review gate. Same total scope, four safe stopping points.
 
 | Slice | Steps | Files owned (no overlap with any other slice) | Blocked by |
 |---:|---|---|---|
-| **4A — infra + data** | 1(part), 2 | `docker-compose.yml` (append), `sql/init_ml_metadata.sql`, `configs/drift-config.yaml`, `src/drift/**`, `src/ml/label_pipeline.py`, `tests/phase2/pipelines/test_drift_*.py`, `test_label_pipeline.py`, `scripts/run_phase2_drift_report.py` | nothing |
-| **4B — RAG** | 1(part), 3, 7 | `configs/rag-sources.yaml`, `src/llm/**`, `tests/phase2/pipelines/test_rag_*.py`, `test_data_governance.py`, `test_pgvector_store.py` | 4A (needs `phase2-postgres` + `ml`) |
-| **4C — Feast + jobs + DAGs** | 1(part), 4, 5, 6 | `src/ml/feast/**`, `feature_repo/**`, `dags/phase2/**`, `tests/phase2/pipelines/test_feast_*.py`, `test_phase2_dags_import.py` | 4A (redis), 4B (rag feature view refs) |
-| **4D — CI + lineage + evidence** | 8, 9 | `.github/workflows/phase2-*.yaml`, `src/governance/phase2_lineage.py`, `configs/phase2-governance.yaml`, `docs/phase2/evidence/llm/*.md`, `tests/phase2/pipelines/test_workflows_phase2.py` | 4A–4C (evidence needs real runs) |
+| **4A — infra + data** | 1(part), 2 | `docker-compose.yml` (append), `sql/init_ml.sql`, `configs/drift-config.yaml`, `src/drift/**`, `src/ml/label_pipeline.py`, `tests/platform/pipelines/test_drift_*.py`, `test_label_pipeline.py`, `scripts/run_phase2_drift_report.py` | nothing |
+| **4B — RAG** | 1(part), 3, 7 | `configs/rag-sources.yaml`, `src/llm/**`, `tests/platform/pipelines/test_rag_*.py`, `test_data_governance.py`, `test_pgvector_store.py` | 4A (needs `phase2-postgres` + `ml`) |
+| **4C — Feast + jobs + DAGs** | 1(part), 4, 5, 6 | `src/ml/feast/**`, `feature_repo/**`, `dags/phase2/**`, `tests/platform/pipelines/test_feast_*.py`, `test_phase2_dags_import.py` | 4A (redis), 4B (rag feature view refs) |
+| **4D — CI + lineage + evidence** | 8, 9 | `.github/workflows/phase2-*.yaml`, `src/governance/phase2_lineage.py`, `configs/phase2-governance.yaml`, `docs/platform/evidence/llm/*.md`, `tests/platform/pipelines/test_workflows_phase2.py` | 4A–4C (evidence needs real runs) |
 
 **Parallelization note:** 4A and 4B touch disjoint files *except* that 4B needs
-4A's `sql/init_ml_metadata.sql`. If the orchestrator wants parallelism, split
+4A's `sql/init_ml.sql`. If the orchestrator wants parallelism, split
 `init_ml_metadata.sql` out as a zero-th slice owned by neither, then 4A and 4B
 can run concurrently. 4C and 4D are strictly sequential after them.
 
@@ -705,7 +705,7 @@ out late costs the whole slice.
 
 | Risk | L×I | Mitigation | Rollback |
 |---|---|---|---|
-| Module-level `feast`/`redis` import breaks the Phase 1 gate (D4) | **High × High** | Lazy imports enforced by `test_feast_definitions_ttl.py` running in `.venv`; run `scripts/run_stage1_quality_gates.py` at the end of every slice | Move the import inside the function; one-line fix, caught in minutes |
+| Module-level `feast`/`redis` import breaks the platform .ate (D4) | **High × High** | Lazy imports enforced by `test_feast_definitions_ttl.py` running in `.venv`; run `scripts/run_stage1_quality_gates.py` at the end of every slice | Move the import inside the function; one-line fix, caught in minutes |
 | Feast 0.65 rejects star-re-exported definitions (§3.4) | Med × Med | 30-min spike at the head of 4C before anything else in the slice | Physically relocate definitions into `feature_repo/`; pinned file imports from there |
 | Feast dependency conflicts (phase-04.md:107) | Med × Med | `.venv-phase2` isolation; jobs run from a container image, not the host env | Pin the resolved set; rebuild the image from the recorded digest |
 | RAG source unavailable / rate-limited (phase-04.md:111) | Med × High | Cache-first `fetch_documents`; committed fixture corpus so evidence runs need no network — mirrors the existing `vnstock_fixture_adapter` precedent | Run against fixtures only; note the substitution in the evidence `scenario:` line |
@@ -718,21 +718,21 @@ out late costs the whole slice.
 
 Phase rollback (phase-04.md:113): disable the five `phase2_*` DAGs, restore the
 previous Feast registry object from MinIO versioning, `docker compose down`
-the `phase2` profile. Phase 1 datasets are never written by any of this.
+the `phase2` profile. platform datasets are never written by any of this.
 
 ---
 
 ## 15. Definition of done
 
 - [ ] `.venv/bin/python scripts/run_stage1_quality_gates.py` passes (the AGENTS.md gate).
-- [ ] `.venv/bin/python -m pytest tests/phase2/pipelines` green, and green again on a second run with identical output.
+- [ ] `.venv/bin/python -m pytest tests/platform/pipelines` green, and green again on a second run with identical output.
 - [ ] `docker compose config` passes; plain `docker compose up` starts the same services as before.
 - [ ] `feast apply` + `materialize_incremental` succeed twice against a disposable store with identical online values (success criterion 2, phase-04.md:98).
 - [ ] Re-running `phase2_rag_ingest` on an unchanged corpus writes 0 new rows to `ml.rag_chunk` (criterion 1, phase-04.md:97).
 - [ ] Both drift scenarios reproduce byte-identical reports across two runs and match their configured direction (criterion 4, phase-04.md:100).
 - [ ] `SELECT * FROM ml.rag_chunk LIMIT 1` shows all nine metadata fields populated (criterion 5, phase-04.md:101).
 - [ ] All four workflow files exist; the three callers each show one successful run.
-- [ ] Seven LLM evidence files exist and `pytest tests/phase2/requirements -k "rag or data_generato or ci-cd"` no longer skips.
+- [ ] Seven LLM evidence files exist and `pytest tests/platform/requirements -k "rag or data_generato or ci-cd"` no longer skips.
 - [ ] `scripts/audit_phase2_evidence.py --matrix-only --strict` passes.
 
 ---
@@ -756,11 +756,11 @@ instead (the generator is already seed-deterministic) and amending that line in
 artifacts exist, but the submission is LLM-only per ADR-010. Write them, or
 leave them for a possible ML retrofit in phase-05?
 
-**Q4 (non-blocking).** `docs/phase2/architecture.md` never enumerates the RAG
+**Q4 (non-blocking).** `docs/platform/architecture.md` never enumerates the RAG
 "trusted sources" (only `src/llm/contracts.py:21` says "Vnstock news + PDFs").
 `configs/rag-sources.yaml` needs concrete entries. Proposal: 2–3 Vnstock company
 news feeds + a small committed corpus of Vietnamese annual-report PDF extracts
-under `tests/phase2/fixtures/rag_corpus/`, each with an explicit license and
+under `tests/platform/fixtures/rag_corpus/`, each with an explicit license and
 access class. Confirm the source list before 4B.
 
 **Q5 (non-blocking).** `phase-04.md` still carries the pre-GKE prose that Session

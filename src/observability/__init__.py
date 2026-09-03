@@ -1,4 +1,4 @@
-"""Dependency-light observability primitives for Phase 2 services."""
+"""Dependency-light observability primitives for platform .ervices."""
 
 from .telemetry import (
     CONTENT_TYPE_LATEST,

@@ -1,4 +1,4 @@
-"""Phase 2 rubric items mapping — stable semantic source of truth for both tracks.
+"""platform .ubric items mapping — stable semantic source of truth for both tracks.
 
 Parses the two final-coursework rubric CSVs:
   - docs/Coursework Tracking (Public) - rubic final-coursework (final - ml).csv
@@ -142,7 +142,7 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-novel-ideas-idea-1": "python_ast_contains:embedding",
     "LLM-novel-ideas-idea-2": "python_ast_contains:citation",
     "LLM-documentation-low-level-ml-design": "text_contains:design",
-    # Phase 1 of plans/260811-1627-close-llm-rubric-to-100: 8 of these 13 rows
+    # platform .f plans/260811-1627-close-llm-rubric-to-100: 8 of these 13 rows
     # were re-pointed off collided artifact_path values (all 7 gateway rows
     # shared f5-nginx-values.yaml; the traces row shared a Loki file with no
     # Jaeger content). Every token below is verified present in its target
@@ -312,7 +312,7 @@ SOURCE_ARTIFACT_ROOTS = (
     ".github/workflows/",
     "notebooks/",
     "tests/platform/requirements/",
-    "docs/phase2/",
+    "docs/platform/",
 )
 GITOPS_ARTIFACT_ROOTS = (
     ".github/workflows/",
@@ -564,7 +564,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "ML-documentation-low-level-ml-design": (
         "ml_engineer",
         "source",
-        "docs/phase2/low-level-design.md",
+        "docs/platform/low-level-design.md",
     ),
     "ML-novel-ideas-idea-1": ("ml_engineer", "source", "src/ml/leakage_guard.py"),
     "ML-novel-ideas-idea-2": ("ml_engineer", "source", "src/ml/reproducibility_manifest.py"),
@@ -840,7 +840,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-documentation-low-level-ml-design": (
         "llm_engineer",
         "source",
-        "docs/phase2/low-level-design.md",
+        "docs/platform/low-level-design.md",
     ),
     "LLM-novel-ideas-idea-1": ("llm_engineer", "source", "src/llm/embedding_registry.py"),
     "LLM-novel-ideas-idea-2": ("llm_engineer", "source", "src/llm/citation_guard.py"),
@@ -1077,7 +1077,7 @@ def _parse_csv(csv_path: Path, track: str) -> list[dict[str, object]]:
                 "owner": owner,
                 "test": test,
                 "validation_command": validation_command,
-                "evidence_path": f"docs/phase2/evidence/{track.lower()}/{rid}.md",
+                "evidence_path": f"docs/platform/evidence/{track.lower()}/{rid}.md",
                 "evidence_type": etype,
                 "acceptance_id": acceptance_id,
                 "source_file": csv_path.relative_to(REPO_ROOT).as_posix(),
@@ -1138,7 +1138,7 @@ for row in _RAW_ML + _RAW_LLM:
     _seen.add(rid)
     row["rubric_id"] = rid
     row["test"] = "pytest tests/platform -k '" + rid + "'"
-    row["evidence_path"] = f"docs/phase2/evidence/{track.lower()}/{rid}.md"
+    row["evidence_path"] = f"docs/platform/evidence/{track.lower()}/{rid}.md"
     acceptance_id = str(row["acceptance_id"])
     validation_slug = acceptance_id.lower().replace("-", "_")
     row["validation_command"] = (

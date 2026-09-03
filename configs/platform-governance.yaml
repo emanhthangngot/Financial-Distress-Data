@@ -1,7 +1,7 @@
-# Phase 2 DataHub governance registry — mirrors configs/datahub/governance.yaml's
+# platform .ataHub governance registry — mirrors configs/datahub/governance.yaml's
 # shape (same loader: src.governance.datahub_model.load_governance_model),
-# kept in a separate file rather than appended to the Phase 1 one because
-# AGENTS.md forbids editing Phase 1 config for a Phase 2 task, and because
+# kept in a separate file rather than appended to the platform .ne because
+# AGENTS.md forbids editing platform .onfig for a platform .ask, and because
 # `ops` vs `ml` is already a hard schema boundary this
 # file mirrors at the lineage level.
 #
@@ -9,11 +9,11 @@
 # gold.fact_market_price are declared here too even though
 # configs/datahub/governance.yaml already owns two of the three names — this
 # is intentional, not duplication: they are the same physical Gold datasets,
-# read by both a Phase 1 pipeline and a Phase 2 one, so both lineage graphs
+# read by both a platform lakehouse pipeline and a platform .ne, so both lineage graphs
 # correctly point at the same DataHub dataset URN. Caveat: emit_governance
 # (src/governance/datahub_emitter.py) stamps `custom_properties.
-# governance_run_id` on every dataset it upserts, so a Phase 2 emit
-# overwrites the `governance_run_id` a Phase 1 emit last wrote for these
+# governance_run_id` on every dataset it upserts, so a platform .mit
+# overwrites the `governance_run_id` a platform .mit last wrote for these
 # three shared datasets, and vice versa — last-writer-wins on that one
 # property. The dataset schemas themselves cannot conflict (both files
 # declare the same field lists for the shared names).

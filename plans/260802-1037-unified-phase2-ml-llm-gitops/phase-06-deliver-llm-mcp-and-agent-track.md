@@ -168,7 +168,7 @@ MCP-tool call counts, failure counts per call, and Web API metrics.
   `platform/llm/ab-testing.yaml`, `platform/observability/prometheus-values.yaml`,
   `platform/observability/loki-otel-values.yaml`
 - Create: `notebooks/` (two agent-understanding notebooks)
-- Create: `tests/phase2/requirements/test_llm_ac_01..20.py` (generated in phase-03, filled here)
+- Create: `tests/platform/requirements/test_llm_ac_01..20.py` (generated in phase-03, filled here)
 
 ## Implementation Steps
 
@@ -238,7 +238,7 @@ MCP-tool call counts, failure counts per call, and Web API metrics.
 17. Write the two Jupyter notebooks demonstrating an agent interacting with both
     MCP servers to pull data from the feature store and for RAG.
 18. Implement and prove the two novel ideas (below).
-19. Fill the 60 assertions in `tests/phase2/requirements/test_llm_ac_01..20.py`
+19. Fill the 60 assertions in `tests/platform/requirements/test_llm_ac_01..20.py`
     so every row's exact `validation_command` selects an assertion for that row,
     not only the shared metadata contract test.
 

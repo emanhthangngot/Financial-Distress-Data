@@ -236,7 +236,7 @@ class RagIngestionPipeline(RagIngestionService):
         would silently mislabel the vectors it just computed. Parent
         documents are registered *before* their chunks: ``rag_chunk.
         document_hash`` is ``NOT NULL REFERENCES rag_document`` (see
-        sql/init_ml_metadata.sql), so inserting chunks first would violate
+        sql/init_ml.sql), so inserting chunks first would violate
         that foreign key on every write against real Postgres."""
         if not chunks:
             return ""
