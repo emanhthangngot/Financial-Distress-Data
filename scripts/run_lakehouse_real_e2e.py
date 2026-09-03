@@ -114,31 +114,31 @@ def postgres_summary(env_path: str | Path = ".env") -> dict[str, str]:
     queries = {
         "pipeline_run_log": (
             "SELECT dag_id, task_id, dataset_name, status, count(*) "
-            "FROM project_metadata.pipeline_run_log GROUP BY 1,2,3,4 ORDER BY 1,2;"
+            "FROM ops.pipeline_run_log GROUP BY 1,2,3,4 ORDER BY 1,2;"
         ),
         "data_quality_result": (
             "SELECT dataset_name, check_name, status, severity, count(*) "
-            "FROM project_metadata.data_quality_result GROUP BY 1,2,3,4 ORDER BY 1,2;"
+            "FROM ops.data_quality_result GROUP BY 1,2,3,4 ORDER BY 1,2;"
         ),
         "dataset_freshness": (
             "SELECT dataset_name, status, freshness_lag_minutes, sla_minutes "
-            "FROM project_metadata.dataset_freshness ORDER BY dataset_name;"
+            "FROM ops.dataset_freshness ORDER BY dataset_name;"
         ),
         "failed_records": (
             "SELECT dataset_name, failure_reason, count(*) "
-            "FROM project_metadata.failed_records GROUP BY 1,2 ORDER BY 1,2;"
+            "FROM ops.failed_records GROUP BY 1,2 ORDER BY 1,2;"
         ),
         "backfill_request": (
             "SELECT dataset_name, start_date, end_date, status, requested_by, count(*) "
-            "FROM project_metadata.backfill_request GROUP BY 1,2,3,4,5 ORDER BY 1,2,3,4,5;"
+            "FROM ops.backfill_request GROUP BY 1,2,3,4,5 ORDER BY 1,2,3,4,5;"
         ),
         "source_request_log": (
             "SELECT source_system, source_endpoint, request_status, count(*) "
-            "FROM project_metadata.source_request_log GROUP BY 1,2,3 ORDER BY 1,2,3;"
+            "FROM ops.source_request_log GROUP BY 1,2,3 ORDER BY 1,2,3;"
         ),
         "collector_checkpoint": (
             "SELECT collector_name, source_system, checkpoint_key, count(*) "
-            "FROM project_metadata.collector_checkpoint GROUP BY 1,2,3 ORDER BY 1,2,3;"
+            "FROM ops.collector_checkpoint GROUP BY 1,2,3 ORDER BY 1,2,3;"
         ),
     }
     return {

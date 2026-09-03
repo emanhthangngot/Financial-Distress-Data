@@ -2,7 +2,7 @@
 # shape (same loader: src.governance.datahub_model.load_governance_model),
 # kept in a separate file rather than appended to the Phase 1 one because
 # AGENTS.md forbids editing Phase 1 config for a Phase 2 task, and because
-# `project_metadata` vs `ml_metadata` is already a hard schema boundary this
+# `ops` vs `ml` is already a hard schema boundary this
 # file mirrors at the lineage level.
 #
 # gold.fact_financial_statement / gold.obt_company_quarter_risk /
@@ -38,16 +38,16 @@ datasets:
   gold.fact_market_price:
     platform: s3
     fields: [[company_key, string], [trading_date, date], [event_timestamp, time]]
-  ml_metadata.rag_document:
+  ml.rag_document:
     platform: postgres
     fields: [[document_hash, string], [source_uri, string], [license, string]]
-  ml_metadata.rag_chunk:
+  ml.rag_chunk:
     platform: postgres
     fields: [[chunk_id, string], [document_hash, string], [embedding_version, string]]
-  ml_metadata.rag_quarantine:
+  ml.rag_quarantine:
     platform: postgres
     fields: [[chunk_id, string], [violation_reason, string], [quarantined_ts, time]]
-  ml_metadata.label_table:
+  ml.label_table:
     platform: postgres
     fields: [[ticker, string], [event_timestamp, time], [label, number]]
   platform.drift_report:
@@ -68,12 +68,12 @@ datasets:
 pipelines:
   platform_rag_ingest:
     inputs: [source.rag_corpus]
-    outputs: [ml_metadata.rag_document, ml_metadata.rag_chunk, ml_metadata.rag_quarantine]
-    contract_dataset: ml_metadata.rag_chunk
+    outputs: [ml.rag_document, ml.rag_chunk, ml.rag_quarantine]
+    contract_dataset: ml.rag_chunk
   platform_label_drift_build:
     inputs: [source.generator_config, gold.fact_financial_statement]
-    outputs: [ml_metadata.label_table, platform.drift_report]
-    contract_dataset: ml_metadata.label_table
+    outputs: [ml.label_table, platform.drift_report]
+    contract_dataset: ml.label_table
   platform_feature_materialize:
     inputs:
       - gold.fact_financial_statement

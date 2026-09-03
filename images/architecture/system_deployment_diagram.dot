@@ -107,7 +107,7 @@ digraph W22Deployment {
         fontsize=10;
         labeljust=l;
         postgres [
-            label="PostgreSQL\nschema: project_metadata\npipeline_run_log\ndata_quality_result\ndataset_freshness\nfailed_records",
+            label="PostgreSQL\nschema: ops\npipeline_run_log\ndata_quality_result\ndataset_freshness\nfailed_records",
             fillcolor="#fecaca",
             color="#991b1b"
         ];

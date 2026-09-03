@@ -2,7 +2,7 @@
 
 Wraps ``src.transforms.compute_distress_labels.compute_labels`` (Phase 1,
 read-only import — AGENTS.md forbids editing Phase 1) and reshapes its
-output to the ``ml_metadata.label_table`` contract. Registered as offline
+output to the ``ml.label_table`` contract. Registered as offline
 parquet + a Postgres row, never as a Feast FeatureView — see
 ``plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md``,
 section 5, for why: a training-time label must never be reachable through
@@ -45,7 +45,7 @@ def build_labels(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
-    """Upsert into ``ml_metadata.label_table``, keeping the latest
+    """Upsert into ``ml.label_table``, keeping the latest
     ``created_ts`` per (ticker, event_timestamp, label_version) — AGENTS.md
     dedupe-by-latest-created_ts rule. Lazy psycopg import per the two-venv
     rule (D4, phase-04-implementation-notes.md section 0) is the caller's
@@ -56,7 +56,7 @@ def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
         for row in rows:
             cur.execute(
                 """
-                INSERT INTO ml_metadata.label_table
+                INSERT INTO ml.label_table
                     (ticker, event_timestamp, label, label_version, created_ts,
                      training_eligible, label_source)
                 VALUES (%(ticker)s, %(event_timestamp)s, %(label)s, %(label_version)s,
@@ -66,7 +66,7 @@ def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
                     created_ts = EXCLUDED.created_ts,
                     training_eligible = EXCLUDED.training_eligible,
                     label_source = EXCLUDED.label_source
-                WHERE EXCLUDED.created_ts >= ml_metadata.label_table.created_ts
+                WHERE EXCLUDED.created_ts >= ml.label_table.created_ts
                 """,
                 row,
             )

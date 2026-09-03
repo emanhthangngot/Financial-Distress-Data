@@ -3,7 +3,7 @@ LOAD httpfs;
 
 -- DuckDB is a local, single-node inspection engine for DBeaver/reviewer SQL.
 -- It is not used as a horizontally scalable serving layer; authoritative
--- governance state stays in MinIO Parquet plus PostgreSQL project_metadata.
+-- governance state stays in MinIO Parquet plus PostgreSQL ops.
 SET s3_endpoint='localhost:9000';
 -- W14 S-B: credentials are intentionally not set in the SQL template.
 -- DuckDB resolves MINIO_ROOT_USER / MINIO_ROOT_PASSWORD from its own

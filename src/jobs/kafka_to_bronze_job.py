@@ -2,7 +2,7 @@
 Spark job: Kafka -> Bronze.
 
 Consumes from the configured Kafka topic, validates each event, and writes to the Bronze zone with
-idempotent partitioning. Rejected records are routed to ``project_metadata.failed_records``.
+idempotent partitioning. Rejected records are routed to ``ops.failed_records``.
 """
 
 from __future__ import annotations

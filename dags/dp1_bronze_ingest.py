@@ -14,7 +14,7 @@ Externalised configuration (rubric bonus: connections and variables inside Airfl
 - ``Variable.get("financial_distress_bronze_window_start_year")`` /
   ``financial_distress_bronze_window_end_year`` - the historical window the collectors walk.
 - ``PROJECT_METADATA_DSN`` env var (read by ``metadata_writer_from_env``) - PostgreSQL DSN for the
-  ``project_metadata`` schema; Airflow Connections are surfaced into the env in the running
+  ``ops`` schema; Airflow Connections are surfaced into the env in the running
   cluster.
 
 This DAG is intentionally a coordinator: it does not duplicate collector or Bronze-write logic. It
@@ -63,7 +63,7 @@ def _airflow_variable(name: str, default: str) -> str:
 
 
 def _project_metadata_dsn() -> str | None:
-    """Resolve the project_metadata PostgreSQL DSN.
+    """Resolve the ops PostgreSQL DSN.
 
     Prefers the AIRFLOW_CONN_PROJECT_METADATA Connection when running inside
     Airflow, then the ``PROJECT_METADATA_DSN`` env var, then ``None`` so the
@@ -72,7 +72,7 @@ def _project_metadata_dsn() -> str | None:
     try:
         from airflow.hooks.base import BaseHook  # type: ignore[import-not-found]
 
-        conn = BaseHook.get_connection("project_metadata")
+        conn = BaseHook.get_connection("ops")
         dsn = conn.get_uri() if conn else None
     except Exception:
         dsn = None

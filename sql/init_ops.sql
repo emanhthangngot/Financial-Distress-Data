@@ -1,6 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS project_metadata;
+CREATE SCHEMA IF NOT EXISTS ops;
 
-CREATE TABLE IF NOT EXISTS project_metadata.pipeline_run_log (
+CREATE TABLE IF NOT EXISTS ops.pipeline_run_log (
     run_id TEXT PRIMARY KEY,
     dag_id TEXT NOT NULL,
     task_id TEXT NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.pipeline_run_log (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS project_metadata.data_quality_result (
+CREATE TABLE IF NOT EXISTS ops.data_quality_result (
     check_id TEXT PRIMARY KEY,
     run_id TEXT,
     dataset_name TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.data_quality_result (
     error_message TEXT
 );
 
-CREATE TABLE IF NOT EXISTS project_metadata.dataset_freshness (
+CREATE TABLE IF NOT EXISTS ops.dataset_freshness (
     dataset_name TEXT PRIMARY KEY,
     latest_event_timestamp TIMESTAMP,
     latest_ingest_ts TIMESTAMP,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.dataset_freshness (
     checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS project_metadata.schema_version_registry (
+CREATE TABLE IF NOT EXISTS ops.schema_version_registry (
     dataset_name TEXT,
     schema_version TEXT,
     effective_from TIMESTAMP,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.schema_version_registry (
     PRIMARY KEY (dataset_name, schema_version)
 );
 
-CREATE TABLE IF NOT EXISTS project_metadata.failed_records (
+CREATE TABLE IF NOT EXISTS ops.failed_records (
     record_id TEXT PRIMARY KEY,
     dataset_name TEXT NOT NULL,
     run_id TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.failed_records (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS project_metadata.backfill_request (
+CREATE TABLE IF NOT EXISTS ops.backfill_request (
     backfill_id TEXT PRIMARY KEY,
     dataset_name TEXT NOT NULL,
     start_date DATE,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.backfill_request (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS project_metadata.source_request_log (
+CREATE TABLE IF NOT EXISTS ops.source_request_log (
     request_id TEXT PRIMARY KEY,
     run_id TEXT,
     source_system TEXT NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.source_request_log (
     requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS project_metadata.collector_checkpoint (
+CREATE TABLE IF NOT EXISTS ops.collector_checkpoint (
     collector_name TEXT NOT NULL,
     source_system TEXT NOT NULL,
     checkpoint_key TEXT NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS project_metadata.collector_checkpoint (
     PRIMARY KEY (collector_name, source_system, checkpoint_key)
 );
 
-INSERT INTO project_metadata.schema_version_registry
+INSERT INTO ops.schema_version_registry
     (dataset_name, schema_version, effective_from, effective_to, schema_json, is_current)
 VALUES
     (
@@ -131,19 +131,19 @@ ON CONFLICT (dataset_name, schema_version) DO NOTHING;
 -- Created idempotently so re-running init is safe.
 
 CREATE INDEX IF NOT EXISTS idx_pipeline_run_log_dag_status_created
-    ON project_metadata.pipeline_run_log (dag_id, status, created_at);
+    ON ops.pipeline_run_log (dag_id, status, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_pipeline_run_log_dataset_created
-    ON project_metadata.pipeline_run_log (dataset_name, created_at);
+    ON ops.pipeline_run_log (dataset_name, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_data_quality_result_dataset_checked
-    ON project_metadata.data_quality_result (dataset_name, checked_at);
+    ON ops.data_quality_result (dataset_name, checked_at);
 
 CREATE INDEX IF NOT EXISTS idx_data_quality_result_run_id
-    ON project_metadata.data_quality_result (run_id);
+    ON ops.data_quality_result (run_id);
 
 CREATE INDEX IF NOT EXISTS idx_failed_records_dataset_created
-    ON project_metadata.failed_records (dataset_name, created_at);
+    ON ops.failed_records (dataset_name, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_failed_records_run_id
-    ON project_metadata.failed_records (run_id);
+    ON ops.failed_records (run_id);

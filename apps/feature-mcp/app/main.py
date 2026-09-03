@@ -154,7 +154,7 @@ class PostgresRagLookupClient:
             cursor.execute(
                 """
                 SELECT chunk_id, chunk_text, source_uri, company, report_date, access_class
-                FROM ml_metadata.rag_chunk
+                FROM ml.rag_chunk
                 WHERE chunk_id = %s
                 """,
                 (chunk_id,),
@@ -192,7 +192,7 @@ def production_clients_from_env() -> tuple[OnlineFeatureClient, RagLookupClient]
         rag_dsn = (
             f"host={os.getenv('PLATFORM_PG_HOST', 'platform-postgres')} "
             f"port={os.getenv('PLATFORM_PG_PORT', '5432')} "
-            f"dbname={os.getenv('PLATFORM_PG_DATABASE', 'ml_metadata')} "
+            f"dbname={os.getenv('PLATFORM_PG_DATABASE', 'ml')} "
             f"user={os.getenv('PLATFORM_PG_USER', 'platform')} "
             f"password={os.environ['PLATFORM_PG_PASSWORD']} connect_timeout=3"
         )

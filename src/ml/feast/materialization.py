@@ -74,7 +74,7 @@ class FeastMaterializationService(FeatureMaterializationService):
 
     def record_registry_revision(self, store: Any) -> str:
         """Hashes the registry proto and records a row in
-        ``ml_metadata.feast_registry_revision`` (sql/init_ml_metadata.sql).
+        ``ml.feast_registry_revision`` (sql/init_ml_metadata.sql).
         No-ops (returns the digest without writing) when ``pg_dsn_env`` isn't
         set — unit tests exercise ``materialize_offline_to_online`` against a
         disposable local registry with no Postgres attached.
@@ -104,7 +104,7 @@ class FeastMaterializationService(FeatureMaterializationService):
 
         with psycopg.connect(dsn) as conn:
             conn.execute(
-                "INSERT INTO ml_metadata.feast_registry_revision "
+                "INSERT INTO ml.feast_registry_revision "
                 "(revision_id, project, registry_digest, feature_view_count) "
                 "VALUES (%s, %s, %s, %s) ON CONFLICT (revision_id) DO NOTHING",
                 (digest, project, digest, feature_view_count),
@@ -130,7 +130,7 @@ def record_stream_checkpoint(
     job_name: str, last_offset: int, last_event_ts: str | None, pg_dsn_env: str = "PLATFORM_PG_DSN"
 ) -> None:
     """Shared by both stream deployables (offline_job.py, online_job.py) so
-    ``ml_metadata.stream_feature_checkpoint`` has one writer. No-ops when
+    ``ml.stream_feature_checkpoint`` has one writer. No-ops when
     ``pg_dsn_env`` isn't set (unit tests never reach a real Postgres)."""
     import os
 
@@ -141,7 +141,7 @@ def record_stream_checkpoint(
 
     with psycopg.connect(dsn) as conn:
         conn.execute(
-            "INSERT INTO ml_metadata.stream_feature_checkpoint "
+            "INSERT INTO ml.stream_feature_checkpoint "
             "(job_name, last_offset, last_event_ts) VALUES (%s, %s, %s) "
             "ON CONFLICT (job_name) DO UPDATE SET "
             "last_offset = EXCLUDED.last_offset, last_event_ts = EXCLUDED.last_event_ts, "

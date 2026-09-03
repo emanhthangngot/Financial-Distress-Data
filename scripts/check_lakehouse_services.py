@@ -2,7 +2,7 @@
 Stage 1 service health check.
 
 Probes MinIO, PostgreSQL, Kafka, and the local Airflow metadata DB to confirm
-the developer cluster is up and the ``project_metadata`` schema is reachable.
+the developer cluster is up and the ``ops`` schema is reachable.
 Prints a per-service status table and exits non-zero on any hard failure.
 """
 

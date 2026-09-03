@@ -11,8 +11,8 @@ online_store:
   type: postgres
   host: platform-postgres
   port: 5432
-  database: ml_metadata
-  db_schema: ml_metadata
+  database: ml
+  db_schema: ml
   user: ${PLATFORM_PG_USER}
   password: ${PLATFORM_PG_PASSWORD}
 offline_store:
