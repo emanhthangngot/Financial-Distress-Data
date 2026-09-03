@@ -27,7 +27,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.evidence.run_manifest import build_run_manifest
-from src.jobs.stage1_evidence_job import metadata_dsn, minio_host_endpoint, read_env_file
+from src.jobs.lakehouse_evidence_job import metadata_dsn, minio_host_endpoint, read_env_file
 from src.security.secrets import require
 
 
@@ -174,7 +174,7 @@ def main() -> None:
     parser.add_argument("--export-evidence", default="docs/evidence")
     args = parser.parse_args()
     started_at = datetime.now(UTC).isoformat()
-    run_id = "stage1-real-" + re.sub(r"[^A-Za-z0-9._-]+", "-", args.execution_date).strip("-")
+    run_id = "lakehouse-real-" + re.sub(r"[^A-Za-z0-9._-]+", "-", args.execution_date).strip("-")
 
     if args.start:
         run(["docker", "compose", "up", "-d", "--build"], timeout=600)
@@ -184,7 +184,7 @@ def main() -> None:
             "docker",
             "exec",
             "-e",
-            f"STAGE1_EVIDENCE_RUN_ID={run_id}",
+            f"LAKEHOUSE_EVIDENCE_RUN_ID={run_id}",
             "financial-distress-data-airflow-webserver-1",
             "airflow",
             "dags",
@@ -196,19 +196,19 @@ def main() -> None:
     )
     evidence_dir = PROJECT_ROOT / args.export_evidence
     evidence_dir.mkdir(parents=True, exist_ok=True)
-    (evidence_dir / "stage1_real_airflow_dag_test.txt").write_text(dag_output, encoding="utf-8")
-    write_json(evidence_dir / "stage1_real_kafka_offsets.json", kafka_offsets())
-    write_json(evidence_dir / "stage1_real_minio_objects.json", minio_objects())
-    write_json(evidence_dir / "stage1_real_postgres_summary.json", postgres_summary())
+    (evidence_dir / "lakehouse_real_airflow_dag_test.txt").write_text(dag_output, encoding="utf-8")
+    write_json(evidence_dir / "lakehouse_real_kafka_offsets.json", kafka_offsets())
+    write_json(evidence_dir / "lakehouse_real_minio_objects.json", minio_objects())
+    write_json(evidence_dir / "lakehouse_real_postgres_summary.json", postgres_summary())
     duckdb_results = run_duckdb_validation(evidence_dir)
-    write_json(evidence_dir / "stage1_real_duckdb_validation.json", duckdb_results)
+    write_json(evidence_dir / "lakehouse_real_duckdb_validation.json", duckdb_results)
     artifacts = [
-        ("stage1_real_airflow_dag_test.txt", "log"),
-        ("stage1_real_kafka_offsets.json", "metrics"),
-        ("stage1_real_minio_objects.json", "metrics"),
-        ("stage1_real_postgres_summary.json", "query_output"),
-        ("stage1_duckdb_validation.json", "query_output"),
-        ("stage1_real_duckdb_validation.json", "query_output"),
+        ("lakehouse_real_airflow_dag_test.txt", "log"),
+        ("lakehouse_real_kafka_offsets.json", "metrics"),
+        ("lakehouse_real_minio_objects.json", "metrics"),
+        ("lakehouse_real_postgres_summary.json", "query_output"),
+        ("lakehouse_duckdb_validation.json", "query_output"),
+        ("lakehouse_real_duckdb_validation.json", "query_output"),
     ]
     manifest = build_run_manifest(
         evidence_dir=evidence_dir,

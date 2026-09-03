@@ -4,7 +4,7 @@
 #
 # `digest` is sha256 over the canonical (sort_keys=True) JSON of every field
 # below except `digest` itself — recompute it, don't hand-edit it. A test
-# (tests/phase2/pipelines/test_embedding_http.py) pins this file's digest to
+# (tests/platform/pipelines/test_embedding_http.py) pins this file's digest to
 # catch silent drift.
 #
 # See plans/260802-1037-unified-phase2-ml-llm-gitops/phase-06-embedding-slice-notes.md

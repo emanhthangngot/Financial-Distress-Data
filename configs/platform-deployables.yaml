@@ -11,9 +11,9 @@ deployables:
   - name: phase1-pipeline
     image_context: .
     dockerfile: infra/phase1-cluster/Dockerfile.pipeline
-    test_selector: "tests -k 'cluster_pipeline or stage1_jobs or feast'"
+    test_selector: "tests -k 'cluster_pipeline or lakehouse_jobs or feast'"
     lint_paths:
-      - src/jobs/stage1_evidence_job.py
+      - src/jobs/lakehouse_evidence_job.py
       - src/collectors/fixture_config.py
       - src/collectors/source_adapters/vnstock_fixture_adapter.py
       - scripts/run_cluster_pipeline.py
@@ -26,11 +26,11 @@ deployables:
   - name: stream-feature-offline
     image_context: .
     dockerfile: infra/stream-feature-offline/Dockerfile
-    test_selector: "tests/phase2/pipelines -k 'feast or ttl or stream'"
+    test_selector: "tests/platform/pipelines -k 'feast or ttl or stream'"
     lint_paths:
       - src/ml/feast/offline_job.py
       - src/ml/feast/feature_definitions.py
-      - tests/phase2/pipelines/test_stream_feature_jobs.py
+      - tests/platform/pipelines/test_stream_feature_jobs.py
     gitops_chart: charts/fastapi-service/Chart.yaml
     gitops_values_path: platform/data/pipeline-deployments.yaml
     gitops_target_type: manifest
@@ -39,11 +39,11 @@ deployables:
   - name: stream-feature-online
     image_context: .
     dockerfile: infra/stream-feature-online/Dockerfile
-    test_selector: "tests/phase2/pipelines -k 'feast or ttl or stream'"
+    test_selector: "tests/platform/pipelines -k 'feast or ttl or stream'"
     lint_paths:
       - src/ml/feast/online_job.py
       - src/ml/feast/feature_definitions.py
-      - tests/phase2/pipelines/test_stream_feature_jobs.py
+      - tests/platform/pipelines/test_stream_feature_jobs.py
     gitops_chart: charts/fastapi-service/Chart.yaml
     gitops_values_path: platform/data/pipeline-deployments.yaml
     gitops_target_type: manifest
@@ -52,13 +52,13 @@ deployables:
   - name: rag-pipeline
     image_context: .
     dockerfile: infra/rag-pipeline/Dockerfile
-    test_selector: "tests/phase2/pipelines -k 'rag or governance'"
+    test_selector: "tests/platform/pipelines -k 'rag or governance'"
     lint_paths:
       - src/llm
-      - tests/phase2/pipelines/test_rag_chunking.py
-      - tests/phase2/pipelines/test_rag_dedup.py
-      - tests/phase2/pipelines/test_rag_metadata_contract.py
-      - tests/phase2/pipelines/test_data_governance.py
+      - tests/platform/pipelines/test_rag_chunking.py
+      - tests/platform/pipelines/test_rag_dedup.py
+      - tests/platform/pipelines/test_rag_metadata_contract.py
+      - tests/platform/pipelines/test_data_governance.py
     gitops_chart: charts/fastapi-service/Chart.yaml
     gitops_values_path: platform/data/pipeline-deployments.yaml
     gitops_target_type: manifest
@@ -67,11 +67,11 @@ deployables:
   - name: feature-agent
     image_context: .
     dockerfile: apps/feature-mcp/Dockerfile
-    test_selector: "tests/phase2/agents tests/phase2/apps -k 'feature or agent'"
+    test_selector: "tests/platform/agents tests/platform/apps -k 'feature or agent'"
     lint_paths:
       - src/agents
       - apps/feature-mcp/app
-      - tests/phase2/agents
+      - tests/platform/agents
     gitops_chart: charts/feature-mcp/Chart.yaml
     gitops_values_path: platform/agents/agent-deployments.yaml
     gitops_target_type: manifest
@@ -80,12 +80,12 @@ deployables:
   - name: drift-agent
     image_context: .
     dockerfile: apps/drift-mcp/Dockerfile
-    test_selector: "tests/phase2/agents tests/phase2/apps -k 'drift or agent'"
+    test_selector: "tests/platform/agents tests/platform/apps -k 'drift or agent'"
     lint_paths:
       - src/agents
       - src/drift
       - apps/drift-mcp/app
-      - tests/phase2/agents
+      - tests/platform/agents
     gitops_chart: charts/drift-mcp/Chart.yaml
     gitops_values_path: platform/agents/agent-deployments.yaml
     gitops_target_type: manifest
@@ -94,10 +94,10 @@ deployables:
   - name: coordinator
     image_context: .
     dockerfile: apps/feature-mcp/Dockerfile
-    test_selector: "tests/phase2/agents -k 'coordinator'"
+    test_selector: "tests/platform/agents -k 'coordinator'"
     lint_paths:
       - src/agents
-      - tests/phase2/agents
+      - tests/platform/agents
     gitops_chart: charts/feature-mcp/Chart.yaml
     gitops_values_path: platform/agents/agent-deployments.yaml
     gitops_target_type: manifest
@@ -106,11 +106,11 @@ deployables:
   - name: drift-mcp
     image_context: .
     dockerfile: apps/drift-mcp/Dockerfile
-    test_selector: "tests/phase2/apps -k 'drift_mcp'"
+    test_selector: "tests/platform/apps -k 'drift_mcp'"
     lint_paths:
       - src/drift
       - apps/drift-mcp/app
-      - tests/phase2/apps
+      - tests/platform/apps
     gitops_chart: charts/drift-mcp/Chart.yaml
     gitops_values_path: apps/dev/drift-mcp/values.yaml
     gitops_target_type: values
@@ -119,9 +119,9 @@ deployables:
   - name: web
     image_context: .
     dockerfile: apps/web/Dockerfile
-    test_selector: "tests/phase2/verification -k 'web_api_adapters'"
+    test_selector: "tests/platform/verification -k 'web_api_adapters'"
     lint_paths:
-      - tests/phase2/verification/test_web_api_adapters.py
+      - tests/platform/verification/test_web_api_adapters.py
     gitops_chart: charts/web/Chart.yaml
     gitops_values_path: apps/dev/web/values.yaml
     gitops_target_type: values

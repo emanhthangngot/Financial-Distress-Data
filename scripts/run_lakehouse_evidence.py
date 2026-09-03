@@ -23,13 +23,13 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.catalog.duckdb_runner import run_duckdb_validation as write_duckdb_validation
 from src.io.minio_writer import rows_to_parquet_bytes as _to_parquet_bytes
 from src.io.minio_writer import write_minio_dataset as _write_minio_dataset
-from src.jobs.stage1_evidence_job import (
+from src.jobs.lakehouse_evidence_job import (
     DEFAULT_BUCKET,
     DEFAULT_ENV_PATH,
     DEFAULT_EVIDENCE_DIR,
     EvidencePayload,
     build_evidence_payload,
-    materialize_stage1_evidence,
+    materialize_lakehouse_evidence,
     metadata_dsn,
     minio_host_endpoint,
     read_env_file,
@@ -70,7 +70,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    payload = materialize_stage1_evidence(
+    payload = materialize_lakehouse_evidence(
         bucket=args.bucket,
         evidence_dir=args.evidence_dir,
         dry_run=args.dry_run,

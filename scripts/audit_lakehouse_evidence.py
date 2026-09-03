@@ -52,18 +52,18 @@ REQUIRED_MINIO_PREFIXES = {
     "gold/fact_market_alert/",
     "gold/obt_company_quarter_risk/",
     "gold/feat_company_unified/",
-    "evidence/stage1/",
+    "evidence/lakehouse/",
 }
 REQUIRED_JSON_ARTIFACTS = (
-    "stage1_real_kafka_offsets.json",
-    "stage1_real_postgres_summary.json",
-    "stage1_real_duckdb_validation.json",
-    "stage1_real_minio_objects.json",
+    "lakehouse_real_kafka_offsets.json",
+    "lakehouse_real_postgres_summary.json",
+    "lakehouse_real_duckdb_validation.json",
+    "lakehouse_real_minio_objects.json",
 )
 
 
 def _airflow_log_success(evidence_dir: Path) -> bool:
-    path = evidence_dir / "stage1_real_airflow_dag_test.txt"
+    path = evidence_dir / "lakehouse_real_airflow_dag_test.txt"
     if not path.exists():
         return False
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -89,7 +89,7 @@ def _load_required_json_artifacts(evidence_dir: Path) -> tuple[dict[str, Any], d
 
 
 def _dq_failure_probe_passed(evidence_dir: Path) -> bool:
-    path = evidence_dir / "stage1_dq_failure_probe.json"
+    path = evidence_dir / "lakehouse_dq_failure_probe.json"
     if not path.exists():
         return False
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -140,10 +140,10 @@ def _topic_has_positive_offset(lines: list[str]) -> bool:
 def audit_evidence(evidence_dir: str | Path) -> dict[str, Any]:
     root = Path(evidence_dir)
     artifacts, artifact_checks = _load_required_json_artifacts(root)
-    kafka_offsets = artifacts["stage1_real_kafka_offsets.json"] or {}
-    postgres_summary = artifacts["stage1_real_postgres_summary.json"] or {}
-    duckdb_validation = artifacts["stage1_real_duckdb_validation.json"] or []
-    minio_objects = artifacts["stage1_real_minio_objects.json"] or []
+    kafka_offsets = artifacts["lakehouse_real_kafka_offsets.json"] or {}
+    postgres_summary = artifacts["lakehouse_real_postgres_summary.json"] or {}
+    duckdb_validation = artifacts["lakehouse_real_duckdb_validation.json"] or []
+    minio_objects = artifacts["lakehouse_real_minio_objects.json"] or []
     metrics = _metric_rows(duckdb_validation)
     object_names = [item["object_name"] for item in minio_objects]
 
@@ -167,7 +167,7 @@ def audit_evidence(evidence_dir: str | Path) -> dict[str, Any]:
         "postgres_has_source_request_evidence": "source_request_log" in postgres_summary
         and "vnstock_fixture" in postgres_summary["source_request_log"],
         "postgres_has_collector_checkpoint_evidence": "collector_checkpoint" in postgres_summary
-        and "stage1_fixture_collectors" in postgres_summary["collector_checkpoint"],
+        and "lakehouse_fixture_collectors" in postgres_summary["collector_checkpoint"],
         "postgres_has_freshness_evidence": "dataset_freshness" in postgres_summary
         and "silver_market_prices" in postgres_summary["dataset_freshness"],
         "postgres_has_dq_evidence": "data_quality_result" in postgres_summary
@@ -205,12 +205,12 @@ def main() -> None:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Fail if stage1_runtime_audit_summary.json is missing or stale.",
+        help="Fail if lakehouse_runtime_audit_summary.json is missing or stale.",
     )
     args = parser.parse_args()
 
     summary = audit_evidence(args.evidence_dir)
-    output_path = Path(args.evidence_dir) / "stage1_runtime_audit_summary.json"
+    output_path = Path(args.evidence_dir) / "lakehouse_runtime_audit_summary.json"
     summary_text = json.dumps(summary, indent=2, sort_keys=True)
     if args.check:
         if not output_path.exists():

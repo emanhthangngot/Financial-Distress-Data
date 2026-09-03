@@ -13,7 +13,7 @@ from typing import Any
 from src.collectors.fixture_config import load_fixture_config
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.io.paths import DEFAULT_BUCKET
-from src.jobs.stage1_evidence_job import build_evidence_payload, write_minio_outputs
+from src.jobs.lakehouse_evidence_job import build_evidence_payload, write_minio_outputs
 
 DEFAULT_CLUSTER_CONFIG = "configs/cluster-collector-config.yaml"
 RISK_FEATURES = (
@@ -67,10 +67,10 @@ def materialize_risk_features() -> dict[str, Any]:
     from src.ml.feast.feature_definitions import build_feature_objects
     from src.ml.feast.materialization import FeastMaterializationService
 
-    entity = os.environ.get("PHASE2_VERIFY_TICKER", "NVL")
-    start = os.environ.get("PHASE2_MATERIALIZE_START_TS", "2020-01-01T00:00:00+00:00")
-    end = os.environ.get("PHASE2_MATERIALIZE_END_TS", datetime.now(UTC).isoformat())
-    configured_repo = os.environ.get("PHASE2_FEAST_REPO_PATH")
+    entity = os.environ.get("PLATFORM_VERIFY_TICKER", "NVL")
+    start = os.environ.get("PLATFORM_MATERIALIZE_START_TS", "2020-01-01T00:00:00+00:00")
+    end = os.environ.get("PLATFORM_MATERIALIZE_END_TS", datetime.now(UTC).isoformat())
+    configured_repo = os.environ.get("PLATFORM_FEAST_REPO_PATH")
     with tempfile.TemporaryDirectory(prefix="fd-feast-") as temp_dir:
         repo_path = configured_repo or temp_dir
         if not configured_repo:
