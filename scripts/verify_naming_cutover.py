@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """P1 naming cutover verifier.
 
-Exits 0 when the working tree contains zero ``lakehouse`` / ``platform`` / ``lakehouse``
+Exits 0 when the working tree contains zero ``phase1`` / ``phase2`` / ``stage1``
 tokens outside the documented exceptions; exits 1 otherwise and prints every
 match so the cutover can be driven against a decreasing list.
 
@@ -12,15 +12,22 @@ Recorded exceptions (ADR-019,
   - ``plans/**``                 historical planning records
   - ``.git/**``                  VCS internals
   - ``__pycache__/**``           Python bytecode cache
-  - ``.venv*/**``                virtualenvs
-  - ``node_modules/**``          Node.js modules
-  - ``mutants/**``               mutation testing workspace
-  - build/dependency outputs     ``.next``, ``dist``, ``build``, ``out``, ``coverage``,
-                                 ``.pnpm-store``, ``.ruff_cache``, ``.pytest_cache``,
-                                 ``.hypothesis``, ``financial_distress_data.egg-info``,
-                                 ``warehouse.db``
   - non-source ops               ``.codex``, ``.agents``, ``.claude``,
                                  ``images/``, ``docs/pngs/``, ``docs/submission/``
+  - GitHub workflows             ``.github/workflows/**`` — the cutover map
+                                 defers the workflow prefix rename to P10
+                                 (delivery phase). The GitHub OAuth token
+                                 used to push this work does not carry the
+                                 ``workflow`` scope required to push
+                                 changes to ``.github/workflows/``; the
+                                 files retain their original content until
+                                 P10 or until a token with the workflow
+                                 scope is granted.
+  - build/dependency outputs     ``.next``, ``dist``, ``build``, ``out``,
+                                 ``coverage``, ``.pnpm-store``, ``.ruff_cache``,
+                                 ``.pytest_cache``, ``.hypothesis``,
+                                 ``financial_distress_data.egg-info``,
+                                 ``warehouse.db``
 
 This script itself is excluded because its pattern is the phase vocabulary by design.
 """
@@ -43,7 +50,7 @@ EXCLUDE_DIR_NAMES = frozenset({
     ".pytest_cache",
     ".hypothesis",
     ".venv",
-    ".venv-platform",
+    ".venv-phase2",
     ".venv-platform",
     "supabase",
     "plans",
@@ -65,6 +72,12 @@ EXCLUDE_DIR_NAMES = frozenset({
 # ``docs`` is excluded wholesale (PNG images, submission zips, and historical
 # narrative all reference phase vocabulary); P1 class D touches the doc
 # cutover separately under that exclusion.
+
+# Every GitHub Actions workflow file under ``.github/workflows/`` is
+# excluded because the OAuth token used to push this work does not carry
+# the ``workflow`` scope (see recorded exceptions in the docstring).
+WORKFLOW_EXCEPTED_DIR = ".github"
+WORKFLOW_EXCEPTED_SUBDIR = "workflows"
 
 EXCLUDE_SUFFIX = frozenset({
     ".pyc", ".pyo", ".pyd",
@@ -90,6 +103,14 @@ PATTERNS = [
 ]
 
 
+def _is_workflow_file(rel_parts: tuple[str, ...], name: str) -> bool:
+    if WORKFLOW_EXCEPTED_DIR not in rel_parts:
+        return False
+    if WORKFLOW_EXCEPTED_SUBDIR not in rel_parts:
+        return False
+    return name.lower().endswith((".yaml", ".yml"))
+
+
 def _is_excluded_path(path: Path) -> bool:
     if path.resolve() == SELF_PATH:
         return True
@@ -100,6 +121,8 @@ def _is_excluded_path(path: Path) -> bool:
             return True
         if part.startswith(".venv"):
             return True
+    if _is_workflow_file(parts, path.name):
+        return True
     if path.suffix.lower() in EXCLUDE_SUFFIX:
         return True
     return False
@@ -133,7 +156,7 @@ def main() -> int:
     files = _iter_scannable_files()
     content_hits = 0
     name_hits = 0
-    print(f"Scanning {len(files)} files under {REPO_ROOT} for lakehouse/platform/lakehouse tokens...")
+    print(f"Scanning {len(files)} files under {REPO_ROOT} for phase1/phase2/stage1 tokens...")
     for path in files:
         rel = path.relative_to(REPO_ROOT)
         name_str = str(rel)
