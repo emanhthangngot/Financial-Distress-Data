@@ -168,10 +168,23 @@ def main() -> int:
             print(f"FILE  {rel}:{line_no}  matched={pattern}  line={line!r}")
             content_hits += 1
     total = name_hits + content_hits
+
+    # Count deferred workflow files loud and clear
+    deferred_workflow_hits = 0
+    workflow_dir = REPO_ROOT / ".github" / "workflows"
+    if workflow_dir.exists():
+        for wf in workflow_dir.glob("*.y*ml"):
+            for pattern in PATTERNS:
+                if pattern.search(wf.name):
+                    deferred_workflow_hits += 1
+            for pattern, _, _ in _scan_contents(wf):
+                deferred_workflow_hits += 1
+
     print("")
-    print(f"path-name matches:  {name_hits}")
-    print(f"content matches:    {content_hits}")
-    print(f"total matches:      {total}")
+    print(f"path-name matches:   {name_hits}")
+    print(f"content matches:     {content_hits}")
+    print(f"total matches:       {total}")
+    print(f"deferred (workflows): {deferred_workflow_hits} (P10 scope / token lacks workflow scope)")
     return 0 if total == 0 else 1
 
 
