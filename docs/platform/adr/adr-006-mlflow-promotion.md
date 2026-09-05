@@ -1,13 +1,21 @@
 # ADR-006: MLflow Promotion Contract
 
-- Status: **Deferred with the ML track — see [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md) (2026-08-07)**
+- Status: **Un-deferred by [ADR-016](./adr-016-full-platform-restore.md) (2026-09-05) — active from P7**
 
-> **Deferred:** MLflow is not installed for the LLM-only submission. This ADR
-> stays valid and unchanged for the post-deadline ML retrofit
-> (`plans/260802-1037-unified-platform-ml-llm-gitops/phase-05-deliver-ml-track.md`).
+> **Un-deferred (2026-09-05, unified rebuild):** the platform restore
+> (ADR-016) reinstates the ML track. MLflow is active from
+> `plans/260831-1644-rebuild-target-mlops-architecture/phase-07-ml-track.md`
+> onward; the promotion contract below is unchanged from its original
+> design and needs no rewrite, only reactivation.
+
+> **Previously deferred (2026-08-07):** MLflow was not installed for the
+> LLM-only submission. This ADR stayed valid and unchanged for the
+> post-deadline ML retrofit — see
+> [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md).
 - Date: 2026-08-02
 - Deciders: the platform architecture review, ML engineer
-- Related: `docs/platform/architecture.md`, `plans/.../phase-05-deliver-ml-track.md`
+- Related: `docs/platform/architecture.md`, `plans/260831-1644-rebuild-target-mlops-architecture/phase-07-ml-track.md`
+
 
 ## Context
 

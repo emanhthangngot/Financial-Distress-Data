@@ -1,8 +1,21 @@
-# ADR-013: Flink CDC as a parallel ingestion path
+# ADR-013: CDC ingestion path — Debezium, Kafka, Flink
 
 ## Status
 
-Accepted — 2026-08-13 (the platform production-hardening overlay).
+**Amended 2026-09-05** (unified rebuild,
+`plans/260831-1644-rebuild-target-mlops-architecture/phase-05-cdc-streaming.md`).
+Originally accepted 2026-08-13 as Flink CDC direct.
+
+> **Amended:** the CDC path is **Debezium → Kafka → Flink**, not Flink CDC
+> connecting to Postgres directly. Debezium's Postgres connector captures the
+> logical replication stream and publishes change events to Kafka; Flink
+> consumes from Kafka, not from the replication slot. This matches the
+> target architecture image (`fdd-architecture-full-4k.png` component #36-38:
+> Debezium → Kafka → Flink, all in `ns: dataflow`) and phase-05's `owns:`
+> scope (`src/cdc/`, `src/streaming/`). The reconciliation contract below
+> (`src/cdc/reconcile.py` comparing the CDC path against the generator/Kafka
+> path over a bounded window) is unchanged — only the transport between
+> Postgres and Flink changes, not the correctness check.
 
 ## Decision
 

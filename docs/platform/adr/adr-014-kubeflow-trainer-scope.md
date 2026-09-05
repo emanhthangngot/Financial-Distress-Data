@@ -1,8 +1,23 @@
-# ADR-014: Kubeflow Trainer boundary
+# ADR-014: Distributed training — Ray, not Kubeflow Trainer HTTP
 
 ## Status
 
-Accepted — 2026-08-13.
+**Amended 2026-09-05** (unified rebuild,
+`plans/260831-1644-rebuild-target-mlops-architecture/phase-07-ml-track.md`).
+Originally accepted 2026-08-13 as a Kubeflow Trainer HTTP submission
+boundary.
+
+> **Amended:** distributed training runs on a **Ray cluster**
+> (`ns: kubeflow`, target architecture component #45), not a
+> `submit_kubeflow` HTTP call to Kubeflow Trainer. Kubeflow Pipeline
+> (component #44) still orchestrates the training pipeline stages; Ray is
+> the distributed-execution backend a pipeline stage submits to, not a
+> replacement for the pipeline itself. Phase-07 owns `src/ml/pipelines/`.
+> The local-baseline / cluster-submission split this ADR's original decision
+> established stays: deterministic local tests never require a live Ray
+> cluster, and a real Ray job is a separate, cluster-dependent acceptance
+> step, exactly as the original text below already required for Kubeflow
+> Trainer.
 
 ## Decision
 

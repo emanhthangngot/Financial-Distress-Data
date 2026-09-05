@@ -1,12 +1,21 @@
 # ADR-010: LLM-Only Submission Scope and Platform Simplification
 
-- Status: Accepted, amended 2026-08-07 (afternoon)
+- Status: **Superseded by [ADR-016](./adr-016-full-platform-restore.md) (2026-09-01)**
 - Date: 2026-08-07
 - Deciders: the platform architecture review, cost owner, platform operator
 - Supersedes: ADR-001 (in part), ADR-003; amends ADR-004, ADR-005, ADR-007 (in
   part); defers ADR-006
 - Related: `plans/260802-1037-unified-platform-ml-llm-gitops/plan.md` Session 2
   and Session 3 validation logs, `phase-03`, `phase-04`, `phase-05`, `phase-06`
+
+> **Superseded (2026-09-01):** the unified rebuild plan
+> (`plans/260831-1644-rebuild-target-mlops-architecture/`) restores the full
+> target architecture and both rubric tracks. ADR-016 names Istio, Vault,
+> Jenkins, Argo Rollouts and the ML track's return; ADR-006 is un-deferred.
+> This ADR's decisions were correct for the 7-day LLM-only window they were
+> made under and remain here as the historical record of why the platform
+> was cut down before it was rebuilt back up.
+
 
 ## Context
 
