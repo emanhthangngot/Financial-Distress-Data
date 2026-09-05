@@ -842,3 +842,15 @@ future adapter delivers tỷ or triệu, the row is rejected rather than silentl
 One finding from that session belongs to P4, not P2: the free vnstock tier caps financial statements
 at **4 periods**, so 28 of the 32 quarters `collector_config.yaml` asks for are unobtainable
 (plan D-21, R-18, `phase-04` §Free-tier data ceiling). It does not affect the contract's types.
+
+## Rubric Citations (phase-03 R-12 closure, appended 2026-09-05)
+
+Every rubric row this phase owns per `docs/rubric-matrix-unified.csv`'s `owning_phase` column, cited so `scripts/verify_rubric_coverage.py` can resolve ownership to an assertion (R-12). Each line names the row's real `rubric_id`, its stated requirement, and its proof artifact/deliverable — the row's own matrix columns, not invented text. Rows whose capability is not yet implemented are forward specs, matching this file's other `AC-P2-*` entries.
+
+- AC-P2-RUBRIC-1: `mini-26-data-storage-how-to-optimize-your-data-storage-dat` — data_engineer -> delivers "Datawarehouse (ví dụ indexing)" -> Datawarehouse (ví dụ indexing) (evidence: `docs/submission/rubric-(mini-coursework)/data_storage.md`)
+- AC-P2-RUBRIC-2: `mini-39-documentation-schema-design-visualize-tables-on-al` — data_engineer -> delivers "Visualize tables on all zones" -> Capture màn hình trên DBeaver (evidence: `docs/submission/rubric-(mini-coursework)/schema_design.md`)
+- AC-P2-RUBRIC-3: `mini-40-documentation-schema-design-dim-table-with-scd-2` — data_engineer -> delivers "Dim table with SCD 2" -> Dim table with SCD 2 (evidence: `docs/submission/rubric-(mini-coursework)/schema_design.md`)
+- AC-P2-RUBRIC-4: `mini-41-documentation-schema-design-feature-tables-feat_-t` — data_engineer -> delivers "Feature tables (feat_ tables) with 2 columns event_timestamp and created" -> Feature tables (feat_ tables) with 2 columns event_timestamp and created (evidence: `docs/submission/rubric-(mini-coursework)/schema_design.md`)
+- AC-P2-RUBRIC-5: `mini-42-documentation-schema-design-relationship-between-d` — data_engineer -> delivers "Relationship between dim & fact tables" -> Relationship between dim & fact tables (evidence: `docs/submission/rubric-(mini-coursework)/schema_design.md`)
+- AC-P2-RUBRIC-6: `mini-43-documentation-schema-design-naming-convention` — data_engineer -> delivers "Naming convention" -> Naming convention (evidence: `docs/submission/rubric-(mini-coursework)/schema_design.md`)
+- AC-P2-RUBRIC-7: `mini-44-novel-ideas-idea-1-idea-1` — data_engineer -> delivers "Idea 1" -> Document idea + proof it worked! (evidence: `docs/submission/rubric-(mini-coursework)/novel_ideas.md`)

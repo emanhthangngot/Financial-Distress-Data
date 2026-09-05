@@ -163,3 +163,12 @@ replace the offending task with a proper module; `changed=0` is the graded asser
 pods `Pending` on `Insufficient cpu` after P6. Mitigation: P0 G0 branch A must be recorded before
 P6 opens. Response: selective injection — mesh only `kserve`, `agents` and `api-serving`, which is
 sufficient for AC-P6-3, and record the reduction in ADR-016.
+
+## Rubric Citations (phase-03 R-12 closure, appended 2026-09-05)
+
+Every rubric row this phase owns per `docs/rubric-matrix-unified.csv`'s `owning_phase` column, cited so `scripts/verify_rubric_coverage.py` can resolve ownership to an assertion (R-12). Each line names the row's real `rubric_id`, its stated requirement, and its proof artifact/deliverable — the row's own matrix columns, not invented text. Rows whose capability is not yet implemented are forward specs, matching this file's other `AC-P6-*` entries.
+
+- AC-P6-RUBRIC-1: `LLM-iac-d-ng-ansible-configure-v-deplo` — platform_operator -> delivers "Dùng Ansible để configure và deploy các service lên VM ; (cần chia thành các role để code clean hơn)" -> Capture màn hình thể hiện từng setup đã chạy thành công (evidence: `docs/platform/evidence/llm/LLM-iac-d-ng-ansible-configure-v-deplo.md`)
+- AC-P6-RUBRIC-2: `LLM-iac-d-ng-terraform-setup-gke-ho-c-` — platform_operator -> delivers "IaC — Dùng Terraform để setup GKE hoặc các cloud services (để ý cách chia folder theo từng service nếu có, ví dụ như sau)" -> Capture màn hình thể hiện từng setup đã chạy thành công (evidence: `docs/platform/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`)
+- AC-P6-RUBRIC-3: `ML-iac-d-ng-ansible-configure-v-deplo` — platform_operator -> delivers "Dùng Ansible để configure và deploy các service lên VM ; (cần chia thành các role để code clean hơn)" -> Capture màn hình thể hiện từng setup đã chạy thành công (evidence: `docs/platform/evidence/ml/ML-iac-d-ng-ansible-configure-v-deplo.md`)
+- AC-P6-RUBRIC-4: `ML-iac-d-ng-terraform-setup-gke-ho-c-` — platform_operator -> delivers "IaC — Dùng Terraform để setup GKE hoặc các cloud services (để ý cách chia folder theo từng service nếu có, ví dụ như sau)" -> Capture màn hình thể hiện từng setup đã chạy thành công (evidence: `docs/platform/evidence/ml/ML-iac-d-ng-terraform-setup-gke-ho-c-.md`)

@@ -315,3 +315,10 @@ and record redirects. Response: the matrix is authoritative — re-point the row
 Mitigation: cross-check the 83 rows against the union of all phase `Related Code Files` sections
 during step 6. Response: assign the orphan component to a phase, or record it as an image-reading
 error in ADR-016.
+
+## Rubric Citations (phase-03 R-12 closure, appended 2026-09-05)
+
+Every rubric row this phase owns per `docs/rubric-matrix-unified.csv`'s `owning_phase` column, cited so `scripts/verify_rubric_coverage.py` can resolve ownership to an assertion (R-12). Each line names the row's real `rubric_id`, its stated requirement, and its proof artifact/deliverable — the row's own matrix columns, not invented text. Rows whose capability is not yet implemented are forward specs, matching this file's other `AC-P3-*` entries.
+
+- AC-P3-RUBRIC-1: `LLM-documentation-low-level-ml-design` — llm_engineer -> delivers "Documentation ; (tất cả documents để trong folder `docs/`, và ở README.md thì mọi người link tới mấy document này nhé. README.md chỉ summari..." -> Document 5 key classes (evidence: `docs/platform/evidence/llm/LLM-documentation-low-level-ml-design.md`)
+- AC-P3-RUBRIC-2: `ML-documentation-low-level-ml-design` — ml_engineer -> delivers "Documentation ; (tất cả documents để trong folder `docs/`, và ở README.md thì mọi người link tới mấy document này nhé. README.md chỉ summari..." -> Document 5 key classes (evidence: `docs/platform/evidence/ml/ML-documentation-low-level-ml-design.md`)
