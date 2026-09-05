@@ -188,3 +188,71 @@ def _extract_section(text: str, heading: str) -> str:
     if not match:
         return ""
     return match.group("body")
+
+
+def test_naming_convention_lint_script_passes() -> None:
+    """scripts/lint_naming_convention.py (phase-02 §Naming Convention, F9/F10/F18) exits 0
+    against the repo's bronze/silver/gold/ops SQL DDL."""
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "lint_naming_convention.py")],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+    )
+    assert (
+        result.returncode == 0
+    ), f"naming convention lint failed:\n{result.stdout}\n{result.stderr}"
+
+
+def test_naming_convention_lint_catches_missing_gold_prefix(tmp_path: Path) -> None:
+    """A gold table without a dim_/fact_/obt_/feat_ prefix must fail the linter."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lint_naming_convention", REPO_ROOT / "scripts" / "lint_naming_convention.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    bad_sql = tmp_path / "bad.sql"
+    bad_sql.write_text("CREATE TABLE gold.unprefixed_table (\n    id VARCHAR PRIMARY KEY\n);\n")
+    findings = module.lint_file(bad_sql)
+    assert findings, "expected a finding for a gold table with no declared prefix"
+    assert any("no declared prefix" in finding for finding in findings)
+
+
+def test_naming_convention_lint_catches_version_token(tmp_path: Path) -> None:
+    """A table name carrying a version token (e.g. _v1) must fail the linter."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lint_naming_convention", REPO_ROOT / "scripts" / "lint_naming_convention.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    bad_sql = tmp_path / "bad.sql"
+    bad_sql.write_text("CREATE TABLE gold.fact_events_v1 (\n    id VARCHAR PRIMARY KEY\n);\n")
+    findings = module.lint_file(bad_sql)
+    assert any("version token" in finding for finding in findings)
+
+
+def test_naming_convention_lint_catches_at_suffix_in_ops() -> None:
+    """An ops column with the banned _at suffix must fail the linter (F3 rename target)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lint_naming_convention", REPO_ROOT / "scripts" / "lint_naming_convention.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    columns = ["run_id", "created_at", "checked_ts"]
+    findings = module.lint_ops_columns("ops.example", columns)
+    assert any("created_at" in finding and "_ts" in finding for finding in findings)

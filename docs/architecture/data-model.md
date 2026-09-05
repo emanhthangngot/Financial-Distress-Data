@@ -2,6 +2,67 @@
 
 Unified data-model contract for the platform. This document is the single source of truth for bronze/silver/gold zones, the surrogate-key scheme, SCD2 semantics, and the feature/event_timestamp convention.
 
+
+> **Status (phase-02-data-model.md, Steps 1-9):** the §Naming Convention section below is the
+> target contract, landed by Step 7. Steps 1-4 (identity layer, vintage-preserving Silver,
+> `known_from_ts`) are implemented in a separate branch/PR; Steps 6, 8, 9 (metadata unification,
+> falsifiable schema evidence, migration/regression) are tracked here as SQL DDL
+> (`sql/schema_evidence.sql`, `sql/init_ops.sql`, `sql/init_ml.sql`,
+> `sql/migrations/002_data_model_v2.sql`, `sql/views/dim_company_sys.sql`) and
+> `scripts/lint_naming_convention.py`. Everything below "## Full specification" still describes the
+> **v1** contract (`company_key`, `distress_labels`, `_at` suffixes) and is superseded section by
+> section as Steps 1-4 land and this document is rewritten to match. Until then, treat the
+> §Naming Convention block as authoritative and the rest as historical/as-built v1 reference.
+
+## Naming Convention
+
+Declared and linted (F3, F9, F10, F18) — `scripts/lint_naming_convention.py` enforces this block
+against the repo; it is wired into `scripts/run_lakehouse_quality_gates.py`.
+
+```text
+ZONE / SCHEMA
+  bronze              `raw_` prefix, PLURAL feed name             raw_companies, raw_financial_statements
+  silver              `stg_` prefix, PLURAL feed name             stg_companies, stg_financial_statements
+  gold                SINGULAR + prefix                           dim_ fact_ obt_ feat_
+  ops                 operational metadata                      pipeline_run_log, data_quality_result
+  ml                  ML metadata                               distress_label, feast_registry_revision
+
+TABLE
+  dim_<entity>        dimension, singular                       dim_company, dim_date
+  fact_<event>        fact, singular                            fact_financial_statement
+  obt_<subject>       one big table                             obt_company_quarter_risk
+  feat_<entity>_<win> feature table                             feat_company_market_30d
+  NO version in a table name — versions live in Iceberg tags/branches
+
+COLUMN
+  <x>_key             surrogate key                             company_version_key, date_key
+  ticker               natural key AND durable key — GROUP BY axis; never a fact join key
+  <x>_ts              TIMESTAMPTZ                               created_ts, known_from_ts, valid_from_ts
+  <x>_date            DATE                                      trading_date, listing_date
+  is_<x>              BOOLEAN                                   is_current, is_latest_vintage
+  event_timestamp     RESERVED — Feast contract, never renamed
+  created_timestamp   RESERVED — Feast tie-break, never renamed
+  NO `_at` suffix — the 8 `ops` columns migrate to `_ts` (sql/migrations/002_data_model_v2.sql)
+  NO "table" inside a table or column name
+
+TYPE
+  money               DECIMAL(18,0)   scale 0: source granularity is 1,000đ (U-1). Irreversible
+  ratio / rate        DECIMAL(18,6)
+  timestamp           TIMESTAMPTZ     migrate via AT TIME ZONE 'UTC', never a bare ALTER TYPE
+  date surrogate      INTEGER YYYYMMDD
+
+CONSTRAINT
+  bronze              NO PK, NO UNIQUE (append-only). Grain documented, not enforced
+  silver              PK includes the snapshot / vintage axis
+  gold fact           PK = the full grain; partial unique index for is_latest_vintage
+  FK                  declared only on tables that carry real rows; every nullable FK
+                      column carries a NULL-rate ceiling in the DQ gate
+```
+
+`ticker` is the durable key (U-2): a real `entity_id` sourced from a curated registry is deferred —
+vnstock exposes no delisting endpoint, so the mapping cannot be sourced today. No
+`company_durable_key` column is created; that would be `company_key` (deleted, F1) renamed.
+
 ## Summary
 
 # Schema Design

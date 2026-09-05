@@ -1,13 +1,15 @@
--- ml schema. Runs against platform-postgres (pgvector/pgvector:pg16),
--- a separate Postgres instance from platform's ops (AGENTS.md: the two
--- schemas never cross-write). Mirrors init_ops.sql's style.
+-- ml schema. Runs against platform-postgres (pgvector/pgvector:pg16), a
+-- separate Postgres instance from ops. The cross-write ban between ops and ml
+-- was revoked by the unified rebuild plan (AGENTS.md), but the two remain
+-- physically separate Postgres instances until a later phase merges them.
 
 CREATE SCHEMA IF NOT EXISTS ml;
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- Label table (src/ml/label_pipeline.py). Not a Feast FeatureView by design —
--- see phase-04-implementation-notes.md section 5.
-CREATE TABLE IF NOT EXISTS ml.label_table (
+-- Distress label table (src/ml/label_pipeline.py). Renamed from ml.label_table:
+-- "table" inside a table name (F9, mini row 43). Not a Feast FeatureView by
+-- design — see phase-04-implementation-notes.md section 5.
+CREATE TABLE IF NOT EXISTS ml.distress_label (
     ticker TEXT NOT NULL,
     event_timestamp TIMESTAMPTZ NOT NULL,
     label INTEGER,
@@ -97,16 +99,6 @@ CREATE TABLE IF NOT EXISTS ml.rag_ingestion_run (
     source_sha TEXT NOT NULL
 );
 
--- DQ results (AGENTS.md: never cross-written with ops).
-CREATE TABLE IF NOT EXISTS ml.data_quality_result (
-    check_id TEXT PRIMARY KEY,
-    run_id TEXT,
-    dataset_name TEXT NOT NULL,
-    check_name TEXT NOT NULL,
-    status TEXT NOT NULL,
-    severity TEXT NOT NULL,
-    metric_value DOUBLE PRECISION,
-    threshold_value DOUBLE PRECISION,
-    checked_at TIMESTAMPTZ DEFAULT now(),
-    error_message TEXT
-);
+-- NOTE: ml.data_quality_result was merged into ops.data_quality_result (F4) —
+-- one table project-wide, PK check_id, disambiguated by the `track` column.
+-- See sql/init_ops.sql and sql/migrations/002_data_model_v2.sql.
