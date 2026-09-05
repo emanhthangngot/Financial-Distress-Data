@@ -12,6 +12,7 @@ from src.transforms.silver.core import (
     align_to_schema,
     bronze_to_silver,
     deduplicate_latest,
+    deduplicate_preserve_vintage,
     normalize_columns,
 )
 
@@ -20,5 +21,6 @@ __all__ = [
     "bronze_to_silver",
     "bronze_to_silver_spark",
     "deduplicate_latest",
+    "deduplicate_preserve_vintage",
     "normalize_columns",
 ]

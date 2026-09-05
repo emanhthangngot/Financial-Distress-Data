@@ -12,6 +12,7 @@ def bronze_to_silver_spark(
     field_types: dict[str, str] | None = None,
     enum_values: dict[str, list[Any]] | None = None,
     blank_as_null: bool = True,
+    preserve_vintages: bool = False,
 ) -> tuple[Any, Any]:
     try:
         from pyspark.sql import functions as F
@@ -75,12 +76,37 @@ def bronze_to_silver_spark(
                 F.col(field).isNotNull() & ~F.col(field).isin(list(allowed))
             )
 
+    if preserve_vintages:
+        knowledge_candidates = [
+            F.col(field).cast("timestamp")
+            for field in (
+                "known_from_ts",
+                "report_release_date",
+                "event_timestamp",
+                "created_ts",
+            )
+            if field in normalized.columns
+        ]
+        if not knowledge_candidates:
+            raise ValueError(
+                "known_from_ts or a source timestamp column is required to preserve vintages"
+            )
+        if "known_from_ts" in normalized.columns:
+            explicit_known = F.col("known_from_ts")
+            invalid_expr = invalid_expr | (
+                explicit_known.isNotNull() & explicit_known.cast("timestamp").isNull()
+            )
+        normalized = normalized.withColumn("known_from_ts", F.coalesce(*knowledge_candidates))
+        if "known_from_ts" not in all_fields:
+            all_fields.append("known_from_ts")
     missing_required_expr = None
     for field in required:
         condition = F.col(field).isNull()
         missing_required_expr = (
             condition if missing_required_expr is None else missing_required_expr | condition
         )
+    if preserve_vintages:
+        missing_required_expr = missing_required_expr | F.col("known_from_ts").isNull()
 
     failed = (
         normalized.filter(missing_required_expr | invalid_expr)
@@ -93,10 +119,26 @@ def bronze_to_silver_spark(
         .withColumn("raw_payload", raw_payload)
     )
     valid = normalized.filter(~missing_required_expr & ~invalid_expr).select(*all_fields)
-    window = Window.partitionBy(*dedup_keys).orderBy(F.col("created_ts").desc_nulls_last())
-    silver = (
-        valid.withColumn("_row_number", F.row_number().over(window))
-        .filter(F.col("_row_number") == 1)
-        .drop("_row_number")
-    )
+    if preserve_vintages:
+        vintage_window = Window.partitionBy(*dedup_keys, "known_from_ts").orderBy(
+            F.col("created_ts").desc_nulls_last()
+        )
+        latest_window = Window.partitionBy(*dedup_keys).orderBy(
+            F.col("known_from_ts").desc(), F.col("created_ts").desc_nulls_last()
+        )
+        silver = (
+            valid.withColumn("_vintage_row_number", F.row_number().over(vintage_window))
+            .filter(F.col("_vintage_row_number") == 1)
+            .drop("_vintage_row_number")
+            .withColumn("_latest_row_number", F.row_number().over(latest_window))
+            .withColumn("is_latest_vintage", F.col("_latest_row_number") == 1)
+            .drop("_latest_row_number")
+        )
+    else:
+        window = Window.partitionBy(*dedup_keys).orderBy(F.col("created_ts").desc_nulls_last())
+        silver = (
+            valid.withColumn("_row_number", F.row_number().over(window))
+            .filter(F.col("_row_number") == 1)
+            .drop("_row_number")
+        )
     return silver, failed

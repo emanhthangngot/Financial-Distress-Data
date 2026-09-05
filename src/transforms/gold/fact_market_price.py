@@ -9,16 +9,27 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.transforms.keys import date_key, stable_company_key
+from src.transforms.keys import (
+    date_key,
+    fact_known_from_ts,
+    resolve_company_version_key,
+    resolve_company_version_key_spark,
+)
 
 
-def build_fact_market_price(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_fact_market_price(
+    rows: list[dict[str, Any]],
+    dim_company_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     facts = []
     previous_close_by_ticker: dict[str, float] = {}
     for row in sorted(rows, key=lambda item: (item["ticker"], item["trading_date"])):
         fact = dict(row)
         fact["ticker"] = str(row["ticker"]).upper()
-        fact["company_key"] = stable_company_key(fact["ticker"])
+        fact["known_from_ts"] = fact_known_from_ts(row, "event_timestamp", "created_ts")
+        fact["company_version_key"] = resolve_company_version_key(
+            fact["ticker"], fact["known_from_ts"], dim_company_rows
+        )
         fact["date_key"] = date_key(row["trading_date"])
         previous_close = previous_close_by_ticker.get(fact["ticker"])
         close_price = float(row["close_price"])
@@ -33,7 +44,10 @@ def build_fact_market_price(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return facts
 
 
-def build_fact_market_price_spark(dataframe: Any) -> Any:
+def build_fact_market_price_spark(
+    dataframe: Any,
+    dim_company_dataframe: Any,
+) -> Any:
     try:
         from pyspark.sql import functions as F
         from pyspark.sql.window import Window
@@ -46,10 +60,30 @@ def build_fact_market_price_spark(dataframe: Any) -> Any:
         previous_close.isNull() | (previous_close == 0),
         F.lit(None).cast("double"),
     ).otherwise((F.col("close_price").cast("double") - previous_close) / previous_close)
-    return (
+    known_from_ts = F.coalesce(
+        (
+            F.to_timestamp("known_from_ts")
+            if "known_from_ts" in dataframe.columns
+            else F.lit(None).cast("timestamp")
+        ),
+        (
+            F.to_timestamp("event_timestamp")
+            if "event_timestamp" in dataframe.columns
+            else F.lit(None).cast("timestamp")
+        ),
+        (
+            F.to_timestamp("created_ts")
+            if "created_ts" in dataframe.columns
+            else F.lit(None).cast("timestamp")
+        ),
+    )
+    fact = (
         dataframe.withColumn("ticker", F.upper(F.col("ticker")))
-        .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
+        .withColumn("known_from_ts", known_from_ts)
         .withColumn("date_key", F.date_format(F.to_date("trading_date"), "yyyyMMdd").cast("int"))
         .withColumn("daily_return", daily_return)
         .withColumn("volatility_signal", F.abs(F.col("daily_return")) > F.lit(0.07))
     )
+    if fact.filter(F.col("known_from_ts").isNull()).limit(1).count():
+        raise ValueError("known_from_ts, event_timestamp, or created_ts is required")
+    return resolve_company_version_key_spark(fact, dim_company_dataframe)

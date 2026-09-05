@@ -144,7 +144,11 @@ def _date_key_to_iso(value: int) -> str:
 
 
 def _silver_dataset(
-    rows: list[dict[str, Any]], dataset_name: str, dedup_keys: list[str]
+    rows: list[dict[str, Any]],
+    dataset_name: str,
+    dedup_keys: list[str],
+    *,
+    preserve_vintages: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     contract = InMemorySchemaRegistry.from_yaml("configs/schema-contracts.yaml").get_current(
         dataset_name
@@ -158,6 +162,7 @@ def _silver_dataset(
         enum_values=contract.enum_values,
         blank_as_null=contract.blank_as_null,
         run_id=current_evidence_run_id(),
+        preserve_vintages=preserve_vintages,
     )
 
 
@@ -380,25 +385,31 @@ def build_evidence_payload(
         collect_market_prices(tickers, 2024, 2025, adapter=adapter)
     )
 
-    silver_companies, failed_companies = _silver_dataset(bronze_companies, "companies", ["ticker"])
+    silver_companies, failed_companies = _silver_dataset(
+        bronze_companies, "companies", ["ticker", "created_ts"]
+    )
     silver_financial_statements, failed_financial_statements = _silver_dataset(
         bronze_financial_statements,
         "financial_statements",
         ["ticker", "report_period"],
+        preserve_vintages=True,
     )
     silver_market_prices, failed_market_prices = _silver_dataset(
         bronze_market_prices,
         "market_prices_daily",
         ["ticker", "trading_date"],
+        preserve_vintages=True,
     )
 
     gold_dim_company = build_dim_company(silver_companies)
-    gold_fact_financial_statement = build_fact_financial_statement(silver_financial_statements)
-    gold_fact_market_price = build_fact_market_price(silver_market_prices)
+    gold_fact_financial_statement = build_fact_financial_statement(
+        silver_financial_statements, gold_dim_company
+    )
+    gold_fact_market_price = build_fact_market_price(silver_market_prices, gold_dim_company)
     gold_fact_news_sentiment = build_fact_news_sentiment(
         [
             StreamEvent.news_sentiment(
-                "AAA",
+                tickers[0],
                 "2026-01-01T09:00:06+00:00",
                 "2026-01-01T09:00:07+00:00",
                 -0.2,
@@ -407,7 +418,7 @@ def build_evidence_payload(
                 "https://example.local/news/aaa-risk",
             ).as_record(),
             StreamEvent.news_sentiment(
-                "BBB",
+                tickers[-1],
                 "2026-01-01T09:00:08+00:00",
                 "2026-01-01T09:00:09+00:00",
                 -0.7,
@@ -415,17 +426,19 @@ def build_evidence_payload(
                 0.9,
                 "https://example.local/news/bbb-distress",
             ).as_record(),
-        ]
+        ],
+        gold_dim_company,
     )
     gold_fact_market_alert = build_fact_market_alert(
         [
             StreamEvent.alert(
-                "BBB",
+                tickers[-1],
                 "2026-01-01T09:00:10+00:00",
                 "2026-01-01T09:00:11+00:00",
                 "price_drop",
             ).as_record()
-        ]
+        ],
+        gold_dim_company,
     )
     gold_distress_labels = compute_labels(gold_fact_financial_statement)
     gold_obt_company_quarter_risk = build_obt_company_quarter_risk(
@@ -617,7 +630,11 @@ def write_postgres_metadata(
     for dataset_name in ("silver_companies", "gold_fact_financial_statement"):
         result = check_unique(payload.datasets[dataset_name], dataset_name, ["ticker"])
         if dataset_name == "gold_fact_financial_statement":
-            result = check_not_null(payload.datasets[dataset_name], dataset_name, "company_key")
+            result = check_not_null(
+                payload.datasets[dataset_name],
+                dataset_name,
+                "company_version_key",
+            )
         writer.log_dq_result(
             result.dataset_name,
             result.check_name,

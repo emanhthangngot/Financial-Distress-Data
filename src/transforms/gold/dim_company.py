@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from src.transforms.keys import date_key, stable_company_key
+from src.transforms.keys import company_version_key, date_key
 
 
 def _utc_iso(value: Any) -> str:
@@ -26,7 +26,14 @@ def merge_dim_company(
     """Merge ordered company snapshots into persistent SCD2 history."""
     output = [dict(row) for row in existing_rows]
     latest_by_ticker = {str(row["ticker"]).upper(): row for row in output if row.get("is_current")}
-    tracked = ("industry", "sector", "exchange", "delisted_flag")
+    tracked = (
+        "company_name",
+        "industry",
+        "sector",
+        "exchange",
+        "listing_date",
+        "delisted_flag",
+    )
     rows = sorted(
         snapshots,
         key=lambda item: (
@@ -47,8 +54,7 @@ def merge_dim_company(
             previous["valid_to_ts"] = valid_from
             previous["is_current"] = False
         dim_row = {
-            "company_key": stable_company_key(ticker),
-            "company_version_key": stable_company_key(f"{ticker}|{valid_from}"),
+            "company_version_key": company_version_key(ticker, valid_from),
             "ticker": ticker,
             "company_name": row.get("company_name"),
             "exchange": row.get("exchange"),

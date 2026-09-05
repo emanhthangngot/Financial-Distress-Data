@@ -14,7 +14,10 @@ def test_critical_not_null_failure():
 
 def test_referential_integrity_failure():
     result = check_referential_integrity(
-        [{"company_key": "missing"}], {"known"}, "fact_financial_statement", "company_key"
+        [{"company_version_key": "missing"}],
+        {"known"},
+        "fact_financial_statement",
+        "company_version_key",
     )
     assert result.status == "fail"
     assert result.severity == "critical"

@@ -53,46 +53,51 @@ def build_actual_dq_checks(
     gold_news = read_minio_parquet_rows(bucket, "gold/fact_news_sentiment/")
     gold_obt = read_minio_parquet_rows(bucket, "gold/obt_company_quarter_risk/")
     silver_market = read_minio_parquet_rows(bucket, "silver/market_prices_daily/")
-    company_keys = {row.get("company_key") for row in gold_dim_company}
+    company_version_keys = {row.get("company_version_key") for row in gold_dim_company}
 
     return [
         {
             "type": "unique",
             "dataset_name": "silver_companies",
             "rows": silver_companies,
-            "fields": ["ticker"],
+            "fields": ["ticker", "created_ts"],
         },
         {
             "type": "not_null",
             "dataset_name": "gold_fact_financial_statement",
             "rows": gold_financial,
-            "field": "company_key",
+            "field": "company_version_key",
         },
         {
             "type": "unique",
             "dataset_name": "gold_fact_financial_statement",
             "rows": gold_financial,
-            "fields": ["ticker", "report_period"],
+            "fields": [
+                "ticker",
+                "report_period",
+                "statement_variant",
+                "known_from_ts",
+            ],
         },
         {
             "type": "referential_integrity",
             "dataset_name": "gold_fact_financial_statement",
             "fact_rows": gold_financial,
-            "dimension_keys": company_keys,
-            "field": "company_key",
+            "dimension_keys": company_version_keys,
+            "field": "company_version_key",
         },
         {
             "type": "unique",
             "dataset_name": "gold_fact_market_price",
             "rows": gold_market,
-            "fields": ["ticker", "trading_date"],
+            "fields": ["ticker", "trading_date", "known_from_ts"],
         },
         {
             "type": "referential_integrity",
             "dataset_name": "gold_fact_market_price",
             "fact_rows": gold_market,
-            "dimension_keys": company_keys,
-            "field": "company_key",
+            "dimension_keys": company_version_keys,
+            "field": "company_version_key",
         },
         {
             "type": "unique",
@@ -110,15 +115,15 @@ def build_actual_dq_checks(
             "type": "referential_integrity",
             "dataset_name": "gold_fact_market_alert",
             "fact_rows": gold_alert,
-            "dimension_keys": company_keys,
-            "field": "company_key",
+            "dimension_keys": company_version_keys,
+            "field": "company_version_key",
         },
         {
             "type": "referential_integrity",
             "dataset_name": "gold_fact_news_sentiment",
             "fact_rows": gold_news,
-            "dimension_keys": company_keys,
-            "field": "company_key",
+            "dimension_keys": company_version_keys,
+            "field": "company_version_key",
         },
         {
             "type": "unique",

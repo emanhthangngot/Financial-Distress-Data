@@ -26,7 +26,7 @@ def _legacy_companies(source_name: str) -> list[dict]:
             "sector": "Industrials",
             "listing_date": "2015-01-01",
             "delisted_flag": False,
-            "created_ts": "2026-01-01T00:00:00+00:00",
+            "created_ts": "2015-01-01T00:00:00+00:00",
             "source_system": source_name,
         },
         {
@@ -37,7 +37,7 @@ def _legacy_companies(source_name: str) -> list[dict]:
             "sector": "Financials",
             "listing_date": "2018-06-01",
             "delisted_flag": False,
-            "created_ts": "2026-01-01T00:00:00+00:00",
+            "created_ts": "2018-06-01T00:00:00+00:00",
             "source_system": source_name,
         },
     ]
@@ -83,7 +83,7 @@ def _build_company_rows(
                 "sector": sector,
                 "listing_date": "2015-01-01",
                 "delisted_flag": False,
-                "created_ts": "2026-01-01T00:00:00+00:00",
+                "created_ts": "2015-01-01T00:00:00+00:00",
                 "source_system": source_name,
             }
         )

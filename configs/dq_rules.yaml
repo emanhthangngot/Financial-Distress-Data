@@ -2,7 +2,7 @@ critical:
   - {name: schema_matches_registry, type: schema}
   - {name: primary_key_not_null, type: not_null}
   - {name: primary_key_unique, type: unique}
-  - {name: fact_company_key_exists, type: referential_integrity}
+  - {name: fact_company_version_key_exists, type: referential_integrity}
   - {name: fact_date_key_exists, type: referential_integrity}
 
 warning:

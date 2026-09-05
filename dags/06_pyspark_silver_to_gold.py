@@ -14,7 +14,7 @@ from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.lakehouse.compaction import compact_small_files
 from src.transforms.compute_distress_labels import compute_labels
-from src.transforms.silver_to_gold import build_fact_financial_statement
+from src.transforms.silver_to_gold import build_dim_company, build_fact_financial_statement
 
 DAG, PythonOperator = airflow_imports()
 
@@ -22,7 +22,8 @@ DAG, PythonOperator = airflow_imports()
 def _gold_smoke() -> list[dict]:
     adapter = VnstockFixtureAdapter()
     statements = adapter.fetch_financial_statements("AAA", 2025, 2025)
-    facts = build_fact_financial_statement(statements)
+    dim_company = build_dim_company(adapter.fetch_companies())
+    facts = build_fact_financial_statement(statements, dim_company)
     return compute_labels(facts)
 
 
