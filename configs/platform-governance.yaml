@@ -31,13 +31,13 @@ datasets:
     fields: [[schema_version, number], [seed, number]]
   gold.fact_financial_statement:
     platform: s3
-    fields: [[company_key, string], [report_period, string], [event_timestamp, time]]
+    fields: [[company_version_key, string], [report_period, string], [known_from_ts, time]]
   gold.obt_company_quarter_risk:
     platform: s3
     fields: [[ticker, string], [report_period, string], [z_score, number]]
   gold.fact_market_price:
     platform: s3
-    fields: [[company_key, string], [trading_date, date], [event_timestamp, time]]
+    fields: [[company_version_key, string], [trading_date, date], [known_from_ts, time]]
   ml.rag_document:
     platform: postgres
     fields: [[document_hash, string], [source_uri, string], [license, string]]

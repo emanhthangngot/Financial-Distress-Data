@@ -31,6 +31,9 @@ class DistressLabel:
     label_confidence: str | None = None
     training_eligible: bool = False
     rule_version: str = RULE_VERSION
+    company_version_key: str | None = None
+    known_from_ts: Any = None
+    decision_ts: Any = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -45,6 +48,9 @@ class DistressLabel:
             "label_confidence": self.label_confidence,
             "training_eligible": self.training_eligible,
             "rule_version": self.rule_version,
+            "company_version_key": self.company_version_key,
+            "known_from_ts": self.known_from_ts,
+            "decision_ts": self.decision_ts,
         }
 
 
@@ -223,6 +229,9 @@ def compute_distress_label(
             z_score=None,
             label_confidence=None,
             training_eligible=False,
+            company_version_key=row.get("company_version_key"),
+            known_from_ts=row.get("known_from_ts"),
+            decision_ts=row.get("known_from_ts"),
         )
 
     z_score = z_double_prime(row)
@@ -273,11 +282,17 @@ def compute_distress_label(
         z_score=z_score,
         label_confidence=label_confidence,
         training_eligible=training_eligible,
+        company_version_key=row.get("company_version_key"),
+        known_from_ts=row.get("known_from_ts"),
+        decision_ts=row.get("known_from_ts"),
     )
 
 
 def compute_labels(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    rows_sorted = sorted(rows, key=lambda item: (item.get("ticker"), item.get("report_period")))
+    latest_rows = [row for row in rows if row.get("is_latest_vintage") is not False]
+    rows_sorted = sorted(
+        latest_rows, key=lambda item: (item.get("ticker"), item.get("report_period"))
+    )
     # Holds the last *observed* row per ticker (whatever sort produced). Whether
     # that row is strictly the prior quarter is decided downstream by the gating
     # check  inside compute_distress_label.

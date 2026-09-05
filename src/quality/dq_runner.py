@@ -15,7 +15,9 @@ from typing import Any
 from src.quality.dq_checks import (
     DQResult,
     check_freshness,
+    check_latest_vintage_unique,
     check_not_null,
+    check_null_rate_ceiling,
     check_referential_integrity,
     check_retention,
     check_unique,
@@ -73,6 +75,20 @@ class DQRunner:
                 check["silver_count"],
                 check["dataset_name"],
                 check.get("threshold", 0.8),
+            )
+        if check_type == "latest_vintage_unique":
+            return check_latest_vintage_unique(
+                check["rows"],
+                check["dataset_name"],
+                check["business_key_fields"],
+                check.get("vintage_flag_field", "is_latest_vintage"),
+            )
+        if check_type == "null_rate_ceiling":
+            return check_null_rate_ceiling(
+                check["rows"],
+                check["dataset_name"],
+                check["field"],
+                check.get("ceiling", 0.05),
             )
         if check_type == "freshness":
             return check_freshness(

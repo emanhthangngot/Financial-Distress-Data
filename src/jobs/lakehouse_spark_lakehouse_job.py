@@ -18,7 +18,9 @@ from src.security.secrets import require
 from src.transforms.bronze_to_silver import bronze_to_silver_spark
 from src.transforms.gold.dim_company import build_dim_date
 from src.transforms.gold.fact_financial_statement import build_fact_financial_statement_spark
+from src.transforms.gold.fact_market_alert import build_fact_market_alert_spark
 from src.transforms.gold.fact_market_price import build_fact_market_price_spark
+from src.transforms.gold.fact_news_sentiment import build_fact_news_sentiment_spark
 
 SPARK_HADOOP_AWS_PACKAGE = "org.apache.hadoop:hadoop-aws:3.3.4"
 SPARK_AWS_SDK_PACKAGE = "com.amazonaws:aws-java-sdk-bundle:1.12.262"
@@ -57,9 +59,17 @@ def _silver(
     required: list[str],
     nullable: list[str],
     dedup_keys: list[str],
+    *,
+    preserve_vintages: bool = False,
 ) -> tuple[Any, Any]:
     bronze = spark.read.parquet(f"s3a://{bucket}/bronze/{dataset}/data.parquet")
-    silver, failed = bronze_to_silver_spark(bronze, required, nullable, dedup_keys)
+    silver, failed = bronze_to_silver_spark(
+        bronze,
+        required,
+        nullable,
+        dedup_keys,
+        preserve_vintages=preserve_vintages,
+    )
     _cast_nulltype_columns(silver).write.mode("overwrite").parquet(
         f"s3a://{bucket}/silver/{dataset}/"
     )
@@ -191,41 +201,50 @@ def build_dim_company_spark(silver_companies_df: Any) -> Any:
     from pyspark.sql import functions as F
     from pyspark.sql.window import Window
 
+    normalized = silver_companies_df.withColumn("ticker", F.upper(F.col("ticker")))
     window_lag = Window.partitionBy("ticker").orderBy("created_ts")
-    prev_industry = F.lag("industry").over(window_lag)
-    prev_sector = F.lag("sector").over(window_lag)
-    prev_exchange = F.lag("exchange").over(window_lag)
-    prev_delisted = F.lag("delisted_flag").over(window_lag)
+    previous_created = F.lag("created_ts").over(window_lag)
+    changed = previous_created.isNull()
+    for field in (
+        "company_name",
+        "industry",
+        "sector",
+        "exchange",
+        "listing_date",
+        "delisted_flag",
+    ):
+        changed = changed | ~F.lag(F.col(field)).over(window_lag).eqNullSafe(F.col(field))
 
-    changed = (
-        prev_industry.isNull()
-        | (prev_industry != F.col("industry"))
-        | prev_sector.isNull()
-        | (prev_sector != F.col("sector"))
-        | prev_exchange.isNull()
-        | (prev_exchange != F.col("exchange"))
-        | prev_delisted.isNull()
-        | (prev_delisted != F.col("delisted_flag"))
-    )
-
-    filtered = (
-        silver_companies_df.withColumn("_changed", changed)
-        .filter(F.col("_changed"))
-        .drop("_changed")
-    )
-
+    filtered = normalized.withColumn("_changed", changed).filter(F.col("_changed")).drop("_changed")
     window_lead = Window.partitionBy("ticker").orderBy("created_ts")
-    valid_to_ts = F.lead("created_ts").over(window_lead)
-    is_current = valid_to_ts.isNull()
+    valid_from_ts = F.to_timestamp("created_ts")
+    valid_to_ts = F.lead(valid_from_ts).over(window_lead)
+    valid_from_text = F.concat(
+        F.date_format(valid_from_ts, "yyyy-MM-dd'T'HH:mm:ss"),
+        F.lit("+00:00"),
+    )
 
     return (
-        filtered.withColumn("ticker", F.upper(F.col("ticker")))
-        .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
-        .withColumn("valid_from_ts", F.col("created_ts"))
+        filtered.withColumn("valid_from_ts", valid_from_ts)
         .withColumn("valid_to_ts", valid_to_ts)
-        .withColumn("is_current", is_current)
+        .withColumn("is_current", F.col("valid_to_ts").isNull())
+        .withColumn(
+            "company_version_key",
+            F.substring(
+                F.sha2(
+                    F.concat(
+                        F.col("ticker"),
+                        F.lit("|"),
+                        valid_from_text,
+                    ),
+                    256,
+                ),
+                1,
+                16,
+            ),
+        )
         .select(
-            "company_key",
+            "company_version_key",
             "ticker",
             "company_name",
             "exchange",
@@ -240,57 +259,15 @@ def build_dim_company_spark(silver_companies_df: Any) -> Any:
     )
 
 
-def build_fact_news_sentiment_spark(news_bronze_df: Any) -> Any:
-    from pyspark.sql import functions as F
-
-    return (
-        news_bronze_df.withColumn("ticker", F.upper(F.col("ticker")))
-        .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
-        .withColumn("date_key", F.date_format(F.to_date("event_timestamp"), "yyyyMMdd").cast("int"))
-        .select(
-            "event_id",
-            "ticker",
-            "event_timestamp",
-            "created_ts",
-            "sentiment_score",
-            "risk_keyword_flag",
-            "severity_score",
-            "source_url",
-            "company_key",
-            "date_key",
-        )
-    )
-
-
-def build_fact_market_alert_spark(alert_bronze_df: Any) -> Any:
-    from pyspark.sql import functions as F
-    from pyspark.sql.window import Window
-
-    window = Window.partitionBy("event_id").orderBy(F.col("created_ts").desc_nulls_last())
-    dedup = (
-        alert_bronze_df.withColumn("_rn", F.row_number().over(window))
-        .filter(F.col("_rn") == 1)
-        .drop("_rn")
-    )
-    return (
-        dedup.withColumn("ticker", F.upper(F.col("ticker")))
-        .withColumn("company_key", F.substring(F.sha2(F.upper(F.col("ticker")), 256), 1, 16))
-        .withColumn("date_key", F.date_format(F.to_date("event_timestamp"), "yyyyMMdd").cast("int"))
-        .select(
-            "event_id",
-            "ticker",
-            "event_timestamp",
-            "created_ts",
-            "alert_type",
-            "company_key",
-            "date_key",
-        )
-    )
-
-
 def compute_labels_spark(financial_fact_df: Any) -> Any:
     from pyspark.sql import functions as F
     from pyspark.sql.window import Window
+
+    latest_financial = (
+        financial_fact_df.filter(F.col("is_latest_vintage"))
+        if "is_latest_vintage" in financial_fact_df.columns
+        else financial_fact_df
+    )
 
     window = Window.partitionBy("ticker").orderBy("report_period")
     prev_net_income = F.lag("net_income").over(window)
@@ -326,14 +303,14 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
         F.col("interest_expense") > 0, F.col("ebit") / F.col("interest_expense")
     ).otherwise(None)
 
-    sector_col = F.col("sector") if "sector" in financial_fact_df.columns else F.lit(None)
-    industry_col = F.col("industry") if "industry" in financial_fact_df.columns else F.lit(None)
+    sector_col = F.col("sector") if "sector" in latest_financial.columns else F.lit(None)
+    industry_col = F.col("industry") if "industry" in latest_financial.columns else F.lit(None)
     gics_sector_col = (
-        F.col("gics_sector") if "gics_sector" in financial_fact_df.columns else F.lit(None)
+        F.col("gics_sector") if "gics_sector" in latest_financial.columns else F.lit(None)
     )
     gics_industry_col = (
         F.col("gics_industry_group")
-        if "gics_industry_group" in financial_fact_df.columns
+        if "gics_industry_group" in latest_financial.columns
         else F.lit(None)
     )
 
@@ -447,7 +424,7 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
     distress_reason = F.array_join(clean_reasons, ";")
 
     return (
-        financial_fact_df.withColumn("z_score", z_score)
+        latest_financial.withColumn("z_score", z_score)
         .withColumn("distress_label", distress_label)
         .withColumn("distress_reason", distress_reason)
         .withColumn("label_source", F.lit("rule_based_v1"))
@@ -455,8 +432,11 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
         .withColumn("training_eligible", training_eligible)
         .withColumn("rule_version", F.lit("v1"))
         .select(
+            "company_version_key",
             "ticker",
             "report_period",
+            "known_from_ts",
+            F.col("known_from_ts").alias("decision_ts"),
             F.coalesce(F.col("event_timestamp"), F.col("report_release_date")).alias(
                 "event_timestamp"
             ),
@@ -475,10 +455,14 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
 def build_obt_company_quarter_risk_spark(financial_fact_df: Any, labels_df: Any) -> Any:
     from pyspark.sql import functions as F
 
-    joined = financial_fact_df.alias("fin").join(
+    latest_financial = (
+        financial_fact_df.filter(F.col("is_latest_vintage"))
+        if "is_latest_vintage" in financial_fact_df.columns
+        else financial_fact_df
+    )
+    joined = latest_financial.alias("fin").join(
         labels_df.alias("lbl"),
-        (F.col("fin.ticker") == F.col("lbl.ticker"))
-        & (F.col("fin.report_period") == F.col("lbl.report_period")),
+        F.col("fin.company_version_key") == F.col("lbl.company_version_key"),
         "left",
     )
 
@@ -501,7 +485,7 @@ def build_obt_company_quarter_risk_spark(financial_fact_df: Any, labels_df: Any)
         interest_expense > 0, F.col("fin.ebit").cast("double") / interest_expense
     ).otherwise(None)
 
-    select_exprs = [F.col(f"fin.{col}").alias(col) for col in financial_fact_df.columns]
+    select_exprs = [F.col(f"fin.{col}").alias(col) for col in latest_financial.columns]
     select_exprs.extend(
         [
             current_ratio.alias("current_ratio"),
@@ -525,17 +509,22 @@ def build_obt_company_quarter_risk_spark(financial_fact_df: Any, labels_df: Any)
 def build_feat_company_financial_4q_spark(obt_df: Any) -> Any:
     from pyspark.sql import functions as F
 
-    reference_timestamp = F.coalesce(
-        F.col("report_release_date"), F.col("event_timestamp"), F.col("created_ts")
+    known_from_ts = F.coalesce(
+        F.col("known_from_ts"),
+        F.col("report_release_date"),
+        F.col("event_timestamp"),
+        F.col("created_ts"),
     )
     return (
         obt_df.withColumn("ticker", F.upper(F.col("ticker")))
-        .withColumn("event_timestamp", reference_timestamp)
+        .withColumn("known_from_ts", known_from_ts)
+        .withColumn("event_timestamp", F.col("known_from_ts"))
         .withColumn("feature_family", F.lit("financial_4q"))
         .select(
             "ticker",
             "report_period",
             "event_timestamp",
+            "known_from_ts",
             "current_ratio",
             "debt_to_asset",
             "debt_to_equity",
@@ -551,14 +540,18 @@ def build_feat_company_financial_4q_spark(obt_df: Any) -> Any:
 def build_feat_company_market_30d_spark(market_fact_df: Any) -> Any:
     from pyspark.sql import functions as F
 
-    event_timestamp = F.coalesce(F.col("event_timestamp"), F.col("trading_date"))
+    known_from_ts = F.coalesce(
+        F.col("known_from_ts"), F.col("event_timestamp"), F.col("created_ts")
+    )
     return (
         market_fact_df.withColumn("ticker", F.upper(F.col("ticker")))
-        .withColumn("event_timestamp", event_timestamp)
+        .withColumn("known_from_ts", known_from_ts)
+        .withColumn("event_timestamp", F.col("known_from_ts"))
         .withColumn("feature_family", F.lit("market_30d"))
         .select(
             "ticker",
             "event_timestamp",
+            "known_from_ts",
             "trading_date",
             "close_price",
             "volume",
@@ -574,10 +567,12 @@ def build_feat_company_news_30d_spark(news_fact_df: Any) -> Any:
 
     return (
         news_fact_df.withColumn("ticker", F.upper(F.col("ticker")))
+        .withColumn("event_timestamp", F.col("known_from_ts"))
         .withColumn("feature_family", F.lit("news_30d"))
         .select(
             "ticker",
             "event_timestamp",
+            "known_from_ts",
             "sentiment_score",
             "risk_keyword_flag",
             "severity_score",
@@ -596,7 +591,7 @@ def build_feat_company_unified_spark(obt_df: Any, market_df: Any) -> Any:
     joined = ref.join(
         feat,
         (F.col("ref.ticker") == F.col("feat.ticker"))
-        & (F.col("feat.event_timestamp") <= F.col("ref.event_timestamp")),
+        & (F.col("feat.known_from_ts") <= F.col("ref.known_from_ts")),
         "left",
     )
 
@@ -644,7 +639,7 @@ def run_lakehouse_spark_lakehouse(
             "companies",
             companies_contract.required,
             companies_contract.nullable,
-            ["ticker"],
+            ["ticker", "created_ts"],
         )
         silver_financial_statements, failed_statements = _silver(
             spark,
@@ -653,6 +648,7 @@ def run_lakehouse_spark_lakehouse(
             statements_contract.required,
             statements_contract.nullable,
             ["ticker", "report_period"],
+            preserve_vintages=True,
         )
 
         batch_prices_df = spark.read.parquet(
@@ -701,6 +697,7 @@ def run_lakehouse_spark_lakehouse(
             prices_contract.required,
             prices_contract.nullable,
             ["ticker", "trading_date"],
+            preserve_vintages=True,
         )
         _cast_nulltype_columns(silver_market_prices).write.mode("overwrite").parquet(
             f"s3a://{bucket}/silver/market_prices_daily/"
@@ -711,8 +708,10 @@ def run_lakehouse_spark_lakehouse(
         dim_company_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/dim_company/")
 
         # 3. Fact Financial Statement & Fact Market Price
-        financial_fact = build_fact_financial_statement_spark(silver_financial_statements)
-        market_fact = build_fact_market_price_spark(silver_market_prices)
+        financial_fact = build_fact_financial_statement_spark(
+            silver_financial_statements, dim_company_df
+        )
+        market_fact = build_fact_market_price_spark(silver_market_prices, dim_company_df)
         financial_fact.write.mode("overwrite").parquet(
             f"s3a://{bucket}/gold/fact_financial_statement/"
         )
@@ -725,7 +724,6 @@ def run_lakehouse_spark_lakehouse(
             )
             if evidence_run_id is not None and "evidence_run_id" in news_bronze_df.columns:
                 news_bronze_df = news_bronze_df.filter(F.col("evidence_run_id") == evidence_run_id)
-            news_fact_df = build_fact_news_sentiment_spark(news_bronze_df)
         except Exception:
             schema = StructType(
                 [
@@ -737,11 +735,14 @@ def run_lakehouse_spark_lakehouse(
                     StructField("risk_keyword_flag", BooleanType(), True),
                     StructField("severity_score", DoubleType(), True),
                     StructField("source_url", StringType(), True),
-                    StructField("company_key", StringType(), True),
+                    StructField("known_from_ts", StringType(), True),
+                    StructField("company_version_key", StringType(), True),
                     StructField("date_key", IntegerType(), True),
                 ]
             )
             news_fact_df = spark.createDataFrame([], schema)
+        else:
+            news_fact_df = build_fact_news_sentiment_spark(news_bronze_df, dim_company_df)
         news_fact_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/fact_news_sentiment/")
 
         # 5. Alert facts (Spark-native with fallback)
@@ -753,7 +754,6 @@ def run_lakehouse_spark_lakehouse(
                 alert_bronze_df = alert_bronze_df.filter(
                     F.col("evidence_run_id") == evidence_run_id
                 )
-            alert_fact_df = build_fact_market_alert_spark(alert_bronze_df)
         except Exception:
             schema = StructType(
                 [
@@ -762,11 +762,14 @@ def run_lakehouse_spark_lakehouse(
                     StructField("event_timestamp", StringType(), True),
                     StructField("created_ts", StringType(), True),
                     StructField("alert_type", StringType(), True),
-                    StructField("company_key", StringType(), True),
+                    StructField("known_from_ts", StringType(), True),
+                    StructField("company_version_key", StringType(), True),
                     StructField("date_key", IntegerType(), True),
                 ]
             )
             alert_fact_df = spark.createDataFrame([], schema)
+        else:
+            alert_fact_df = build_fact_market_alert_spark(alert_bronze_df, dim_company_df)
         alert_fact_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/fact_market_alert/")
 
         # 6. Distress labels (Spark-native)

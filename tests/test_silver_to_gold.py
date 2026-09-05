@@ -1,4 +1,6 @@
-from src.transforms.keys import stable_company_key
+import pytest
+
+from src.transforms.keys import company_version_key
 from src.transforms.silver_to_gold import (
     build_dim_company,
     build_dim_date,
@@ -13,34 +15,76 @@ from src.transforms.silver_to_gold import (
 )
 
 
-def test_dim_company_scd2_rebuild_keeps_company_key_stable():
+def _dim_company():
+    return build_dim_company(
+        [
+            {
+                "ticker": "AAA",
+                "company_name": "AAA Corp",
+                "exchange": "HOSE",
+                "created_ts": "2025-01-01T00:00:00+00:00",
+            }
+        ]
+    )
+
+
+def test_dim_company_scd2_rebuild_tracks_version_identity():
     dim = build_dim_company(
         [
             {
                 "ticker": "AAA",
                 "company_name": "AAA",
                 "exchange": "HOSE",
-                "industry": "Old",
+                "industry": "Industrial",
                 "sector": "Industrial",
+                "listing_date": "2015-01-01",
+                "created_ts": "2025-01-01T00:00:00+00:00",
+            },
+            {
+                "ticker": "AAA",
+                "company_name": "AAA Renamed",
+                "exchange": "HOSE",
+                "industry": "Industrial",
+                "sector": "Industrial",
+                "listing_date": "2015-01-01",
+                "created_ts": "2026-01-01T00:00:00+00:00",
+            },
+        ]
+    )
+    assert len(dim) == 2
+    assert [row["company_version_key"] for row in dim] == [
+        company_version_key("AAA", "2025-01-01T00:00:00+00:00"),
+        company_version_key("AAA", "2026-01-01T00:00:00+00:00"),
+    ]
+    assert dim[0]["is_current"] is False
+    assert dim[1]["is_current"] is True
+
+
+def test_dim_company_scd2_tracks_listing_date_changes():
+    dim = build_dim_company(
+        [
+            {
+                "ticker": "AAA",
+                "company_name": "AAA",
+                "exchange": "HOSE",
+                "listing_date": "2015-01-01",
                 "created_ts": "2025-01-01T00:00:00+00:00",
             },
             {
                 "ticker": "AAA",
                 "company_name": "AAA",
                 "exchange": "HOSE",
-                "industry": "New",
-                "sector": "Industrial",
+                "listing_date": "2016-01-01",
                 "created_ts": "2026-01-01T00:00:00+00:00",
             },
         ]
     )
+
     assert len(dim) == 2
-    assert {row["company_key"] for row in dim} == {stable_company_key("AAA")}
-    assert dim[0]["is_current"] is False
-    assert dim[1]["is_current"] is True
 
 
-def test_fact_financial_statement_has_company_and_date_keys():
+def test_fact_financial_statement_has_company_version_and_date_keys():
+    dim_company = _dim_company()
     fact = build_fact_financial_statement(
         [
             {
@@ -54,10 +98,14 @@ def test_fact_financial_statement_has_company_and_date_keys():
                 "report_release_date": "2026-01-30",
                 "created_ts": "2026-01-30T00:00:00+00:00",
             }
-        ]
+        ],
+        dim_company,
     )[0]
-    assert fact["company_key"] == stable_company_key("AAA")
+    assert fact["company_version_key"] == dim_company[0]["company_version_key"]
     assert fact["date_key"] == 20260130
+    assert fact["known_from_ts"] == "2026-01-30"
+    assert fact["statement_variant"] == "consolidated"
+    assert fact["is_latest_vintage"] is True
 
 
 def test_fact_financial_statement_preserves_statement_type():
@@ -75,10 +123,29 @@ def test_fact_financial_statement_preserves_statement_type():
                 "statement_type": "consolidated",
                 "created_ts": "2026-01-30T00:00:00+00:00",
             }
-        ]
+        ],
+        _dim_company(),
     )[0]
 
     assert fact["statement_type"] == "consolidated"
+    assert fact["statement_variant"] == "consolidated"
+
+
+def test_fact_financial_statement_rejects_missing_real_timestamp():
+    with pytest.raises(ValueError, match="known_from_ts"):
+        build_fact_financial_statement(
+            [
+                {
+                    "ticker": "AAA",
+                    "report_period": "2025Q4",
+                    "fiscal_year": 2025,
+                    "report_release_date": None,
+                    "event_timestamp": None,
+                    "created_ts": None,
+                }
+            ],
+            _dim_company(),
+        )
 
 
 def test_pit_join_never_uses_future_feature_timestamp():
@@ -132,7 +199,8 @@ def test_dim_date_materializes_calendar_range():
     assert dim[0]["quarter"] == 1
 
 
-def test_fact_news_sentiment_has_company_and_date_keys():
+def test_fact_news_sentiment_has_company_version_and_date_keys():
+    dim_company = _dim_company()
     fact = build_fact_news_sentiment(
         [
             {
@@ -144,15 +212,17 @@ def test_fact_news_sentiment_has_company_and_date_keys():
                 "risk_keyword_flag": True,
                 "severity_score": 0.8,
             }
-        ]
+        ],
+        dim_company,
     )[0]
 
-    assert fact["company_key"] == stable_company_key("AAA")
+    assert fact["company_version_key"] == dim_company[0]["company_version_key"]
     assert fact["date_key"] == 20260102
     assert fact["risk_keyword_flag"] is True
 
 
-def test_fact_market_alert_has_company_date_keys_and_deduplicates_event_id():
+def test_fact_market_alert_has_company_version_date_keys_and_deduplicates_event_id():
+    dim_company = _dim_company()
     facts = build_fact_market_alert(
         [
             {
@@ -169,12 +239,13 @@ def test_fact_market_alert_has_company_date_keys_and_deduplicates_event_id():
                 "created_ts": "2026-01-02T09:02:00+00:00",
                 "alert_type": "price_drop",
             },
-        ]
+        ],
+        dim_company,
     )
 
     assert len(facts) == 1
     assert facts[0]["ticker"] == "AAA"
-    assert facts[0]["company_key"] == stable_company_key("AAA")
+    assert facts[0]["company_version_key"] == dim_company[0]["company_version_key"]
     assert facts[0]["date_key"] == 20260102
 
 

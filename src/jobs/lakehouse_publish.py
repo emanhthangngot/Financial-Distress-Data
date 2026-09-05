@@ -74,9 +74,13 @@ def validate_spark_outputs(
 ) -> None:
     """Run critical uniqueness and referential checks before publication."""
     checks = (
-        (silver_companies, ["ticker"], "silver_companies"),
-        (financial_fact, ["ticker", "report_period"], "fact_financial_statement"),
-        (market_fact, ["ticker", "trading_date"], "fact_market_price"),
+        (silver_companies, ["ticker", "created_ts"], "silver_companies"),
+        (
+            financial_fact,
+            ["ticker", "report_period", "statement_variant", "known_from_ts"],
+            "fact_financial_statement",
+        ),
+        (market_fact, ["ticker", "trading_date", "known_from_ts"], "fact_market_price"),
         (alert_fact, ["event_id"], "fact_market_alert"),
         (news_fact, ["event_id"], "fact_news_sentiment"),
         (obt, ["ticker", "report_period"], "obt_company_quarter_risk"),
@@ -86,7 +90,7 @@ def validate_spark_outputs(
         if dataframe.groupBy(*keys).count().filter("count > 1").limit(1).count():
             errors.append(f"{name} duplicate key: {keys}")
 
-    dimension_keys = dim_company.select("company_key").distinct()
+    dimension_keys = dim_company.select("company_version_key").distinct()
     for dataframe, name in (
         (financial_fact, "fact_financial_statement"),
         (market_fact, "fact_market_price"),
@@ -94,13 +98,19 @@ def validate_spark_outputs(
         (news_fact, "fact_news_sentiment"),
     ):
         missing = (
-            dataframe.filter("company_key IS NULL")
-            .select("company_key")
-            .union(dataframe.select("company_key").join(dimension_keys, "company_key", "left_anti"))
+            dataframe.filter("company_version_key IS NULL")
+            .select("company_version_key")
+            .union(
+                dataframe.select("company_version_key").join(
+                    dimension_keys,
+                    "company_version_key",
+                    "left_anti",
+                )
+            )
             .limit(1)
             .count()
         )
         if missing:
-            errors.append(f"{name} has missing company_key relationship")
+            errors.append(f"{name} has missing company_version_key relationship")
     if errors:
         raise RuntimeError("publication DQ failed: " + "; ".join(errors))
