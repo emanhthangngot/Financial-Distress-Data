@@ -19,7 +19,8 @@ from coverage import Coverage  # isort: skip
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = (
-    REPO_ROOT / "plans/260809-2039-complete-platform-llm-submission/reports/phase05-web-coverage.xml"
+    REPO_ROOT
+    / "plans/260809-2039-complete-platform-llm-submission/reports/phase05-web-coverage.xml"
 )
 TESTS = [
     "tests/platform/apps",

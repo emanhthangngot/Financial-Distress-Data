@@ -7,7 +7,10 @@ import pytest
 
 from src.catalog.duckdb_runner import run_duckdb_validation
 from src.jobs.kafka_to_bronze_job import build_lakehouse_stream_events
-from src.jobs.lakehouse_spark_lakehouse_job import run_lakehouse_spark_lakehouse, spark_runtime_config
+from src.jobs.lakehouse_spark_lakehouse_job import (
+    run_lakehouse_spark_lakehouse,
+    spark_runtime_config,
+)
 from src.streaming.kafka_producer import serialize_event
 
 
@@ -272,7 +275,9 @@ def test_lakehouse_evidence_audit_reports_missing_json_artifact_without_tracebac
 def test_lakehouse_evidence_audit_reports_malformed_json_artifact_without_traceback(tmp_path: Path):
     module = importlib.import_module("scripts.audit_lakehouse_evidence")
     _write_complete_lakehouse_audit_artifacts(tmp_path)
-    (tmp_path / "lakehouse_real_duckdb_validation.json").write_text("{broken json", encoding="utf-8")
+    (tmp_path / "lakehouse_real_duckdb_validation.json").write_text(
+        "{broken json", encoding="utf-8"
+    )
 
     summary = module.audit_evidence(tmp_path)
 

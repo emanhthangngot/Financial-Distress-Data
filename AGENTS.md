@@ -189,7 +189,7 @@ These are facts, not preferences. Do not re-derive them from memory.
 .venv/bin/ruff check src dags tests scripts
 .venv/bin/black --check src dags tests scripts
 docker compose config                        # validates compose file without starting anything
-.venv/bin/python scripts/run_stage1_quality_gates.py   # one-shot: runs all four above
+.venv/bin/python scripts/run_lakehouse_quality_gates.py   # one-shot: runs all four above
 ```
 
 Definition of done for any code change: the one-shot gate above passes. CI
@@ -200,10 +200,10 @@ before declaring done.
 
 ## Time-Costly — avoid unless the task needs it
 
-- `scripts/run_stage1_quality_gates.py --include-services` and
-  `scripts/stage1_readiness_report.py --include-services` need the Docker stack already running.
+- `scripts/run_lakehouse_quality_gates.py --include-services` and
+  `scripts/lakehouse_readiness_report.py --include-services` need the Docker stack already running.
   Don't start the stack just to run these.
-- `scripts/run_stage1_real_e2e.py` hits live Kafka/MinIO/Postgres/Airflow containers — full stack
+- `scripts/run_lakehouse_real_e2e.py` hits live Kafka/MinIO/Postgres/Airflow containers — full stack
   boot, not a quick check. `tests/test_real_e2e_contracts.py` pins that script's contracts against
   fixtures and `tmp_path`; it needs no live service and runs in the fast loop.
 - `scripts/run_flink_benchmark.py` requires `ENABLE_FLINK=1` and the `flink` compose profile — skip

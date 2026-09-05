@@ -452,7 +452,11 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
         "source",
         "src/ml/data_versioning.py",
     ),
-    "ML-ci-cd-ci-cd-cho-pipelines": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "ML-ci-cd-ci-cd-cho-pipelines": (
+        "data_engineer",
+        "source",
+        ".github/workflows/platform-ci.yaml",
+    ),
     "ML-ci-cd-training-pipeline": ("ml_engineer", "source", ".github/workflows/platform-ci.yaml"),
     "ML-ci-cd-dp-1": ("platform_operator", "source", ".github/workflows/ci.yml"),
     "ML-ci-cd-dp-2": ("platform_operator", "source", ".github/workflows/ci.yml"),
