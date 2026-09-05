@@ -652,7 +652,9 @@ def _only_evidence_sha_lines_changed(root: Path, revision: str, head: str) -> bo
             continue
         elif line.startswith(("+", "-")):
             saw_change = True
-            if not current_path.startswith("docs/platform/evidence/") or not allowed_line.match(line):
+            if not current_path.startswith("docs/platform/evidence/") or not allowed_line.match(
+                line
+            ):
                 return False
     return saw_change
 
@@ -978,7 +980,9 @@ def _audit_behavior_validations(matrix: list[dict[str, str]]) -> list[str]:
     import subprocess
 
     errors: list[str] = []
-    allowed = re.compile(r"pytest tests/platform/requirements/test_[a-z0-9_]+\.py -k '[A-Za-z0-9-]+'")
+    allowed = re.compile(
+        r"pytest tests/platform/requirements/test_[a-z0-9_]+\.py -k '[A-Za-z0-9-]+'"
+    )
     for row in matrix:
         rid = row.get("rubric_id", "?")
         command = row.get("validation_command", "")
@@ -1083,7 +1087,7 @@ def main(argv: list[str] | None = None) -> int:
     accepted_design_only = {
         rid.strip() for group in args.accept_design_only for rid in group.split(",") if rid.strip()
     }
-    final_promotion = bool(args.phase1_base) or args.run_validations
+    final_promotion = bool(args.platform_base) or args.run_validations
     scoped = (
         [row for row in matrix if row.get("track", "") in selected_tracks]
         if matrix is not None
@@ -1150,10 +1154,10 @@ def main(argv: list[str] | None = None) -> int:
                 label = "accepted final cut" if final_promotion else "pending interim row"
                 print(f"WARNING: {rid}: {label}; no rubric points claimed")
             if args.matrix is None and final_promotion:
-                if not args.phase1_base or not _is_full_git_sha(args.phase1_base):
+                if not args.platform_base or not _is_full_git_sha(args.platform_base):
                     errors.append("final promotion requires --platform-base as a frozen 40-hex SHA")
                 else:
-                    errors.extend(_audit_phase1_git_diff(args.phase1_base))
+                    errors.extend(_audit_phase1_git_diff(args.platform_base))
                     errors.extend(_audit_frozen_revisions(scoped, args.gitops_root))
         errors.extend(_audit_required_docs())
 
@@ -1167,7 +1171,7 @@ def main(argv: list[str] | None = None) -> int:
             errors.append("--run-validations requires --require-executed")
         elif args.matrix is not None:
             errors.append("--run-validations is allowed only for the canonical matrix")
-        elif not args.phase1_base or not _is_full_git_sha(args.phase1_base):
+        elif not args.platform_base or not _is_full_git_sha(args.platform_base):
             errors.append("--run-validations requires --platform-base as a frozen 40-hex SHA")
         elif scoped is not None:
             errors.extend(_audit_behavior_validations(scoped))

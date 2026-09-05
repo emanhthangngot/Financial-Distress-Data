@@ -66,7 +66,9 @@ def write_offline_rows(rows: list[dict[str, Any]], client: Any, bucket: str) -> 
         return
     from src.io.minio_writer import write_minio_dataset
 
-    object_key = f"{bucket}/platform/offline/stream_features/{_deterministic_batch_id(rows)}.parquet"
+    object_key = (
+        f"{bucket}/platform/offline/stream_features/{_deterministic_batch_id(rows)}.parquet"
+    )
     write_minio_dataset(client, bucket, object_key, rows)
 
 

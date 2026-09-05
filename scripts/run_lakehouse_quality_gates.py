@@ -42,7 +42,10 @@ DEFAULT_GATES: tuple[QualityGate, ...] = (
     ),
 )
 SERVICE_GATES: tuple[QualityGate, ...] = (
-    QualityGate("lakehouse-service-readiness", (sys.executable, "scripts/check_lakehouse_services.py")),
+    QualityGate(
+        "lakehouse-service-readiness",
+        (sys.executable, "scripts/check_lakehouse_services.py"),
+    ),
 )
 ALL_GATES: tuple[QualityGate, ...] = DEFAULT_GATES + SERVICE_GATES
 

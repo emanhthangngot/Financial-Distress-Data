@@ -50,9 +50,7 @@ def _run(command: tuple[str, ...], *, timeout: int) -> dict[str, object]:
     }
 
 
-def capture(
-    *, rollout: str, namespace: str = "dataflow", timeout: int = 60
-) -> dict[str, object]:
+def capture(*, rollout: str, namespace: str = "dataflow", timeout: int = 60) -> dict[str, object]:
     """Capture status and analysis records for one rollout."""
 
     required = ("kubectl", "kubectl-argo-rollouts")

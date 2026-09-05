@@ -8,7 +8,7 @@ services:
     ports:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
-      - ./sql/init_project_metadata.sql:/docker-entrypoint-initdb.d/01_init_project_metadata.sql:ro
+      - ./sql/init_ops.sql:/docker-entrypoint-initdb.d/01_init_ops.sql:ro
 
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
@@ -235,7 +235,7 @@ services:
     ports:
       - "${PLATFORM_PG_HOST_PORT:-5433}:5432"
     volumes:
-      - ./sql/init_ml_metadata.sql:/docker-entrypoint-initdb.d/01_init_ml_metadata.sql:ro
+      - ./sql/init_ml.sql:/docker-entrypoint-initdb.d/01_init_ml.sql:ro
       - platform-pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PLATFORM_PG_USER:-platform} -d ml"]

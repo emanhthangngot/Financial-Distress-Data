@@ -164,7 +164,9 @@ def run_materialize_task() -> dict[str, Any]:
     repo_path = os.environ.get("PLATFORM_FEAST_REPO_PATH", "feature_repo/structured")
     feature_view = os.environ.get("PLATFORM_FEATURE_VIEW", "company_financial_features")
     now = datetime.now(UTC)
-    start_ts = os.environ.get("PLATFORM_MATERIALIZE_START_TS", (now - timedelta(days=1)).isoformat())
+    start_ts = os.environ.get(
+        "PLATFORM_MATERIALIZE_START_TS", (now - timedelta(days=1)).isoformat()
+    )
     end_ts = os.environ.get("PLATFORM_MATERIALIZE_END_TS", now.isoformat())
 
     import uuid
