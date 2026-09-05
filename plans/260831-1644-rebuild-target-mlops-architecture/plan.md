@@ -340,11 +340,19 @@ above is a fact, and the plan states three things about it:
 3. **If a cut becomes necessary, cut in this order** — lowest rubric points per day first. Recompute
    the ordering against the regenerated matrix at P3 exit before using it (§Risk R-9).
 
-### Cut ladder — recomputed 2026-09-02 against all three rubrics
+### Cut ladder — recomputed 2026-09-05 against the regenerated 161-row matrix
+
+Step 7 of `phase-03` (`docs/rubric-matrix-unified.csv`, built and verified 2026-09-05) confirms
+every point value below by direct query against the final matrix, not by re-deriving them: R-9
+(cut-ladder ordering stale) is now closed for this matrix. One number changes — item "Spark +
+Airflow + DataHub — never cut" — from the previous revision's approximate "~60" to a measured
+**67**, once the mini rows plus the ML/LLM CI/CD-for-pipelines rows are summed against the actual
+matrix rather than estimated. It was already the largest, "never cut" item; the correction does not
+change the ordering or any decision below it.
 
 The 2026-09-01 ladder priced every item at **0 rubric points** because it was computed against the
 two *final* rubrics only. The mini rubric was not yet in the matrix. With all 161 rows in scope, two
-prices change, and one of them is load-bearing.
+prices changed on 2026-09-02, and one of them was load-bearing (Flink, item "Debezium + Flink CDC").
 
 | Order | Cut | Days saved | Rubric points at risk | Named by rubric? |
 |---|---|---|---|---|
@@ -352,21 +360,20 @@ prices change, and one of them is load-bearing.
 | 2 | Triton (P7 partial) | 2-3 | **0** | Not named |
 | 3 | Trino + Superset + dbt (P9 partial) | 6-8 | **0** | Named by no rubric. mini 26 asks for warehouse indexing, owned by P2, not by Trino |
 | 4 | Jenkins → keep GitHub Actions (P10 partial) | 6-8 | **0** | No — rubric says "CI/CD" only |
-| 5 | Ray → Spark/XGBoost distributed (P7 partial) | 5-7 | **0** if another distributed backend | ML 24 says "distributed training", not Ray |
-| 6 | KServe 0.18 + llm-d + LWS + GIE (P8 partial) | 5-8 | **2** | LLM 2-3 need *an* LLM inference platform with a custom model; a simpler server still earns them, so only the 0.18-specific evidence is at risk |
+| 5 | Ray → Spark/XGBoost distributed (P7 partial) | 5-7 | **0** if another distributed backend | ML-24 (`Trong training pipeline... distributed training`, 2 pts, owned by P7) says "distributed training", not Ray |
+| 6 | KServe 0.18 + llm-d + LWS + GIE (P8 partial) | 5-8 | **2** | LLM-2 + LLM-3 (`Deploy a LLM inference platform...` + `Setup a custom model`, 2 pts each, owned by P8) need *an* LLM inference platform with a custom model; a simpler server still earns them, so only the 0.18-specific evidence is at risk |
 | — | **Below this line every cut loses points** | | | |
-| 7 | Kubeflow | 3-4 | **1** | ML 50 names the Kubeflow API |
-| 8 | Istio | 6-8 | **1** | ML 54 names "service mesh" |
-| 9 | Vault | 2-3 | **2** | ML 53 / LLM 57, "(or similar tools)" |
-| ✗ | **Debezium + Flink CDC — RE-PRICED, do not cut** | 5-7 | **13** | mini 20-24 name a **Flink job** explicitly: baseline 2 + burst 3 + late arrival 3 + other 3 + window processing 2. The 2026-09-01 ladder listed this as item 3 at **0 points**. That was wrong |
-| ✗ | **Loki / Jaeger — never cut** | — | **14** | ML 38,39,47,48; LLM 41,42,51,52 |
-| ✗ | **Spark + Airflow + DataHub — never cut** | — | **~60** | mini 14-19 (Spark), 27-38 (pipelines + governance), plus ML/LLM CI-CD-for-pipelines rows |
+| 7 | Kubeflow | 3-4 | **1** | ML-50 (`Trigger retrain by calling Kubeflow API`, 1 pt, owned by P12) names the Kubeflow API |
+| 8 | Istio | 6-8 | **1** | ML-54 (`Using service mesh to authorize access from service to service`, 1 pt, owned by P9) names "service mesh" |
+| 9 | Vault | 2-3 | **2** | ML-53 + LLM-57 (`Security — Centralize secret management`, 1 pt each, owned by P9), "(or similar tools)" |
+| ✗ | **Debezium + Flink CDC — RE-PRICED, do not cut** | 5-7 | **13** | mini 21-25 (`Flink job...`) name a **Flink job** explicitly: baseline 2 + burst 3 + late arrival 3 + other 3 + window processing 2 = 13, confirmed by direct matrix sum 2026-09-05 |
+| ✗ | **Loki / Jaeger — never cut** | — | **14** | ML-38/39/47/48 (2+2+2+2) + LLM-41/42/51/52 (2+2+1+1) = 14, confirmed by direct matrix sum 2026-09-05 |
+| ✗ | **Spark + Airflow + DataHub — never cut** | — | **67** | mini 15-20 (Spark, 16 pts) + mini 28-39 (pipelines + governance, 24 pts) + ML/LLM CI-CD-for-pipelines rows (27 pts) = 67, confirmed by direct matrix sum 2026-09-05 (previously estimated "~60") |
 
 Cutting items 1-5 saves **21-27 days at zero rubric cost** and reduces the always-on floor, but
 forfeits O-1 (image fidelity). Item 6 costs 2 points for 5-8 days.
 **Do not execute any cut without an explicit user decision.**
 
-R-9 still applies: recompute this table against the regenerated matrix at P3 exit (`phase-03` step 7).
 
 ### Score tripwires — added 2026-09-02
 
