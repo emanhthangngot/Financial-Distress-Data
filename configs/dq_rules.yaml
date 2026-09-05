@@ -4,6 +4,8 @@ critical:
   - {name: primary_key_unique, type: unique}
   - {name: fact_company_version_key_exists, type: referential_integrity}
   - {name: fact_date_key_exists, type: referential_integrity}
+  - {name: latest_vintage_unique_per_business_key, type: latest_vintage_unique}
+  - {name: nullable_fk_null_rate_ceiling, type: null_rate_ceiling, parameters: {ceiling: 0.05}}
 
 warning:
   - {name: total_assets_non_negative, type: range, parameters: {minimum: 0}}

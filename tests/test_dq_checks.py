@@ -1,6 +1,8 @@
 from src.quality.dq_checks import (
     check_freshness,
+    check_latest_vintage_unique,
     check_not_null,
+    check_null_rate_ceiling,
     check_referential_integrity,
     check_retention,
 )
@@ -53,3 +55,44 @@ def test_freshness_passes_when_latest_event_is_within_sla():
 
     assert result.status == "pass"
     assert result.metric_value == 30.0
+
+
+def test_latest_vintage_unique_passes_with_exactly_one_flag_per_business_key():
+    rows = [
+        {"ticker": "AAA", "report_period": "2023Q2", "is_latest_vintage": False},
+        {"ticker": "AAA", "report_period": "2023Q2", "is_latest_vintage": True},
+    ]
+    result = check_latest_vintage_unique(
+        rows, "fact_financial_statement", ["ticker", "report_period"]
+    )
+    assert result.status == "pass"
+    assert result.severity == "critical"
+
+
+def test_latest_vintage_unique_fails_when_two_vintages_both_flagged_latest():
+    """AC-P2-4 negative test: forgetting the vintage filter must be a visible failure."""
+    rows = [
+        {"ticker": "AAA", "report_period": "2023Q2", "is_latest_vintage": True},
+        {"ticker": "AAA", "report_period": "2023Q2", "is_latest_vintage": True},
+    ]
+    result = check_latest_vintage_unique(
+        rows, "fact_financial_statement", ["ticker", "report_period"]
+    )
+    assert result.status == "fail"
+    assert result.severity == "critical"
+    assert result.metric_value == 1.0
+
+
+def test_null_rate_ceiling_passes_below_threshold():
+    rows = [{"run_id": "r1"}] * 19 + [{"run_id": None}]
+    result = check_null_rate_ceiling(rows, "ops.failed_records", "run_id", ceiling=0.05)
+    assert result.status == "pass"
+
+
+def test_null_rate_ceiling_fails_above_threshold():
+    """F16: an entirely-NULL nullable FK column must fail, not pass vacuously."""
+    rows = [{"run_id": None}] * 10
+    result = check_null_rate_ceiling(rows, "ops.failed_records", "run_id", ceiling=0.05)
+    assert result.status == "fail"
+    assert result.severity == "critical"
+    assert result.metric_value == 1.0

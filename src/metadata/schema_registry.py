@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -90,7 +91,15 @@ def _coerce_value(field: str, value: Any, field_type: str) -> Any:
             return date.fromisoformat(str(value).strip())
         if field_type == "timestamp":
             return _parse_timestamp(value)
-    except (TypeError, ValueError) as exc:
+        if field_type == "decimal":
+            # Money: DECIMAL(18,0). Source granularity is 1,000đ, so scale 0
+            # carries no information loss (U-1) and exact-equality checks
+            # (AC-P2-11: assets = liabilities + equity) never need tolerance.
+            return Decimal(str(value)).quantize(Decimal("1"))
+        if field_type == "decimal6":
+            # Ratio / rate / sentiment_score: DECIMAL(18,6).
+            return Decimal(str(value)).quantize(Decimal("0.000001"))
+    except (TypeError, ValueError, InvalidOperation) as exc:
         raise SchemaValidationError(f"invalid {field_type} value for {field}: {value!r}") from exc
     raise SchemaValidationError(f"unsupported field type for {field}: {field_type}")
 
@@ -141,6 +150,57 @@ DEFAULT_CONTRACTS = {
             "shares_outstanding",
             "event_timestamp",
         ],
+    ),
+    # v2 (phase-02-data-model.md): raw_/stg_ prefixes, known_from_ts, DECIMAL
+    # money/ratio types, source_unit fail-closed on every money-bearing
+    # contract (U-1d, AC-P2-25). v1 contracts above are retained, not
+    # replaced — ops.schema_version_registry keeps both versions.
+    "raw_companies": SchemaContract(
+        "raw_companies",
+        "v2",
+        ["ticker", "source_name", "source_unit", "created_ts", "ingest_batch_id"],
+        ["company_name", "exchange"],
+    ),
+    "raw_financial_statements": SchemaContract(
+        "raw_financial_statements",
+        "v2",
+        [
+            "ticker",
+            "report_period",
+            "source_name",
+            "source_unit",
+            "known_from_ts",
+            "created_ts",
+            "ingest_batch_id",
+        ],
+        ["total_assets", "total_liabilities", "total_equity"],
+        field_types={
+            "total_assets": "decimal",
+            "total_liabilities": "decimal",
+            "total_equity": "decimal",
+            "known_from_ts": "timestamp",
+            "created_ts": "timestamp",
+        },
+    ),
+    "raw_market_prices_daily": SchemaContract(
+        "raw_market_prices_daily",
+        "v2",
+        [
+            "ticker",
+            "trading_date",
+            "source_name",
+            "source_unit",
+            "known_from_ts",
+            "created_ts",
+            "ingest_batch_id",
+        ],
+        ["close_price"],
+        field_types={
+            "close_price": "decimal",
+            "trading_date": "date",
+            "known_from_ts": "timestamp",
+            "created_ts": "timestamp",
+        },
     ),
 }
 
