@@ -211,3 +211,18 @@ the rubric scores two rows and CI/CD is graded per job (ML 35-36, LLM 38-39).
 **Risk:** TTL values are written but the rationale is not. Signal: `feature_repo/` has TTLs and the
 document does not explain them. Mitigation: AC-P5-6 asserts both. Response: the rationale is the
 scored artifact — write it.
+
+## Rubric Citations (phase-03 R-12 closure, appended 2026-09-05)
+
+Every rubric row this phase owns per `docs/rubric-matrix-unified.csv`'s `owning_phase` column, cited so `scripts/verify_rubric_coverage.py` can resolve ownership to an assertion (R-12). Each line names the row's real `rubric_id`, its stated requirement, and its proof artifact/deliverable — the row's own matrix columns, not invented text. Rows whose capability is not yet implemented are forward specs, matching this file's other `AC-P5-*` entries.
+
+- AC-P5-RUBRIC-1: `ML-feature-store-define-ttl-cho-t-ng-b-ng-featu` — ml_engineer -> delivers "Define TTL cho từng bảng feature, giải thích tại sao chọn TTL như thế" -> + Capture màn hình thể hiện các data pipeline và thứ tự các stage trên Airflow; + Capture màn hình thể hiện 2 job đang chạy, và thể hiện out... (evidence: `docs/platform/evidence/ml/ML-feature-store-define-ttl-cho-t-ng-b-ng-featu.md`)
+- AC-P5-RUBRIC-2: `mini-20-processing-jobs-flink-job-to-handle-streaming-data` — data_engineer -> delivers "Baseline (without optimization)" -> Document giải thích từng step optimize từ baseline như thế nào, dùng Flink UI như thế nào (với screenshots để thấy rõ vấn đề) (evidence: `docs/submission/rubric-(mini-coursework)/processing_jobs.md`)
+- AC-P5-RUBRIC-3: `mini-21-processing-jobs-flink-job-to-handle-streaming-data` — data_engineer -> delivers "Handle burst with explanation" -> Handle burst with explanation (evidence: `docs/submission/rubric-(mini-coursework)/processing_jobs.md`)
+- AC-P5-RUBRIC-4: `mini-22-processing-jobs-flink-job-to-handle-streaming-data` — data_engineer -> delivers "Handle late arrival with explanation" -> Handle late arrival with explanation (evidence: `docs/submission/rubric-(mini-coursework)/processing_jobs.md`)
+- AC-P5-RUBRIC-5: `mini-23-processing-jobs-flink-job-to-handle-streaming-data` — data_engineer -> delivers "Handle other streaming problem with explanation" -> Handle other streaming problem with explanation (evidence: `docs/submission/rubric-(mini-coursework)/processing_jobs.md`)
+- AC-P5-RUBRIC-6: `mini-24-processing-jobs-flink-job-to-handle-streaming-data` — data_engineer -> delivers "Window processing" -> Capture đoạn code thể hiện khả năng xử lý Window trong Flink (evidence: `docs/submission/rubric-(mini-coursework)/processing_jobs.md`)
+- AC-P5-RUBRIC-7: `mini-31-data-pipeline-orchestration-pipeline-to-compute-of` — data_engineer -> delivers "Ingest stage" -> Capture màn hình pipeline trên Airflow UI thể hiện các stage và thứ tự trong pipeline (evidence: `docs/submission/rubric-(mini-coursework)/data_pipeline_orchestration.md`)
+- AC-P5-RUBRIC-8: `mini-32-data-pipeline-orchestration-pipeline-to-compute-of` — data_engineer -> delivers "Validate stage" -> Validate stage (evidence: `docs/submission/rubric-(mini-coursework)/data_pipeline_orchestration.md`)
+- AC-P5-RUBRIC-9: `mini-37-data-governance-dp3-linked-with-related-tables-lin` — data_engineer -> delivers "Lineage between the pipeline and tables" -> Capture màn hình pipeline trên DataHub UI thể hiện lineage, validation và data contract (evidence: `docs/submission/rubric-(mini-coursework)/data_governance.md`)
+- AC-P5-RUBRIC-10: `mini-38-data-governance-dp3-linked-with-related-tables-dat` — data_engineer -> delivers "Data validation and data contract" -> Data validation and data contract (evidence: `docs/submission/rubric-(mini-coursework)/data_governance.md`)

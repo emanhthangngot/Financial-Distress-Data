@@ -146,3 +146,23 @@ Signal: the cut decision arrives after step 3. Mitigation: **the twelve lanes ca
 points, not Jenkins.** Author them as a shared library that GitHub Actions can also instantiate, so a
 Jenkins cut costs the controller work only, not the lanes. Response: re-target the lanes at GitHub
 Actions reusable workflows; the per-artifact structure and its evidence survive.
+
+## Rubric Citations (phase-03 R-12 closure, appended 2026-09-05)
+
+Every rubric row this phase owns per `docs/rubric-matrix-unified.csv`'s `owning_phase` column, cited so `scripts/verify_rubric_coverage.py` can resolve ownership to an assertion (R-12). Each line names the row's real `rubric_id`, its stated requirement, and its proof artifact/deliverable — the row's own matrix columns, not invented text. Rows whose capability is not yet implemented are forward specs, matching this file's other `AC-P10-*` entries.
+
+- AC-P10-RUBRIC-1: `LLM-ci-cd-agent-drift-detection` — llm_engineer -> delivers "Agent drift detection" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/llm/LLM-ci-cd-agent-drift-detection.md`)
+- AC-P10-RUBRIC-2: `LLM-ci-cd-agent-k-o-d-li-u` — llm_engineer -> delivers "Agent kéo dữ liệu" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/llm/LLM-ci-cd-agent-k-o-d-li-u.md`)
+- AC-P10-RUBRIC-3: `LLM-ci-cd-agent-l-m-coordinator` — llm_engineer -> delivers "Agent để làm coordinator" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/llm/LLM-ci-cd-agent-l-m-coordinator.md`)
+- AC-P10-RUBRIC-4: `LLM-ci-cd-ci-cd-cho-rag-data-pipeline` — data_engineer -> delivers "CI/CD; (CI/CD = test + build + auto-deploy); (all secrets should be saved in Jenkins or similar tools instead of putting it inside your code..." -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md`)
+- AC-P10-RUBRIC-5: `LLM-ci-cd-job-1` — data_engineer -> delivers "Job 1: Push stream feature to OFFLINE store" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/llm/LLM-ci-cd-job-1.md`)
+- AC-P10-RUBRIC-6: `LLM-ci-cd-job-2` — data_engineer -> delivers "Job 2: Push stream feature to ONLINE store" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/llm/LLM-ci-cd-job-2.md`)
+- AC-P10-RUBRIC-7: `ML-ci-cd-ci-cd-cho-pipelines` — data_engineer -> delivers "CI/CD; (CI/CD = test + build + auto-deploy); (all secrets should be saved in Jenkins or similar tools instead of putting it inside your code..." -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-ci-cd-cho-pipelines.md`)
+- AC-P10-RUBRIC-8: `ML-ci-cd-dp-1` — platform_operator -> delivers "DP 1 (xem ở sheet mini-coursework)" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-dp-1.md`)
+- AC-P10-RUBRIC-9: `ML-ci-cd-dp-2` — platform_operator -> delivers "DP 2 (xem ở sheet mini-coursework)" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-dp-2.md`)
+- AC-P10-RUBRIC-10: `ML-ci-cd-dp-3` — platform_operator -> delivers "DP 3 (xem ở sheet mini-coursework)" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-dp-3.md`)
+- AC-P10-RUBRIC-11: `ML-ci-cd-inference-engine` — platform_operator -> delivers "Inference Engine (ví dụ KServe)" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-inference-engine.md`)
+- AC-P10-RUBRIC-12: `ML-ci-cd-job-1` — data_engineer -> delivers "Job 1: Push stream feature to OFFLINE store" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-job-1.md`)
+- AC-P10-RUBRIC-13: `ML-ci-cd-job-2` — data_engineer -> delivers "Job 2: Push stream feature to ONLINE store" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-job-2.md`)
+- AC-P10-RUBRIC-14: `ML-ci-cd-training-pipeline` — ml_engineer -> delivers "Training Pipeline" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-training-pipeline.md`)
+- AC-P10-RUBRIC-15: `ML-ci-cd-web-api` — platform_operator -> delivers "Web API (với FastAPI)" -> Capture màn hình từng CI/CD pipeline đã run thành công (evidence: `docs/platform/evidence/ml/ML-ci-cd-web-api.md`)
