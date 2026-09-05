@@ -1,8 +1,8 @@
 """
 Command-line runner for the DuckDB catalog.
 
-Applies the catalog DDL against a local DuckDB instance, used by DAG 08 and by the lakehouse evidence
-script. Idempotent: re-running drops and recreates the views.
+Applies the catalog DDL against a local DuckDB instance, used by DAG 08 and by the
+lakehouse evidence script. Idempotent: re-running drops and recreates the views.
 """
 
 from __future__ import annotations

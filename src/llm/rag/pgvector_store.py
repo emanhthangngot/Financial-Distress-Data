@@ -75,8 +75,7 @@ class PgVectorStore:
     def content_hash_exists(self, content_hash: str, embedding_version: str) -> bool:
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT 1 FROM ml.rag_chunk WHERE content_hash = %s "
-                "AND embedding_version = %s",
+                "SELECT 1 FROM ml.rag_chunk WHERE content_hash = %s " "AND embedding_version = %s",
                 (content_hash, embedding_version),
             )
             return cur.fetchone() is not None

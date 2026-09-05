@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from src.jobs.stage1_spark_lakehouse_job import _spark_session  # noqa: E402
+
 from src.jobs.spark_baseline_job import build_baseline_plan  # noqa: E402
 from src.jobs.spark_benchmark_common import (  # noqa: E402
     canonical_output_digest,
@@ -25,7 +27,6 @@ from src.jobs.spark_benchmark_common import (  # noqa: E402
 )
 from src.jobs.spark_optimized_job import build_optimized_plan  # noqa: E402
 from src.jobs.spark_storage_experiment import run_storage_experiment  # noqa: E402
-from src.jobs.stage1_spark_lakehouse_job import _spark_session  # noqa: E402
 
 
 def _rows(dataframe: Any) -> list[dict[str, Any]]:

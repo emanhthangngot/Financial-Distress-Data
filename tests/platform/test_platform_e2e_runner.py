@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.run_platform_e2e import coordinator_payload, model_payload, validate_coordinator_response
+from scripts.run_platform_e2e import (
+    coordinator_payload,
+    model_payload,
+    validate_coordinator_response,
+)
 
 
 def valid_response() -> dict[str, object]:

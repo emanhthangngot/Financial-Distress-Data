@@ -154,9 +154,10 @@ def test_schema_design_doc_documents_bronze_silver_naming() -> None:
         r"(?i)bronze and silver naming", text
     ), "docs/architecture/data-model.md is missing a 'Bronze And Silver Naming' section"
     for token in ("bronze.companies", "silver.companies", "raw_", "stg_"):
-        assert (
-            token in text
-        ), f"docs/architecture/data-model.md does not mention required Bronze/Silver token {token!r}"
+        assert token in text, (
+            "docs/architecture/data-model.md does not mention required "
+            f"Bronze/Silver token {token!r}"
+        )
 
 
 def test_readme_documents_deployment_diagram() -> None:

@@ -41,33 +41,35 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SELF_PATH = Path(__file__).resolve()
 
-EXCLUDE_DIR_NAMES = frozenset({
-    ".git",
-    "__pycache__",
-    "node_modules",
-    "mutants",
-    ".ruff_cache",
-    ".pytest_cache",
-    ".hypothesis",
-    ".venv",
-    ".venv-phase2",
-    ".venv-platform",
-    "supabase",
-    "plans",
-    "financial_distress_data.egg-info",
-    ".codex",
-    ".agents",
-    ".claude",
-    "images",
-    "docs",
-    "warehouse.db",
-    ".next",
-    "dist",
-    "build",
-    "out",
-    "coverage",
-    ".pnpm-store",
-})
+EXCLUDE_DIR_NAMES = frozenset(
+    {
+        ".git",
+        "__pycache__",
+        "node_modules",
+        "mutants",
+        ".ruff_cache",
+        ".pytest_cache",
+        ".hypothesis",
+        ".venv",
+        ".venv-phase2",
+        ".venv-platform",
+        "supabase",
+        "plans",
+        "financial_distress_data.egg-info",
+        ".codex",
+        ".agents",
+        ".claude",
+        "images",
+        "docs",
+        "warehouse.db",
+        ".next",
+        "dist",
+        "build",
+        "out",
+        "coverage",
+        ".pnpm-store",
+    }
+)
 
 # ``docs`` is excluded wholesale (PNG images, submission zips, and historical
 # narrative all reference phase vocabulary); P1 class D touches the doc
@@ -79,20 +81,51 @@ EXCLUDE_DIR_NAMES = frozenset({
 WORKFLOW_EXCEPTED_DIR = ".github"
 WORKFLOW_EXCEPTED_SUBDIR = "workflows"
 
-EXCLUDE_SUFFIX = frozenset({
-    ".pyc", ".pyo", ".pyd",
-    ".so", ".dll", ".dylib",
-    ".gif", ".png", ".jpg", ".jpeg", ".webp", ".ico",
-    ".woff", ".woff2", ".ttf", ".eot",
-    ".mp4", ".mp3", ".wav",
-    ".zip", ".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz",
-    ".7z", ".rar", ".iso",
-    ".pdf",
-    ".parquet", ".feather", ".arrow",
-    ".duckdb", ".db", ".sqlite", ".sqlite3",
-    ".lock", ".pnp.cjs", ".pnp.loader.mjs",
-    ".bin", ".map",
-})
+EXCLUDE_SUFFIX = frozenset(
+    {
+        ".pyc",
+        ".pyo",
+        ".pyd",
+        ".so",
+        ".dll",
+        ".dylib",
+        ".gif",
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".webp",
+        ".ico",
+        ".woff",
+        ".woff2",
+        ".ttf",
+        ".eot",
+        ".mp4",
+        ".mp3",
+        ".wav",
+        ".zip",
+        ".tar",
+        ".tar.gz",
+        ".tar.bz2",
+        ".tar.xz",
+        ".tgz",
+        ".7z",
+        ".rar",
+        ".iso",
+        ".pdf",
+        ".parquet",
+        ".feather",
+        ".arrow",
+        ".duckdb",
+        ".db",
+        ".sqlite",
+        ".sqlite3",
+        ".lock",
+        ".pnp.cjs",
+        ".pnp.loader.mjs",
+        ".bin",
+        ".map",
+    }
+)
 
 PATTERNS = [
     re.compile(r"\bphase1\b", re.IGNORECASE),
@@ -177,14 +210,16 @@ def main() -> int:
             for pattern in PATTERNS:
                 if pattern.search(wf.name):
                     deferred_workflow_hits += 1
-            for pattern, _, _ in _scan_contents(wf):
+            for _pattern, _, _ in _scan_contents(wf):
                 deferred_workflow_hits += 1
 
     print("")
     print(f"path-name matches:   {name_hits}")
     print(f"content matches:     {content_hits}")
     print(f"total matches:       {total}")
-    print(f"deferred (workflows): {deferred_workflow_hits} (P10 scope / token lacks workflow scope)")
+    print(
+        f"deferred (workflows): {deferred_workflow_hits} (P10 scope / token lacks workflow scope)"
+    )
     return 0 if total == 0 else 1
 
 

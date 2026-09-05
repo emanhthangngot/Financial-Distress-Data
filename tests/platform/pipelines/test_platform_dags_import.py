@@ -89,8 +89,7 @@ def test_dag_object_is_none_without_airflow_installed(path: Path) -> None:
 
 
 _PLATFORM_DAG_IDS = {
-    _load_module(path, f"_platform_collect_{path.stem}").DAG_ID
-    for path in PLATFORM_DAG_FILES
+    _load_module(path, f"_platform_collect_{path.stem}").DAG_ID for path in PLATFORM_DAG_FILES
 }
 
 
