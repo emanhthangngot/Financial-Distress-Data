@@ -74,10 +74,12 @@ def gold_source_path(dataset_name: str) -> str:
 
 
 def build_feature_objects() -> dict[str, Any]:
-    """Constructs the entity and every FeatureView. Every ``event_timestamp_
-    column`` is declared even though only the online store is read this
-    week (phase-04.md:110, non-negotiable) — each Gold builder retains the
-    original ``event_timestamp`` field via ``dict(row)``/``**row``."""
+    """Constructs the entity and every FeatureView. Every ``FileSource``
+    binds Feast's ``event_timestamp`` join axis to the Gold ``known_from_ts``
+    column (ADR-017 §Feast temporal contract, F14) — never a raw
+    ``event_timestamp`` field, which for ``fact_financial_statement`` in
+    particular carries a different, non-knowledge-time value derived from
+    the source row rather than ``report_release_date``."""
     from feast import Entity, FeatureView, Field, FileSource, PushSource
     from feast.types import Bool, Float64, Int64, String
     from feast.value_type import ValueType
@@ -87,7 +89,7 @@ def build_feature_objects() -> dict[str, Any]:
     financial_source = FileSource(
         name="fact_financial_statement_source",
         path=gold_source_path(GOLD_DATASETS["company_financial_features"]),
-        timestamp_field="event_timestamp",
+        timestamp_field="known_from_ts",
     )
     company_financial_features = FeatureView(
         name="company_financial_features",
@@ -109,7 +111,7 @@ def build_feature_objects() -> dict[str, Any]:
     risk_source = FileSource(
         name="obt_company_quarter_risk_source",
         path=gold_source_path(GOLD_DATASETS["company_risk_features"]),
-        timestamp_field="event_timestamp",
+        timestamp_field="known_from_ts",
     )
     company_risk_features = FeatureView(
         name="company_risk_features",
@@ -131,7 +133,7 @@ def build_feature_objects() -> dict[str, Any]:
     price_source = FileSource(
         name="fact_market_price_source",
         path=gold_source_path(GOLD_DATASETS["market_price_features"]),
-        timestamp_field="event_timestamp",
+        timestamp_field="known_from_ts",
     )
     market_price_features = FeatureView(
         name="market_price_features",
