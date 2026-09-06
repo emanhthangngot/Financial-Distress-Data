@@ -134,6 +134,10 @@ def generate_offline_data(config: GeneratorConfig) -> OfflineData:
             assets = 1_000_000 + company_index * 100 + quarter_index * 1000
             liabilities = int(assets * (0.45 + rng.random() * 0.25))
             release = date(fiscal_year, fiscal_quarter * 3, 28) + timedelta(days=30)
+            original_known_from = datetime(
+                fiscal_year, fiscal_quarter * 3, 28, tzinfo=UTC
+            ) + timedelta(days=30)
+            is_restated = rng.random() < settings.restatement_rate
             statements.append(
                 {
                     "ticker": ticker,
@@ -158,9 +162,57 @@ def generate_offline_data(config: GeneratorConfig) -> OfflineData:
                     "source_system": "configurable_generator",
                     "source_record_id": f"statement-{company_index:012d}-{quarter_index:02d}",
                     "schema_version": schema_version,
+                    "known_from_ts": _iso(original_known_from),
+                    "is_latest_vintage": not is_restated,
                 }
             )
-
+            if is_restated:
+                restated_known_from = original_known_from + timedelta(
+                    days=settings.restatement_lag_days
+                )
+                # Realistic revision magnitude/direction: a restatement moves total_assets
+                # and equity by +/- restatement_magnitude, liabilities absorbs the delta so
+                # the balance-sheet identity (assets = liabilities + equity) still holds
+                # exactly under the restated figures too.
+                direction = 1 if rng.random() < 0.5 else -1
+                revised_assets = int(assets * (1 + direction * settings.restatement_magnitude))
+                revised_liabilities = int(
+                    liabilities * (1 + direction * settings.restatement_magnitude * 0.6)
+                )
+                statements.append(
+                    {
+                        "ticker": ticker,
+                        "report_period": period,
+                        "fiscal_year": fiscal_year,
+                        "fiscal_quarter": fiscal_quarter,
+                        "total_assets": revised_assets,
+                        "total_liabilities": revised_liabilities,
+                        "equity": revised_assets - revised_liabilities,
+                        "current_assets": int(revised_assets * 0.4),
+                        "current_liabilities": int(revised_liabilities * 0.5),
+                        "revenue": int(revised_assets * 0.25),
+                        "ebit": int(revised_assets * 0.04),
+                        "interest_expense": int(revised_assets * 0.01),
+                        "net_income": int(revised_assets * 0.025),
+                        "operating_cash_flow": (
+                            None if schema_version == 1 else int(revised_assets * 0.03)
+                        ),
+                        "retained_earnings": (
+                            None if schema_version == 1 else int(revised_assets * 0.08)
+                        ),
+                        "statement_type": "consolidated" if schema_version == 2 else None,
+                        "report_release_date": release.isoformat(),
+                        "event_timestamp": f"{release.isoformat()}T00:00:00+00:00",
+                        "created_ts": _iso(company_created + timedelta(days=quarter_index)),
+                        "source_system": "configurable_generator",
+                        "source_record_id": (
+                            f"statement-{company_index:012d}-{quarter_index:02d}-restated"
+                        ),
+                        "schema_version": schema_version,
+                        "known_from_ts": _iso(restated_known_from),
+                        "is_latest_vintage": True,
+                    }
+                )
     companies = _inject_company_duplicates(companies, settings.duplicate_rate, rng)
     duplicate_rows = sum(row["is_injected_duplicate"] for row in companies)
     return OfflineData(
