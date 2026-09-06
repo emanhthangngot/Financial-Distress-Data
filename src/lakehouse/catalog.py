@@ -112,6 +112,7 @@ class LocalIcebergTable:
                 f"partition fields not found in schema: {sorted(unknown_partitions)}"
             )
         self._snapshots: list[Snapshot] = []
+        self._tags: dict[str, str] = {}
         self._lock = threading.RLock()
 
     @property
@@ -212,6 +213,37 @@ class LocalIcebergTable:
             if snapshot.snapshot_id == snapshot_id:
                 return snapshot
         raise CatalogError(f"unknown snapshot {snapshot_id!r} for {self.identifier}")
+
+    def tag(self, name: str, snapshot_id: str | None = None) -> str:
+        """Point a named tag at a snapshot (defaults to the current one).
+
+        Tags are Iceberg's mechanism for a stable, human-readable reference to
+        an immutable snapshot — e.g. ``holdout-v1`` — so re-reading by tag
+        always resolves to the same byte-identical rows regardless of later
+        commits to the table's main history.
+        """
+        with self._lock:
+            resolved = self._resolve_snapshot(snapshot_id)
+            if resolved is None:
+                raise CatalogError(f"cannot tag {self.identifier}: no snapshot to reference")
+            self._tags[str(name)] = resolved.snapshot_id
+            return resolved.snapshot_id
+
+    def resolve_tag(self, name: str) -> str:
+        with self._lock:
+            try:
+                return self._tags[str(name)]
+            except KeyError as exc:
+                raise CatalogError(f"unknown tag {name!r} for {self.identifier}") from exc
+
+    @property
+    def tags(self) -> dict[str, str]:
+        with self._lock:
+            return dict(self._tags)
+
+    def read_tag(self, name: str) -> list[dict[str, Any]]:
+        """Time-travel read by tag — byte-identical across calls (same snapshot_id)."""
+        return self.read(self.resolve_tag(name))
 
 
 class LocalIcebergCatalog:
