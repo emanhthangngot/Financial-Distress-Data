@@ -20,6 +20,9 @@ class OfflineConfig:
     dominant_exchange_rate: float
     duplicate_rate: float
     schema_change_quarter: int
+    restatement_rate: float = 0.0
+    restatement_lag_days: int = 180
+    restatement_magnitude: float = 0.15
 
     def validate(self) -> None:
         if self.companies <= 0 or self.quarters <= 1:
@@ -29,6 +32,9 @@ class OfflineConfig:
         _validate_rate("dominant_sector_rate", self.dominant_sector_rate)
         _validate_rate("dominant_exchange_rate", self.dominant_exchange_rate)
         _validate_rate("duplicate_rate", self.duplicate_rate)
+        _validate_rate("restatement_rate", self.restatement_rate)
+        if self.restatement_lag_days <= 0:
+            raise ValueError("restatement_lag_days must be positive")
         if not 1 < self.schema_change_quarter <= self.quarters:
             raise ValueError("schema_change_quarter must split the configured quarters")
 

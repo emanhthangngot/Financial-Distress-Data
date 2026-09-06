@@ -1,13 +1,19 @@
 """
 Live vnstock adapter for the financial-distress pipeline.
 
-Wraps the vnstock Python SDK to fetch real Vietnamese market data (company list, financial
-statements, market prices) and yield records in the common schema. Disabled by default; the fixture
-adapter is used in CI and during platform .ocal development.
+Re-exports VnstockLiveAdapter (the real implementation, src/collectors/source_adapters/
+vnstock_live_adapter.py) and VnstockFixtureAdapter (the CI/default path). Disabled by default —
+``configs/collector_config.yaml``'s ``source_mode: online`` declares intent, but callers must
+explicitly instantiate VnstockLiveAdapter to use it; nothing in this module makes a network call
+at import time.
 """
 
 from __future__ import annotations
 
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
+from src.collectors.source_adapters.vnstock_live_adapter import (
+    VnstockLiveAdapter,
+    VnstockUnavailableError,
+)
 
-__all__ = ["VnstockFixtureAdapter"]
+__all__ = ["VnstockFixtureAdapter", "VnstockLiveAdapter", "VnstockUnavailableError"]
