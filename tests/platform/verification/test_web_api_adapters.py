@@ -105,12 +105,12 @@ async def test_feature_adapters_and_production_configuration(monkeypatch) -> Non
     module = load_app_module("feature-mcp", "main")
     monkeypatch.delenv("FEAST_REPO_PATH", raising=False)
     monkeypatch.delenv("RAG_DATABASE_URL", raising=False)
-    monkeypatch.delenv("PHASE2_PG_PASSWORD", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_PASSWORD", raising=False)
     features, rag = module.production_clients_from_env()
     assert isinstance(features, module.UnconfiguredFeatureClient)
     assert isinstance(rag, module.UnconfiguredRagClient)
 
-    monkeypatch.setenv("PHASE2_PG_PASSWORD", "secret")
+    monkeypatch.setenv("PLATFORM_PG_PASSWORD", "secret")
     _, password_rag = module.production_clients_from_env()
     assert isinstance(password_rag, module.PostgresRagLookupClient)
     assert "password=secret" in password_rag._dsn
