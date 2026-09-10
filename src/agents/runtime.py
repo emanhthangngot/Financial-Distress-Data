@@ -21,9 +21,9 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.agents.coordinator import Coordinator
 from src.agents.drift_agent import DriftAgent
 from src.agents.feature_agent import FeatureAgent
+from src.agents.langgraph_runtime import build_langgraph_coordinator, coordinate_langgraph
 from src.agents.models import AgentFailure, SpecialistResponse
 from src.observability.telemetry import (
     CONTENT_TYPE_LATEST,
@@ -326,13 +326,14 @@ def create_app() -> FastAPI:
         model,
         telemetry=telemetry,
     )
-    coordinator = Coordinator(
-        HttpSpecialistClient(os.getenv("FEATURE_AGENT_URL", "http://feature-agent"), telemetry),
-        HttpSpecialistClient(os.getenv("DRIFT_AGENT_URL", "http://drift-agent"), telemetry),
-        max_hops=int(os.getenv("MAX_AGENT_HOPS", "2")),
-        timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0")),
-        telemetry=telemetry,
-    )
+    coordinator_graph = None
+    if role == "coordinator":
+        coordinator_graph = build_langgraph_coordinator(
+            HttpSpecialistClient(os.getenv("FEATURE_AGENT_URL", "http://feature-agent"), telemetry),
+            HttpSpecialistClient(os.getenv("DRIFT_AGENT_URL", "http://drift-agent"), telemetry),
+            max_hops=int(os.getenv("MAX_AGENT_HOPS", "2")),
+            max_parallel=2,
+        )
     application = FastAPI(title=f"{role}-agent", version="1.0.0")
     application.state.telemetry = telemetry
 
@@ -389,7 +390,11 @@ def create_app() -> FastAPI:
         elif role == "drift":
             result = await drift.run(payload)
         elif role == "coordinator":
-            result = await coordinator.coordinate(payload)
+            result = await coordinate_langgraph(
+                coordinator_graph,
+                payload,
+                timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0")),
+            )
             if isinstance(result, AgentFailure):
                 LOGGER.warning("coordinator agent failure: %s", result.error)
         else:
