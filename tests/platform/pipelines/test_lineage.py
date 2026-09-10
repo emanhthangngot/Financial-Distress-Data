@@ -22,11 +22,11 @@ def test_config_loads_and_validates() -> None:
     model = load_platform_governance_model()
     model.validate()
     assert set(model.pipelines) == {
-        "phase2_rag_ingest",
-        "phase2_label_drift_build",
-        "phase2_feature_materialize",
-        "phase2_stream_feature_offline",
-        "phase2_stream_feature_online",
+        "platform_rag_ingest",
+        "platform_label_drift_build",
+        "platform_feature_materialize",
+        "platform_stream_feature_offline",
+        "platform_stream_feature_online",
     }
 
 
@@ -52,17 +52,17 @@ def test_audit_does_not_import_datahub(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_audit_reports_every_pipeline_as_a_contract() -> None:
     report = audit_lineage()
     assert set(report["contracts"]) == {
-        "phase2_rag_ingest",
-        "phase2_label_drift_build",
-        "phase2_feature_materialize",
-        "phase2_stream_feature_offline",
-        "phase2_stream_feature_online",
+        "platform_rag_ingest",
+        "platform_label_drift_build",
+        "platform_feature_materialize",
+        "platform_stream_feature_offline",
+        "platform_stream_feature_online",
     }
 
 
 def test_rag_ingest_contract_dataset_is_rag_chunk() -> None:
     report = audit_lineage()
-    assert report["contracts"]["phase2_rag_ingest"]["dataset"] == "ml.rag_chunk"
+    assert report["contracts"]["platform_rag_ingest"]["dataset"] == "ml.rag_chunk"
 
 
 def test_emit_rejects_unknown_pipeline_before_importing_datahub() -> None:
@@ -72,15 +72,15 @@ def test_emit_rejects_unknown_pipeline_before_importing_datahub() -> None:
 
 
 def test_audit_narrowed_to_one_pipeline_reports_only_that_pipeline() -> None:
-    report = audit_lineage(pipeline_name="phase2_rag_ingest")
-    assert set(report["contracts"]) == {"phase2_rag_ingest"}
+    report = audit_lineage(pipeline_name="platform_rag_ingest")
+    assert set(report["contracts"]) == {"platform_rag_ingest"}
 
 
 def test_audit_narrowed_pipeline_only_carries_its_own_datasets() -> None:
     model = load_platform_governance_model()
     full_dataset_count = len(model.datasets)
-    report = audit_lineage(pipeline_name="phase2_rag_ingest")
-    # phase2_rag_ingest touches 4 datasets (1 input + 3 outputs); the full
+    report = audit_lineage(pipeline_name="platform_rag_ingest")
+    # platform_rag_ingest touches 4 datasets (1 input + 3 outputs); the full
     # registry has more than that — narrowing must have actually happened,
     # not just filtered the report's pipeline list.
     assert report["dataset_count"] < full_dataset_count
@@ -101,7 +101,7 @@ def test_emit_if_configured_is_a_true_no_op_when_unset(
     """The default state in every environment today (no compose service,
     Airflow env, or image installs `datahub`) — must never import datahub
     or raise, only report why it skipped."""
-    monkeypatch.delenv("PHASE2_DATAHUB_SERVER", raising=False)
+    monkeypatch.delenv("PLATFORM_DATAHUB_SERVER", raising=False)
     import builtins
 
     real_import = builtins.__import__
@@ -112,8 +112,8 @@ def test_emit_if_configured_is_a_true_no_op_when_unset(
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _blocking_import)
-    report = emit_lineage_if_configured("run-1", "phase2_rag_ingest")
-    assert report == {"emitted": False, "reason": "PHASE2_DATAHUB_SERVER not set"}
+    report = emit_lineage_if_configured("run-1", "platform_rag_ingest")
+    assert report == {"emitted": False, "reason": "PLATFORM_DATAHUB_SERVER not set"}
 
 
 def test_emit_if_configured_catches_emit_failure_instead_of_raising(
@@ -122,7 +122,7 @@ def test_emit_if_configured_catches_emit_failure_instead_of_raising(
     """Governance telemetry must never fail the data task that already
     committed its work — a bad/unreachable server (or a missing `datahub`
     package) reports {"emitted": False, ...} instead of raising."""
-    monkeypatch.setenv("PHASE2_DATAHUB_SERVER", "http://unreachable.invalid:9999")
-    report = emit_lineage_if_configured("run-1", "phase2_rag_ingest")
+    monkeypatch.setenv("PLATFORM_DATAHUB_SERVER", "http://unreachable.invalid:9999")
+    report = emit_lineage_if_configured("run-1", "platform_rag_ingest")
     assert report["emitted"] is False
     assert "reason" in report

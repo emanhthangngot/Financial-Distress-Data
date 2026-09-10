@@ -46,7 +46,7 @@ def configure_s3_environment() -> None:
 
 
 def produce_gold() -> dict[str, Any]:
-    config_path = os.environ.get("PHASE1_CLUSTER_CONFIG", DEFAULT_CLUSTER_CONFIG)
+    config_path = os.environ.get("LAKEHOUSE_CLUSTER_CONFIG", DEFAULT_CLUSTER_CONFIG)
     bucket = os.environ.get("FINANCIAL_DISTRESS_BUCKET", DEFAULT_BUCKET)
     adapter = VnstockFixtureAdapter(config=load_fixture_config(config_path))
     payload = build_evidence_payload(bucket=bucket, adapter=adapter)

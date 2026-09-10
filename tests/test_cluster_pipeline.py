@@ -29,7 +29,7 @@ def test_produce_gold_uses_configured_phase1_adapter_and_canonical_writer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     written: dict[str, object] = {}
-    monkeypatch.setenv("PHASE1_CLUSTER_CONFIG", "configs/cluster-collector-config.yaml")
+    monkeypatch.setenv("LAKEHOUSE_CLUSTER_CONFIG", "configs/cluster-collector-config.yaml")
     monkeypatch.setattr(
         run_cluster_pipeline,
         "write_minio_outputs",

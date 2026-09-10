@@ -50,7 +50,7 @@ PLATFORM_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
 )
 
 
-def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebergTable]:
+def register_platform_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebergTable]:
     """Register all platform tables and return them by identifier.
 
     Existing registrations are accepted when their schema and partition spec
@@ -78,7 +78,7 @@ def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebe
     return tables
 
 
-def phase2_table_definitions() -> tuple[TableDefinition, ...]:
+def platform_table_definitions() -> tuple[TableDefinition, ...]:
     """Return immutable definitions for callers that need to inspect them."""
     return PLATFORM_TABLE_DEFINITIONS
 
@@ -86,6 +86,6 @@ def phase2_table_definitions() -> tuple[TableDefinition, ...]:
 __all__ = [
     "PLATFORM_TABLE_DEFINITIONS",
     "TableDefinition",
-    "phase2_table_definitions",
-    "register_phase2_tables",
+    "platform_table_definitions",
+    "register_platform_tables",
 ]
