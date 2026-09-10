@@ -8,8 +8,11 @@ re-verified here (see the script's own docstring for that evidence).
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -50,7 +53,30 @@ def test_every_change_class_is_one_of_the_declared_five_or_a_combination() -> No
 
 
 def test_check_component_returns_false_without_a_namespace() -> None:
-    """External actors / annotated edges with no namespace probe are never
-    falsely reported as live — they fail closed."""
+    """External actors / annotated edges with no namespace probes fail closed."""
     external_actor = next(c for c in _module.TARGET_COMPONENTS if c.probe[1] is None)
     assert _module.check_component(external_actor) is False
+
+
+def test_selected_inventory_rejects_missing_required_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    inventory = tmp_path / "inventory.json"
+    inventory.write_text(
+        json.dumps(
+            {
+                "components": [
+                    {
+                        "name": "required component",
+                        "owner": "P4",
+                        "evidence_path": "missing/artifact.json",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(_module, "INVENTORY_PATH", inventory)
+    assert _module.verify_selected_inventory() == [
+        "required component: missing evidence missing/artifact.json"
+    ]

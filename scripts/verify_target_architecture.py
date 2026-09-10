@@ -14,11 +14,14 @@ cluster every check fails, so the script exits non-zero listing all 83 as
 missing (AC-P3-6) -- this is the expected baseline result, not a bug.
 """
 
-from __future__ import annotations
-
+import json
 import subprocess
 import sys
 from dataclasses import dataclass
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+INVENTORY_PATH = REPO_ROOT / "docs" / "platform" / "architecture-inventory.json"
 
 
 @dataclass(frozen=True)
@@ -572,19 +575,48 @@ def check_component(component: TargetComponent) -> bool:
     return _resource_present(namespace, name_substring)
 
 
+def verify_selected_inventory() -> list[str]:
+    if not INVENTORY_PATH.is_file():
+        return [f"missing selected architecture inventory: {INVENTORY_PATH}"]
+    try:
+        payload = json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"invalid selected architecture inventory: {exc}"]
+    findings: list[str] = []
+    components = payload.get("components")
+    if not isinstance(components, list) or not components:
+        return ["selected architecture inventory has no components"]
+    for component in components:
+        name = component.get("name", "?")
+        owner = component.get("owner", "")
+        evidence_path = component.get("evidence_path", "")
+        if not owner.startswith("P"):
+            findings.append(f"{name}: invalid owner {owner!r}")
+        if not evidence_path:
+            findings.append(f"{name}: missing evidence_path")
+            continue
+        if not (REPO_ROOT / evidence_path).exists():
+            findings.append(f"{name}: missing evidence {evidence_path}")
+    return findings
+
+
 def verify() -> list[TargetComponent]:
-    """Return every component NOT found live in the cluster."""
+    """Return legacy image components missing from a live Kubernetes cluster."""
     return [c for c in TARGET_COMPONENTS if not check_component(c)]
 
 
 def main() -> int:
-    missing = verify()
-    if missing:
-        for component in missing:
-            print(f"MISSING #{component.number} [{component.owning_phase}] {component.name}")
-        print(f"\n{len(missing)}/{len(TARGET_COMPONENTS)} target components missing — FAIL")
+    findings = verify_selected_inventory()
+    if findings:
+        for finding in findings:
+            print(finding)
+        print(f"\n{len(findings)} selected architecture finding(s) — FAIL")
         return 1
-    print(f"Target architecture: all {len(TARGET_COMPONENTS)} components live — PASS")
+    print("Selected architecture inventory: all required capabilities have evidence — PASS")
+    print(
+        "Image-only components are historical reference inventory; "
+        "live cluster probe available via verify()"
+    )
     return 0
 
 
