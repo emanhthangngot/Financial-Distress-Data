@@ -169,10 +169,15 @@ def build_fact_financial_statement_spark(
     variant_rank = F.create_map(
         *[item for key, rank in _STATEMENT_VARIANTS.items() for item in (F.lit(key), F.lit(rank))]
     )[F.col("statement_variant")]
+    created_ts_col = (
+        F.to_timestamp(F.col("created_ts"))
+        if "created_ts" in dataframe.columns
+        else F.lit(None).cast("timestamp")
+    )
     election_window = Window.partitionBy("ticker", "report_period").orderBy(
         F.col("known_from_ts").desc(),
         variant_rank.asc(),
-        F.col("created_ts").desc_nulls_last(),
+        created_ts_col.desc_nulls_last(),
         F.col("statement_variant").asc(),
     )
     fact = (

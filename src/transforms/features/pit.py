@@ -141,6 +141,7 @@ def build_feat_company_financial_4q(financial_rows: list[dict[str, Any]]) -> lis
 
 
 def build_feat_company_market_30d(market_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Aggregate up to 30 calendar days using 21 expected trading observations."""
     rows: list[dict[str, Any]] = []
     for ticker in sorted({str(row["ticker"]).upper() for row in market_rows}):
         ticker_rows = [row for row in market_rows if str(row["ticker"]).upper() == ticker]

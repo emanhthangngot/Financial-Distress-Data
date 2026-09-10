@@ -150,3 +150,32 @@ def test_exhaustive_inventory_rejects_missing_target_component() -> None:
     assert any(
         "2 " in finding and "missing from exhaustive inventory" in finding for finding in findings
     )
+
+
+def test_exhaustive_inventory_requires_seven_selected_components() -> None:
+    payload = {
+        "components": [
+            {
+                "number": component.number,
+                "name": component.name,
+                "status": "omitted",
+                "reason": "not available",
+            }
+            for component in _module.TARGET_COMPONENTS
+        ]
+    }
+    findings = _module.verify_exhaustive_inventory(payload)
+    assert "expected 7 selected components, found 0" in findings
+
+
+def test_main_fails_for_known_bad_inventory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    inventory = tmp_path / "inventory.json"
+    inventory.write_text(
+        json.dumps({"components": [{"name": "bad", "status": "selected"}]}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(_module, "INVENTORY_PATH", inventory)
+    monkeypatch.setattr(sys, "argv", ["verify_target_architecture.py"])
+    assert _module.main() == 1

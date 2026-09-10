@@ -604,11 +604,6 @@ def verify_selected_inventory() -> list[str]:
                 findings.append(f"{name}: missing evidence {evidence_path}")
         elif not component.get("reason"):
             findings.append(f"{name}: missing omission reason")
-    if any(
-        isinstance(component, dict) and isinstance(component.get("number"), int)
-        for component in components
-    ):
-        findings.extend(verify_exhaustive_inventory(payload))
     return findings
 
 
@@ -623,6 +618,9 @@ def verify_exhaustive_inventory(payload: dict[str, object]) -> list[str]:
         if number in expected:
             seen[number] = raw
     findings: list[str] = []
+    selected_count = sum(raw.get("status") == "selected" for raw in seen.values())
+    if selected_count != 7:
+        findings.append(f"expected 7 selected components, found {selected_count}")
     for number, component in expected.items():
         raw = seen.get(number)
         if raw is None:
@@ -651,6 +649,9 @@ def main() -> int:
     )
     args = parser.parse_args()
     findings = verify_selected_inventory()
+    if not findings:
+        payload = json.loads(INVENTORY_PATH.read_text(encoding="utf-8"))
+        findings.extend(verify_exhaustive_inventory(payload))
     if args.cluster:
         findings.extend(f"{c.number} {c.name}: missing from cluster" for c in verify())
     if findings:
