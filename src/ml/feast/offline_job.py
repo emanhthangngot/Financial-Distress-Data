@@ -11,38 +11,71 @@ from __future__ import annotations
 
 import hashlib
 from collections import defaultdict
+from datetime import datetime, timedelta
 from typing import Any
 
 
 def aggregate_stream_events(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Groups price_update events by ticker and computes
-    ``stream_market_features``: ``last_price`` (latest by event_timestamp),
-    ``event_count_1h`` (count in the batch — the caller controls the window
-    by how it batches ``events``), ``price_change_pct_1h`` (relative change
-    from the batch's first to last price). Accepts either a raw payload dict
-    (``ticker``/``price``/``event_timestamp``) or a Kafka message's
-    ``.value`` (a ``StreamEvent``-shaped dict with a nested ``payload``)."""
-    by_ticker: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    """Aggregate a deduplicated one-hour event-time window per ticker.
+
+    The caller may provide a larger replay batch; the latest event per ticker
+    defines the one-hour window. Duplicate CDC/Kafka deliveries are removed by
+    ``event_id`` when present, otherwise by the stable ticker/timestamp/price
+    tuple.
+    """
+    by_ticker: dict[str, dict[tuple[Any, ...], dict[str, Any]]] = defaultdict(dict)
     for event in events:
         payload = event.get("payload", event)
-        by_ticker[payload["ticker"]].append(payload)
+        ticker = payload["ticker"]
+        identity = (
+            ("event_id", payload["event_id"])
+            if payload.get("event_id") is not None
+            else (
+                "value",
+                ticker,
+                payload.get("event_timestamp"),
+                payload.get("price"),
+            )
+        )
+        by_ticker[ticker][identity] = payload
 
     rows: list[dict[str, Any]] = []
-    for ticker, ticker_events in by_ticker.items():
-        ordered = sorted(ticker_events, key=lambda item: item["event_timestamp"])
-        first_price = float(ordered[0]["price"])
-        last_price = float(ordered[-1]["price"])
+    for ticker, unique_events in by_ticker.items():
+        ordered = sorted(
+            unique_events.values(),
+            key=lambda item: _stream_timestamp(item["event_timestamp"]),
+        )
+        latest_ts = _stream_timestamp(ordered[-1]["event_timestamp"])
+        window = [
+            item
+            for item in ordered
+            if _stream_timestamp(item["event_timestamp"]) >= latest_ts - timedelta(hours=1)
+        ]
+        first_price = float(window[0]["price"])
+        last_price = float(window[-1]["price"])
         change_pct = None if first_price == 0 else (last_price - first_price) / first_price
         rows.append(
             {
                 "ticker": ticker,
                 "last_price": last_price,
-                "event_count_1h": len(ordered),
+                "event_count_1h": len(window),
                 "price_change_pct_1h": change_pct,
-                "event_timestamp": ordered[-1]["event_timestamp"],
+                "event_timestamp": window[-1]["event_timestamp"],
             }
         )
     return rows
+
+
+def _stream_timestamp(value: Any) -> datetime:
+    from datetime import UTC
+
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=UTC)
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return datetime(1970, 1, 1, tzinfo=UTC)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
 def write_offline_rows(rows: list[dict[str, Any]], client: Any, bucket: str) -> None:
