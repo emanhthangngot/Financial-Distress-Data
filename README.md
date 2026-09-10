@@ -136,7 +136,7 @@ python -m pip install -r requirements.txt
 python -m pip install -e ".[dev,runtime]"
 cp .env.example .env
 docker compose up -d
-.venv/bin/python scripts/check_stage1_services.py
+.venv/bin/python scripts/check_lakehouse_services.py
 ```
 
 Full local setup, Docker Compose profiles (incl. opt-in Flink), product/platform .hecks, service URLs, platform evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.

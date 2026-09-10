@@ -25,7 +25,7 @@ def test_gold_event_timestamp_is_written_as_timezone_aware_parquet_type() -> Non
     assert str(table.schema.field("event_timestamp").type) == "timestamp[us, tz=UTC]"
 
 
-def test_produce_gold_uses_configured_phase1_adapter_and_canonical_writer(
+def test_produce_gold_uses_configured_lakehouse_adapter_and_canonical_writer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     written: dict[str, object] = {}
