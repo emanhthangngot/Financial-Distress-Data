@@ -11,8 +11,8 @@ List files and runtime surfaces that still describe or implement a contract diff
 | Surface | Observed drift | Owner | Required correction |
 |---|---|---:|---|
 | `sql/schema_evidence.sql` | Active DDL still uses `TIMESTAMP` in several tables while v2 requires `TIMESTAMPTZ` with explicit UTC migration. | P2/P4 | Apply `AT TIME ZONE 'UTC'` migration and regenerate schema evidence. |
-| `src/transforms/gold/fact_financial_statement.py` | Resolved: statement variants are a closed four-value enum; unknown/missing values fail closed through `failed_records`. | P2 | Keep the enum and negative-case coverage. |
-| `src/transforms/gold/fact_market_price.py` | Resolved: Python and Spark previous-close selection are knowledge-time aware; Spark row identity is stable across branch recomputation. | P4 | Keep parity regression coverage. |
+| `src/transforms/gold/fact_financial_statement.py` | Partially resolved: Python quarantines unknown/missing variants; Spark still aborts the batch on invalid variants, while real Spark/Python election parity is now tested. | P2/P4 | Split Spark invalid rows into failed records before claiming full parity. |
+| `src/transforms/gold/fact_market_price.py` | Resolved: Python and Spark previous-close selection are knowledge-time aware; Spark row identity is stable across branch recomputation and null volatility semantics match. | P4 | Keep parity regression coverage. |
 | `src/transforms/features/pit.py` | Python feature builders compute as-of windows and preserve news grain; Spark materialization parity and live window output remain unverified. | P4/P5 | Keep Python regression coverage, add Spark aggregation parity, and verify live materialization in a zero-spend runtime. |
 | `src/ml/feast/feature_definitions.py` | Partially resolved locally: FileSources bind `known_from_ts` and partitioned `feat_*` prefixes, but risk/unified `created_timestamp` columns and the market `volume` field require schema reconciliation before `feast apply`. | P5 | Reconcile emitted columns, run `feast apply`, and execute live materialization only inside an approved no-spend window. |
 | `src/agents/langgraph_runtime.py` / `src/agents/runtime.py` | Resolved locally: coordinator uses LangChain RunnableLambda plus bounded LangGraph fan-out, hop short-circuit, timeout, and typed failures; live multi-replica deployment remains unverified. | P8/P9 | Execute parity/evaluation and live serving evidence when provider and cluster gates pass. |
@@ -37,5 +37,7 @@ The following are not active architecture requirements by themselves:
 - Full repository quality gate: pass, 376 passed / 2 xfailed; naming, rubric, architecture, and evidence gates pass.
 - Feast/streaming platform contract suite in isolated `.venv-platform`: pass, 25 tests.
 - Platform workflow contract suite in isolated `.venv-platform`: pass, 34 tests after aligning the verifier with the repository's phase2 workflow names.
-- Exhaustive target-component coverage tests: pass, 11 tests; missing-file, invalid-owner, missing-evidence, omission-reason, and missing-component failure paths exercised.
-- Phase 11 coverage/mutation thresholds: blocked; full platform collection lacks `mcp`, `psycopg`, `hypothesis`, and the asyncio marker plugin in `.venv-platform`.
+- Exhaustive target-component coverage tests: pass, 13 tests; missing-file, invalid-owner, missing-evidence, omission-reason, missing-component, selected-count, and bad-main failure paths exercised.
+- Phase 11 web coverage gate: pass, 28 tests; 96.72% line coverage and 95.65% branch coverage.
+- Phase 11 mutation gate: pass, 86.11% mutation score (62 killed / 72 total), above the exclusive 80% threshold.
+- Real Spark gold parity tests: pass, 2 tests; financial vintage election and market daily-return/volatility parity executed with local PySpark.

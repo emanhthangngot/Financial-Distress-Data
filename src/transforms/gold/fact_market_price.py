@@ -127,11 +127,11 @@ def build_fact_market_price_spark(
             "left",
         )
         .join(
-            prior_dates,
-            F.col("current.__row_id") == F.col("__row_id"),
+            prior_dates.alias("prior"),
+            F.col("current.__row_id") == F.col("prior.__row_id"),
             "left",
         )
-        .filter(F.col("previous.trading_date") == F.col("__prior_date"))
+        .filter(F.col("previous.trading_date") == F.col("prior.__prior_date"))
         .groupBy(F.col("current.__row_id").alias("__row_id"))
         .agg(
             F.max_by(
