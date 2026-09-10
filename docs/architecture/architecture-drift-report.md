@@ -1,6 +1,6 @@
 # Architecture Drift Report
 
-Captured 2026-09-10 against `dev` at the Phase 3 contract reconciliation point.
+Captured 2026-09-10 against the merged Phase 5/LangGraph cutover commits on `dev`.
 
 ## Purpose
 
@@ -11,9 +11,11 @@ List files and runtime surfaces that still describe or implement a contract diff
 | Surface | Observed drift | Owner | Required correction |
 |---|---|---:|---|
 | `sql/schema_evidence.sql` | Active DDL still uses `TIMESTAMP` in several tables while v2 requires `TIMESTAMPTZ` with explicit UTC migration. | P2/P4 | Apply `AT TIME ZONE 'UTC'` migration and regenerate schema evidence. |
-| `src/transforms/gold/fact_financial_statement.py` | Missing/unknown statement variant still has a consolidated fallback in one builder path. | P2 | Use an explicit closed enum and route unknown values to failed records. |
-| `src/transforms/gold/fact_market_price.py` | Python return calculation is knowledge-time aware; Spark window parity still needs a vintage-aware implementation. | P4 | Make Spark and Python previous-close selection identical and add adversarial correction evidence. |
-| `src/transforms/features/pit.py` | Feature builders currently project rows; full 4-quarter/30-day aggregate windows and completeness fields remain incomplete. | P4/P5 | Implement real as-of windows and preserve `event_timestamp`/`created_timestamp`. |
+| `src/transforms/gold/fact_financial_statement.py` | Resolved: statement variants are a closed four-value enum; unknown/missing values fail closed through `failed_records`. | P2 | Keep the enum and negative-case coverage. |
+| `src/transforms/gold/fact_market_price.py` | Resolved: Python and Spark previous-close selection are knowledge-time aware; Spark row identity is stable across branch recomputation. | P4 | Keep parity regression coverage. |
+| `src/transforms/features/pit.py` | Resolved: feature families compute as-of windows, completeness metadata, and preserve news grain; market windows select 30 observations. | P4/P5 | Keep window regression coverage and verify live materialization when a zero-spend runtime window exists. |
+| `src/ml/feast/feature_definitions.py` | Resolved locally: FileSources bind `known_from_ts` and `created_timestamp` to partitioned `feat_*` prefixes; live Postgres-to-Redis materialization remains unverified. | P5 | Run live AC-P5-3/5/7/8 only inside an approved no-spend window. |
+| `src/agents/langgraph_runtime.py` / `src/agents/runtime.py` | Resolved locally: coordinator uses LangChain RunnableLambda plus bounded LangGraph fan-out, hop short-circuit, timeout, and typed failures; live multi-replica deployment remains unverified. | P8/P9 | Execute parity/evaluation and live serving evidence when provider and cluster gates pass. |
 | `docs/architecture/data-model.md` | Historical v1 sections remain in the document. | P3 | Keep historical sections explicitly marked; new callers must use the v2 header and Phase 2 contract. |
 | `scripts/verify_target_architecture.py` | Legacy image component list remains for historical/live-cluster inspection. | P3/P6+ | Selected inventory is now the default gate; legacy image probe remains diagnostic only. |
 | `.github/workflows/*` | Workflow token references are deferred to P10 and are not part of P1 naming cutover. | P10 | Reconcile deployment labels only with the release workflow owner. |
@@ -32,5 +34,6 @@ The following are not active architecture requirements by themselves:
 
 - Rubric coverage verifier: pass, 161 rows / 300 points.
 - Selected architecture inventory verifier: pass.
-- Legacy image live-cluster probe: diagnostic only; not a release gate under ADR-022.
-- Full repository quality gate: must be rerun after each subsequent phase changes the shared contracts.
+- Full repository quality gate: pass, 376 passed / 2 xfailed; naming, rubric, architecture, and evidence gates pass.
+- Feast/streaming platform contract suite in isolated `.venv-platform`: pass, 25 tests.
+- LangChain/LangGraph bounded parity smoke: pass; live provider, cluster, and external GitOps deployment evidence remain unverified.
