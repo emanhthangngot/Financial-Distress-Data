@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted — 2026-09-01 (`plans/260831-1644-rebuild-target-mlops-architecture/plan.md`).
+Accepted — 2026-09-01. Amended by [ADR-022](./adr-022-rubric-before-image-fidelity.md) on 2026-09-10.
+ADR-022 supersedes the image-fidelity portion of O-1; this ADR remains the historical reference inventory.
 Supersedes [ADR-010](./adr-010-llm-only-scope-and-platform-simplification.md).
 
 ## Context
