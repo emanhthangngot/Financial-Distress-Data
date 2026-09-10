@@ -539,7 +539,13 @@ Tables:
 - `feat_company_news_30d`
 - `feat_company_unified`
 
-`feat_company_unified` enforces point-in-time correctness by excluding feature rows whose `feature_event_timestamp` is greater than the reference row `event_timestamp`.
+**v1 as-built leakage guard:** `src/orchestration/pipeline_contracts.py` rejects a
+feature whose `feature_event_timestamp` is later than the reference event, and
+`sql/duckdb_validation_queries.sql` asserts the same invariant. The Spark job
+also orders on `feature_event_timestamp` when constructing the joined output.
+
+**v2 target axis:** feature knowledge is represented by `known_from_ts`, exposed
+to Feast as `event_timestamp`; `created_timestamp` remains the retry tie-break.
 
 Acceptance criteria:
 

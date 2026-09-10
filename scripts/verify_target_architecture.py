@@ -14,6 +14,7 @@ cluster every check fails, so the script exits non-zero listing all 83 as
 missing (AC-P3-6) -- this is the expected baseline result, not a bug.
 """
 
+import argparse
 import json
 import subprocess
 import sys
@@ -590,13 +591,49 @@ def verify_selected_inventory() -> list[str]:
         name = component.get("name", "?")
         owner = component.get("owner", "")
         evidence_path = component.get("evidence_path", "")
-        if not owner.startswith("P"):
-            findings.append(f"{name}: invalid owner {owner!r}")
-        if not evidence_path:
-            findings.append(f"{name}: missing evidence_path")
+        status = component.get("status", "selected")
+        if status not in {"selected", "omitted"}:
+            findings.append(f"{name}: invalid status {status!r}")
+        if status == "selected":
+            if not owner.startswith("P"):
+                findings.append(f"{name}: invalid owner {owner!r}")
+            if not evidence_path:
+                findings.append(f"{name}: missing evidence_path")
+                continue
+            if not (REPO_ROOT / evidence_path).exists():
+                findings.append(f"{name}: missing evidence {evidence_path}")
+        elif not component.get("reason"):
+            findings.append(f"{name}: missing omission reason")
+    if any(
+        isinstance(component, dict) and isinstance(component.get("number"), int)
+        for component in components
+    ):
+        findings.extend(verify_exhaustive_inventory(payload))
+    return findings
+
+
+def verify_exhaustive_inventory(payload: dict[str, object]) -> list[str]:
+    """Ensure every image component is explicitly selected or omitted."""
+    expected = {c.number: c for c in TARGET_COMPONENTS}
+    seen: dict[int, dict[str, object]] = {}
+    for raw in payload.get("components", []):
+        if not isinstance(raw, dict) or not isinstance(raw.get("number"), int):
             continue
-        if not (REPO_ROOT / evidence_path).exists():
-            findings.append(f"{name}: missing evidence {evidence_path}")
+        number = raw["number"]
+        if number in expected:
+            seen[number] = raw
+    findings: list[str] = []
+    for number, component in expected.items():
+        raw = seen.get(number)
+        if raw is None:
+            findings.append(f"{number} {component.name}: missing from exhaustive inventory")
+            continue
+        if raw.get("name") != component.name:
+            findings.append(f"{number}: name does not match target component")
+        if raw.get("status") not in {"selected", "omitted"}:
+            findings.append(f"{number} {component.name}: missing selected|omitted status")
+        if not isinstance(raw.get("reason"), str) or not raw["reason"].strip():
+            findings.append(f"{number} {component.name}: missing one-line reason")
     return findings
 
 
@@ -606,17 +643,24 @@ def verify() -> list[TargetComponent]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--cluster",
+        action="store_true",
+        help="also probe the declared components against the current Kubernetes cluster",
+    )
+    args = parser.parse_args()
     findings = verify_selected_inventory()
+    if args.cluster:
+        findings.extend(f"{c.number} {c.name}: missing from cluster" for c in verify())
     if findings:
         for finding in findings:
             print(finding)
-        print(f"\n{len(findings)} selected architecture finding(s) — FAIL")
+        print(f"\n{len(findings)} architecture finding(s) — FAIL")
         return 1
     print("Selected architecture inventory: all required capabilities have evidence — PASS")
-    print(
-        "Image-only components are historical reference inventory; "
-        "live cluster probe available via verify()"
-    )
+    if args.cluster:
+        print("Live Kubernetes component probes: PASS")
     return 0
 
 

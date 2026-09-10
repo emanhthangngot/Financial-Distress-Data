@@ -81,7 +81,7 @@ def build_fact_financial_statement(
             item["report_period"],
             -_timestamp_sort_key(item["known_from_ts"]),
             _STATEMENT_VARIANTS[item["statement_variant"]],
-            str(item.get("created_ts") or ""),
+            (-_timestamp_sort_key(item["created_ts"]) if item.get("created_ts") else float("inf")),
             item["statement_variant"],
         ),
     ):

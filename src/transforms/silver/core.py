@@ -141,7 +141,7 @@ def bronze_to_silver(
         try:
             aligned = (
                 contract.validate_row(row)
-                if field_types is not None
+                if field_types is not None or enum_values is not None
                 else align_to_schema(row, required, nullable)
             )
             valid.append(aligned)
