@@ -41,7 +41,9 @@ def build_fact_market_price(
         prior_dates = {
             item["trading_date"]
             for item in prepared
-            if item["ticker"] == fact["ticker"] and item["trading_date"] < fact["trading_date"]
+            if item["ticker"] == fact["ticker"]
+            and item["trading_date"] < fact["trading_date"]
+            and item["known_from_ts"] <= current_ts
         }
         previous_close = None
         if prior_dates:
@@ -116,7 +118,7 @@ def build_fact_market_price_spark(
             & (F.col("previous.known_from_ts") <= F.col("current.known_from_ts")),
             "left",
         )
-        .groupBy(F.col("current.__row_id").alias("__row_id"))
+        .groupBy(F.col("current.__row_id").alias("__prior_row_id"))
         .agg(F.max(F.col("previous.trading_date")).alias("__prior_date"))
     )
     previous_as_of = (
@@ -128,10 +130,10 @@ def build_fact_market_price_spark(
         )
         .join(
             prior_dates.alias("prior"),
-            F.col("current.__row_id") == F.col("prior.__row_id"),
+            F.col("current.__row_id") == F.col("__prior_row_id"),
             "left",
         )
-        .filter(F.col("previous.trading_date") == F.col("prior.__prior_date"))
+        .filter(F.col("previous.trading_date") == F.col("__prior_date"))
         .groupBy(F.col("current.__row_id").alias("__row_id"))
         .agg(
             F.max_by(

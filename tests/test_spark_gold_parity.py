@@ -17,19 +17,18 @@ from src.transforms.gold.fact_market_price import (
 )
 from src.transforms.keys import company_version_key
 
-try:
-    from pyspark.sql import SparkSession
-except ImportError:  # pragma: no cover - exercised by the lightweight CI stub
-    SparkSession = None  # type: ignore[assignment]
-
-
-pytestmark = pytest.mark.skipif(SparkSession is None, reason="PySpark runtime is unavailable")
+pytestmark = pytest.mark.slow
 
 
 @pytest.fixture(scope="module")
 def spark():
+    try:
+        from pyspark.sql import SparkSession
+    except ImportError:
+        pytest.skip("PySpark runtime is unavailable")
     os.environ.setdefault("SPARK_LOCAL_IP", "127.0.0.1")
-    os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
+    os.environ["PYSPARK_PYTHON"] = sys.executable
+    os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
     session = (
         SparkSession.builder.master("local[2]")
         .appName("financial-distress-gold-parity-test")
@@ -105,7 +104,13 @@ def test_market_daily_return_and_null_volatility_match_python(spark) -> None:
             "ticker": "ABC",
             "trading_date": date(2024, 1, 2),
             "close_price": 110.0,
-            "known_from_ts": "2024-01-02T00:00:00+00:00",
+            "known_from_ts": "2024-01-04T00:00:00+00:00",
+        },
+        {
+            "ticker": "ABC",
+            "trading_date": date(2024, 1, 3),
+            "close_price": 120.0,
+            "known_from_ts": "2024-01-03T00:00:00+00:00",
         },
     ]
     python_rows = build_fact_market_price(rows, _dimension())
