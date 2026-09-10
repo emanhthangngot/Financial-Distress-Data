@@ -74,16 +74,9 @@ def build_fact_market_price_spark(
 ) -> Any:
     try:
         from pyspark.sql import functions as F
-        from pyspark.sql.window import Window
     except ImportError as exc:
         raise RuntimeError("PySpark is required for Spark Gold transforms.") from exc
 
-    window = Window.partitionBy(F.upper(F.col("ticker"))).orderBy(F.col("trading_date"))
-    previous_close = F.lag(F.col("close_price").cast("double")).over(window)
-    daily_return = F.when(
-        previous_close.isNull() | (previous_close == 0),
-        F.lit(None).cast("double"),
-    ).otherwise((F.col("close_price").cast("double") - previous_close) / previous_close)
     known_from_ts = F.coalesce(
         (
             F.to_timestamp("known_from_ts")
@@ -101,12 +94,60 @@ def build_fact_market_price_spark(
             else F.lit(None).cast("timestamp")
         ),
     )
-    fact = (
+    base = (
         dataframe.withColumn("ticker", F.upper(F.col("ticker")))
         .withColumn("known_from_ts", known_from_ts)
         .withColumn("date_key", F.date_format(F.to_date("trading_date"), "yyyyMMdd").cast("int"))
-        .withColumn("daily_return", daily_return)
+        .withColumn("__row_id", F.monotonically_increasing_id())
+    )
+    current = base.alias("current")
+    previous = base.alias("previous")
+    prior_dates = (
+        current.join(
+            previous,
+            (F.col("current.ticker") == F.col("previous.ticker"))
+            & (F.col("previous.trading_date") < F.col("current.trading_date"))
+            & (F.col("previous.known_from_ts") <= F.col("current.known_from_ts")),
+            "left",
+        )
+        .groupBy(F.col("current.__row_id").alias("__row_id"))
+        .agg(F.max(F.col("previous.trading_date")).alias("__prior_date"))
+    )
+    previous_as_of = (
+        current.join(
+            previous,
+            (F.col("current.ticker") == F.col("previous.ticker"))
+            & (F.col("previous.known_from_ts") <= F.col("current.known_from_ts")),
+            "left",
+        )
+        .join(
+            prior_dates,
+            F.col("current.__row_id") == F.col("__row_id"),
+            "left",
+        )
+        .filter(F.col("previous.trading_date") == F.col("__prior_date"))
+        .groupBy(F.col("current.__row_id").alias("__row_id"))
+        .agg(
+            F.max_by(
+                F.col("previous.close_price").cast("double"),
+                F.col("previous.known_from_ts"),
+            ).alias("__previous_close")
+        )
+    )
+    fact = (
+        base.join(previous_as_of, "__row_id", "left")
+        .withColumn(
+            "daily_return",
+            F.when(
+                F.col("__previous_close").isNull() | (F.col("__previous_close") == 0),
+                F.lit(None).cast("double"),
+            ).otherwise(
+                (F.col("close_price").cast("double") - F.col("__previous_close"))
+                / F.col("__previous_close")
+            ),
+        )
         .withColumn("volatility_signal", F.abs(F.col("daily_return")) > F.lit(0.07))
+        .drop("__previous_close", "__row_id")
     )
     if fact.filter(F.col("known_from_ts").isNull()).limit(1).count():
         raise ValueError("known_from_ts, event_timestamp, or created_ts is required")

@@ -96,6 +96,7 @@ def test_fact_financial_statement_has_company_version_and_date_keys():
                 "total_liabilities": 500,
                 "equity": 500,
                 "report_release_date": "2026-01-30",
+                "statement_variant": "consolidated_unaudited",
                 "created_ts": "2026-01-30T00:00:00+00:00",
             }
         ],
@@ -104,12 +105,34 @@ def test_fact_financial_statement_has_company_version_and_date_keys():
     assert fact["company_version_key"] == dim_company[0]["company_version_key"]
     assert fact["date_key"] == 20260130
     assert fact["known_from_ts"] == "2026-01-30"
-    assert fact["statement_variant"] == "consolidated"
+    assert fact["statement_variant"] == "consolidated_unaudited"
     assert fact["is_latest_vintage"] is True
 
 
-def test_fact_financial_statement_preserves_statement_type():
-    fact = build_fact_financial_statement(
+def test_fact_financial_statement_routes_missing_variant_to_failed_records():
+    failed_records = []
+    facts = build_fact_financial_statement(
+        [
+            {
+                "ticker": "AAA",
+                "report_period": "2025Q4",
+                "total_assets": 1000,
+                "total_liabilities": 500,
+                "equity": 500,
+                "report_release_date": "2026-01-30",
+                "created_ts": "2026-01-30T00:00:00+00:00",
+            }
+        ],
+        _dim_company(),
+        failed_records=failed_records,
+    )
+    assert facts == []
+    assert failed_records[0]["failure_reason"] == "unknown_statement_variant: None"
+
+
+def test_fact_financial_statement_routes_unmapped_statement_type():
+    failed_records = []
+    facts = build_fact_financial_statement(
         [
             {
                 "ticker": "AAA",
@@ -125,10 +148,10 @@ def test_fact_financial_statement_preserves_statement_type():
             }
         ],
         _dim_company(),
-    )[0]
-
-    assert fact["statement_type"] == "consolidated"
-    assert fact["statement_variant"] == "consolidated"
+        failed_records=failed_records,
+    )
+    assert facts == []
+    assert failed_records[0]["failure_reason"] == "unknown_statement_variant: 'consolidated'"
 
 
 def test_fact_financial_statement_rejects_missing_real_timestamp():
@@ -140,8 +163,8 @@ def test_fact_financial_statement_rejects_missing_real_timestamp():
                     "report_period": "2025Q4",
                     "fiscal_year": 2025,
                     "report_release_date": None,
+                    "statement_variant": "consolidated_unaudited",
                     "event_timestamp": None,
-                    "created_ts": None,
                 }
             ],
             _dim_company(),

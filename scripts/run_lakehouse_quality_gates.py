@@ -32,6 +32,8 @@ DEFAULT_GATES: tuple[QualityGate, ...] = (
     ),
     QualityGate("docker-compose-config", ("docker", "compose", "config")),
     QualityGate("naming-convention", (sys.executable, "scripts/lint_naming_convention.py")),
+    QualityGate("rubric-coverage", (sys.executable, "scripts/verify_rubric_coverage.py")),
+    QualityGate("target-architecture", (sys.executable, "scripts/verify_target_architecture.py")),
     QualityGate(
         "lakehouse-evidence-audit",
         (

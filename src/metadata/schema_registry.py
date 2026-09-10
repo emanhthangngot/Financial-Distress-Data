@@ -134,9 +134,18 @@ DEFAULT_CONTRACTS = {
             "operating_cash_flow",
             "retained_earnings",
             "statement_type",
+            "statement_variant",
             "report_release_date",
             "event_timestamp",
         ],
+        enum_values={
+            "statement_variant": [
+                "consolidated_audited",
+                "consolidated_unaudited",
+                "separate_audited",
+                "separate_unaudited",
+            ],
+        },
     ),
     "market_prices_daily": SchemaContract(
         "market_prices_daily",

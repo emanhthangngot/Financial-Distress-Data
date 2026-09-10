@@ -156,6 +156,7 @@ def generate_offline_data(config: GeneratorConfig) -> OfflineData:
                     "operating_cash_flow": None if schema_version == 1 else int(assets * 0.03),
                     "retained_earnings": None if schema_version == 1 else int(assets * 0.08),
                     "statement_type": "consolidated" if schema_version == 2 else None,
+                    "statement_variant": "consolidated_unaudited",
                     "report_release_date": release.isoformat(),
                     "event_timestamp": f"{release.isoformat()}T00:00:00+00:00",
                     "created_ts": _iso(company_created + timedelta(days=quarter_index)),
@@ -201,6 +202,7 @@ def generate_offline_data(config: GeneratorConfig) -> OfflineData:
                             None if schema_version == 1 else int(revised_assets * 0.08)
                         ),
                         "statement_type": "consolidated" if schema_version == 2 else None,
+                        "statement_variant": "consolidated_unaudited",
                         "report_release_date": release.isoformat(),
                         "event_timestamp": f"{release.isoformat()}T00:00:00+00:00",
                         "created_ts": _iso(company_created + timedelta(days=quarter_index)),
