@@ -98,7 +98,13 @@ def build_fact_market_price_spark(
         dataframe.withColumn("ticker", F.upper(F.col("ticker")))
         .withColumn("known_from_ts", known_from_ts)
         .withColumn("date_key", F.date_format(F.to_date("trading_date"), "yyyyMMdd").cast("int"))
-        .withColumn("__row_id", F.monotonically_increasing_id())
+        .withColumn(
+            "__row_id",
+            F.sha2(
+                F.to_json(F.struct(*[F.col(column) for column in dataframe.columns])),
+                256,
+            ),
+        )
     )
     current = base.alias("current")
     previous = base.alias("previous")

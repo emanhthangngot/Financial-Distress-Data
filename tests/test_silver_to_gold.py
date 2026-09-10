@@ -1,3 +1,5 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from src.transforms.keys import company_version_key
@@ -305,3 +307,41 @@ def test_split_feature_tables_are_materialized_from_gold_rows():
     assert build_feat_company_financial_4q(financial)[0]["feature_family"] == "financial_4q"
     assert build_feat_company_market_30d(market)[0]["feature_family"] == "market_30d"
     assert build_feat_company_news_30d(news)[0]["feature_family"] == "news_30d"
+
+
+def test_feature_windows_preserve_news_grain_and_select_latest_market_periods():
+    news = [
+        {
+            "ticker": "AAA",
+            "event_timestamp": "2026-01-20T00:00:00+00:00",
+            "sentiment_score": -0.5,
+            "risk_keyword_flag": True,
+            "severity_score": 0.9,
+        },
+        {
+            "ticker": "AAA",
+            "event_timestamp": "2026-01-20T00:00:00+00:00",
+            "sentiment_score": 0.5,
+            "risk_keyword_flag": True,
+            "severity_score": 0.7,
+        },
+    ]
+    news_features = build_feat_company_news_30d(news)
+    assert news_features[-1]["article_count"] == 2
+    assert news_features[-1]["risk_keyword_count"] == 2
+
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    market = [
+        {
+            "ticker": "AAA",
+            "trading_date": (start + timedelta(days=index)).date().isoformat(),
+            "event_timestamp": (start + timedelta(days=index)).isoformat(),
+            "close_price": index + 1,
+            "daily_return": 0.01,
+            "volatility_signal": False,
+        }
+        for index in range(31)
+    ]
+    market_features = build_feat_company_market_30d(market)
+    assert market_features[-1]["window_period_count"] == 30
+    assert market_features[-1]["close_price"] == pytest.approx(16.5)
