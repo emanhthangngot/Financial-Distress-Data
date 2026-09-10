@@ -34,7 +34,7 @@ from src.collectors.company_list_collector import collect_companies
 from src.collectors.financial_statement_collector import collect_financial_statements
 from src.collectors.market_price_collector import collect_market_prices
 from src.io.minio_writer import write_minio_dataset
-from src.io.paths import DEFAULT_BUCKET
+from src.io.paths import DEFAULT_BUCKET, dataset_object_key
 
 DAG, PythonOperator = airflow_imports()
 
@@ -123,17 +123,19 @@ def ingest_bronze_callable() -> dict[str, int]:
         return client_holder["client"]
 
     client = _client()
-    write_minio_dataset(client, bucket, f"{bucket}/bronze/companies/data.parquet", companies)
+    write_minio_dataset(
+        client, bucket, dataset_object_key(bucket, "bronze", "companies"), companies
+    )
     write_minio_dataset(
         client,
         bucket,
-        f"{bucket}/bronze/financial_statements/data.parquet",
+        dataset_object_key(bucket, "bronze", "financial_statements"),
         financials,
     )
     write_minio_dataset(
         client,
         bucket,
-        f"{bucket}/bronze/market_prices_daily/data.parquet",
+        dataset_object_key(bucket, "bronze", "market_prices_daily"),
         market_prices,
     )
 

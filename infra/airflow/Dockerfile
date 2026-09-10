@@ -12,6 +12,10 @@
 
 FROM apache/airflow:2.10.5-python3.11 AS builder
 
+USER root
+
+RUN mkdir -p /opt/venv && chown airflow:root /opt/venv
+
 USER airflow
 
 # Create an isolated venv so its site-packages can be copied wholesale into
@@ -49,10 +53,15 @@ RUN apt-get update \
 
 USER airflow
 
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
-    SPARK_LOCAL_IP=127.0.0.1 \
-    PATH="/opt/venv/bin:${PATH}"
+RUN pip install --no-cache-dir \
+    duckdb==1.1.3 \
+    kafka-python==2.0.2 \
+    minio==7.2.12 \
+    pyarrow==17.0.0 \
+    "psycopg[binary]==3.2.3" \
+    pyspark==3.5.6 \
+    "pandas==2.1.4" \
+    "pytz>=2024.1"
 
-# Copy the prebuilt venv (already a multi-GB savings vs reinstalling on the
-# runtime image, because pip wheel downloads are skipped).
-COPY --from=builder --chown=airflow:root /opt/venv /opt/venv
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
+    SPARK_LOCAL_IP=127.0.0.1

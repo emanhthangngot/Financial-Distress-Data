@@ -32,7 +32,7 @@ def ml_metadata_conn(tmp_path_factory: pytest.TempPathFactory):
     for binary in ("initdb", "pg_ctl"):
         if shutil.which(binary) is None:
             message = f"{binary} not available; cannot run real-Postgres RAG store tests"
-            if os.environ.get("PHASE2_REQUIRE_PG") == "1":
+            if os.environ.get("PLATFORM_REQUIRE_PG") == "1":
                 pytest.fail(message)
             pytest.skip(message)
 
@@ -82,7 +82,7 @@ def ml_metadata_conn(tmp_path_factory: pytest.TempPathFactory):
         except (psycopg.errors.FeatureNotSupported, psycopg.errors.UndefinedFile) as exc:
             conn.rollback()
             conn.close()
-            # Always skip here, never escalate via PHASE2_REQUIRE_PG: that var
+            # Always skip here, never escalate via PLATFORM_REQUIRE_PG: that var
             # (tests/platform/product/conftest.py) exists to guarantee the
             # initdb/pg_ctl *binaries* are present, not that every Postgres
             # extension is installed. CI's `apt-get install postgresql` step

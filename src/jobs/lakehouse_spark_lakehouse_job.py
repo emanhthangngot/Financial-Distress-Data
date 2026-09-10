@@ -11,7 +11,7 @@ import os
 from typing import Any
 
 from src.io.minio_writer import clear_minio_prefix
-from src.io.paths import DEFAULT_BUCKET
+from src.io.paths import DEFAULT_BUCKET, dataset_object_key
 from src.jobs.lakehouse_evidence_job import _ensure_bucket, _minio_client
 from src.metadata.schema_registry import InMemorySchemaRegistry
 from src.security.secrets import require
@@ -62,7 +62,7 @@ def _silver(
     *,
     preserve_vintages: bool = False,
 ) -> tuple[Any, Any]:
-    bronze = spark.read.parquet(f"s3a://{bucket}/bronze/{dataset}/data.parquet")
+    bronze = spark.read.parquet(f"s3a://{dataset_object_key(bucket, 'bronze', dataset)}")
     silver, failed = bronze_to_silver_spark(
         bronze,
         required,
@@ -71,7 +71,7 @@ def _silver(
         preserve_vintages=preserve_vintages,
     )
     _cast_nulltype_columns(silver).write.mode("overwrite").parquet(
-        f"s3a://{bucket}/silver/{dataset}/"
+        f"s3a://{bucket}/silver/stg_{dataset}/"
     )
     return silver, failed
 
@@ -178,13 +178,13 @@ def _clear_output_prefixes(bucket: str) -> None:
     client = _minio_client()
     _ensure_bucket(client, bucket)
     for prefix in (
-        "silver/companies/",
-        "silver/financial_statements/",
-        "silver/market_prices_daily/",
+        "silver/stg_companies/",
+        "silver/stg_financial_statements/",
+        "silver/stg_market_prices_daily/",
         "gold/dim_company/",
         "gold/fact_financial_statement/",
         "gold/fact_market_price/",
-        "gold/distress_labels/",
+        "gold/fact_distress_label/",
         "gold/dim_date/",
         "gold/obt_company_quarter_risk/",
         "gold/fact_market_alert/",
@@ -460,11 +460,13 @@ def build_obt_company_quarter_risk_spark(financial_fact_df: Any, labels_df: Any)
         if "is_latest_vintage" in financial_fact_df.columns
         else financial_fact_df
     )
-    joined = latest_financial.alias("fin").join(
-        labels_df.alias("lbl"),
-        F.col("fin.company_version_key") == F.col("lbl.company_version_key"),
-        "left",
+    join_condition = (
+        (F.col("fin.company_version_key") == F.col("lbl.company_version_key"))
+        & (F.col("fin.ticker") == F.col("lbl.ticker"))
+        & (F.col("fin.report_period") == F.col("lbl.report_period"))
+        & (F.col("fin.known_from_ts") == F.col("lbl.known_from_ts"))
     )
+    joined = latest_financial.alias("fin").join(labels_df.alias("lbl"), join_condition, "left")
 
     total_assets = F.col("fin.total_assets").cast("double")
     total_liabilities = F.col("fin.total_liabilities").cast("double")
@@ -652,7 +654,7 @@ def run_lakehouse_spark_lakehouse(
         )
 
         batch_prices_df = spark.read.parquet(
-            f"s3a://{bucket}/bronze/market_prices_daily/data.parquet"
+            f"s3a://{dataset_object_key(bucket, 'bronze', 'market_prices_daily')}"
         )
         try:
             streaming_prices_df = spark.read.parquet(
@@ -700,7 +702,7 @@ def run_lakehouse_spark_lakehouse(
             preserve_vintages=True,
         )
         _cast_nulltype_columns(silver_market_prices).write.mode("overwrite").parquet(
-            f"s3a://{bucket}/silver/market_prices_daily/"
+            f"s3a://{bucket}/silver/stg_market_prices_daily/"
         )
 
         # 2. Dim Company (Spark-native SCD Type 2)
@@ -772,9 +774,8 @@ def run_lakehouse_spark_lakehouse(
             alert_fact_df = build_fact_market_alert_spark(alert_bronze_df, dim_company_df)
         alert_fact_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/fact_market_alert/")
 
-        # 6. Distress labels (Spark-native)
         labels_df = compute_labels_spark(financial_fact)
-        labels_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/distress_labels/")
+        labels_df.write.mode("overwrite").parquet(f"s3a://{bucket}/gold/fact_distress_label/")
 
         # 7. OBT Company Quarter Risk (Spark-native)
         obt_df = build_obt_company_quarter_risk_spark(financial_fact, labels_df)

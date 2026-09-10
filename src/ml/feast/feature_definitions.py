@@ -24,31 +24,28 @@ from typing import Any
 ENTITY_NAME = "ticker"
 
 FEATURE_VIEW_TTL: dict[str, timedelta] = {
-    "company_financial_features": timedelta(days=100),
-    "company_risk_features": timedelta(days=100),
-    "market_price_features": timedelta(days=2),
+    "company_financial_features": timedelta(days=400),
+    "company_risk_features": timedelta(days=400),
+    "market_price_features": timedelta(days=45),
     "stream_market_features": timedelta(hours=1),
 }
 
 FEATURE_VIEW_RATIONALE: dict[str, str] = {
     "company_financial_features": (
-        "A quarterly filing stays the authoritative view of the company until "
-        "the next filing lands; 100 days is approximately one quarter plus "
-        "filing lag, so nothing expires while it is still the newest truth."
+        "A quarterly filing stays authoritative across a four-quarter window "
+        "plus publication lag; 400 days prevents expiry before replacement."
     ),
     "company_risk_features": (
-        "Derived from the same quarterly filing as company_financial_features "
-        "(obt_company_quarter_risk joins the fact to the label), so it must "
-        "not expire before its parent fact does."
+        "Derived from the quarterly financial fact and label; it shares the "
+        "400-day parent horizon so the risk leg cannot expire first."
     ),
     "market_price_features": (
-        "A daily bar is superseded by the next trading session; 2 days "
-        "survives a weekend/holiday gap without ever serving a week-old "
-        "price as current."
+        "A 30-day daily market window plus a 15-day holiday and late-arrival "
+        "buffer requires 45 days to avoid serving an incomplete feature."
     ),
     "stream_market_features": (
-        "Intraday aggregates describe the current trading hour only; a "
-        "longer TTL would let the online API answer 'live' with a stale tick."
+        "Intraday aggregates describe the current trading hour; a longer TTL "
+        "would allow stale ticks to answer a live query."
     ),
 }
 
@@ -74,10 +71,12 @@ def gold_source_path(dataset_name: str) -> str:
 
 
 def build_feature_objects() -> dict[str, Any]:
-    """Constructs the entity and every FeatureView. Every ``event_timestamp_
-    column`` is declared even though only the online store is read this
-    week (phase-04.md:110, non-negotiable) — each Gold builder retains the
-    original ``event_timestamp`` field via ``dict(row)``/``**row``."""
+    """Constructs the entity and every FeatureView. Every ``FileSource``
+    binds Feast's ``event_timestamp`` join axis to the Gold ``known_from_ts``
+    column (ADR-017 §Feast temporal contract, F14) — never a raw
+    ``event_timestamp`` field, which for ``fact_financial_statement`` in
+    particular carries a different, non-knowledge-time value derived from
+    the source row rather than ``report_release_date``."""
     from feast import Entity, FeatureView, Field, FileSource, PushSource
     from feast.types import Bool, Float64, Int64, String
     from feast.value_type import ValueType
@@ -87,7 +86,7 @@ def build_feature_objects() -> dict[str, Any]:
     financial_source = FileSource(
         name="fact_financial_statement_source",
         path=gold_source_path(GOLD_DATASETS["company_financial_features"]),
-        timestamp_field="event_timestamp",
+        timestamp_field="known_from_ts",
     )
     company_financial_features = FeatureView(
         name="company_financial_features",
@@ -109,7 +108,7 @@ def build_feature_objects() -> dict[str, Any]:
     risk_source = FileSource(
         name="obt_company_quarter_risk_source",
         path=gold_source_path(GOLD_DATASETS["company_risk_features"]),
-        timestamp_field="event_timestamp",
+        timestamp_field="known_from_ts",
     )
     company_risk_features = FeatureView(
         name="company_risk_features",
@@ -131,7 +130,7 @@ def build_feature_objects() -> dict[str, Any]:
     price_source = FileSource(
         name="fact_market_price_source",
         path=gold_source_path(GOLD_DATASETS["market_price_features"]),
-        timestamp_field="event_timestamp",
+        timestamp_field="known_from_ts",
     )
     market_price_features = FeatureView(
         name="market_price_features",

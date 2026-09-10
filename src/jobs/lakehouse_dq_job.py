@@ -45,14 +45,14 @@ def read_minio_parquet_rows(bucket: str, prefix: str) -> list[dict[str, Any]]:
 def build_actual_dq_checks(
     bucket: str, reference_timestamp: str | None = None
 ) -> list[dict[str, Any]]:
-    silver_companies = read_minio_parquet_rows(bucket, "silver/companies/")
+    silver_companies = read_minio_parquet_rows(bucket, "silver/stg_companies/")
     gold_financial = read_minio_parquet_rows(bucket, "gold/fact_financial_statement/")
     gold_dim_company = read_minio_parquet_rows(bucket, "gold/dim_company/")
     gold_market = read_minio_parquet_rows(bucket, "gold/fact_market_price/")
     gold_alert = read_minio_parquet_rows(bucket, "gold/fact_market_alert/")
     gold_news = read_minio_parquet_rows(bucket, "gold/fact_news_sentiment/")
     gold_obt = read_minio_parquet_rows(bucket, "gold/obt_company_quarter_risk/")
-    silver_market = read_minio_parquet_rows(bucket, "silver/market_prices_daily/")
+    silver_market = read_minio_parquet_rows(bucket, "silver/stg_market_prices_daily/")
     company_version_keys = {row.get("company_version_key") for row in gold_dim_company}
 
     return [
@@ -129,7 +129,7 @@ def build_actual_dq_checks(
             "type": "unique",
             "dataset_name": "gold_obt_company_quarter_risk",
             "rows": gold_obt,
-            "fields": ["ticker", "report_period"],
+            "fields": ["ticker", "report_period", "known_from_ts"],
         },
         {
             "type": "freshness",
@@ -137,7 +137,7 @@ def build_actual_dq_checks(
             "rows": silver_market,
             "reference_timestamp": reference_timestamp or utc_now_iso(),
             "sla_minutes": 120,
-            "timestamp_field": "event_timestamp",
+            "timestamp_field": "known_from_ts",
         },
     ]
 

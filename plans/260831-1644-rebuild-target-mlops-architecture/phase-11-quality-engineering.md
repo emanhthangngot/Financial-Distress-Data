@@ -1,15 +1,15 @@
 ---
 phase: 11
-title: "Phase 11: Quality engineering — coverage, EP/BVA, mutation, property-based, load"
+title: "Phase 11: Quality, functional eval and regression gates"
 status: pending
 priority: P1
-effort: "7-10 days"
+effort: "Re-estimate from unfinished ACs; historical baseline 7-10 days + eval-fixture authoring"
 dependencies: ["phase-02-data-model.md"]
-softDependencies: ["phase-09-serving-edge.md"]
-owns: ["tests/", "mutants/", "tests/load/", "docs/testing/", "Dockerfile*", "docker-compose*.yml"]
+softDependencies: ["phase-04-data-plane.md", "phase-07-ml-track.md", "phase-08-llm-agent-track.md", "phase-09-serving-edge.md"]
+owns: ["tests/", "tests/eval/", "mutants/", "tests/load/", "docs/testing/", "Dockerfile*", "docker-compose*.yml"]
 ---
 
-# Phase 11: Quality engineering — coverage, EP/BVA, mutation, property-based, load
+# Phase 11: Quality, functional eval and regression gates
 
 ## Overview
 
@@ -17,8 +17,31 @@ Twelve rubric rows across all three tracks are test- and packaging-engineering p
 architecture. They had **no owning phase** in the previous plan — grep of all ten phase files on
 2026-09-01 found zero matches for `property-based`, `mutation testing`, `equivalence partitioning`
 or `boundary value`, and the 2026-09-02 audit found zero AC citations for `multistage`.
-This phase owns them. Source-only. **Resident cost: 0** (load testing runs inside an existing
-serving window).
+This phase owns them, **plus** the session-added functional-eval and regression-gate scope from the
+master plan's decision ledger and scheduling section
+(`plan.md:39,100-101`): P11 co-owns the human-reviewed evaluation baseline for RAG with P8, defines
+the eval fixtures and metrics P8/P9 consumer checks run against, and supplies P10 its release
+subgate result — not a reciprocal whole-phase dependency in either direction. Source-only for the
+quality-engineering rows. **Resident cost: 0** (load testing runs inside an existing serving window;
+the human-reviewed RAG eval runs against whatever provider P0 `G5-providers` cleared, at zero spend).
+
+### Functional eval and regression gates (session addition, 2026-09-10)
+
+- **Eval fixtures and metrics, defined early.** P11 authors `tests/eval/` — a fixed development
+  corpus, expected-citation set and scoring rubric — **before** P8's parity pilot needs it
+  (`phase-02-data-model.md` dependency chain notwithstanding; this work starts once P2's contract is
+  frozen, not after P8 exists). P8's pilot-vs-current-path comparison and its clean-cutover decision
+  both score against this fixture, not an ad hoc one P8 invents itself.
+- **Human-reviewed RAG eval, co-owned with P8.** P11 owns the scoring harness and the reviewer
+  rubric (citation validity, groundedness, refusal-on-missing-context); P8 owns the RAG pipeline
+  under evaluation. Neither phase substitutes an automated proxy metric for the human review the
+  rubric names.
+- **Regression gates for P2's M1–M11 fixes.** The AC-P2-26…AC-P2-38 regression cases P2 wrote to
+  fail before its fix and pass after are wired into this phase's `pytest tests` run, so a later edit
+  that reintroduces a P2 defect fails here, not silently.
+- **P10 release subgate.** P11 reports pass/fail per eval fixture and per regression case to P10's
+  evidence-gated release; P10 blocks the release artifact it owns on a P11 fail, but P11 does not
+  block on P10 — the dependency runs one way, per `plan.md:101`.
 
 | Rows | Requirement | Points | Needs a cluster? |
 |---|---|---|---|
@@ -42,13 +65,22 @@ phases parked **22 cheap points behind ~40 days of work**, on a schedule already
 
 New rule:
 
-- `dependencies: [P2]` — the 22 local points may start as soon as the v2 contract is frozen.
-- `softDependencies: [P9]` — **only** the load test (ML 14 / LLM 30, 4 points) waits for a live
-  `feature-api`. It is the last item in the phase, not the gate on the first.
+- `dependencies: [P2]` — the 22 local quality-engineering points may start as soon as the v2
+  contract is frozen; nothing in this phase blocks on P4/P7/P8/P9 existing.
+- `softDependencies: [P4, P7, P8, P9]` — **refined 2026-09-10**, not reverted: P11 *authors*
+  `tests/eval/` and the load-test harness against P2 as soon as it opens (no wait), but four
+  **consumer checks** cannot execute until their producer exists — the load test (ML 14 / LLM 30)
+  needs a live `feature-api` from P9; the eval-fixture score (AC-P11-11/12) needs P8's parity
+  pilot to run against; the P2 regression wiring's Spark-side leg (AC-P11-13) closes once P4
+  mirrors P2 (`phase-04-data-plane.md` §Session decisions, AC-P4-30); and the
+  `prediction-api`-determinism property (AC-P11-4) needs a real promoted model from P7's MLflow
+  registry, not a mock, to be a meaningful assertion. These four are `softDependencies`, not the
+  phase's `dependencies`: each can go `blocked/unverified` independently without stalling the
+  other points, the same escape hatch the original re-baseline introduced for the load test alone.
 
-Accepted cost: tests written against pre-P7/P8/P9 interfaces need touch-ups when those phases change
-an API. Budgeted at 2-3 days inside the 7-10 day estimate. That is cheaper than deferring 22 points
-by 40 days.
+Accepted cost: tests written against pre-P4/P7/P8/P9 interfaces need touch-ups when those phases
+change an API. Budgeted at 2-3 days inside the 7-10 day estimate. That is cheaper than deferring
+22 points by 40 days.
 
 Existing surface to build on: `mutants/` with `mutmut-stats.json` and `mutmut-cicd-stats.json`,
 `.hypothesis/` with a constants cache, `tests/load/`, and
@@ -175,6 +207,19 @@ directly, so the code and the document cannot drift.
       multistage build, and the artifact records **image size before and after** per image plus the
       technique applied (multistage, slim base, layer ordering, `.dockerignore`); the reduction
       percentage is stated per image, not as one aggregate
+- [ ] AC-P11-11 **(session addition — eval fixtures)**: P8 engineer → runs the parity pilot →
+      scores against `tests/eval/`'s fixed development corpus and expected-citation set, authored
+      by P11 before the pilot exists; P8 does not invent its own scoring fixture
+- [ ] AC-P11-12 **(session addition — human-reviewed RAG eval)**: Reviewer → runs the P11 scoring
+      harness against P8's RAG pipeline → produces a human-reviewed citation-validity and
+      groundedness score, at zero spend under P0 `G5-providers`; no automated proxy metric is
+      substituted for the required human review
+- [ ] AC-P11-13 **(session addition — P2 regression wiring)**: Engineer → runs `pytest tests` →
+      AC-P2-26…AC-P2-38's regression cases execute as part of this phase's suite; reintroducing any
+      of M1–M11 fails the run here, not only in an isolated P2-only invocation
+- [ ] AC-P11-14 **(session addition — P10 subgate)**: P10 release job → reads P11's per-fixture and
+      per-regression-case pass/fail record → blocks the release artifact on any P11 fail; a P10
+      fail never blocks P11's own suite (one-way dependency, `plan.md:101`)
 
 ## Risk Assessment
 

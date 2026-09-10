@@ -47,8 +47,8 @@ def task_chain() -> list[str]:
         "produce_fixture_stream_events_to_kafka",
         "consume_kafka_events_to_bronze",
         "run_spark_bronze_to_silver_gold",
-        "run_silver_gold_dq_gate",
         "write_project_metadata_rows",
+        "run_silver_gold_dq_gate",
         "run_duckdb_validation_and_publish_evidence",
     ]
 
@@ -61,9 +61,11 @@ def materialize_bronze_batch_objects() -> dict[str, int]:
     client = _minio_client()
     _ensure_bucket(client, bucket)
     bronze_datasets = {
-        "bronze/companies/data.parquet": payload.datasets["bronze_companies"],
-        "bronze/financial_statements/data.parquet": payload.datasets["bronze_financial_statements"],
-        "bronze/market_prices_daily/data.parquet": payload.datasets["bronze_market_prices"],
+        "bronze/raw_companies/data.parquet": payload.datasets["bronze_companies"],
+        "bronze/raw_financial_statements/data.parquet": payload.datasets[
+            "bronze_financial_statements"
+        ],
+        "bronze/raw_market_prices_daily/data.parquet": payload.datasets["bronze_market_prices"],
     }
     for object_key, rows in bronze_datasets.items():
         write_minio_dataset(client, bucket, f"{bucket}/{object_key}", rows)
@@ -104,6 +106,7 @@ def write_project_metadata_rows() -> str:
         dag_id="lakehouse_real_e2e_pipeline",
         task_id="write_project_metadata_rows",
         dataset_name="lakehouse_real_e2e",
+        run_id=current_evidence_run_id(),
     )
 
 

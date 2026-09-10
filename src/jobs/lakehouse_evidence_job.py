@@ -22,7 +22,11 @@ from src.collectors.fixture_config import load_fixture_config
 from src.collectors.market_price_collector import collect_market_prices
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.io.minio_writer import write_minio_dataset, write_minio_text
-from src.io.paths import DEFAULT_BUCKET, lakehouse_dataset_object_keys
+from src.io.paths import (
+    DEFAULT_BUCKET,
+    lakehouse_dataset_object_keys,
+    lakehouse_dataset_object_keys_by_name,
+)
 from src.metadata.metadata_writer import (
     PostgresMetadataWriter,
     psycopg_connection_factory,
@@ -540,15 +544,9 @@ def write_minio_outputs(payload: EvidencePayload, bucket: str) -> None:
     _ensure_bucket(client, bucket)
 
     dataset_names = [name for name in payload.datasets if name != "failed_records"]
-    dataset_by_key = dict(
-        zip(
-            payload.object_keys,
-            [payload.datasets[name] for name in dataset_names],
-            strict=True,
-        )
-    )
-    for object_key, rows in dataset_by_key.items():
-        write_minio_dataset(client, bucket, object_key, rows)
+    object_key_by_name = lakehouse_dataset_object_keys_by_name(bucket)
+    for name in dataset_names:
+        write_minio_dataset(client, bucket, object_key_by_name[name], payload.datasets[name])
 
 
 def build_evidence_artifacts(
@@ -593,6 +591,7 @@ def write_postgres_metadata(
     dag_id: str = "lakehouse_runtime_evidence",
     task_id: str = "materialize_fixture_lakehouse",
     dataset_name: str = "lakehouse_evidence",
+    run_id: str | None = None,
 ) -> str:
     writer = PostgresMetadataWriter(psycopg_connection_factory(metadata_dsn()))
     run_id = writer.log_run(
@@ -601,6 +600,7 @@ def write_postgres_metadata(
         dataset_name,
         "success",
         output_rows=sum(payload.row_counts.values()),
+        run_id=run_id,
     )
     writer.log_backfill_request(
         "lakehouse_lakehouse",
@@ -679,6 +679,10 @@ def materialize_lakehouse_evidence(
     evidence_dir: str | Path = DEFAULT_EVIDENCE_DIR,
     dry_run: bool = False,
 ) -> EvidencePayload:
+    # CLI runs outside Airflow do not inherit compose's environment. Load the
+    # gitignored project .env as defaults while preserving explicit exports.
+    for key, value in read_env_file(DEFAULT_ENV_PATH).items():
+        os.environ.setdefault(key, value)
     payload = build_evidence_payload(bucket)
     write_evidence_files(payload, evidence_dir)
     if not dry_run:

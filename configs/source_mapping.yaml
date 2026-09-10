@@ -15,10 +15,10 @@ sources:
 datasets:
   companies:
     primary_source: vnstock
-    bronze_path: s3a://financial-distress-lake/bronze/companies/
+    bronze_path: s3a://financial-distress-lake/bronze/raw_companies/
   financial_statements:
     primary_source: vnstock
-    bronze_path: s3a://financial-distress-lake/bronze/financial_statements/
+    bronze_path: s3a://financial-distress-lake/bronze/raw_financial_statements/
   market_prices_daily:
     primary_source: vnstock
-    bronze_path: s3a://financial-distress-lake/bronze/market_prices_daily/
+    bronze_path: s3a://financial-distress-lake/bronze/raw_market_prices_daily/

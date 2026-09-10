@@ -1,4 +1,12 @@
-"""Flink CDC job contract without importing Flink at module load time."""
+"""Flink streaming job contract without importing Flink at module load time.
+
+ADR-013 (amended 2026-09-05): Flink consumes from Kafka, populated by a standalone
+Debezium connector (CDCConfig.debezium_connector_config(), registered with Kafka Connect
+separately) — never a direct Flink-embedded CDC connector against Postgres. CDCJobSpec.source
+is Flink's Kafka table-source options; ``debezium_connector`` is exposed for whatever
+registers the Kafka Connect connector (an Airflow task or a one-shot setup script), not for
+the Flink job itself to submit.
+"""
 
 from __future__ import annotations
 
@@ -13,6 +21,7 @@ from .config import CDCConfig
 class CDCJobSpec:
     source: dict[str, str]
     sink: dict[str, str]
+    debezium_connector: dict[str, str]
     initial_snapshot: bool = True
 
 
@@ -20,8 +29,9 @@ def build_job_spec(config: CDCConfig | None = None) -> CDCJobSpec:
     cfg = config or CDCConfig.from_env()
     cfg.validate_logical_replication()
     return CDCJobSpec(
-        source=cfg.connector_properties(),
+        source=cfg.flink_kafka_source_properties(),
         sink=cfg.sink_properties(),
+        debezium_connector=cfg.debezium_connector_config(),
         initial_snapshot=cfg.snapshot_mode != "never",
     )
 

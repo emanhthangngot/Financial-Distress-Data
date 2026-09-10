@@ -30,6 +30,24 @@ services:
       mc mb --ignore-existing local/${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake};
       "
 
+  cdc-postgres:
+    image: postgres:16
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=4", "-c", "max_wal_senders=4"]
+    environment:
+      POSTGRES_DB: financial_distress_cdc
+      POSTGRES_USER: cdc_admin
+      POSTGRES_PASSWORD: cdc_admin
+    ports:
+      - "${CDC_POSTGRES_HOST_PORT:-5434}:5432"
+    volumes:
+      - ./infra/cdc/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cdc_admin -d financial_distress_cdc"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    profiles: ["streaming"]
+
   kafka:
     image: apache/kafka:3.9.0
     hostname: kafka
@@ -58,6 +76,30 @@ services:
     volumes:
       - ./infra/kafka:/opt/financial-distress-init:ro
     command: bash /opt/financial-distress-init/kafka_init_topics.sh
+
+  kafka-connect:
+    image: debezium/connect:2.7.3.Final
+    depends_on:
+      kafka:
+        condition: service_started
+      cdc-postgres:
+        condition: service_healthy
+    ports:
+      - "${KAFKA_CONNECT_HOST_PORT:-8083}:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    profiles: ["streaming"]
 
   airflow-webserver:
     build:
@@ -96,7 +138,7 @@ services:
       - ./sql:/opt/airflow/sql
       - ./docs:/opt/airflow/docs
     ports:
-      - "8080:8080"
+      - "${AIRFLOW_HOST_PORT:-8085}:8080"
 
   airflow-init:
     build:

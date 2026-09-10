@@ -8,7 +8,8 @@ ticks into Kafka.
 
 from __future__ import annotations
 
-from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
+from src.collectors.source_adapters.base import SourceAdapter
+from src.collectors.source_adapters.vnstock_adapter import build_source_adapter
 from src.metadata.metadata_writer import MetadataWriter
 
 
@@ -16,10 +17,10 @@ def collect_market_prices(
     tickers: list[str],
     start_year: int,
     end_year: int,
-    adapter: VnstockFixtureAdapter | None = None,
+    adapter: SourceAdapter | None = None,
     metadata: MetadataWriter | None = None,
 ) -> list[dict]:
-    adapter = adapter or VnstockFixtureAdapter()
+    adapter = adapter or build_source_adapter()
     rows: list[dict] = []
     for ticker in tickers:
         rows.extend(adapter.fetch_market_prices(ticker, start_year, end_year))

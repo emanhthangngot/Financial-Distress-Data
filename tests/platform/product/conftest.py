@@ -30,8 +30,8 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """Stamp every test collected from this package with postgres + slow.
 
     One place, no per-file churn, cannot drift as files are added to this
-    package. The PHASE2_REQUIRE_PG availability skip below is unrelated and
-    stays untouched — the skip answers "can this machine run it at all?",
+    package. The PLATFORM_REQUIRE_PG availability skip below is unrelated —
+    the skip answers "can this machine run it at all?",
     this marker answers "do I want to run it right now?".
 
     A conftest.py hook of this name is registered session-wide, not scoped
@@ -74,9 +74,9 @@ def pg_cluster(tmp_path_factory: pytest.TempPathFactory):
         if shutil.which(binary) is None:
             message = f"{binary} not available; cannot run real-Postgres RLS tests"
             # A silent skip in CI would mean the authorization rules are never
-            # actually verified anywhere. CI sets PHASE2_REQUIRE_PG=1 so a
+            # actually verified anywhere. CI sets PLATFORM_REQUIRE_PG=1 so a
             # missing server is a failure there, not a quiet pass.
-            if os.environ.get("PHASE2_REQUIRE_PG") == "1":
+            if os.environ.get("PLATFORM_REQUIRE_PG") == "1":
                 pytest.fail(message)
             pytest.skip(message)
 

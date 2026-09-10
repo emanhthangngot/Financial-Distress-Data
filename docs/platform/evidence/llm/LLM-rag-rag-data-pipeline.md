@@ -11,7 +11,7 @@ proving reprocessing an unchanged document writes zero new rows.
 - source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: financial-distress-data@5a5a40a, pgvector/pgvector:pg16, embedding_model=deterministic-hash-v1
-- command: `PHASE2_PG_DSN=postgresql://platform:platform@localhost:5433/ml .venv/bin/python -c "from src.llm.rag_pipeline import run_ingestion_task; print(run_ingestion_task())"` (run twice)
+- command: `PLATFORM_PG_DSN=postgresql://platform:platform@localhost:5433/ml .venv/bin/python -c "from src.llm.rag_pipeline import run_ingestion_task; print(run_ingestion_task())"` (run twice)
 - expected_result: run 1 writes new chunks with all 9 metadata fields populated; run 2 on the same source writes 0 new rows (`chunks_new == 0`, `ingestion_version == ""`); `ml.rag_chunk` row count unchanged between runs; lineage audit `status == "pass"`
 - actual_result: run 1 → `{"documents_fetched": 1, "chunks_new": 2, "chunks_quarantined": 0, "ingestion_version": "2026-08-08-c53e23b28d00"}`, lineage_audit status=pass (4 datasets, 1 pipeline, 4 edges). Run 2 (same source, same process) → `{"documents_fetched": 1, "chunks_new": 0, "chunks_quarantined": 0, "ingestion_version": ""}`. `SELECT count(*) FROM ml.rag_chunk` = 2 after both runs — no duplicate rows written on rerun.
 - redaction_status: none — synthetic/fixture RAG corpus (`tests/platform/fixtures/rag_corpus/vnstock_news_vnm.txt`), no real PII or secrets

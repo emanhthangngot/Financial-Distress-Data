@@ -38,7 +38,7 @@ EXPECTED_GOLD_TABLES = {
     "fact_market_price",
     "fact_market_alert",
     "fact_news_sentiment",
-    "distress_labels",
+    "fact_distress_label",
     "obt_company_quarter_risk",
     "feat_company_financial_4q",
     "feat_company_market_30d",

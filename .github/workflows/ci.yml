@@ -1,10 +1,11 @@
-name: Stage 1 CI
+name: Unified Lakehouse CI
 
 on:
   push:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -12,8 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Full history + all branches so scripts/audit_phase2_evidence.py can
-          # resolve `origin/dev` and run its Phase 1 no-mutation git gate.
+          # Full history keeps evidence and naming audits reproducible.
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -34,11 +34,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql
           ls -d /usr/lib/postgresql/*/bin | tail -1 >> "$GITHUB_PATH"
-      - name: Stage 1 quality gates
+      - name: Unified quality gates
         env:
-          # Turn a missing Postgres into a failure instead of a silent skip.
-          PHASE2_REQUIRE_PG: "1"
-        run: python scripts/run_stage1_quality_gates.py
+          PLATFORM_REQUIRE_PG: "1"
+        run: python scripts/run_lakehouse_quality_gates.py
 
   contracts:
     runs-on: ubuntu-latest

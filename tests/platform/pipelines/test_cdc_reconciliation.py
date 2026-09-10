@@ -7,7 +7,8 @@ from src.cdc.flink_cdc_job import build_job_spec, normalize_change
 from src.cdc.reconcile import reconcile_paths, run_reconciliation_task
 
 
-def test_cdc_config_is_connector_and_sink_contract() -> None:
+def test_cdc_config_is_debezium_connector_and_flink_kafka_source_contract() -> None:
+    """ADR-013 (amended 2026-09-05): Debezium -> Kafka -> Flink, never Flink-embedded CDC."""
     config = CDCConfig.from_mapping(
         {
             "host": "postgres",
@@ -15,11 +16,20 @@ def test_cdc_config_is_connector_and_sink_contract() -> None:
             "table_include_list": "public.events,public.labels",
         }
     )
-    props = config.connector_properties()
-    assert props["connector"] == "postgres-cdc"
-    assert props["slot.name"] == config.slot_name
-    assert props["table-names"] == "public.events,public.labels"
-    assert build_job_spec(config).sink["catalog-type"] == "rest"
+    connector = config.debezium_connector_config()
+    assert connector["connector.class"] == "io.debezium.connector.postgresql.PostgresConnector"
+    assert connector["slot.name"] == config.slot_name
+    assert connector["table.include.list"] == "public.events,public.labels"
+
+    flink_source = config.flink_kafka_source_properties()
+    assert flink_source["connector"] == "kafka"
+    assert flink_source["format"] == "debezium-json"
+    assert "postgres-cdc" not in flink_source.values()
+
+    spec = build_job_spec(config)
+    assert spec.sink["catalog-type"] == "rest"
+    assert spec.source == flink_source
+    assert spec.debezium_connector == connector
 
 
 def test_cdc_config_rejects_non_logical_replication() -> None:

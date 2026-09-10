@@ -55,8 +55,8 @@ class MetadataWriter:
                 "task_id": task_id,
                 "dataset_name": dataset_name,
                 "status": status,
-                "started_at": utc_now_iso(),
-                "ended_at": utc_now_iso(),
+                "started_ts": utc_now_iso(),
+                "ended_ts": utc_now_iso(),
                 "input_rows": input_rows,
                 "output_rows": output_rows,
                 "error_message": error_message,
@@ -74,18 +74,19 @@ class MetadataWriter:
         threshold_value: float | None = None,
         error_message: str | None = None,
         run_id: str | None = None,
+        track: str = "ml",
     ) -> None:
         self.data_quality_result.append(
             {
-                "check_id": str(uuid4()),
                 "run_id": run_id,
+                "track": track,
                 "dataset_name": dataset_name,
                 "check_name": check_name,
                 "status": status,
                 "severity": severity,
                 "metric_value": metric_value,
                 "threshold_value": threshold_value,
-                "checked_at": utc_now_iso(),
+                "checked_ts": utc_now_iso(),
                 "error_message": error_message,
             }
         )
@@ -104,7 +105,7 @@ class MetadataWriter:
                 "run_id": run_id,
                 "failure_reason": failure_reason,
                 "raw_payload": raw_payload,
-                "created_at": utc_now_iso(),
+                "created_ts": utc_now_iso(),
             }
         )
 
@@ -135,12 +136,12 @@ class MetadataWriter:
         self.dataset_freshness.append(
             {
                 "dataset_name": dataset_name,
-                "latest_event_timestamp": latest_event_timestamp,
+                "latest_event_ts": latest_event_timestamp,
                 "latest_ingest_ts": latest_ingest_ts,
                 "freshness_lag_minutes": freshness_lag_minutes,
                 "sla_minutes": sla_minutes,
                 "status": status,
-                "checked_at": utc_now_iso(),
+                "checked_ts": utc_now_iso(),
             }
         )
 
@@ -162,7 +163,7 @@ class MetadataWriter:
                 "end_date": end_date,
                 "status": status,
                 "requested_by": requested_by,
-                "created_at": utc_now_iso(),
+                "created_ts": utc_now_iso(),
             }
         )
         return backfill_id
@@ -194,7 +195,7 @@ class MetadataWriter:
                 "retry_count": retry_count,
                 "raw_payload_hash": raw_payload_hash,
                 "error_message": error_message,
-                "requested_at": utc_now_iso(),
+                "requested_ts": utc_now_iso(),
             }
         )
         return request_id
@@ -221,7 +222,7 @@ class MetadataWriter:
                 "source_system": source_system,
                 "checkpoint_key": checkpoint_key,
                 "checkpoint_value": checkpoint_value,
-                "updated_at": utc_now_iso(),
+                "updated_ts": utc_now_iso(),
             }
         )
 
@@ -264,13 +265,14 @@ class PostgresMetadataWriter:
         input_rows: int = 0,
         output_rows: int = 0,
         error_message: str | None = None,
+        run_id: str | None = None,
     ) -> str:
-        run_id = str(uuid4())
+        run_id = run_id or str(uuid4())
         now = utc_now_iso()
         self._execute(
             """
             INSERT INTO ops.pipeline_run_log (
-                run_id, dag_id, task_id, dataset_name, status, started_at, ended_at,
+                run_id, dag_id, task_id, dataset_name, status, started_ts, ended_ts,
                 input_rows, output_rows, error_message
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -301,7 +303,7 @@ class PostgresMetadataWriter:
 
         template = (
             "INSERT INTO ops.pipeline_run_log ("
-            "run_id, dag_id, task_id, dataset_name, status, started_at, ended_at, "
+            "run_id, dag_id, task_id, dataset_name, status, started_ts, ended_ts, "
             "input_rows, output_rows, error_message) VALUES %s"
         )
         placeholders = "(" + ", ".join(["%s"] * 10) + ")"
@@ -317,8 +319,8 @@ class PostgresMetadataWriter:
                     row["task_id"],
                     row["dataset_name"],
                     row["status"],
-                    row["started_at"],
-                    row["ended_at"],
+                    row.get("started_ts") or row["started_at"],
+                    row.get("ended_ts") or row["ended_at"],
                     row["input_rows"],
                     row["output_rows"],
                     row["error_message"],
@@ -344,18 +346,20 @@ class PostgresMetadataWriter:
         threshold_value: float | None = None,
         error_message: str | None = None,
         run_id: str | None = None,
+        track: str = "ml",
     ) -> None:
         self._execute(
             """
             INSERT INTO ops.data_quality_result (
-                check_id, run_id, dataset_name, check_name, status, severity,
-                metric_value, threshold_value, checked_at, error_message
+                check_id, run_id, track, dataset_name, check_name, status, severity,
+                metric_value, threshold_value, checked_ts, error_message
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 str(uuid4()),
                 run_id,
+                track,
                 dataset_name,
                 check_name,
                 status,
@@ -377,7 +381,7 @@ class PostgresMetadataWriter:
         self._execute(
             """
             INSERT INTO ops.failed_records (
-                record_id, dataset_name, run_id, failure_reason, raw_payload, created_at
+                record_id, dataset_name, run_id, failure_reason, raw_payload, created_ts
             )
             VALUES (%s, %s, %s, %s, %s::jsonb, %s)
             """,
@@ -418,17 +422,17 @@ class PostgresMetadataWriter:
         self._execute(
             """
             INSERT INTO ops.dataset_freshness (
-                dataset_name, latest_event_timestamp, latest_ingest_ts,
-                freshness_lag_minutes, sla_minutes, status, checked_at
+                dataset_name, latest_event_ts, latest_ingest_ts,
+                freshness_lag_minutes, sla_minutes, status, checked_ts
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (dataset_name) DO UPDATE SET
-                latest_event_timestamp = EXCLUDED.latest_event_timestamp,
+                latest_event_ts = EXCLUDED.latest_event_ts,
                 latest_ingest_ts = EXCLUDED.latest_ingest_ts,
                 freshness_lag_minutes = EXCLUDED.freshness_lag_minutes,
                 sla_minutes = EXCLUDED.sla_minutes,
                 status = EXCLUDED.status,
-                checked_at = EXCLUDED.checked_at
+                checked_ts = EXCLUDED.checked_ts
             """,
             (
                 dataset_name,
@@ -454,7 +458,7 @@ class PostgresMetadataWriter:
         self._execute(
             """
             INSERT INTO ops.backfill_request (
-                backfill_id, dataset_name, start_date, end_date, status, requested_by, created_at
+                backfill_id, dataset_name, start_date, end_date, status, requested_by, created_ts
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (backfill_id) DO UPDATE SET
@@ -495,7 +499,7 @@ class PostgresMetadataWriter:
             INSERT INTO ops.source_request_log (
                 request_id, run_id, source_system, source_endpoint, ticker, report_period,
                 request_status, http_status_code, retry_count, raw_payload_hash,
-                error_message, requested_at
+                error_message, requested_ts
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
@@ -526,12 +530,12 @@ class PostgresMetadataWriter:
         self._execute(
             """
             INSERT INTO ops.collector_checkpoint (
-                collector_name, source_system, checkpoint_key, checkpoint_value, updated_at
+                collector_name, source_system, checkpoint_key, checkpoint_value, updated_ts
             )
             VALUES (%s, %s, %s, %s, %s)
             ON CONFLICT (collector_name, source_system, checkpoint_key) DO UPDATE SET
                 checkpoint_value = EXCLUDED.checkpoint_value,
-                updated_at = EXCLUDED.updated_at
+                updated_ts = EXCLUDED.updated_ts
             """,
             (
                 collector_name,

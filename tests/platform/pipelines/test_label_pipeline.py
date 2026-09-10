@@ -108,8 +108,8 @@ def test_write_labels_postgres_is_a_noop_on_empty_rows() -> None:
 
 
 def test_run_label_build_without_dsn_builds_but_does_not_write(monkeypatch) -> None:
-    monkeypatch.delenv("PHASE2_REQUIRE_PG", raising=False)
-    monkeypatch.delenv("PHASE2_PG_DSN", raising=False)
+    monkeypatch.delenv("PLATFORM_REQUIRE_PG", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_DSN", raising=False)
     repo_root = Path(__file__).resolve().parents[3]
     result = run_label_build(repo_root / "configs" / "generator-config.yaml", profile="ci")
     assert result["labels_built"] > 0
@@ -117,7 +117,7 @@ def test_run_label_build_without_dsn_builds_but_does_not_write(monkeypatch) -> N
 
 
 def test_run_label_drift_build_task_reads_env_and_writes_no_dsn(monkeypatch, tmp_path) -> None:
-    monkeypatch.delenv("PHASE2_PG_DSN", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_DSN", raising=False)
     monkeypatch.setenv("PHASE2_DRIFT_OUTPUT_ROOT", str(tmp_path))
     monkeypatch.chdir(Path(__file__).resolve().parents[3])
     result = run_label_drift_build_task()
@@ -128,7 +128,7 @@ def test_run_label_drift_build_task_reads_env_and_writes_no_dsn(monkeypatch, tmp
 
 
 def test_run_label_drift_build_task_raises_on_failed_drift_assertion(monkeypatch, tmp_path) -> None:
-    monkeypatch.delenv("PHASE2_PG_DSN", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_DSN", raising=False)
     monkeypatch.setenv("PHASE2_DRIFT_OUTPUT_ROOT", str(tmp_path / "drift-output"))
     monkeypatch.chdir(Path(__file__).resolve().parents[3])
     # A threshold no real run could ever clear.

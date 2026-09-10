@@ -110,7 +110,7 @@ def test_gold_layers_actually_used() -> None:
         "dim_company",
         "fact_financial_statement",
         "feat_company_unified",
-        "distress_labels",
+        "fact_distress_label",
     ):
         assert (
             required in folders_used

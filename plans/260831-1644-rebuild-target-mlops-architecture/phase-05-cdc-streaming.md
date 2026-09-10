@@ -1,22 +1,25 @@
 ---
 phase: 5
-title: "Phase 5: CDC, streaming and feature stores"
+title: "Phase 5: CDC, streaming, real rolling features and Feast"
 status: pending
 priority: P1
-effort: "10-14 days"
+effort: "Re-estimate from unfinished ACs after P0 local/cloud gates; historical baseline 10-14 days"
 dependencies: ["phase-04-data-plane.md"]
 owns: ["src/cdc/", "src/streaming/", "src/ml/feast/", "feature_repo/", "platform/streaming/", "platform/features/"]
 ---
 
-# Phase 5: CDC, streaming and feature stores
+# Phase 5: CDC, streaming, real rolling features and Feast
 
 ## Overview
 
 Deploy Kafka, Debezium, Flink and Feast; bind the CDC and streaming contracts to real runtimes;
-implement the Flink realtime feature job; deploy the two stream-feature jobs the rubric names
-(offline store and online store); define per-table TTL **with rationale**; prove the point-in-time
-leakage guard against the live Postgres offline store using the P4 restatement fixture.
-Runs in parallel with P6 — no shared files. **Resident cost: 5-7 vCPU windowed.**
+implement the Flink realtime feature job computing genuine rolling-window aggregates (not per-row
+projections — see §Real rolling-window features); deploy the two stream-feature jobs the rubric
+names (offline store and online store); define per-table TTL **with rationale**; prove the
+point-in-time leakage guard against the live Postgres offline store using the P4 restatement
+fixture. Runs in parallel with P6 — no shared files. No additional monetary spend (master
+§Decision ledger); component uptime and window length are what P0 `G2-window` measures, not a
+fixed vCPU/hours commitment made here.
 
 ADR-005 (Postgres offline) and ADR-013 (Debezium → Kafka → Flink) must be **accepted** before this
 phase opens (P3 gate).
@@ -96,6 +99,27 @@ Fixed in ADR-017 and enforced by the P2 ERD CHECK `event_timestamp = known_from_
 longer a §Risk response — the risk entry below now only covers the case where the materialization
 writes the wrong column.
 
+### Real rolling-window features (M5 / AC-P2-39 hand-off from P2)
+
+P2's 2026-09-10 revision found `feat_company_financial_4q`, `_market_30d` and `_news_30d`
+**aggregate nothing today** — each is a per-input-row projection, so "4q" and "30d" are false
+names (`pit.py:18-81`). P2 owns the contract fix (as-of snapshots, one row per `(ticker,
+cutoff_ts)`, aggregating a declared window over the as-of vintage) and declares the hand-off:
+**"P5 consumes the `feat_*` snapshot contract and owns the Feast registry, TTL and materialization"**
+(`phase-02-data-model.md:78-80`). Concretely for this phase:
+
+- The Flink realtime job and the offline `stream-feature-offline` job compute the **same declared
+  window** (4 quarters / 30 days) as a genuine aggregate — mean, latest, count, or the specific
+  function each feature names — not a projection of the single triggering row.
+- Every `feat_*` row exposes `window_period_count` and `feature_completeness`; a ticker inside the
+  window with fewer periods than the full window reports partial completeness with `NULL`
+  aggregates, never zero-fill or forward-fill (P2 AC-P2-30 is the reference test; this phase's
+  materialization must reproduce the same behavior in the streaming/offline path, not only the
+  pure-Python reference).
+- Each `feat_*` source declares **both** `event_timestamp` and `created_timestamp` (AC-P2-39) and
+  the Feast source binds to the **partitioned `feat_*` table prefix**, not a single `data.parquet`
+  object (M8) — `feature_definitions.py:57-70,86-133` and `paths.py:13-21` are the sites to correct.
+
 ## Related Code Files
 
 - Restore from archive: `platform/streaming/kafka/`, `platform/streaming/flink/`,
@@ -158,8 +182,8 @@ writes the wrong column.
 ### Mini-track streaming and DP3 rows (added 2026-09-02)
 
 P3 §`owning_phase` part 2 assigns these to P5. They are **13 + 12 = 25 points** that the
-2026-09-01 revision left with no owner and no AC, and that `plan.md` §Schedule Reality wrongly
-priced at **0** when it listed "Debezium + Flink CDC" as a zero-cost cut. Baseline numbers come from
+2026-09-01 revision left with no owner and no AC — a defect the 2026-09-01 plan's own since-removed
+cost table missed by pricing "Debezium + Flink CDC" as a zero-cost cut. Baseline numbers come from
 `docs/evidence/flink/` at tag `evidence-baseline-pre-rebuild` (P3 step 0).
 
 - [ ] AC-P5-9 **(mini 20)**: Flink → runs the realtime feature job **without** optimizations →
@@ -186,6 +210,13 @@ priced at **0** when it listed "Debezium + Flink CDC" as a zero-cost cut. Baseli
       contract plus a validation result; the knowledge-time axis appears in the graph
 - [ ] AC-P5-16 **(F14)**: Engineer → reads any materialized `feat_*` row → `event_timestamp` equals
       `known_from_ts`; a restated vintage does **not** overwrite the earlier vintage's feature row
+- [ ] AC-P5-17 **(M5/AC-P2-39 hand-off)**: Engineer → reads a materialized `feat_company_financial_4q`
+      or `feat_company_market_30d` row → the value is a genuine aggregate over the declared window
+      (not the triggering row's own value), `window_period_count`/`feature_completeness` are
+      populated, and a ticker with fewer periods than the full window shows `NULL` aggregates —
+      never zero-fill or forward-fill; the Feast source for that table binds to the partitioned
+      `feat_*` prefix and declares both `event_timestamp` and `created_timestamp`, never a single
+      `data.parquet` object
 
 ## Risk Assessment
 

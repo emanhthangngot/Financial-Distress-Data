@@ -64,12 +64,14 @@ def rows_to_parquet_bytes(rows: list[dict[str, Any]]) -> bytes:
         values = [row.get(field) for row in rows]
         timestamp_values = _timestamp_values(field, values)
         if timestamp_values is not None:
-            arrays.append(pa.array(timestamp_values, type=pa.timestamp("us", tz="UTC")))
+            arrays.append(
+                pa.array(timestamp_values, type=pa.timestamp("us", tz="UTC"), from_pandas=False)
+            )
             continue
         arrow_type = _arrow_type(values)
         if pa.types.is_string(arrow_type):
             values = [None if value is None else str(value) for value in values]
-        arrays.append(pa.array(values, type=arrow_type))
+        arrays.append(pa.array(values, type=arrow_type, from_pandas=False))
 
     table = pa.Table.from_arrays(arrays, names=fields)
     output = io.BytesIO()

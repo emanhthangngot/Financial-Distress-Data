@@ -71,15 +71,15 @@ def _write_complete_lakehouse_audit_artifacts(evidence_dir: Path) -> None:
     (evidence_dir / "lakehouse_real_minio_objects.json").write_text(
         json.dumps(
             [
-                {"object_name": "bronze/companies/data.parquet"},
-                {"object_name": "bronze/financial_statements/data.parquet"},
-                {"object_name": "bronze/market_prices_daily/data.parquet"},
+                {"object_name": "bronze/raw_companies/data.parquet"},
+                {"object_name": "bronze/raw_financial_statements/data.parquet"},
+                {"object_name": "bronze/raw_market_prices_daily/data.parquet"},
                 {"object_name": "bronze/kafka/financial.price_events/part.parquet"},
                 {"object_name": "bronze/kafka/financial.news_events/part.parquet"},
                 {"object_name": "bronze/kafka/financial.alert_events/part.parquet"},
-                {"object_name": "silver/companies/part.parquet"},
-                {"object_name": "silver/financial_statements/part.parquet"},
-                {"object_name": "silver/market_prices_daily/part.parquet"},
+                {"object_name": "silver/stg_companies/part.parquet"},
+                {"object_name": "silver/stg_financial_statements/part.parquet"},
+                {"object_name": "silver/stg_market_prices_daily/part.parquet"},
                 {"object_name": "gold/fact_financial_statement/part.parquet"},
                 {"object_name": "gold/fact_market_price/part.parquet"},
                 {"object_name": "gold/dim_company/part.parquet"},
@@ -148,8 +148,8 @@ def test_real_e2e_dag_exposes_full_runtime_task_chain():
         "produce_fixture_stream_events_to_kafka",
         "consume_kafka_events_to_bronze",
         "run_spark_bronze_to_silver_gold",
-        "run_silver_gold_dq_gate",
         "write_project_metadata_rows",
+        "run_silver_gold_dq_gate",
         "run_duckdb_validation_and_publish_evidence",
     ]
 

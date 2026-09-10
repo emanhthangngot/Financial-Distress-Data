@@ -27,7 +27,7 @@ $ .venv/bin/python -m pytest tests/platform/pipelines/test_data_governance.py -q
 
 Live quarantine probe (against `platform-postgres`, port 5433):
 ```
-$ PHASE2_PG_DSN=postgresql://platform:platform@localhost:5433/ml .venv/bin/python -c "..."
+$ PLATFORM_PG_DSN=postgresql://platform:platform@localhost:5433/ml .venv/bin/python -c "..."
 chunks remaining after governance: 0
 
 $ psql -U platform -d ml -c "SELECT chunk_id, source_uri, violation_reason, quarantined_ts FROM ml.rag_quarantine;"

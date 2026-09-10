@@ -8,24 +8,6 @@ from typing import Any
 from src.jobs.lakehouse_evidence_job import metadata_dsn
 from src.metadata.metadata_writer import PostgresMetadataWriter, psycopg_connection_factory
 
-PUBLISHED_PREFIXES = [
-    "silver/companies/",
-    "silver/financial_statements/",
-    "silver/market_prices_daily/",
-    "gold/dim_company/",
-    "gold/fact_financial_statement/",
-    "gold/fact_market_price/",
-    "gold/distress_labels/",
-    "gold/dim_date/",
-    "gold/obt_company_quarter_risk/",
-    "gold/fact_market_alert/",
-    "gold/fact_news_sentiment/",
-    "gold/feat_company_financial_4q/",
-    "gold/feat_company_market_30d/",
-    "gold/feat_company_news_30d/",
-    "gold/feat_company_unified/",
-]
-
 
 def persist_failed_rows(failed_by_dataset: dict[str, Any], run_id: str) -> int:
     """Persist Spark quarantine rows into PostgreSQL before publication."""

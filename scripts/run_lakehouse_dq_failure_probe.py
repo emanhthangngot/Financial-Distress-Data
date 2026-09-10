@@ -38,6 +38,13 @@ def main() -> None:
     args = parser.parse_args()
 
     writer = PostgresMetadataWriter(psycopg_connection_factory(args.dsn))
+    writer.log_run(
+        "lakehouse_dq_failure_probe",
+        "run_lakehouse_dq_failure_probe",
+        "dq_failure_probe",
+        "running",
+        run_id=args.run_id,
+    )
     runner = DQRunner(writer)
     evidence = {
         "run_id": args.run_id,
