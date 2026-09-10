@@ -7,7 +7,6 @@ on:
       - "src/ml/feast/offline_job.py"
       - "src/ml/feast/feature_definitions.py"
       - "dags/stream_feature_offline.py"
-      - "platform/streaming/pipeline-deployments.yaml"
 
 permissions:
   contents: read
@@ -22,7 +21,7 @@ jobs:
         [{"name":"stream-feature-offline","image_context":".","dockerfile":"infra/stream-feature-offline/Dockerfile",
         "test_selector":"tests/platform/pipelines -k 'feast or ttl or stream'",
         "lint_paths":"src/ml/feast/offline_job.py src/ml/feast/feature_definitions.py tests/platform/pipelines/test_stream_feature_jobs.py",
-        "gitops_path":"platform/streaming/pipeline-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"CronJob","gitops_target_selector":"stream-feature-offline"}]
+        "gitops_path":"platform/data/pipeline-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"CronJob","gitops_target_selector":"stream-feature-offline"}]
     secrets:
       GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
       GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
