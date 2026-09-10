@@ -66,10 +66,24 @@ def test_boundary_timestamp_is_not_leakage() -> None:
 def test_manifest_and_data_version_are_deterministic() -> None:
     rows = _rows()
     first = build_manifest(
-        "iceberg-42", source_sha="abc", image_digest="sha256:def", environment={"lock": "1"}
+        "iceberg-42",
+        source_sha="abc",
+        image_digest="sha256:def",
+        environment={"lock": "1"},
+        compute_source="local",
+        compute_seconds=0,
+        accelerator="cpu",
+        marginal_cost_usd=0,
     )
     second = build_manifest(
-        "iceberg-42", source_sha="abc", image_digest="sha256:def", environment={"lock": "1"}
+        "iceberg-42",
+        source_sha="abc",
+        image_digest="sha256:def",
+        environment={"lock": "1"},
+        compute_source="local",
+        compute_seconds=0,
+        accelerator="cpu",
+        marginal_cost_usd=0,
     )
     assert first == second
     assert first.digest() == second.digest()
