@@ -1,13 +1,11 @@
-"""platform: Feast structured feature materialization
-(feast_apply -> materialize_incremental -> record_registry_revision), run as
-one task via src.ml.feast.materialization.run_materialize_task."""
+"""platform: Feast structured feature materialization with validation."""
 
 from __future__ import annotations
 
 from datetime import timedelta
 
 from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
-from src.ml.feast.materialization import run_materialize_task
+from src.ml.feast.materialization import run_materialize_task, validate_materialization_task
 
 DAG, PythonOperator = airflow_imports()
 DAG_ID = "feature_materialize"
@@ -26,7 +24,12 @@ if DAG is not None:
         dagrun_timeout=timedelta(hours=1),
         tags=["financial-distress", "platform", "ml", "feast"],
     ) as dag:
-        PythonOperator(
-            task_id="materialize",
+        ingest_features = PythonOperator(
+            task_id="ingest_features",
             python_callable=run_materialize_task,
         )
+        validate_features = PythonOperator(
+            task_id="validate_features",
+            python_callable=validate_materialization_task,
+        )
+        ingest_features >> validate_features

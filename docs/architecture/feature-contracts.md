@@ -28,10 +28,12 @@ which asserts `timestamp_field == "known_from_ts"` on every declared `FileSource
 
 | Feature view | Gold source | TTL | Reason |
 |---|---|---|---|
-| `company_financial_features` | `fact_financial_statement` | 400 days | A quarterly filing stays authoritative across a four-quarter window plus publication lag; 400 days prevents expiry before replacement. |
+| `company_financial_features` | `feat_company_financial_4q` | 400 days | A quarterly filing stays authoritative across a four-quarter window plus publication lag; 400 days prevents expiry before replacement. |
 | `company_risk_features` | `obt_company_quarter_risk` | 400 days | Derived from the quarterly financial fact and label; it shares the 400-day parent horizon so the risk leg cannot expire first. |
-| `market_price_features` | `fact_market_price` | 45 days | A 30-day daily market window plus a 15-day holiday and late-arrival buffer requires 45 days to avoid serving an incomplete feature. |
-| `stream_market_features` | `fact_market_price` (batch fallback via `PushSource`) | 1 hour | Intraday aggregates describe the current trading hour; a longer TTL would allow stale ticks to answer a live query. |
+| `market_price_features` | `feat_company_market_30d` | 45 days | A 30-day daily market window plus a 15-day holiday and late-arrival buffer requires 45 days to avoid serving an incomplete feature. |
+| `news_features` | `feat_company_news_30d` | 45 days | News uses the same 30-day observation window as market data; 45 days absorbs quiet periods and late-arriving articles. |
+| `unified_features` | `feat_company_unified` | 400 days | The unified feature joins financial, market, and news inputs; 400 days matches the longest quarterly financial input. |
+| `stream_market_features` | `PushSource` with `feat_company_market_30d` fallback | 1 hour | Intraday aggregates describe the current trading hour; a longer TTL would allow stale ticks to answer a live query. |
 
 `stream_market_features` has no Gold `FileSource` of its own — its `PushSource.batch_source` is
 `market_price_features`'s `FileSource`, so an online-store miss still resolves through the daily

@@ -28,6 +28,8 @@ EXPECTED_TTL = {
     "company_financial_features": timedelta(days=400),
     "company_risk_features": timedelta(days=400),
     "market_price_features": timedelta(days=45),
+    "news_features": timedelta(days=45),
+    "unified_features": timedelta(days=400),
     "stream_market_features": timedelta(hours=1),
 }
 
@@ -62,6 +64,6 @@ def test_gold_datasets_cover_every_file_backed_view() -> None:
     assert set(GOLD_DATASETS) == file_backed
 
 
-def test_gold_source_path_resolves_through_src_io_paths() -> None:
-    path = gold_source_path("fact_financial_statement")
-    assert path == "s3://financial-distress-lake/gold/fact_financial_statement/data.parquet"
+def test_gold_source_path_is_partitioned_prefix() -> None:
+    path = gold_source_path("feat_company_financial_4q")
+    assert path == "s3://financial-distress-lake/gold/feat_company_financial_4q/"
