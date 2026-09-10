@@ -1,17 +1,837 @@
 {
-  "version": 1,
+  "version": 2,
   "policy": "rubric-first",
   "source_image": "images/architecture/fdd-architecture-full-4k.png",
   "components": [
-    {"name": "Bronze/Silver/Gold lakehouse", "owner": "P4", "evidence_path": "docs/evidence/lakehouse_row_counts.json"},
-    {"name": "MinIO lakehouse storage", "owner": "P4", "evidence_path": "docs/evidence/lakehouse_real_minio_objects.json"},
-    {"name": "PostgreSQL operational metadata", "owner": "P4", "evidence_path": "docs/evidence/lakehouse_real_postgres_summary.json"},
-    {"name": "Kafka streaming topics", "owner": "P5", "evidence_path": "docs/evidence/lakehouse_real_kafka_offsets.json"},
-    {"name": "Temporal data contract", "owner": "P2", "evidence_path": "sql/schema_evidence.sql"},
-    {"name": "Bounded agent runtime", "owner": "P8", "evidence_path": "src/agents/runtime.py"},
-    {"name": "Quality and evidence gates", "owner": "P11", "evidence_path": "scripts/run_lakehouse_quality_gates.py"}
-  ],
-  "omitted_image_only_components": [
-    "Kiali", "Superset", "Trino", "dbt", "Jenkins", "Argo Rollouts", "Triton", "llm-d", "LWS"
+    {
+      "number": 1,
+      "name": "Analytic Stakeholder (watch dashboard)",
+      "owner": "P9",
+      "image_location": "top, external",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 2,
+      "name": "Web user (access)",
+      "owner": "P9",
+      "image_location": "left, external",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 3,
+      "name": "Developer (git push / git merge)",
+      "owner": "P10",
+      "image_location": "left, external",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 4,
+      "name": "GitHub (SCM + webhook trigger)",
+      "owner": "P10",
+      "image_location": "left, external",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 5,
+      "name": "Terraform (provision, IaC)",
+      "owner": "P6",
+      "image_location": "left, external",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 6,
+      "name": "Ansible",
+      "owner": "P6",
+      "image_location": "left, external",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 7,
+      "name": "GKE / Kubernetes",
+      "owner": "P6",
+      "image_location": "left + top-right",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 8,
+      "name": "Vietnam API HOSE/HNX Stock (streaming event)",
+      "owner": "P4",
+      "image_location": "left of dataflow",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 9,
+      "name": "financial-distress-gitops repo",
+      "owner": "P10",
+      "image_location": "bottom",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 10,
+      "name": "Argo CD (reconcile/sync, argo watch)",
+      "owner": "P10",
+      "image_location": "bottom",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 11,
+      "name": "NGINX System Controller",
+      "owner": "P9",
+      "image_location": "ns: ingress",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 12,
+      "name": "cert-manager",
+      "owner": "P9",
+      "image_location": "ns: ingress",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 13,
+      "name": "Next.js UI + Route Handlers",
+      "owner": "P9",
+      "image_location": "ns: web",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 14,
+      "name": "prediction-api",
+      "owner": "P9",
+      "image_location": "ns: api-serving",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 15,
+      "name": "feature-api (get online features)",
+      "owner": "P9",
+      "image_location": "ns: api-serving",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 16,
+      "name": "feature-mcp (http -> feature-api)",
+      "owner": "P8",
+      "image_location": "ns: api-serving",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 17,
+      "name": "drift-api",
+      "owner": "P9",
+      "image_location": "ns: api-serving",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 18,
+      "name": "drift-mcp",
+      "owner": "P8",
+      "image_location": "ns: api-serving",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 19,
+      "name": "KEDA (autoscale api-serving)",
+      "owner": "P9",
+      "image_location": "ns: api-serving",
+      "change_class": "C+A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 20,
+      "name": "kagent controllers + CRDs",
+      "owner": "P8",
+      "image_location": "ns: agents",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 21,
+      "name": "Coordinator Agent (replicas=3 + autoscale)",
+      "owner": "P8",
+      "image_location": "Sandbox",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 22,
+      "name": "Feature Agent",
+      "owner": "P8",
+      "image_location": "Sandbox",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 23,
+      "name": "Drift Agent",
+      "owner": "P8",
+      "image_location": "Sandbox",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 24,
+      "name": "agentgateway (retained egress boundary)",
+      "owner": "P8",
+      "image_location": "implied by basic auth + rate limit edge",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 25,
+      "name": "Superset",
+      "owner": "P9",
+      "image_location": "ns: analytic",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 26,
+      "name": "Trino (Run SQL)",
+      "owner": "P9",
+      "image_location": "ns: analytic",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 27,
+      "name": "dbt - Build Gold Data Mart",
+      "owner": "P9",
+      "image_location": "ns: analytic",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 28,
+      "name": "Data Generator (simulate batch ingestion)",
+      "owner": "P4",
+      "image_location": "ns: dataflow",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 29,
+      "name": "MinIO (object storage)",
+      "owner": "P4",
+      "image_location": "ns: dataflow",
+      "change_class": "A",
+      "status": "selected",
+      "reason": "Selected evidence-backed component; see evidence_path.",
+      "evidence_path": "docs/evidence/lakehouse_real_minio_objects.json"
+    },
+    {
+      "number": 30,
+      "name": "Iceberg + Lakekeeper REST catalog",
+      "owner": "P4",
+      "image_location": "ns: dataflow",
+      "change_class": "B+A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 31,
+      "name": "Bronze tables",
+      "owner": "P4",
+      "image_location": "ns: dataflow",
+      "change_class": "B",
+      "status": "selected",
+      "reason": "Selected evidence-backed component; see evidence_path.",
+      "evidence_path": "docs/evidence/lakehouse_row_counts.json"
+    },
+    {
+      "number": 32,
+      "name": "Silver/Gold tables",
+      "owner": "P4",
+      "image_location": "ns: dataflow",
+      "change_class": "B",
+      "status": "selected",
+      "reason": "Selected evidence-backed component; see evidence_path.",
+      "evidence_path": "docs/evidence/lakehouse_row_counts.json"
+    },
+    {
+      "number": 33,
+      "name": "gold.distress_holdout @ tag holdout-v1",
+      "owner": "P4",
+      "image_location": "ns: dataflow",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 34,
+      "name": "Spark - batch feature engineering",
+      "owner": "P4",
+      "image_location": "ns: dataflow",
+      "change_class": "B",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 35,
+      "name": "Source system (Postgres, logical WAL)",
+      "owner": "P5",
+      "image_location": "ns: dataflow",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 36,
+      "name": "Debezium",
+      "owner": "P5",
+      "image_location": "ns: dataflow",
+      "change_class": "B",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 37,
+      "name": "Kafka",
+      "owner": "P5",
+      "image_location": "ns: dataflow",
+      "change_class": "A",
+      "status": "selected",
+      "reason": "Selected evidence-backed component; see evidence_path.",
+      "evidence_path": "docs/evidence/lakehouse_real_kafka_offsets.json"
+    },
+    {
+      "number": 38,
+      "name": "Flink - realtime feature engineering",
+      "owner": "P5",
+      "image_location": "ns: dataflow",
+      "change_class": "A+B",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 39,
+      "name": "Feast",
+      "owner": "P5",
+      "image_location": "ns: dataflow",
+      "change_class": "B",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 40,
+      "name": "FEAST offline store (Postgres)",
+      "owner": "P5",
+      "image_location": "ns: dataflow",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 41,
+      "name": "FEAST online store (Redis)",
+      "owner": "P5",
+      "image_location": "ns: dataflow",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 42,
+      "name": "Airflow (trigger sync/materialize, drift DAG, daily DAG, retrain trigger)",
+      "owner": "P4",
+      "image_location": "adjacent to dataflow",
+      "change_class": "A",
+      "status": "selected",
+      "reason": "Selected evidence-backed component; see evidence_path.",
+      "evidence_path": "docs/evidence/lakehouse_runtime_audit_summary.json"
+    },
+    {
+      "number": 43,
+      "name": "DataHub",
+      "owner": "P4",
+      "image_location": "adjacent to dataflow",
+      "change_class": "B",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 44,
+      "name": "Kubeflow Pipeline",
+      "owner": "P7",
+      "image_location": "ns: kubeflow",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 45,
+      "name": "Ray Cluster (distributed training)",
+      "owner": "P7",
+      "image_location": "ns: kubeflow",
+      "change_class": "B+C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 46,
+      "name": "MLflow",
+      "owner": "P7",
+      "image_location": "ns: tracking",
+      "change_class": "B+C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 47,
+      "name": "Postgres - metadata + registry",
+      "owner": "P7",
+      "image_location": "ns: tracking",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 48,
+      "name": "MinIO - checkpoint + model artifacts",
+      "owner": "P7",
+      "image_location": "ns: tracking",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 49,
+      "name": "KServe (operator, 0.18)",
+      "owner": "P8",
+      "image_location": "ns: kserve",
+      "change_class": "D",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 50,
+      "name": "NVIDIA Triton InferenceService",
+      "owner": "P7",
+      "image_location": "ns: kserve",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 51,
+      "name": "canaryTrafficPercent 10->25->50",
+      "owner": "P7",
+      "image_location": "ns: kserve",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 52,
+      "name": "Gateway / GatewayClass: istio / ClusterIP",
+      "owner": "P8",
+      "image_location": "ns: kserve",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 53,
+      "name": "HTTPRoute group llm-ab",
+      "owner": "P8",
+      "image_location": "ns: kserve",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 54,
+      "name": "llm-d isvc-a (w=9)",
+      "owner": "P8",
+      "image_location": "ns: kserve",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 55,
+      "name": "llm-d isvc-b (w=1)",
+      "owner": "P8",
+      "image_location": "ns: kserve",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 56,
+      "name": "LWS - multi-node serving",
+      "owner": "P8",
+      "image_location": "ns: kserve",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 57,
+      "name": "mTLS STRICT + AuthorizationPolicy (kserve)",
+      "owner": "P8",
+      "image_location": "ns: kserve",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 58,
+      "name": "Knative Serving + Kourier net layer",
+      "owner": "P8",
+      "image_location": "ns: kserve group",
+      "change_class": "D",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 59,
+      "name": "Argo Rollouts (Deployments only)",
+      "owner": "P10",
+      "image_location": "ns: rollouts",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 60,
+      "name": "canary + AnalysisTemplate",
+      "owner": "P10",
+      "image_location": "ns: rollouts",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 61,
+      "name": "Istio (istiod)",
+      "owner": "P6",
+      "image_location": "ns: istio-system",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 62,
+      "name": "Kiali",
+      "owner": "P6",
+      "image_location": "ns: istio-system",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 63,
+      "name": "mTLS STRICT + AuthorizationPolicy (mesh-wide)",
+      "owner": "P6",
+      "image_location": "ns: istio-system",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 64,
+      "name": "HashiCorp Vault",
+      "owner": "P6",
+      "image_location": "ns: security",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 65,
+      "name": "External Secrets Operator",
+      "owner": "P6",
+      "image_location": "ns: security",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 66,
+      "name": "OpenTelemetry Collector",
+      "owner": "P12",
+      "image_location": "ns: observability",
+      "change_class": "A",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 67,
+      "name": "Loki",
+      "owner": "P12",
+      "image_location": "ns: observability",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 68,
+      "name": "Prometheus",
+      "owner": "P12",
+      "image_location": "ns: observability",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 69,
+      "name": "Grafana",
+      "owner": "P12",
+      "image_location": "ns: observability",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 70,
+      "name": "Jaeger",
+      "owner": "P12",
+      "image_location": "ns: observability",
+      "change_class": "E",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 71,
+      "name": "PushGateway",
+      "owner": "P12",
+      "image_location": "implied edge",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 72,
+      "name": "Jenkins Controller",
+      "owner": "P10",
+      "image_location": "ns: ci",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 73,
+      "name": "Jenkins Agents",
+      "owner": "P10",
+      "image_location": "ns: ci",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Image-only component; no repository runtime artifact.",
+      "evidence_path": null
+    },
+    {
+      "number": 74,
+      "name": "app-ci lane: lint -> test-build -> scan -> push-by-digest",
+      "owner": "P10",
+      "image_location": "ns: ci",
+      "change_class": "C",
+      "status": "selected",
+      "reason": "Selected evidence-backed component; see evidence_path.",
+      "evidence_path": "docs/evidence/lakehouse_runtime_audit_summary.json"
+    },
+    {
+      "number": 75,
+      "name": "model-promote lane: fetch-run -> holdout gate -> smoke-test -> scan -> sign",
+      "owner": "P10",
+      "image_location": "ns: ci",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 76,
+      "name": "bump-gitops (shared terminus)",
+      "owner": "P10",
+      "image_location": "ns: ci",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 77,
+      "name": "frozen eval set (holdout gate input)",
+      "owner": "P7",
+      "image_location": "ns: ci edge",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 78,
+      "name": "sync: triton-isvc.yaml, llm-isvc-b.yaml",
+      "owner": "P10",
+      "image_location": "Argo edge",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 79,
+      "name": "commit: canaryTrafficPercent + llm HTTPRoute weight",
+      "owner": "P10",
+      "image_location": "Argo edge",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 80,
+      "name": "ML gate: p99 latency, error rate, drift",
+      "owner": "P7",
+      "image_location": "annotation",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 81,
+      "name": "LLM gate: TTFT, tokens/s, KV-cache hit",
+      "owner": "P8",
+      "image_location": "annotation",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 82,
+      "name": "query metrics, analysis latency, error rate -> AnalysisTemplate",
+      "owner": "P10",
+      "image_location": "annotation",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    },
+    {
+      "number": 83,
+      "name": "Developer stress test -> Web",
+      "owner": "P11",
+      "image_location": "dotted edge",
+      "change_class": "C",
+      "status": "omitted",
+      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
+      "evidence_path": null
+    }
   ]
 }

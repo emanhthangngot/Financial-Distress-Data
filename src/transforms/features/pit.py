@@ -20,7 +20,17 @@ def _as_of_rows(rows: list[dict[str, Any]], ticker: str, cutoff: datetime) -> li
         row
         for row in rows
         if str(row.get("ticker", "")).upper() == ticker
-        and _parse_timestamp(row.get("known_from_ts") or row.get("event_timestamp")) <= cutoff
+        and _parse_timestamp(
+            _knowledge_timestamp(
+                row,
+                "event_timestamp",
+                "published_ts",
+                "created_ts",
+                "report_release_date",
+                "trading_date",
+            )
+        )
+        <= cutoff
     ]
     by_period: dict[Any, dict[str, Any]] = {}
     for index, row in enumerate(candidates):
@@ -32,13 +42,35 @@ def _as_of_rows(rows: list[dict[str, Any]], ticker: str, cutoff: datetime) -> li
             or f"__row_{index}"
         )
         current = by_period.get(period)
-        if current is None or _parse_timestamp(
-            row.get("known_from_ts") or row.get("event_timestamp")
-        ) > _parse_timestamp(current.get("known_from_ts") or current.get("event_timestamp")):
+        row_ts = _parse_timestamp(
+            _knowledge_timestamp(
+                row,
+                "event_timestamp",
+                "published_ts",
+                "created_ts",
+                "report_release_date",
+                "trading_date",
+            )
+        )
+        current_ts = (
+            _parse_timestamp(
+                _knowledge_timestamp(
+                    current,
+                    "event_timestamp",
+                    "published_ts",
+                    "created_ts",
+                    "report_release_date",
+                    "trading_date",
+                )
+            )
+            if current is not None
+            else None
+        )
+        if current is None or row_ts > current_ts:
             by_period[period] = row
     return sorted(
         by_period.values(),
-        key=lambda row: _parse_timestamp(row.get("known_from_ts") or row.get("event_timestamp")),
+        key=lambda row: str(row.get("report_period") or row.get("trading_date") or ""),
     )
 
 
@@ -130,35 +162,33 @@ def build_feat_company_market_30d(market_rows: list[dict[str, Any]]) -> list[dic
                 key=lambda row: _parse_timestamp(row["trading_date"]),
             )[-30:]
             count = len(window)
+            expected_observations = 21
             output = _feature_metadata(
                 ticker,
                 cutoff,
                 window[-1].get("created_ts") if window else None,
                 "market_30d",
                 count,
-                30,
+                expected_observations,
             )
             output.update(
                 {
                     "trading_date": cutoff.date(),
                     "close_price": (
                         sum(float(row["close_price"]) for row in window) / count
-                        if count == 30
+                        if count >= expected_observations
                         else None
                     ),
                     "daily_return": (
-                        sum(
-                            float(row["daily_return"])
-                            for row in window
-                            if row.get("daily_return") is not None
-                        )
-                        / count
-                        if count == 30
+                        sum(float(row["daily_return"]) for row in window) / count
+                        if count >= expected_observations
                         and all(row.get("daily_return") is not None for row in window)
                         else None
                     ),
                     "volatility_signal": (
-                        any(row.get("volatility_signal") for row in window) if count == 30 else None
+                        any(row.get("volatility_signal") for row in window)
+                        if count >= expected_observations
+                        else None
                     ),
                 }
             )

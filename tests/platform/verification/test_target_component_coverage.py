@@ -69,6 +69,7 @@ def test_selected_inventory_rejects_missing_required_evidence(
                     {
                         "name": "required component",
                         "owner": "P4",
+                        "status": "selected",
                         "evidence_path": "missing/artifact.json",
                     }
                 ]
@@ -80,3 +81,72 @@ def test_selected_inventory_rejects_missing_required_evidence(
     assert _module.verify_selected_inventory() == [
         "required component: missing evidence missing/artifact.json"
     ]
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        (None, "missing selected architecture inventory:"),
+        (
+            {
+                "components": [
+                    {
+                        "name": "bad owner",
+                        "owner": "owner",
+                        "status": "selected",
+                        "evidence_path": "x",
+                    }
+                ]
+            },
+            "bad owner: invalid owner",
+        ),
+        (
+            {
+                "components": [
+                    {"name": "missing evidence field", "owner": "P4", "status": "selected"}
+                ]
+            },
+            "missing evidence field: missing evidence_path",
+        ),
+        (
+            {
+                "components": [
+                    {"name": "logo", "status": "omitted", "reason": "non-required decoration"}
+                ]
+            },
+            None,
+        ),
+    ],
+)
+def test_inventory_failure_modes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    payload: dict[str, object] | None,
+    expected: str | None,
+) -> None:
+    inventory = tmp_path / "inventory.json"
+    if payload is not None:
+        inventory.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(_module, "INVENTORY_PATH", inventory)
+    findings = _module.verify_selected_inventory()
+    if expected is None:
+        assert findings == []
+    else:
+        assert any(expected in finding for finding in findings)
+
+
+def test_exhaustive_inventory_rejects_missing_target_component() -> None:
+    payload = {
+        "components": [
+            {
+                "number": 1,
+                "name": _module.TARGET_COMPONENTS[0].name,
+                "status": "omitted",
+                "reason": "external",
+            }
+        ]
+    }
+    findings = _module.verify_exhaustive_inventory(payload)
+    assert any(
+        "2 " in finding and "missing from exhaustive inventory" in finding for finding in findings
+    )
