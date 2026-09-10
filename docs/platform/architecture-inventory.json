@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "policy": "rubric-first",
+  "source_image": "images/architecture/fdd-architecture-full-4k.png",
+  "components": [
+    {"name": "Bronze/Silver/Gold lakehouse", "owner": "P4", "evidence_path": "docs/evidence/lakehouse_row_counts.json"},
+    {"name": "MinIO lakehouse storage", "owner": "P4", "evidence_path": "docs/evidence/lakehouse_real_minio_objects.json"},
+    {"name": "PostgreSQL operational metadata", "owner": "P4", "evidence_path": "docs/evidence/lakehouse_real_postgres_summary.json"},
+    {"name": "Kafka streaming topics", "owner": "P5", "evidence_path": "docs/evidence/lakehouse_real_kafka_offsets.json"},
+    {"name": "Temporal data contract", "owner": "P2", "evidence_path": "sql/schema_evidence.sql"},
+    {"name": "Bounded agent runtime", "owner": "P8", "evidence_path": "src/agents/runtime.py"},
+    {"name": "Quality and evidence gates", "owner": "P11", "evidence_path": "scripts/run_lakehouse_quality_gates.py"}
+  ],
+  "omitted_image_only_components": [
+    "Kiali", "Superset", "Trino", "dbt", "Jenkins", "Argo Rollouts", "Triton", "llm-d", "LWS"
+  ]
+}

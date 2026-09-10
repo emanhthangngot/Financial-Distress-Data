@@ -3,16 +3,11 @@
 Unified data-model contract for the platform. This document is the single source of truth for bronze/silver/gold zones, the surrogate-key scheme, SCD2 semantics, and the feature/event_timestamp convention.
 
 
-> **Status (phase-02-data-model.md, Steps 1-9):** the §Naming Convention section below is the
-> target contract, landed by Step 7. Steps 1-4 (identity layer, vintage-preserving Silver,
-> `known_from_ts`) are implemented in a separate branch/PR; Steps 6, 8, 9 (metadata unification,
-> falsifiable schema evidence, migration/regression) are tracked here as SQL DDL
-> (`sql/schema_evidence.sql`, `sql/init_ops.sql`, `sql/init_ml.sql`,
-> `sql/migrations/002_data_model_v2.sql`, `sql/views/dim_company_sys.sql`) and
-> `scripts/lint_naming_convention.py`. Everything below "## Full specification" still describes the
-> **v1** contract (`company_key`, `distress_labels`, `_at` suffixes) and is superseded section by
-> section as Steps 1-4 land and this document is rewritten to match. Until then, treat the
-> §Naming Convention block as authoritative and the rest as historical/as-built v1 reference.
+> **Status (2026-09-10):** The target v2 contract in `AGENTS.md`, `plans/260831-1644-rebuild-target-mlops-architecture/phase-02-data-model.md`,
+> and the schema evidence DDL are authoritative for active work. The legacy “Full specification”
+> section below is retained as historical/as-built v1 reference and must not be copied into new
+> callers. Where the DDL still uses `TIMESTAMP`, the runtime migration to `TIMESTAMPTZ` remains
+> an open P2/P4 reconciliation item; the target type is `TIMESTAMPTZ`.
 
 ## Naming Convention
 
@@ -76,9 +71,9 @@ three Bronze, three Silver, and nine Gold tables.
 ## Relationships
 
 Gold facts and the quarterly risk OBT reference both
-`dim_company.company_version_key` and `dim_date.date_key`. Stable
-`company_key` identifies a company across history; `company_version_key`
-identifies one SCD2 version.
+`dim_company.company_version_key` and `dim_date.date_key`. `ticker` is the
+natural and durable grouping key; `company_version_key` identifies one SCD2
+version and is the fact join key. Facts never join the dimension on `ticker`.
 
 ## SCD Type 2
 
@@ -88,9 +83,10 @@ one current row.
 
 ## Feature Contract
 
-Every `feat_company_*` table includes literal `event_timestamp` and
-`created_ts` columns. The unified table also has `feature_event_timestamp` and a
-database check enforcing it is not later than the reference event.
+Every `feat_company_*` table includes the reserved Feast columns
+`event_timestamp` and `created_timestamp`, plus `known_from_ts`. The contract
+requires `event_timestamp = known_from_ts`; `created_timestamp` is only the
+retry tie-break and never the feature knowledge axis.
 
 ## Reproduction
 
