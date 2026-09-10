@@ -118,7 +118,7 @@ def test_run_label_build_without_dsn_builds_but_does_not_write(monkeypatch) -> N
 
 def test_run_label_drift_build_task_reads_env_and_writes_no_dsn(monkeypatch, tmp_path) -> None:
     monkeypatch.delenv("PLATFORM_PG_DSN", raising=False)
-    monkeypatch.setenv("PHASE2_DRIFT_OUTPUT_ROOT", str(tmp_path))
+    monkeypatch.setenv("PLATFORM_DRIFT_OUTPUT_ROOT", str(tmp_path))
     monkeypatch.chdir(Path(__file__).resolve().parents[3])
     result = run_label_drift_build_task()
     assert result["labels_built"] > 0
@@ -129,7 +129,7 @@ def test_run_label_drift_build_task_reads_env_and_writes_no_dsn(monkeypatch, tmp
 
 def test_run_label_drift_build_task_raises_on_failed_drift_assertion(monkeypatch, tmp_path) -> None:
     monkeypatch.delenv("PLATFORM_PG_DSN", raising=False)
-    monkeypatch.setenv("PHASE2_DRIFT_OUTPUT_ROOT", str(tmp_path / "drift-output"))
+    monkeypatch.setenv("PLATFORM_DRIFT_OUTPUT_ROOT", str(tmp_path / "drift-output"))
     monkeypatch.chdir(Path(__file__).resolve().parents[3])
     # A threshold no real run could ever clear.
     bad_config = tmp_path / "drift.yaml"
@@ -152,6 +152,6 @@ scenarios:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setenv("PHASE2_DRIFT_CONFIG", str(bad_config))
+    monkeypatch.setenv("PLATFORM_DRIFT_CONFIG", str(bad_config))
     with pytest.raises((RuntimeError, Exception)):
         run_label_drift_build_task()

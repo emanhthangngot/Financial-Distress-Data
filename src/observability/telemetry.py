@@ -283,7 +283,7 @@ def trace_span(
 
 
 _current_telemetry: ContextVar[Telemetry | NoopTelemetry | None] = ContextVar(
-    "phase2_telemetry", default=None
+    "platform_telemetry", default=None
 )
 
 

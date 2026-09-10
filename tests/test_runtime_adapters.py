@@ -87,7 +87,7 @@ def test_postgres_metadata_writer_executes_project_metadata_inserts():
         "2024-01-01",
         "2025-12-31",
         "completed",
-        "stage1_e2e",
+        "lakehouse_e2e",
         run_id=run_id,
     )
     writer.log_source_request(
@@ -213,7 +213,7 @@ def test_postgres_writer_flush_pipeline_run_logs_uses_single_commit_batched_exec
     rows = [
         {
             "run_id": f"run-{i}",
-            "dag_id": "stage1_pipeline",
+            "dag_id": "lakehouse_pipeline",
             "task_id": "ingest",
             "dataset_name": f"dataset-{i}",
             "status": "success",

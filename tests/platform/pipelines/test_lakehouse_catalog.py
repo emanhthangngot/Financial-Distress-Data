@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from src.lakehouse.catalog import CatalogConfig, ConcurrentCommitError, load_catalog
 from src.lakehouse.snapshots import diff_snapshots, read_as_of
-from src.lakehouse.tables import register_phase2_tables
+from src.lakehouse.tables import register_platform_tables
 
 
 def test_platform_tables_register_and_time_travel() -> None:
     catalog = load_catalog(CatalogConfig(uri="http://localhost:8181/catalog"))
-    tables = register_phase2_tables(catalog)
+    tables = register_platform_tables(catalog)
     table = tables["platform.features"]
     first = table.append(
         [
@@ -38,7 +38,7 @@ def test_platform_tables_register_and_time_travel() -> None:
 
 def test_schema_evolution_is_additive_and_old_snapshot_remains_readable() -> None:
     catalog = load_catalog()
-    table = register_phase2_tables(catalog)["platform.labels"]
+    table = register_platform_tables(catalog)["platform.labels"]
     snapshot = table.append(
         [
             {

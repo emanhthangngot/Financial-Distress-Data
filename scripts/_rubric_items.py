@@ -100,14 +100,14 @@ ITEMS: tuple[RubricItem, ...] = (
         category="Implement Data Generator",
         claim="Simulate offline data problems: skew",
         points=2,
-        evidence_check=lambda: _exists("docs/evidence/stage1_generator_characteristics.json"),
+        evidence_check=lambda: _exists("docs/evidence/lakehouse_generator_characteristics.json"),
     ),
     RubricItem(
         idx=4,
         category="Implement Data Generator",
         claim="Simulate offline data problems: high cardinality",
         points=2,
-        evidence_check=lambda: _exists("docs/evidence/stage1_generator_characteristics.json"),
+        evidence_check=lambda: _exists("docs/evidence/lakehouse_generator_characteristics.json"),
     ),
     RubricItem(
         idx=5,

@@ -296,9 +296,9 @@ def load_catalog(
     """
     catalog = LocalIcebergCatalog(config or CatalogConfig.from_env())
     if register_defaults:
-        from .tables import register_phase2_tables
+        from .tables import register_platform_tables
 
-        register_phase2_tables(catalog)
+        register_platform_tables(catalog)
     return catalog
 
 
