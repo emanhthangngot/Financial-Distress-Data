@@ -21,9 +21,9 @@ def build_fact_market_price(
     rows: list[dict[str, Any]],
     dim_company_rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    facts = []
-    previous_close_by_ticker: dict[str, float] = {}
-    for row in sorted(rows, key=lambda item: (item["ticker"], item["trading_date"])):
+    """Build price facts after selecting the as-of vintage for each trading day."""
+    prepared = []
+    for row in rows:
         fact = dict(row)
         fact["ticker"] = str(row["ticker"]).upper()
         fact["known_from_ts"] = fact_known_from_ts(row, "event_timestamp", "created_ts")
@@ -31,17 +31,41 @@ def build_fact_market_price(
             fact["ticker"], fact["known_from_ts"], dim_company_rows
         )
         fact["date_key"] = date_key(row["trading_date"])
-        previous_close = previous_close_by_ticker.get(fact["ticker"])
-        close_price = float(row["close_price"])
+        prepared.append(fact)
+    output = []
+    for fact in sorted(
+        prepared,
+        key=lambda item: (item["ticker"], item["trading_date"], item["known_from_ts"]),
+    ):
+        current_ts = fact["known_from_ts"]
+        prior_dates = {
+            item["trading_date"]
+            for item in prepared
+            if item["ticker"] == fact["ticker"] and item["trading_date"] < fact["trading_date"]
+        }
+        previous_close = None
+        if prior_dates:
+            prior_date = max(prior_dates)
+            candidates = [
+                item
+                for item in prepared
+                if item["ticker"] == fact["ticker"]
+                and item["trading_date"] == prior_date
+                and item["known_from_ts"] <= current_ts
+            ]
+            if candidates:
+                previous_close = float(
+                    max(candidates, key=lambda item: item["known_from_ts"])["close_price"]
+                )
+        close_price = float(fact["close_price"])
         fact["daily_return"] = (
             None if previous_close in (None, 0) else (close_price - previous_close) / previous_close
         )
         fact["volatility_signal"] = bool(
             fact["daily_return"] is not None and abs(fact["daily_return"]) > 0.07
         )
-        previous_close_by_ticker[fact["ticker"]] = close_price
-        facts.append(fact)
-    return facts
+        output.append(fact)
+    return output
 
 
 def build_fact_market_price_spark(

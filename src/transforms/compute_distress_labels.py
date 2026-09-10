@@ -8,6 +8,7 @@ Encapsulates ``RULE_VERSION`` and the threshold table so rule changes are audita
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
@@ -31,9 +32,11 @@ class DistressLabel:
     label_confidence: str | None = None
     training_eligible: bool = False
     rule_version: str = RULE_VERSION
+    label_version: str = RULE_VERSION
     company_version_key: str | None = None
     known_from_ts: Any = None
     decision_ts: Any = None
+    label_available_ts: Any = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -48,9 +51,11 @@ class DistressLabel:
             "label_confidence": self.label_confidence,
             "training_eligible": self.training_eligible,
             "rule_version": self.rule_version,
+            "label_version": self.label_version,
             "company_version_key": self.company_version_key,
             "known_from_ts": self.known_from_ts,
             "decision_ts": self.decision_ts,
+            "label_available_ts": self.label_available_ts,
         }
 
 
@@ -184,6 +189,19 @@ def warning_rules(
     }
 
 
+def _report_period_end_ts(report_period: Any) -> str | None:
+    value = str(report_period or "").strip().upper()
+    if len(value) != 6 or value[4] != "Q":
+        return None
+    try:
+        year, quarter = int(value[:4]), int(value[5])
+        month = quarter * 3
+        next_month = datetime(year + (month == 12), month % 12 + 1, 1, tzinfo=UTC)
+        return (next_month - timedelta(microseconds=1)).isoformat()
+    except (ValueError, IndexError):
+        return None
+
+
 def compute_distress_label(
     row: dict[str, Any], previous_row: dict[str, Any] | None = None
 ) -> DistressLabel:
@@ -231,7 +249,8 @@ def compute_distress_label(
             training_eligible=False,
             company_version_key=row.get("company_version_key"),
             known_from_ts=row.get("known_from_ts"),
-            decision_ts=row.get("known_from_ts"),
+            decision_ts=_report_period_end_ts(row.get("report_period")),
+            label_available_ts=row.get("label_available_ts") or row.get("known_from_ts"),
         )
 
     z_score = z_double_prime(row)
@@ -284,7 +303,8 @@ def compute_distress_label(
         training_eligible=training_eligible,
         company_version_key=row.get("company_version_key"),
         known_from_ts=row.get("known_from_ts"),
-        decision_ts=row.get("known_from_ts"),
+        decision_ts=_report_period_end_ts(row.get("report_period")),
+        label_available_ts=row.get("label_available_ts") or row.get("known_from_ts"),
     )
 
 

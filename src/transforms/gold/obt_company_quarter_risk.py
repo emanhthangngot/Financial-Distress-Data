@@ -15,17 +15,19 @@ def build_obt_company_quarter_risk(
     labels: list[dict[str, Any]],
     market_facts: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    label_by_version = {
-        row["company_version_key"]: row for row in labels if row.get("company_version_key")
+    label_by_period = {
+        (str(row["ticker"]).upper(), row["report_period"], row.get("rule_version", "v1")): row
+        for row in labels
     }
-    label_by_period = {(row["ticker"], row["report_period"]): row for row in labels}
     output = []
     for row in financial_facts:
-        if row.get("is_latest_vintage") is False:
-            continue
-        label = label_by_version.get(
-            row.get("company_version_key"),
-            label_by_period.get((row["ticker"], row["report_period"]), {}),
+        label = label_by_period.get(
+            (
+                str(row["ticker"]).upper(),
+                row["report_period"],
+                row.get("label_version", "v1"),
+            ),
+            {},
         )
         total_assets = (
             float(row["total_assets"]) if row.get("total_assets") not in (None, 0) else None
