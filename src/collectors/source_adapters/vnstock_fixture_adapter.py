@@ -110,6 +110,7 @@ def _build_financial_rows(
             row = {
                 "ticker": ticker,
                 "report_period": report_period,
+                "statement_variant": "consolidated_unaudited",
                 "fiscal_year": year,
                 "fiscal_quarter": quarter,
                 "total_assets": 1000,
@@ -257,6 +258,7 @@ def _legacy_financial_statements(
                 {
                     "ticker": ticker,
                     "report_period": report_period,
+                    "statement_variant": "consolidated_unaudited",
                     "fiscal_year": year,
                     "fiscal_quarter": quarter,
                     "total_assets": 1000,

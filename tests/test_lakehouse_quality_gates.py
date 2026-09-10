@@ -23,6 +23,8 @@ def test_quality_gate_runner_executes_default_gates_in_order():
         "docker",
         sys.executable,
         sys.executable,
+        sys.executable,
+        sys.executable,
     ]
     assert [command for command, _, _ in calls] == [gate.command for gate in module.DEFAULT_GATES]
     assert all(check is True for _, _, check in calls)

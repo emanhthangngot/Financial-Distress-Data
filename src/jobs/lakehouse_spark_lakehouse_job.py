@@ -263,10 +263,23 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
     from pyspark.sql import functions as F
     from pyspark.sql.window import Window
 
+    vintage_rank = (
+        F.when(F.col("statement_variant") == "consolidated_audited", 1)
+        .when(F.col("statement_variant") == "consolidated_unaudited", 2)
+        .when(F.col("statement_variant") == "separate_audited", 3)
+        .when(F.col("statement_variant") == "separate_unaudited", 4)
+        .otherwise(99)
+    )
+    election_window = Window.partitionBy("ticker", "report_period").orderBy(
+        F.col("known_from_ts").desc(),
+        vintage_rank.asc(),
+        F.col("created_ts").desc_nulls_last(),
+        F.col("statement_variant").asc(),
+    )
     latest_financial = (
-        financial_fact_df.filter(F.col("is_latest_vintage"))
-        if "is_latest_vintage" in financial_fact_df.columns
-        else financial_fact_df
+        financial_fact_df.withColumn("_label_rn", F.row_number().over(election_window))
+        .filter(F.col("_label_rn") == 1)
+        .drop("_label_rn")
     )
 
     window = Window.partitionBy("ticker").orderBy("report_period")
@@ -470,19 +483,13 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
 def build_obt_company_quarter_risk_spark(financial_fact_df: Any, labels_df: Any) -> Any:
     from pyspark.sql import functions as F
 
-    latest_financial = (
-        financial_fact_df.filter(F.col("is_latest_vintage"))
-        if "is_latest_vintage" in financial_fact_df.columns
-        else financial_fact_df
-    )
+    financial = financial_fact_df.alias("fin")
     join_condition = (
-        (F.col("fin.company_version_key") == F.col("lbl.company_version_key"))
-        & (F.col("fin.ticker") == F.col("lbl.ticker"))
+        (F.col("fin.ticker") == F.col("lbl.ticker"))
         & (F.col("fin.report_period") == F.col("lbl.report_period"))
-        & (F.col("fin.known_from_ts") == F.col("lbl.known_from_ts"))
+        & (F.lit("v1") == F.col("lbl.label_version"))
     )
-    joined = latest_financial.alias("fin").join(labels_df.alias("lbl"), join_condition, "left")
-
+    joined = financial.join(labels_df.alias("lbl"), join_condition, "left")
     total_assets = F.col("fin.total_assets").cast("double")
     total_liabilities = F.col("fin.total_liabilities").cast("double")
     equity = F.col("fin.equity").cast("double")
@@ -502,7 +509,7 @@ def build_obt_company_quarter_risk_spark(financial_fact_df: Any, labels_df: Any)
         interest_expense > 0, F.col("fin.ebit").cast("double") / interest_expense
     ).otherwise(None)
 
-    select_exprs = [F.col(f"fin.{col}").alias(col) for col in latest_financial.columns]
+    select_exprs = [F.col(f"fin.{col}").alias(col) for col in financial_fact_df.columns]
     select_exprs.extend(
         [
             current_ratio.alias("current_ratio"),
