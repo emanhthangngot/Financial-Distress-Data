@@ -36,4 +36,4 @@ The following are not active architecture requirements by themselves:
 - Selected architecture inventory verifier: pass.
 - Full repository quality gate: pass, 376 passed / 2 xfailed; naming, rubric, architecture, and evidence gates pass.
 - Feast/streaming platform contract suite in isolated `.venv-platform`: pass, 25 tests.
-- Platform-only workflow suite: 33 failures in the isolated environment because its expected `platform-*.yaml` filenames are absent; this is a repository workflow-rename defect, not a cloud blocker, and is not included in the fast gate.
+- Platform workflow contract suite in isolated `.venv-platform`: pass, 34 tests after aligning the verifier with the repository's phase2 workflow names.
