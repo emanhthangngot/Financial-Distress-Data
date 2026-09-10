@@ -167,9 +167,11 @@ CREATE TABLE gold.fact_distress_label (         -- renamed from distress_labels 
     report_period  VARCHAR NOT NULL,
     label_version  VARCHAR NOT NULL,
     distress_label SMALLINT NOT NULL,
-    decision_ts    TIMESTAMP NOT NULL,          -- the boundary known_from_ts is compared against
+    decision_ts    TIMESTAMP NOT NULL,          -- report-period end predictor cutoff
+    label_available_ts TIMESTAMP NOT NULL,      -- statement vintage availability
     created_ts     TIMESTAMP NOT NULL,
-    PRIMARY KEY (ticker, report_period, label_version)
+    PRIMARY KEY (ticker, report_period, label_version),
+    CHECK (decision_ts <= label_available_ts)
 );
 
 CREATE TABLE gold.obt_company_quarter_risk (

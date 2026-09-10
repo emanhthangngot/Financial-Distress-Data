@@ -23,9 +23,8 @@ def _utc_iso(value: Any) -> str:
 def merge_dim_company(
     existing_rows: list[dict[str, Any]], snapshots: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
-    """Merge ordered company snapshots into persistent SCD2 history."""
+    """Merge snapshots monotonically without rewriting closed SCD2 history."""
     output = [dict(row) for row in existing_rows]
-    latest_by_ticker = {str(row["ticker"]).upper(): row for row in output if row.get("is_current")}
     tracked = (
         "company_name",
         "industry",
@@ -34,22 +33,26 @@ def merge_dim_company(
         "listing_date",
         "delisted_flag",
     )
-    rows = sorted(
+    versions = {(str(row["ticker"]).upper(), _utc_iso(row["valid_from_ts"])): row for row in output}
+    for row in sorted(
         snapshots,
-        key=lambda item: (
-            str(item["ticker"]).upper(),
-            _utc_iso(item["created_ts"]),
-        ),
-    )
-    for row in rows:
+        key=lambda item: (str(item["ticker"]).upper(), _utc_iso(item["created_ts"])),
+    ):
         ticker = str(row["ticker"]).upper()
-        previous = latest_by_ticker.get(ticker)
-        changed = previous is None or any(
-            previous.get(field) != row.get(field) for field in tracked
-        )
-        if not changed:
-            continue
         valid_from = _utc_iso(row["created_ts"])
+        existing = versions.get((ticker, valid_from))
+        if existing is not None:
+            if all(
+                existing.get(field)
+                == (bool(row.get(field, False)) if field == "delisted_flag" else row.get(field))
+                for field in tracked
+            ):
+                continue
+            raise ValueError(f"late_scd2_snapshot for ticker={ticker} valid_from_ts={valid_from}")
+        prior = [item for item in output if str(item["ticker"]).upper() == ticker]
+        if prior and valid_from <= max(item["valid_from_ts"] for item in prior):
+            raise ValueError(f"late_scd2_snapshot for ticker={ticker} valid_from_ts={valid_from}")
+        previous = max(prior, key=lambda item: item["valid_from_ts"], default=None)
         if previous is not None:
             previous["valid_to_ts"] = valid_from
             previous["is_current"] = False
@@ -67,7 +70,7 @@ def merge_dim_company(
             "is_current": True,
         }
         output.append(dim_row)
-        latest_by_ticker[ticker] = dim_row
+        versions[(ticker, valid_from)] = dim_row
     return output
 
 

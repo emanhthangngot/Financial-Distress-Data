@@ -423,6 +423,16 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
     clean_reasons = F.array_compact(reasons)
     distress_reason = F.array_join(clean_reasons, ";")
 
+    period_end = F.last_day(
+        F.to_date(
+            F.concat(
+                F.substring("report_period", 1, 4),
+                F.lit("-"),
+                (F.substring("report_period", 6, 1).cast("int") * 3).cast("string"),
+                F.lit("-01"),
+            )
+        )
+    )
     return (
         latest_financial.withColumn("z_score", z_score)
         .withColumn("distress_label", distress_label)
@@ -431,12 +441,16 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
         .withColumn("label_confidence", label_confidence)
         .withColumn("training_eligible", training_eligible)
         .withColumn("rule_version", F.lit("v1"))
+        .withColumn("label_version", F.lit("v1"))
+        .withColumn("report_period_end_ts", F.to_timestamp(period_end))
         .select(
             "company_version_key",
             "ticker",
             "report_period",
             "known_from_ts",
-            F.col("known_from_ts").alias("decision_ts"),
+            F.col("report_period_end_ts").alias("decision_ts"),
+            "report_period_end_ts",
+            F.col("known_from_ts").alias("label_available_ts"),
             F.coalesce(F.col("event_timestamp"), F.col("report_release_date")).alias(
                 "event_timestamp"
             ),
@@ -448,6 +462,7 @@ def compute_labels_spark(financial_fact_df: Any) -> Any:
             "label_confidence",
             "training_eligible",
             "rule_version",
+            "label_version",
         )
     )
 
