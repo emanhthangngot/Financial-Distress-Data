@@ -184,3 +184,18 @@ def run_materialize_task() -> dict[str, Any]:
         run_id=uuid.uuid4().hex, pipeline_name="platform_feature_materialize"
     )
     return result
+
+
+def validate_materialization_task(**context: Any) -> dict[str, Any]:
+    """Validate the ingest result before the DAG publishes its run."""
+    result = context["ti"].xcom_pull(task_ids="ingest_features") or {}
+    feature_view = result.get("feature_view")
+    if feature_view not in FEATURE_VIEW_TTL:
+        raise ValueError(f"unsupported materialized feature view: {feature_view!r}")
+    if not result.get("registry_revision"):
+        raise ValueError("materialization did not return a registry revision")
+    return {
+        "feature_view": feature_view,
+        "registry_revision": result["registry_revision"],
+        "validated": True,
+    }
