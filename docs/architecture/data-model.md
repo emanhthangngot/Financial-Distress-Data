@@ -141,14 +141,15 @@ s3_use_ssl=false
 Implemented object layout:
 
 ```text
-bronze/companies/data.parquet
-bronze/financial_statements/data.parquet
-bronze/market_prices_daily/data.parquet
+raw paths:
+bronze/raw_companies/data.parquet
+bronze/raw_financial_statements/data.parquet
+bronze/raw_market_prices_daily/data.parquet
 bronze/kafka/{topic}/event_date=YYYY-MM-DD/event_hour=HH/batch_id={uuid}/data.parquet
 
-silver/companies/
-silver/financial_statements/
-silver/market_prices_daily/
+silver/stg_companies/
+silver/stg_financial_statements/
+silver/stg_market_prices_daily/
 
 gold/dim_company/
 gold/dim_date/
@@ -156,7 +157,7 @@ gold/fact_financial_statement/
 gold/fact_market_price/
 gold/fact_market_alert/
 gold/fact_news_sentiment/
-gold/distress_labels/
+gold/fact_distress_label/
 gold/obt_company_quarter_risk/
 gold/feat_company_financial_4q/
 gold/feat_company_market_30d/
@@ -208,7 +209,7 @@ s3a://financial-distress-lake/gold/dim_*/
 s3a://financial-distress-lake/gold/fact_*/
 s3a://financial-distress-lake/gold/obt_*/
 s3a://financial-distress-lake/gold/feat_*/
-s3a://financial-distress-lake/gold/distress_labels/
+s3a://financial-distress-lake/gold/fact_distress_label/
 ```
 
 `distress_labels` is the only Gold folder that does not use the
@@ -227,19 +228,19 @@ is enforced by `tests/test_naming_convention.py`.
 
 | Rubric equivalent | This project | Physical object |
 | --- | --- | --- |
-| `raw_companies` | `bronze.companies` | `s3a://financial-distress-lake/bronze/companies/data.parquet` |
-| `raw_financial_statements` | `bronze.financial_statements` | `s3a://financial-distress-lake/bronze/financial_statements/data.parquet` |
-| `raw_market_prices_daily` | `bronze.market_prices_daily` | `s3a://financial-distress-lake/bronze/market_prices_daily/data.parquet` |
-| `stg_companies` | `silver.companies` | `s3a://financial-distress-lake/silver/companies/` |
-| `stg_financial_statements` | `silver.financial_statements` | `s3a://financial-distress-lake/silver/financial_statements/` |
-| `stg_market_prices_daily` | `silver.market_prices_daily` | `s3a://financial-distress-lake/silver/market_prices_daily/` |
+| `raw_companies` | `bronze.companies` | `s3a://financial-distress-lake/bronze/raw_companies/data.parquet` |
+| `raw_financial_statements` | `bronze.financial_statements` | `s3a://financial-distress-lake/bronze/raw_financial_statements/data.parquet` |
+| `raw_market_prices_daily` | `bronze.market_prices_daily` | `s3a://financial-distress-lake/bronze/raw_market_prices_daily/data.parquet` |
+| `stg_companies` | `silver.companies` | `s3a://financial-distress-lake/silver/stg_companies/` |
+| `stg_financial_statements` | `silver.financial_statements` | `s3a://financial-distress-lake/silver/stg_financial_statements/` |
+| `stg_market_prices_daily` | `silver.market_prices_daily` | `s3a://financial-distress-lake/silver/stg_market_prices_daily/` |
 
-Bronze and Silver storage paths do not enforce a per-table prefix
-inside the layer folder — the dataset name is the only segment:
+Bronze and Silver storage paths enforce the physical `raw_` / `stg_`
+dataset prefix inside each layer folder:
 
 ```text
-s3a://financial-distress-lake/bronze/{dataset}/data.parquet
-s3a://financial-distress-lake/silver/{dataset}/
+ s3a://financial-distress-lake/bronze/raw_{dataset}/data.parquet
+ s3a://financial-distress-lake/silver/stg_{dataset}/
 ```
 
 This keeps the raw ingest and dedup layers flexible enough to absorb

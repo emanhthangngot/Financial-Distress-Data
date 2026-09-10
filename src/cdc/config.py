@@ -93,8 +93,7 @@ class CDCConfig:
                 "host": env.get("CDC_POSTGRES_HOST", "cdc-postgres"),
                 "port": env.get("CDC_POSTGRES_PORT", "5432"),
                 "database": env.get("CDC_POSTGRES_DB", "financial_distress_cdc"),
-                "user": env.get("CDC_POSTGRES_USER", "cdc_reader"),
-                "password": env.get("CDC_POSTGRES_PASSWORD"),
+                "password": env.get("CDC_POSTGRES_PASSWORD", "cdc_reader"),
                 "slot_name": env.get("CDC_REPLICATION_SLOT", "financial_distress_cdc_slot"),
                 "publication_name": env.get(
                     "CDC_PUBLICATION", "financial_distress_cdc_publication"

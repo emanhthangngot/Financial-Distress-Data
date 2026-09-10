@@ -49,6 +49,36 @@ measured Spark decimal promotion, raw mini-rubric CSV cells.
 | "`DECIMAL(20,2)` is the recommendation" | Wrong on both axes: it pays 16-byte-class storage **and** carries the thinnest aggregation headroom | Corrected to `DECIMAL(18,0)` |
 | "maximum precision is the safe choice" | Spark 4.2.0 measured: `SUM(DECIMAL(p,s)) → DECIMAL(p+10, s)`, capped at 38. `DECIMAL(18,0)` → `DECIMAL(28,0)`; `DECIMAL(38,2)` → `DECIMAL(38,2)` — **no promotion left** | Precision 38 is the only choice with zero aggregation headroom. Precision 18 has nine orders of magnitude |
 
+## Revision 2026-09-10 — model semantics reconciliation (M1 … M11)
+
+The v2 decisions of 2026-09-02 / 02b are **unchanged and binding**: `company_key` deleted,
+`company_version_key` the `dim_company` PK and fact join key, `ticker` the durable key,
+`valid_from_ts` / `valid_to_ts` / `is_current` verbatim, `known_from_ts` as the one knowledge-time
+identifier, money `DECIMAL(18,0)`, ratios `DECIMAL(18,6)`, `raw_` / `stg_` prefixes,
+`data_quality_result` PK `check_id`. **No accepted primary key is changed by this revision.** What
+follows fixes semantics that revision left ambiguous or self-contradictory. Every item below is a
+defect read out of the current source, not a new feature.
+
+| # | Defect (verified in source) | Evidence | Resolution |
+|---|---|---|---|
+| **M1** | The OBT joins labels by `company_version_key` **first**. That key is `sha256(f"{ticker}\|{valid_from}")[:16]` — it identifies a *dimension version*, not a period, and one version stays current across many quarters. `label_by_version` therefore keeps **one label per version** and hands it to every `report_period` that version covers | `obt_company_quarter_risk.py:18-29`, `keys.py:42` | Labels join on **`(ticker, report_period, label_version)`** only; `company_version_key` is never a label join key. §Label boundary versus predictor availability |
+| **M2** | The OBT drops every non-latest vintage (`if row.get("is_latest_vintage") is False: continue`), so the analyst/training table is latest-only — while its declared PK `(ticker, report_period, known_from_ts)` anticipates many vintages. The bi-temporal model dies at the last hop, which is the same class as D-3 | `obt_company_quarter_risk.py:24-25`, `sql/schema_evidence.sql:175-184` | The OBT **retains every vintage**; a separate view `gold.obt_company_quarter_risk_latest` serves analyst/DBeaver evidence. §OBT vintage retention |
+| **M3** | `merge_dim_company` compares each snapshot only against the **current** row. Re-merging a batch that has already been superseded re-emits the older snapshot: `company_version_key = hash(ticker\|created_ts)` **collides with the existing row's PK**, and `previous["valid_to_ts"] = valid_from` writes `valid_to_ts < valid_from_ts` — a **negative interval** | `dim_company.py:44-70`, `keys.py:31-42` | The merge becomes **idempotent and monotonic**: out-of-order snapshots are rejected, an interval is never closed backwards, an existing version key is never re-minted. §SCD2 replay and backfill |
+| **M4** | `daily_return` lags `close_price` over rows sorted by `(ticker, trading_date)` **only**. With the vintage axis a corrected close for one `trading_date` is a *second row*, so "previous close" is whichever vintage happened to sort last — a **future correction leaks into a past return**. The Spark window has the same defect (`partitionBy(ticker).orderBy(trading_date)`, no vintage tie-break, so `lag` is nondeterministic) | `fact_market_price.py:26-42`, `:57-58` | Every derived series is computed **after** as-of vintage selection collapses the vintage axis. §As-of vintage selection |
+| **M5** | `feat_company_financial_4q`, `_market_30d` and `_news_30d` **aggregate nothing** — each is a per-input-row projection, so "4q" and "30d" are false names; and PK `(ticker, event_timestamp)` breaks the moment one ticker's two `report_period`s share an instant (a backfill, or a Q4 + FY drop) | `pit.py:18-81`, `sql/schema_evidence.sql:197-205` | Feature rows become **as-of snapshots**: one row per `(ticker, cutoff_ts)`, aggregating a declared window. `report_period` becomes an attribute, so `(ticker, event_timestamp)` is unique by construction — the accepted PK is kept, not changed. §Feature window semantics |
+| **M6** | `statement_variant` defaults **any** unknown or missing value to `'consolidated'`; and it is part of the PK while `UNIQUE (ticker, report_period) WHERE is_latest_vintage` is *not* variant-scoped, so two variants of one period can both be flagged latest and the partial unique index fails | `fact_financial_statement.py:37-39`, `silver/core.py:41-92` | PK unchanged. A **closed enum plus a deterministic precedence rank** elects exactly one latest row per `(ticker, report_period)`; an unrecognized variant fails closed to `ops.failed_records`. §Statement variant precedence |
+| **M7** | `compute_distress_labels` sets `decision_ts = row["known_from_ts"]` — the knowledge time of the very statement the rule read. The guard tests `feature_time > label_time`, so that statement passes **at equality** and is admitted as its own predictor. The guard cannot fail on the leakage it exists to catch | `compute_distress_labels.py:234,287`, `leakage_guard.py:100` | **Two boundaries, two columns**: `decision_ts` = the predictor cutoff, `label_available_ts` = when the label became computable. §Label boundary versus predictor availability |
+| **M8** | Feast reads `fact_financial_statement`, `obt_company_quarter_risk` and `fact_market_price` with `timestamp_field="known_from_ts"`, **no `created_timestamp_column` at all**, from a **single `data.parquet`** object — while this plan declares the `feat_*` tables as the Feast contract carrying `event_timestamp` / `created_timestamp`, and D-15 removes the single-object layout | `feature_definitions.py:57-70,86-133`, `paths.py:13-21` | The `feat_*` tables are the Feast source of record; sources declare **both** reserved columns and read the **partitioned prefix**. §Feast source parity |
+| **M9** | `date_key` means three different things: knowledge date on statements (`date_key(known_from_ts)`), trading date on prices, event date on news/alerts — while `dim_date` carries the `fiscal_year` / `fiscal_quarter` that F13 moved *off* the fact. Joining a statement's `date_key` to `dim_date` yields the **filing** quarter, not the reported one, so F13 loses the attribute it was supposed to relocate | `fact_financial_statement.py:36`, `fact_market_price.py:33`, `fact_news_sentiment.py:42`, `fact_market_alert.py:42` | `date_key` is **role-declared per table**, and every fact carrying `report_period` also carries `report_period_end_date_key`, so fiscal attributes resolve from valid time. The fiscal-calendar assumption is declared and policed. §date_key roles and the fiscal-calendar guard |
+| **M10** | News and alert facts are deduplicated by **`event_id`** at runtime and asserted unique on `event_id` by the publisher and the DQ job — but the DDL declares `PRIMARY KEY (ticker, article_hash)` / `(ticker, alert_type, raised_ts)`, and **no builder emits `event_id`, `article_hash`, `published_ts` or `raised_ts`** into those tables | `fact_news_sentiment.py:26-34`, `fact_market_alert.py:26-34`, `lakehouse_publish.py:66-67`, `lakehouse_dq_job.py:105-113`, `sql/schema_evidence.sql:142-163` | The DDL adopts the **runtime grain `event_id`** plus the event-time column the builders actually emit. §Event grain reconciliation |
+| **M11** | `docs/07_data_contracts.md` documents objects that exist under **neither** the current nor the target names (`raw_company`, `raw_market_price`, `stg_company`, `stg_company_quarter`, a Silver-zone `fact_company_quarter_financials`), prices as `DOUBLE … VND`, periods as `(period_year, period_quarter)`, labels as `is_distressed BOOLEAN`, and `stg_company` PK `ticker` — contradicting F6, F17, F18 and the `report_period` decision. AC-P2-23 and AC-P4-27 cite `docs/architecture/data-contracts.md`, which **does not exist** | `docs/07_data_contracts.md:31,52,75,100,123,149,279,300,320`, filesystem | An explicit **legacy → target mapping** is migrated into `docs/architecture/data-contracts.md` and the legacy file is retired in the same commit. §Legacy contract migration |
+
+Ownership of the fixes: **P2 owns the contract, the DDL and the pure-Python reference
+implementation** (including the `*_spark` transform functions that live under `src/transforms/`);
+**P4 owns the Spark job wiring** in `src/jobs/` and must mirror P2's semantics, with parity asserted
+(AC-P2-38); **P5 consumes** the `feat_*` snapshot contract and owns the Feast registry, TTL and
+materialization (P5 §Feast source parity, §TTL policy).
+
 ## Overview
 
 Fix the data model. Source-only; runs against the local Docker Compose lakehouse, no GKE capacity
@@ -82,8 +112,9 @@ again.
     **One identifier for this axis project-wide** (F3).
   - `fact_financial_statement` grain = `(ticker, report_period, statement_variant, known_from_ts)`,
     declared as a **real PRIMARY KEY** in the graded ERD, not only as a DQ assertion (F7).
-  - `is_latest_vintage` is a **derived** boolean, enforced by a partial unique index, not a filter
-    applied at write time.
+  - `is_latest_vintage` is a **derived** boolean, enforced by a partial unique index, and elected by
+    a **deterministic precedence** across `statement_variant` so that exactly one row per
+    `(ticker, report_period)` carries it (M6).
   - `company_key` is deleted from all fact and feature tables. **`company_version_key` is retained**
     as the `dim_company` PK and the fact join key. **`ticker` is the declared durable key** — no
     separate `company_durable_key` column is created (U-2) — and stays a natural-key attribute (F1).
@@ -107,12 +138,30 @@ again.
     normalization it applied. The unit is a property of *which adapter answered*, not of "vnstock"
     (U-1d) — `configs/collector_config.yaml` lists four fallback sources whose units are unverified.
   - Bronze tables are prefixed **`raw_`** and Silver tables **`stg_`** (F18, mini row 43).
-  - `feat_*.event_timestamp = known_from_ts` is a **design decision**, not a fallback — Feast's
-    default tie-break selects the newest `created_timestamp`, which is precisely the leakage this
-    model exists to prevent (F14).
+  - `feat_*` tables carry **both** Feast reserved columns: `event_timestamp = known_from_ts` (a
+    design decision, not a fallback — Feast's default tie-break selects the newest
+    `created_timestamp`, which is precisely the leakage this model exists to prevent, F14) and
+    `created_timestamp` = the ingest wall clock. Feast sources point at the **`feat_*` partitioned
+    prefixes**, not at facts and not at a single `data.parquet` (M8).
   - Gold is partitioned; `src/io/paths.py` no longer resolves to a single `data.parquet`.
   - `scripts/build_schema_evidence.py` loads **real** Gold output, can fail, and asserts a NULL-rate
     ceiling on every nullable FK column (F16).
+  - `feat_*` rows are **as-of snapshots**: one row per `(ticker, cutoff_ts)` aggregating a declared
+    window, with the window's observation count and a completeness flag on the row (M5).
+  - The label carries **two distinct timestamps** — `decision_ts` (the predictor cutoff) and
+    `label_available_ts` (when the label became computable) — and is joined on
+    `(ticker, report_period, label_version)`, never on `company_version_key` (M1, M7).
+  - `gold.obt_company_quarter_risk` retains **every vintage**; `gold.obt_company_quarter_risk_latest`
+    is the latest-vintage view (M2).
+  - `merge_dim_company` is **idempotent under replay and safe under backfill**: no duplicate
+    `company_version_key`, no interval where `valid_to_ts < valid_from_ts` (M3).
+  - Every fact declares the **role** its `date_key` plays, and every fact carrying `report_period`
+    also carries `report_period_end_date_key` (M9). The fiscal-calendar assumption is stated and
+    checked, not implied.
+  - `fact_market_alert` and `fact_news_sentiment` declare the **`event_id`** grain the builders,
+    publisher and DQ job already use (M10).
+  - `docs/architecture/data-contracts.md` exists, carries the legacy → target mapping, and
+    `docs/07_data_contracts.md` is retired in the same commit (M11).
 - Non-functional: contract version bumped to `v2` in `ops.schema_version_registry` — the mechanism
   already exists and has never been used for its purpose; `v1` rows are retained, not deleted.
   The naming convention is written down **and linted**, not merely described (F10).
@@ -186,6 +235,66 @@ restatement in Mar-2024 to 120bn; the firm enters distress in Q4-2024. A model t
 figure stamped as available in 2023 has been handed the answer. One time axis cannot encode two
 independent facts.
 
+### SCD2 replay and backfill (M3) — idempotent, monotonic, never a negative interval
+
+`merge_dim_company` today reads only the **current** row per ticker, so it cannot see that a
+snapshot it is about to apply belongs *before* an interval that is already closed. Two concrete
+failures, both reachable from a re-run:
+
+```
+batch 1: {AAA, name="Alpha",  created_ts=t1}   → version hash(AAA|t1), [t1, ∞), is_current
+batch 2: {AAA, name="Alpha2", created_ts=t2}   → hash(AAA|t1) closed at t2; hash(AAA|t2) current
+replay batch 1 (same rows, t1 < t2):
+        tracked fields differ from the current row  → "changed"
+        emits company_version_key = hash(AAA|t1)    → DUPLICATE PRIMARY KEY
+        sets  hash(AAA|t2).valid_to_ts = t1         → valid_to_ts < valid_from_ts (NEGATIVE)
+        and marks the OLDEST row is_current         → uq_dim_company_current now names the wrong row
+```
+
+Rules the rewritten merge obeys, in this order:
+
+```
+1  WATERMARK   a snapshot whose created_ts <= the ticker's max(valid_from_ts) is NOT a new version.
+               If its tracked attributes match the version in force at that instant → no-op (this
+               is what makes replay idempotent). If they differ → ops.failed_records with reason
+               `late_scd2_snapshot`; history is never rewritten in place.
+2  IDENTITY    company_version_key is minted only for a valid_from_ts that does not already exist
+               for that ticker. A collision is an error, never an overwrite.
+3  INTERVAL    closing an interval requires new.valid_from_ts > previous.valid_from_ts; the writer
+               asserts valid_to_ts > valid_from_ts on every row it closes.
+4  CURRENCY    exactly one is_current row per ticker, and it is the one with max(valid_from_ts)
+               (uq_dim_company_current, F1).
+5  FLAP        an A → B → A attribute sequence produces THREE versions with three distinct
+               valid_from_ts values; it never reuses the first version's key.
+```
+
+Backfilling genuinely older history (a corrected listing date for a period already closed) is a
+**rebuild**, not a merge: the ticker's history is recomputed from the full ordered snapshot set and
+rewritten as one transaction, so intervals stay contiguous and keys stay stable. That path is
+explicit and asserted (AC-P2-27), not a side effect of re-running the daily merge.
+
+### As-of vintage selection (M4) — one read semantics for every fact
+
+```
+as_of_ts        the knowledge instant a read is taken at (a training cutoff, a request, or the
+                arriving row's own known_from_ts when a stored derived column is computed)
+as-of vintage   per business key: the row with the GREATEST known_from_ts <= as_of_ts
+latest vintage  the as-of vintage at as_of_ts = now  ⇒ is_latest_vintage
+
+RULE  every derived series — returns, deltas, rolling windows, ratios across periods — is computed
+      AFTER as-of selection has collapsed the vintage axis to one row per business key.
+      Lagging across vintages is forbidden; a stored derived column is computed at the arriving
+      row's own known_from_ts, so each vintage carries the value that was knowable when it landed.
+```
+
+`fact_market_price.daily_return` is the load-bearing case. Under the rule, the vintage row for
+trading day *D* takes its previous close from the as-of vintage of the previous **trading** day at
+`as_of_ts = ` that row's own `known_from_ts` — so a correction that arrives later cannot change a
+return that was already published, and the corrected vintage gets its own return row. The Spark
+window gains the same total order (`partitionBy(ticker, trading_date)` for selection, then
+`orderBy(trading_date)` over the selected rows), removing the nondeterministic `lag` at
+`fact_market_price.py:57-58`. Regression case AC-P2-28 pins the numbers.
+
 ### Grain, the vintage flag, and real constraints (F7)
 
 ```
@@ -209,6 +318,45 @@ duality is what makes `build_schema_evidence.py` falsifiable under O-5.
 `statement_variant` is part of the grain for `fact_financial_statement` **only**. `fact_market_price`
 and `fact_market_alert` have no variant concept; their grain is declared per table below.
 
+### Statement variant precedence (M6) — deterministic, PK unchanged
+
+The accepted PK keeps `statement_variant`, and the accepted partial unique index is *not*
+variant-scoped. Both stay. The conflict between them is resolved by making the **election** of
+`is_latest_vintage` total, not by widening the index or shrinking the PK.
+
+```
+CLOSED ENUM (four tokens = the accepted {consolidated, separate} × {audited, unaudited})
+  statement_variant     variant_rank    meaning
+  consolidated_audited       1          group accounts, auditor signed  ← preferred
+  consolidated_unaudited     2          group accounts, management figures
+  separate_audited           3          parent-only accounts, auditor signed
+  separate_unaudited         4          parent-only, management figures
+
+SILVER dedup key = (ticker, report_period, statement_variant) × known_from_ts
+  → all four variants and all vintages survive; the accepted PK is exactly this tuple
+
+ELECTION of is_latest_vintage, per (ticker, report_period) — a total order, no ties possible:
+  ROW_NUMBER() OVER (
+    PARTITION BY ticker, report_period
+    ORDER BY known_from_ts DESC,     -- newest knowledge first
+             variant_rank ASC,       -- audited group accounts beat management parent accounts
+             created_ts DESC,        -- newest ingest of the same variant+vintage
+             statement_variant ASC   -- final lexical tie-break; guarantees determinism
+  ) = 1
+  → exactly one row per (ticker, report_period) ⇒ uq_ffs_latest holds with the PK untouched
+```
+
+`variant_rank` is **derived from the enum, not stored** — a stored rank would be a second source of
+truth for a four-value lookup. Precedence rationale: audited figures supersede management figures
+for the same period because the audit is the later, authoritative statement of the same facts, and
+consolidated accounts are the basis of the distress rules (group leverage, not parent-only).
+
+Fail-closed replacement for the `or "consolidated"` default (`fact_financial_statement.py:37-39`):
+the legacy nullable `statement_type` (`schema_registry.py:127`) maps through an **explicit table in
+the v2 contract**; a value that is absent, empty, or unmapped routes the row to
+`ops.failed_records` with `failure_reason = 'unknown_statement_variant'`. It is never defaulted,
+because defaulting a *separate* statement to *consolidated* silently doubles group leverage.
+
 ### Date and fiscal period — stop denormalising onto the fact (F12, F13)
 
 `gold.dim_date` currently has two columns (`schema_evidence.sql:58-61`): `date_key`, `calendar_date`.
@@ -230,6 +378,50 @@ Consequence: D-9's cross-field consistency check becomes unnecessary, because th
 rather than policed. `dim_date` generation is now an explicit P2 deliverable — the previous revision
 declared a foreign key into it (`schema_evidence.sql:64`) and an AC demanding zero orphans, without
 owning the table that has to be populated.
+
+### `date_key` roles and the fiscal-calendar guard (M9)
+
+`date_key` is a **role-playing** foreign key, and the role differs per fact. That is legitimate
+Kimball practice, but only when the role is declared — today it is not, which is why a statement's
+`date_key` (its *filing* date, `fact_financial_statement.py:36`) resolves to the filing quarter's
+fiscal attributes and F13's relocation of `fiscal_year` / `fiscal_quarter` silently loses the
+reported period.
+
+| Table | `date_key` role | Source expression | Also declares |
+|---|---|---|---|
+| `fact_financial_statement` | **knowledge date** — when this vintage became knowable | `known_from_ts::date` | `report_period_end_date_key` (valid time) |
+| `obt_company_quarter_risk` | **knowledge date** of the statement vintage the row is built from | `known_from_ts::date` | `report_period_end_date_key` |
+| `fact_market_price` | **observation date** — the trading day | `trading_date` | — (no report period exists) |
+| `fact_market_alert` | **event date** | `event_timestamp::date` | — |
+| `fact_news_sentiment` | **event date** — publication/arrival | `event_timestamp::date` | — |
+| `fact_distress_label` | **report-period end date** — the label's own grain is valid time | `report_period_end_ts::date` | — |
+
+So: knowledge-date roles answer "when could this be known", valid-time roles answer "which period
+does this describe", and **fiscal attributes are only ever read through a valid-time role**. A
+consumer that needs the fiscal quarter of a statement joins `report_period_end_date_key`, never
+`date_key`. The naming stays `date_key` (it is already in the graded ERD and in AC-P2-15 / AC-P2-20)
+with the role recorded in the data dictionary and in the column comment.
+
+**Fiscal-calendar assumption, declared and policed.** `dim_date` is generated with
+`fiscal_year = year(calendar_date)` and `fiscal_quarter = quarter(calendar_date)` — i.e. the fiscal
+year equals the calendar year. Grounds: the free tier returns statement periods as calendar labels
+only (`2026-Q2`, `2025-Q4`; phase-04 §Free-tier data ceiling) and exposes **no fiscal-year-end
+field**, and `exclude_financial_sector: true` removes the sector most likely to diverge. The
+assumption is therefore not inferrable from the source and is instead:
+
+```
+1  ASSERTED at generation   dim_date rows satisfy fiscal_year = year(calendar_date)
+                            and fiscal_quarter = quarter(calendar_date); the generator fails
+                            if a future fiscal-calendar table is introduced without updating it
+2  CHECKED per row          a report_period whose derived period end is not a calendar quarter end
+                            routes to ops.failed_records, reason `fiscal_calendar_mismatch`
+3  RECORDED                 ADR-017 states the assumption, its evidence, and that a per-issuer
+                            fiscal-year-end registry would replace it (same deferral shape as the
+                            Tier-2 entity registry, U-2)
+```
+
+A non-calendar fiscal year is therefore a *rejected row with a named reason*, never a silently
+mislabelled quarter.
 
 ### Feast contract — the default is the adversary (F14)
 
@@ -255,6 +447,150 @@ The existing `feat_company_unified` CHECK (`schema_evidence.sql:102`)
 `feature_event_timestamp <= event_timestamp` is replaced: with a knowledge axis the correct invariant
 compares the feature's knowledge time to the **label decision boundary**, which lives on
 `fact_distress_label.decision_ts`.
+
+### Feast source parity (M8) — the contract is the `feat_*` table, not the fact
+
+The live registry (`feature_definitions.py:57-70,86-133`) contradicts the paragraph above in three
+ways at once, and each one defeats a different part of the design:
+
+| Live | Consequence | Target |
+|---|---|---|
+| `FileSource(path=<fact/obt single data.parquet>)` for `fact_financial_statement`, `obt_company_quarter_risk`, `fact_market_price` | Feast joins the **raw fact**, so it sees every vintage as an independent row and the `feat_*` CHECK never applies; and the path is the single-object layout D-15 deletes | sources point at the **`feat_*` partitioned prefix** (`feat_company_financial_4q`, `_market_30d`, `_news_30d`, `_unified`) |
+| `timestamp_field="known_from_ts"` | works, but the graded column and the CHECK are on `event_timestamp`; two names for Feast's join axis reopens F3 | `timestamp_field="event_timestamp"`, with the ERD CHECK `event_timestamp = known_from_ts` keeping the two provably equal |
+| **no `created_timestamp_column`** | Feast has no declared tie-break, so retry duplicates of one ingest are resolved arbitrarily — and the DDL's `created_timestamp NOT NULL` column is written by nobody (`pit.py` emits `created_ts`) | `created_timestamp_column="created_timestamp"`; the builders emit **both** reserved names, and `created_ts` is not a Feast name |
+
+P2 owns the two reserved columns and the CHECK; **P5 owns the registry, the FileSource wiring and
+the TTL table**, and P5 §TTL policy carries the FeatureView ↔ `feat_*` table ↔ TTL mapping.
+
+### Label boundary versus predictor availability (M1, M7)
+
+A distress label produced by a rule over a statement becomes *knowable* exactly when that statement
+is filed. Setting the guard's boundary to that instant (`decision_ts = known_from_ts`,
+`compute_distress_labels.py:234,287`) therefore admits the label's own source row as a predictor —
+the guard compares `feature_time > label_time` (`leakage_guard.py:100`) and equality passes. The two
+concepts must be two columns:
+
+```
+report_period_end_ts   valid-time close of the reported period      (derived via dim_date)
+decision_ts            PREDICTOR CUTOFF := report_period_end_ts     ← the guard's boundary
+label_available_ts     max(known_from_ts) over the statement vintages the rule actually read
+                       — when the label became computable; a publish/schedule gate, never a
+                       predictor boundary
+
+INVARIANTS
+  feature.known_from_ts <= label.decision_ts            enforced by the guard (LeakageError)
+  label.decision_ts     <= label.label_available_ts     enforced by a CHECK + DQ rule
+  the statement that PRODUCED the label is filed after the period end, so its known_from_ts
+  is strictly greater than decision_ts and it can never be its own predictor
+```
+
+**Why period end is the conservative default.** The tightest correct cutoff would be "the instant
+before the label's source filing", which requires a per-issuer filing calendar the source does not
+expose (phase-04 §Free-tier data ceiling). Period end is the latest instant that is provably free of
+the label's own information for every issuer, and it is derivable from `report_period` alone. It is
+deliberately conservative: it also excludes same-period market and news features published between
+period end and the filing. Any relaxation is a modelling decision that belongs to P7/P11 with its
+own evidence, and it must move `decision_ts` explicitly in the contract — not by widening a
+comparison operator.
+
+**Join key.** The label is joined on `(ticker, report_period, label_version)`. `company_version_key`
+is not period-scoped (`keys.py:42`) and is therefore never a label join key (M1); it remains the
+fact→dimension join key. `label_version` is pinned per training run so a re-labelled cohort cannot
+silently change a frozen dataset.
+
+### Feature window semantics and missing history (M5)
+
+```
+cutoff_ts   a knowledge instant at which a snapshot is taken. The snapshot set per ticker =
+            the distinct known_from_ts values of that ticker's own inputs (statement filings for
+            financial_4q, trading days for market_30d, article arrivals for news_30d) plus any
+            explicit training cutoff requested by P7/P11.
+GRAIN       one row per (ticker, cutoff_ts)
+            event_timestamp = known_from_ts = cutoff_ts   ⇒ PK (ticker, event_timestamp) is unique
+            report_period / trading_date / article identity are ATTRIBUTES, not key parts
+INPUTS      each window reads the AS-OF VINTAGE at cutoff_ts (§As-of vintage selection), so a
+            later correction cannot alter a snapshot that already exists
+```
+
+| Feature table | Window | Aggregates | Minimum history | Below the minimum |
+|---|---|---|---|---|
+| `feat_company_financial_4q` | the 4 most recent distinct `report_period`s whose as-of vintage is known at `cutoff_ts` | per ratio: latest value, 4-period mean, QoQ delta, YoY delta | **4 distinct periods** | every aggregate `NULL`; `window_period_count` recorded; `feature_completeness = 'insufficient'`; `training_eligible = false` |
+| `feat_company_market_30d` | trailing **30 calendar days** ending at `cutoff_ts`, as-of vintage per `trading_date` | mean and last close, realized volatility, cumulative return, max drawdown, mean volume | **18 trading days** (≈ 60 % of the ~22 expected in 30 calendar days) | same rule; `window_trading_day_count` recorded |
+| `feat_company_news_30d` | trailing **30 calendar days** by `known_from_ts` | article count, mean and minimum sentiment, risk-keyword count | **none** — zero articles is a real observation, not missing data | `news_article_count = 0`; score aggregates `NULL`; `feature_completeness = 'empty_window'` |
+| `feat_company_unified` | the join of the three above at one `cutoff_ts` | pass-through of each leg | every leg present | the missing leg's columns `NULL`; `feature_completeness` is the **worst** of the legs |
+
+Conservative defaults, stated once and applied everywhere:
+
+```
+NULL, never zero-fill        a missing ratio is unknown, not zero (0.0 debt_to_asset reads as healthy)
+No forward-fill past TTL     a stale value never answers a query beyond its table's TTL (P5 §TTL)
+No imputation in the feature layer   imputation is a model decision; it belongs to P7/P11 where it
+                                     is versioned with the model, not silently baked into Gold
+Partial windows are labelled, not averaged   window_*_count is on every row, so a consumer can
+                                     reject a thin window instead of trusting a mean of two points
+```
+
+### OBT vintage retention (M2)
+
+```
+gold.obt_company_quarter_risk          ALL vintages. PK (ticker, report_period, known_from_ts) —
+                                       unchanged, and now actually multi-row as it was declared to be
+gold.obt_company_quarter_risk_latest   VIEW: WHERE is_latest_vintage  ← analyst + DBeaver evidence
+                                       (mini row 42 renders relationships from the base tables)
+```
+
+The training consumer reads the base table with an explicit `as_of_ts`; the human consumer reads the
+view. Dropping non-latest rows at build time (`obt_company_quarter_risk.py:24-25`) is exactly D-3
+one layer later: the row that proves the restatement existed is the row being deleted.
+
+### Event grain reconciliation (M10)
+
+The runtime already agrees with itself and only the DDL disagrees: the builders key on `event_id`
+(`fact_news_sentiment.py:31-34`, `fact_market_alert.py:31-34`), the publisher asserts uniqueness on
+`event_id` (`lakehouse_publish.py:66-67`), the DQ job checks `event_id` uniqueness
+(`lakehouse_dq_job.py:105-113`), and `event_id` is a stable content hash of the event payload
+(`streaming/events.py:17-20`). The DDL's `article_hash` / `(alert_type, raised_ts)` columns are
+produced by nothing.
+
+```
+fact_market_alert    PRIMARY KEY (event_id)        + UNIQUE (ticker, alert_type, event_timestamp)
+fact_news_sentiment  PRIMARY KEY (event_id)        + INDEX  (ticker, event_timestamp)
+```
+
+`event_id` is the grain because it is the deduplication key the stream contract already guarantees
+(`flink_contract.py:138-142`, `problem_factory.py:110-133` injects colliding `event_id`s precisely to
+be deduplicated). The secondary UNIQUE on alerts keeps the business rule "one alert of a type per
+ticker per event instant" declarable, which is what the old PK was reaching for.
+
+### Legacy contract migration (M11) — truthful, not a fresh document
+
+`docs/07_data_contracts.md` is not merely out of date; it describes a *different* model. Every row
+below is a real divergence, and the mapping is migrated into `docs/architecture/data-contracts.md`
+so no reader is left believing the old names:
+
+| Legacy object / field (`docs/07_data_contracts.md`) | Target | Divergence |
+|---|---|---|
+| `raw_company` :31 | `bronze.raw_companies` | singular; F18 prefix matches only by coincidence |
+| `raw_financial_statement` :52 | `bronze.raw_financial_statements` | singular |
+| `raw_market_price` :75 | `bronze.raw_market_prices_daily` | singular **and** drops `_daily` |
+| `stg_company` :100, PK `ticker` | `silver.stg_companies`, PK `(ticker, created_ts)` | legacy PK makes SCD2 structurally impossible (F6) |
+| `stg_company_quarter` :123 | `silver.stg_financial_statements` | legacy pivots long→wide in Silver and has no vintage axis |
+| `fact_company_quarter_financials` :149 (in the **Silver** zone) | `gold.fact_financial_statement` | a fact documented in Silver; zone violation |
+| `(period_year, period_quarter)` :130,156,320 | `report_period` | the accepted single period identifier (D-9) |
+| `open/high/low/close DOUBLE … VND` :92-95 | `DECIMAL(18,0)` đồng | wrong by 1000× (F17) |
+| `total_assets … DOUBLE … VND` :141-147 | `DECIMAL(18,0)` đồng | float money; unit unqualified (U-1) |
+| Source "TCBS market price API" :80 | vnstock v4 (KBS / VCI) | TCBS REST paths 404 (phase-04 §Source-data reality) |
+| `fact_market_alert` PK `(ticker, alert_date, alert_type)` :279 | PK `event_id` | no `alert_date` is produced (M10) |
+| `fact_news_sentiment` PK `(ticker, news_date)` :300, `article_count` | PK `event_id`; counts live on `feat_company_news_30d` | grain is the event, not the day (M10) |
+| `fact_distress_label` `is_distressed BOOLEAN` :331 | `distress_label SMALLINT` + `decision_ts` + `label_available_ts` | a boolean cannot carry the two boundaries (M7) |
+| every legacy table: `Partition columns \| none` | partitioned Gold | contradicts AC-P2-12 |
+| no knowledge-time column anywhere | `known_from_ts` on every fact | the legacy doc predates the bi-temporal model |
+
+Retirement is part of the same commit: `docs/architecture/data-contracts.md` is created **with** this
+mapping as its §Migration section, and `docs/07_data_contracts.md` is **deleted** — not left as a
+stale second source of truth, and not silently overwritten as though it had always said this.
+`docs/architecture/feature-contracts.md` already exists (P5 owns its TTL content), so P2 adds only
+the `feat_*` column contract to it and does not claim to create it.
 
 ### Money and numeric types (F11, U-1) — resolved with measurement, not judgement
 
@@ -527,86 +863,179 @@ CREATE TABLE gold.dim_date (
 CREATE TABLE gold.fact_financial_statement (
     company_version_key VARCHAR NOT NULL REFERENCES gold.dim_company(company_version_key),
     date_key            INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+                        -- ROLE: knowledge date = known_from_ts::date (M9)
+    report_period_end_date_key INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+                        -- ROLE: valid time. Fiscal attributes are read ONLY through this key (M9)
     ticker              VARCHAR NOT NULL,
     report_period       VARCHAR NOT NULL,
-    statement_variant   VARCHAR NOT NULL,
+    statement_variant   VARCHAR NOT NULL,       -- closed enum, 4 tokens (M6)
     known_from_ts       TIMESTAMPTZ NOT NULL,
-    is_latest_vintage   BOOLEAN NOT NULL,
+    is_latest_vintage   BOOLEAN NOT NULL,       -- elected by the total order in §Statement variant precedence
     total_assets        DECIMAL(18,0),
     total_liabilities   DECIMAL(18,0),
     total_equity        DECIMAL(18,0),
+    source_name         VARCHAR NOT NULL,       -- which adapter answered (U-1d)
+    source_unit         VARCHAR NOT NULL,       -- unit as delivered, before normalization (U-1d)
     created_ts          TIMESTAMPTZ NOT NULL,
-    PRIMARY KEY (ticker, report_period, statement_variant, known_from_ts)
+    PRIMARY KEY (ticker, report_period, statement_variant, known_from_ts),
+    CHECK (statement_variant IN ('consolidated_audited','consolidated_unaudited',
+                                 'separate_audited','separate_unaudited'))
 );
 CREATE UNIQUE INDEX uq_ffs_latest ON gold.fact_financial_statement (ticker, report_period)
-    WHERE is_latest_vintage;
+    WHERE is_latest_vintage;                    -- one row per period ACROSS variants (M6)
 
 CREATE TABLE gold.fact_market_price (
     company_version_key VARCHAR NOT NULL REFERENCES gold.dim_company(company_version_key),
     date_key            INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+                        -- ROLE: observation date = trading_date (M9)
     ticker              VARCHAR NOT NULL,
     trading_date        DATE NOT NULL,
     close_price         DECIMAL(18,0),         -- đồng, normalized at the adapter (F17)
+    daily_return        DECIMAL(18,6),         -- computed at THIS row's known_from_ts against the
+                                               -- as-of vintage of the previous trading day (M4)
+    source_name         VARCHAR NOT NULL,
+    source_unit         VARCHAR NOT NULL,
     known_from_ts       TIMESTAMPTZ NOT NULL,
     created_ts          TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (ticker, trading_date, known_from_ts)
 );
 
+-- Event grain adopted from the runtime, publisher and DQ job (M10).
 CREATE TABLE gold.fact_market_alert (           -- was missing from the ERD (F8)
+    event_id            VARCHAR PRIMARY KEY,    -- stable content hash (streaming/events.py:17-20)
     company_version_key VARCHAR NOT NULL REFERENCES gold.dim_company(company_version_key),
     date_key            INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+                        -- ROLE: event date = event_timestamp::date (M9)
     ticker              VARCHAR NOT NULL,
     alert_type          VARCHAR NOT NULL,
-    raised_ts           TIMESTAMPTZ NOT NULL,
+    event_timestamp     TIMESTAMPTZ NOT NULL,   -- when the alert fired (the builders' own column)
     known_from_ts       TIMESTAMPTZ NOT NULL,
     created_ts          TIMESTAMPTZ NOT NULL,
-    PRIMARY KEY (ticker, alert_type, raised_ts)
+    UNIQUE (ticker, alert_type, event_timestamp)  -- one alert of a type per ticker per instant
 );
 
 CREATE TABLE gold.fact_news_sentiment (         -- was missing from the ERD (F8)
+    event_id            VARCHAR PRIMARY KEY,
     company_version_key VARCHAR NOT NULL REFERENCES gold.dim_company(company_version_key),
     date_key            INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+                        -- ROLE: event date = event_timestamp::date (M9)
     ticker              VARCHAR NOT NULL,
-    article_hash        VARCHAR NOT NULL,
     sentiment_score     DECIMAL(18,6),
-    published_ts        TIMESTAMPTZ NOT NULL,
+    risk_keyword_flag   BOOLEAN NOT NULL,
+    severity_score      DECIMAL(18,6),
+    event_timestamp     TIMESTAMPTZ NOT NULL,   -- publication / arrival instant
     known_from_ts       TIMESTAMPTZ NOT NULL,
-    created_ts          TIMESTAMPTZ NOT NULL,
-    PRIMARY KEY (ticker, article_hash)
+    created_ts          TIMESTAMPTZ NOT NULL
 );
+CREATE INDEX ix_fns_ticker_event ON gold.fact_news_sentiment (ticker, event_timestamp);
 
 CREATE TABLE gold.fact_distress_label (         -- renamed from distress_labels (F8, F9)
-    ticker         VARCHAR NOT NULL,
-    report_period  VARCHAR NOT NULL,
-    label_version  VARCHAR NOT NULL,
-    distress_label SMALLINT NOT NULL,
-    decision_ts    TIMESTAMPTZ NOT NULL,        -- the boundary known_from_ts is compared against
-    created_ts     TIMESTAMPTZ NOT NULL,
-    PRIMARY KEY (ticker, report_period, label_version)
+    ticker             VARCHAR NOT NULL,
+    report_period      VARCHAR NOT NULL,
+    label_version      VARCHAR NOT NULL,
+    distress_label     SMALLINT NOT NULL,
+    date_key           INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+                       -- ROLE: report-period end date (M9)
+    report_period_end_ts TIMESTAMPTZ NOT NULL,  -- valid-time close of the reported period
+    decision_ts        TIMESTAMPTZ NOT NULL,    -- PREDICTOR CUTOFF := report_period_end_ts (M7)
+    label_available_ts TIMESTAMPTZ NOT NULL,    -- when the label became computable (M7)
+    label_source       VARCHAR NOT NULL,        -- rule id / provenance
+    training_eligible  BOOLEAN NOT NULL,
+    created_ts         TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (ticker, report_period, label_version),
+    CHECK (decision_ts = report_period_end_ts),
+    CHECK (decision_ts <= label_available_ts)
 );
 
+-- OBT retains EVERY vintage (M2); the latest-only projection is a view, not a filter at write time.
 CREATE TABLE gold.obt_company_quarter_risk (
     company_version_key VARCHAR NOT NULL REFERENCES gold.dim_company(company_version_key),
     date_key            INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
+                        -- ROLE: knowledge date of the statement vintage this row is built from (M9)
+    report_period_end_date_key INTEGER NOT NULL REFERENCES gold.dim_date(date_key),
     ticker              VARCHAR NOT NULL,
     report_period       VARCHAR NOT NULL,
     known_from_ts       TIMESTAMPTZ NOT NULL,
+    is_latest_vintage   BOOLEAN NOT NULL,
+    statement_variant   VARCHAR NOT NULL,
     debt_to_asset       DECIMAL(18,6),
-    distress_label      SMALLINT,
+    current_ratio       DECIMAL(18,6),
+    roa                 DECIMAL(18,6),
+    label_version       VARCHAR,                -- label joined on (ticker, report_period, label_version)
+    distress_label      SMALLINT,               -- NULL when no label exists for this period (M1)
+    label_decision_ts   TIMESTAMPTZ,            -- carried through so the guard has both sides
+    label_available_ts  TIMESTAMPTZ,
+    created_ts          TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (ticker, report_period, known_from_ts)
 );
+CREATE VIEW gold.obt_company_quarter_risk_latest AS
+    SELECT * FROM gold.obt_company_quarter_risk WHERE is_latest_vintage;
 
--- GOLD features: Feast axis is knowledge time (F14); real PKs (F7).
-CREATE TABLE gold.feat_company_unified (
-    ticker            VARCHAR NOT NULL,
-    event_timestamp   TIMESTAMPTZ NOT NULL,     -- RESERVED Feast name = known_from_ts
-    created_timestamp TIMESTAMPTZ NOT NULL,     -- RESERVED Feast tie-break
-    known_from_ts     TIMESTAMPTZ NOT NULL,
-    report_period     VARCHAR NOT NULL,
+-- GOLD features: as-of snapshots, one row per (ticker, cutoff_ts) (M5); Feast axis is knowledge
+-- time (F14); both reserved Feast names are declared and written (M8).
+CREATE TABLE gold.feat_company_financial_4q (
+    ticker              VARCHAR NOT NULL,
+    event_timestamp     TIMESTAMPTZ NOT NULL,   -- RESERVED Feast join axis = known_from_ts = cutoff_ts
+    created_timestamp   TIMESTAMPTZ NOT NULL,   -- RESERVED Feast tie-break = ingest wall clock
+    known_from_ts       TIMESTAMPTZ NOT NULL,
+    as_of_report_period VARCHAR NOT NULL,       -- newest period inside the window; ATTRIBUTE, not key
+    window_period_count SMALLINT NOT NULL,      -- periods actually aggregated (M5)
+    feature_completeness VARCHAR NOT NULL,      -- 'complete' | 'insufficient'
+    debt_to_asset_latest  DECIMAL(18,6),
+    debt_to_asset_mean_4q DECIMAL(18,6),
+    debt_to_asset_qoq     DECIMAL(18,6),
+    debt_to_asset_yoy     DECIMAL(18,6),
+    -- current_ratio / roa / roe / ebit_interest_coverage / z_score carry the same four aggregates
+    PRIMARY KEY (ticker, event_timestamp),
+    CHECK (event_timestamp = known_from_ts),
+    CHECK (feature_completeness IN ('complete','insufficient'))
+);
+
+CREATE TABLE gold.feat_company_market_30d (
+    ticker              VARCHAR NOT NULL,
+    event_timestamp     TIMESTAMPTZ NOT NULL,
+    created_timestamp   TIMESTAMPTZ NOT NULL,
+    known_from_ts       TIMESTAMPTZ NOT NULL,
+    window_start_date   DATE NOT NULL,          -- cutoff - 30 calendar days
+    window_end_date     DATE NOT NULL,          -- cutoff date; trading_date is NOT a key part (M5)
+    window_trading_day_count SMALLINT NOT NULL,
+    feature_completeness VARCHAR NOT NULL,
+    close_last          DECIMAL(18,0),
+    close_mean_30d      DECIMAL(18,0),
+    return_cum_30d      DECIMAL(18,6),
+    volatility_30d      DECIMAL(18,6),
+    max_drawdown_30d    DECIMAL(18,6),
+    volume_mean_30d     DECIMAL(18,0),
     PRIMARY KEY (ticker, event_timestamp),
     CHECK (event_timestamp = known_from_ts)
 );
--- feat_company_financial_4q / _market_30d / _news_30d follow the same shape.
+
+CREATE TABLE gold.feat_company_news_30d (
+    ticker              VARCHAR NOT NULL,
+    event_timestamp     TIMESTAMPTZ NOT NULL,
+    created_timestamp   TIMESTAMPTZ NOT NULL,
+    known_from_ts       TIMESTAMPTZ NOT NULL,
+    window_start_ts     TIMESTAMPTZ NOT NULL,
+    news_article_count  INTEGER NOT NULL,       -- 0 is an observation, not missing data (M5)
+    feature_completeness VARCHAR NOT NULL,      -- 'complete' | 'empty_window'
+    sentiment_mean_30d  DECIMAL(18,6),          -- NULL when the window is empty — never 0
+    sentiment_min_30d   DECIMAL(18,6),
+    risk_keyword_count  INTEGER NOT NULL,
+    PRIMARY KEY (ticker, event_timestamp),      -- article identity is NOT a key part (M5)
+    CHECK (event_timestamp = known_from_ts)
+);
+
+CREATE TABLE gold.feat_company_unified (
+    ticker              VARCHAR NOT NULL,
+    event_timestamp     TIMESTAMPTZ NOT NULL,
+    created_timestamp   TIMESTAMPTZ NOT NULL,
+    known_from_ts       TIMESTAMPTZ NOT NULL,
+    as_of_report_period VARCHAR,                -- attribute of the financial leg
+    feature_completeness VARCHAR NOT NULL,      -- worst of the three legs (M5)
+    -- pass-through columns of feat_company_financial_4q / _market_30d / _news_30d
+    PRIMARY KEY (ticker, event_timestamp),
+    CHECK (event_timestamp = known_from_ts)
+);
 ```
 
 Iceberg partitioning: `month(known_from_ts)` for statements, `day(trading_date)` for prices. Two
@@ -622,23 +1051,50 @@ supports partition evolution, so `month` → `day` stays available without a rew
 - Modify: `src/transforms/gold/dim_company.py` — **keep** `valid_from_ts`/`valid_to_ts`/`is_current`;
   add `company_name`, `listing_date` to the tracked set; **keep** `company_version_key`; drop
   `company_key`; **do not** emit a durable-key column — `ticker` fills that slot (U-2)
-- **Create**: `src/transforms/gold/dim_date.py` — generate 2015-01-01…2030-12-31 with fiscal
-  attributes; must cover every `date_key` any fact emits (F12, F13)
+- **Move and enrich**: `build_dim_date` already exists in `src/transforms/gold/dim_company.py:86-106`
+  and emits `quarter` / `year` / `is_weekend` — **not** the graded `fiscal_year`, `fiscal_quarter`,
+  `quarter_end_date`, `is_quarter_end`, `is_trading_day`. Move it to
+  `src/transforms/gold/dim_date.py`, generate 2015-01-01…2030-12-31 with the fiscal attributes,
+  assert the calendar-fiscal identity (M9), and cover every `date_key` any fact emits (F12, F13).
+  This is a move plus enrichment, not a green-field create
 - Modify: `src/transforms/gold/fact_financial_statement.py` — drop `company_key`; **keep and populate
   `company_version_key` by joining `dim_company` on `(ticker, known_from_ts)`**; add `known_from_ts`
   and `statement_variant`; drop `fiscal_year`/`fiscal_quarter`; **delete the
   `f"{fiscal_year}-01-01"` fallback and raise instead** (D-6)
-- Modify: `src/transforms/gold/fact_market_price.py`, `fact_market_alert.py`, `fact_news_sentiment.py`
-  — same key treatment; declare their own grain
-- Modify: `src/transforms/gold/obt_company_quarter_risk.py` — join on `company_version_key`, filter
-  the vintage axis
+- Modify: `src/transforms/gold/fact_market_price.py` — same key treatment; **as-of vintage selection
+  before the lag** so `daily_return` cannot read a future correction (M4); the Spark window gains the
+  same total order, removing the nondeterministic `lag` at `:57-58`
+- Modify: `src/transforms/gold/fact_market_alert.py`, `fact_news_sentiment.py` — keep the existing
+  `event_id` dedup (it is the declared grain, M10); emit `event_timestamp` as the event-time column
+  and stop implying `article_hash` / `raised_ts` / `published_ts`, which nothing produces
+- Modify: `src/transforms/gold/obt_company_quarter_risk.py` — **delete `label_by_version`**; join
+  labels on `(ticker, report_period, label_version)` (M1); **stop dropping non-latest vintages**
+  (M2) and carry `is_latest_vintage`, `label_decision_ts`, `label_available_ts`; the latest-only
+  projection moves to the `gold.obt_company_quarter_risk_latest` view
 - Modify: `src/transforms/silver/core.py`, `silver/spark.py` — dedup on the key **including**
   vintage; emit `is_latest_vintage`; `silver.stg_companies` retains snapshot history keyed
   `(ticker, created_ts)`; `_created_timestamp` **raises** instead of returning `datetime.min` (D-5)
-- Modify: `src/transforms/features/pit.py` — `_parse_timestamp` raises; PIT join filters to a
-  knowledge-time cutoff
+- Modify: `src/transforms/features/pit.py` — `_parse_timestamp` raises; the PIT join filters to a
+  knowledge-time cutoff; **`build_feat_company_financial_4q` / `_market_30d` / `_news_30d` become
+  real as-of window aggregations** with one row per `(ticker, cutoff_ts)`, `window_*_count` and
+  `feature_completeness` (M5); the builders emit **both** `event_timestamp` and `created_timestamp`
+  (M8), not `created_ts`
+- Modify: `src/transforms/gold/dim_company.py` — `merge_dim_company` becomes idempotent and
+  monotonic: watermark check, no re-minted `company_version_key`, no interval closed backwards, one
+  `is_current` per ticker; out-of-order snapshots route to `ops.failed_records`
+  (`late_scd2_snapshot`), and full-history rebuild is a separate explicit path (M3)
 - Modify: `src/ml/leakage_guard.py` — compare `feature.known_from_ts` against
-  `fact_distress_label.decision_ts`; raise on a missing timestamp instead of skipping the row
+  `fact_distress_label.decision_ts`; raise on a missing timestamp instead of skipping the row; the
+  alias list stops accepting `created_ts` as a feature axis (`leakage_guard.py:67-74`), because an
+  ingest wall clock is not a knowledge time
+- Modify: `src/transforms/compute_distress_labels.py` — `decision_ts` is the **report-period end**,
+  not the statement's `known_from_ts` (`:234,287`); add `label_available_ts`, `report_period_end_ts`
+  and `report_period` to the label row (M7)
+- Modify: `src/ml/label_pipeline.py` — the projected label row and its upsert key move from
+  `(ticker, event_timestamp, label_version)` to `(ticker, report_period, label_version)` so a label
+  cannot lose its period (`:29-30,59-70`, M1). **Shared-file note:** `src/ml/` is not in this
+  phase's `owns` list; this file and `leakage_guard.py` are P2 contract changes executed with the
+  same serialization rule the plan applies to `pyproject.toml` (see §Requested dependency changes)
 - Modify: `src/metadata/schema_registry.py` — v2 contracts; `report_period` as the single period
   identifier with `fiscal_year`/`fiscal_quarter` sourced from `dim_date`; `DECIMAL(18,0)` money /
   `DECIMAL(18,6)` ratio field types; a `source_unit` field on every money-bearing contract;
@@ -657,10 +1113,22 @@ supports partition evolution, so `month` → `day` stays available without a rew
 - Create: `sql/migrations/002_data_model_v2.sql`
 - Create: `sql/views/dim_company_sys.sql` — SQL:2011 alias view (`sys_start`/`sys_end`)
 - Create: `docs/architecture/data-model.md` §Naming Convention — the block above, verbatim
-- Create: `scripts/lint_naming_convention.py`, wired into `scripts/run_quality_gates.py` (F10)
+- **Already exists and is already wired**: `scripts/lint_naming_convention.py` implements the gold
+  prefix/singular rules, the `raw_`/`stg_` clause, the version-token ban, the `ops` `_at` ban and the
+  two reserved Feast names (`:9-15,109-155`), and runs as the `naming-convention` gate in
+  `scripts/run_lakehouse_quality_gates.py:34`. F10/F18 therefore need **no new script** — only the
+  renames themselves, plus re-running the existing gate. Nothing in this phase may claim to create it
+- Create: `docs/architecture/data-contracts.md` — the `feat_*` / fact column contract plus the
+  §Migration mapping from `docs/07_data_contracts.md` (M11); **delete** the legacy file in the same
+  commit. `docs/architecture/feature-contracts.md` already exists and is P5-owned; P2 adds only the
+  column contract to it
+- Create: `sql/views/obt_company_quarter_risk_latest.sql` — the latest-vintage view (M2)
 - Create: `tests/test_bitemporal_contract.py`, `tests/test_restatement_leakage.py`,
   `tests/test_naming_convention.py`, `tests/test_dim_date_coverage.py`
 - Restore: `tests/test_schema_evidence.py` — currently deleted; only the `.pyc` survives
+- Create: `tests/test_scd2_replay.py`, `tests/test_obt_label_join.py`,
+  `tests/test_as_of_return.py`, `tests/test_feature_window.py` — one regression per repaired defect
+  (AC-P2-26 … AC-P2-31); each must fail against today's code before the fix
 
 ## Implementation Steps
 
@@ -673,34 +1141,50 @@ supports partition evolution, so `month` → `day` stays available without a rew
    `DECIMAL(18,6)` ratios, a **`source_unit`** field on every money-bearing contract,
    `known_from_ts`, `statement_variant`; seed `v2` into `ops.schema_version_registry` alongside `v1`.
    Confirming against one live payload is a P4 step (AC-P4-25), not a P2 blocker.
-3. **Silver: vintage-preserving dedup** (1-2 d) — dedup key gains the vintage axis; emit
-   `is_latest_vintage`; `silver.stg_companies` keyed `(ticker, created_ts)` so SCD2 has history to read;
-   `_created_timestamp` raises on unparseable input. Verify Bronze replay is still idempotent and
-   that two vintages of one quarter both survive to Silver.
-4. **Gold: keys, dimensions, grain, partitioning** (2-3 d) — delete `company_key`; retain and
-   **populate** `company_version_key` on every fact; **no durable-key column** (U-2); build and populate
-   the enriched `dim_date`; drop `fiscal_year`/`fiscal_quarter` from facts; keep the SCD2 column
-   names and expand the tracked set; remove the `date_key` fiscal-year fallback; partition Gold by
-   `month(known_from_ts)` (statements) and `day(trading_date)` (prices).
-5. **PIT and leakage guard** (1-2 d) — PIT join takes a knowledge-time cutoff; the guard compares
-   `known_from_ts` to `fact_distress_label.decision_ts`; both raise on missing timestamps. The step-1
-   test must now pass, and must fail again if the vintage filter is removed.
+3. **Silver: vintage-preserving dedup and a safe SCD2 merge** (2 d) — dedup key gains the vintage
+   axis and `statement_variant`; `is_latest_vintage` is elected by the total order in §Statement
+   variant precedence; an unrecognized variant routes to `ops.failed_records`;
+   `silver.stg_companies` keyed `(ticker, created_ts)` so SCD2 has history to read;
+   `_created_timestamp` raises on unparseable input; `merge_dim_company` gains the watermark,
+   identity, interval, currency and flap rules (M3). Verify Bronze replay is still idempotent, that
+   two vintages of one quarter both survive to Silver, and that re-merging an already-superseded
+   snapshot changes nothing.
+4. **Gold: keys, roles, grain, partitioning** (3 d) — delete `company_key`; retain and **populate**
+   `company_version_key` on every fact; **no durable-key column** (U-2); move and enrich `dim_date`
+   with the asserted calendar-fiscal identity; drop `fiscal_year`/`fiscal_quarter` from facts and
+   add `report_period_end_date_key` wherever `report_period` exists, with each `date_key` role
+   recorded in the column comment and the data dictionary (M9); adopt the `event_id` grain on
+   alerts and news (M10); compute `daily_return` **after** as-of vintage selection (M4); keep the
+   SCD2 column names and expand the tracked set; remove the `date_key` fiscal-year fallback;
+   partition Gold by `month(known_from_ts)` (statements) and `day(trading_date)` (prices).
+4b. **OBT and label boundaries** (1-2 d) — OBT retains every vintage and gains the latest-only
+   view; labels join on `(ticker, report_period, label_version)`; `decision_ts` becomes the
+   report-period end and `label_available_ts` is added, with both CHECKs declared (M1, M2, M7).
+4c. **Real feature windows** (2 d) — the three `feat_*` builders become as-of window aggregations
+   with one row per `(ticker, cutoff_ts)`, `window_*_count`, `feature_completeness` and the
+   conservative missing-history defaults; both reserved Feast names are written (M5, M8).
+5. **PIT and leakage guard** (1-2 d) — the PIT join takes a knowledge-time cutoff; the guard
+   compares `feature.known_from_ts` to `fact_distress_label.decision_ts` (now the period end, so
+   the label's own source filing is excluded rather than admitted at equality) and stops treating
+   `created_ts` as a feature axis; both raise on missing timestamps. The step-1 test must now pass,
+   and must fail again if the vintage filter or the boundary separation is removed.
 6. **Metadata unification and the naming cutover** (1-2 d) — one database, two schemas,
    `TIMESTAMPTZ` via explicit `AT TIME ZONE 'UTC'`, the 8 `ops` `_at` → `_ts` renames in the same
    migration, merged `data_quality_result` with PK `check_id` + `track` CHECK enum + `(track,
    checked_ts)` index, four foreign keys, deterministic `check_id`, partial unique index on
    `is_current`, `ml.label_table` → `ml.distress_label`.
-7. **Naming convention: write it and lint it** (0.5 d) — the §Naming Convention block into
-   `docs/architecture/data-model.md`; `scripts/lint_naming_convention.py` asserts gold prefixes,
-   singular gold table names, plural bronze/silver, `_ts`/`_date` suffixes with the two reserved
-   Feast exceptions, no version token in any table name, no `_at`; wire it into
-   `scripts/run_quality_gates.py`.
+7. **Naming convention: write it, then run the lint that already exists** (0.5 d) — the
+   §Naming Convention block into `docs/architecture/data-model.md`; apply the eight renames; run the
+   existing `naming-convention` gate (`scripts/run_lakehouse_quality_gates.py:34` →
+   `scripts/lint_naming_convention.py`). Extend the lint only if a rule it does not already cover is
+   needed; do not re-create it.
 8. **Falsifiable schema evidence** (1 d) — rewrite `build_schema_evidence.py` against real Gold
    output covering **all 12** Gold datasets; restore `tests/test_schema_evidence.py`; prove it fails
    when a fact row's `company_version_key` is absent from `dim_company`, when a `date_key` is absent
    from `dim_date`, and when a nullable FK column exceeds its NULL-rate ceiling.
 9. **Migration and regression** (1 d) — `sql/migrations/002_data_model_v2.sql` as one transaction;
-   run `scripts/run_quality_gates.py` and `pytest tests`; re-freeze the contracts.
+   run `.venv/bin/python scripts/run_lakehouse_quality_gates.py` and the phase's regression tests;
+   re-freeze the contracts.
 
 ## Success Criteria
 
@@ -731,7 +1215,9 @@ supports partition evolution, so `month` → `day` stays available without a rew
 - [ ] AC-P2-11: Analyst → sums `total_assets` across all companies under `DECIMAL(18,0)` →
       `assets = liabilities + equity` holds exactly; the DQ check needs no arbitrary tolerance
 - [ ] AC-P2-12: Engineer → lists Gold objects → partitioned prefixes, not one `data.parquet` per dataset
-- [ ] AC-P2-13: Engineer → runs `scripts/run_quality_gates.py` and `pytest tests` → both pass, zero skips
+- [ ] AC-P2-13: Engineer → runs `.venv/bin/python scripts/run_lakehouse_quality_gates.py` plus the
+      phase's regression tests → both pass, zero skips. (The gate script is
+      `run_lakehouse_quality_gates.py`; `scripts/run_quality_gates.py` does not exist)
 - [ ] AC-P2-14 **(F2, mini 40)**: Reviewer → inspects `gold.dim_company` → columns
       `valid_from_ts`, `valid_to_ts`, `is_current` exist **under those exact names**; the SCD2 change
       set includes `company_name` and `listing_date`; `dim_company_sys` exposes `sys_start`/`sys_end`
@@ -745,22 +1231,28 @@ supports partition evolution, so `month` → `day` stays available without a rew
 - [ ] AC-P2-18 **(F8, mini 39)**: Reviewer → counts Gold tables in `sql/schema_evidence.sql` →
       **12**, matching `src/io/paths.py`; `fact_market_alert`, `fact_news_sentiment` and
       `fact_distress_label` are present
-- [ ] AC-P2-19 **(F9, F10, mini 43)**: `scripts/lint_naming_convention.py` → runs on the repo →
-      exits 0; zero Gold tables without a declared prefix, zero plural Gold table names, zero
-      version tokens in table names, zero `_at`-suffixed columns in `ops`, and both reserved Feast
-      names untouched
+- [ ] AC-P2-19 **(F9, F10, mini 43)**: Engineer → runs the existing `naming-convention` gate
+      (`scripts/run_lakehouse_quality_gates.py:34` → `scripts/lint_naming_convention.py`) after the
+      renames → exits 0; zero Gold tables without a declared prefix, zero plural Gold table names,
+      zero version tokens in table names, zero `_at`-suffixed columns in `ops`, and both reserved
+      Feast names present on every `feat_*` table. **The script and its wiring already exist
+      (`:9-15,109-155`); this AC is about the renames passing it, not about creating it**
 - [ ] AC-P2-20 **(F12, F13)**: `scripts/build_schema_evidence.py` → checks `dim_date` → every
       `date_key` present in any fact table resolves in `dim_date`, `dim_date` carries
       `fiscal_year`/`fiscal_quarter`/`quarter_end_date`, and **no fact table carries
       `fiscal_year` or `fiscal_quarter`**
-- [ ] AC-P2-21 **(F14)**: Engineer → reads any `feat_*` row → `event_timestamp = known_from_ts`; the
-      CHECK is declared in the ERD; ADR-017 states the mapping and the reason Feast's default
-      tie-break is unsuitable
+- [ ] AC-P2-21 **(F14, M8)**: Engineer → reads any `feat_*` row → `event_timestamp = known_from_ts`
+      and `created_timestamp` is populated with the ingest wall clock; the CHECK is declared in the
+      ERD; ADR-017 states the mapping and why Feast's default tie-break is unsuitable; no builder
+      emits `created_ts` into a `feat_*` table
 - [ ] AC-P2-22 **(F11)**: Engineer → reads ADR-017 → it records the real vnstock reporting unit, the
       chosen scale, and the fact that Iceberg permits precision widening but prohibits scale change
-- [ ] AC-P2-23 **(F17)**: Reviewer → reads `docs/architecture/data-contracts.md` → `open`, `high`,
-      `low`, `close` are documented as **đồng**, and the price adapter's ×1000 normalization is
-      stated with the `quote.py:345` citation; no document still claims vnstock returns prices in VND
+- [ ] AC-P2-23 **(F17, M11)**: Reviewer → reads `docs/architecture/data-contracts.md` → `open`,
+      `high`, `low`, `close` are documented as **đồng** with the `quote.py:345` citation, the
+      §Migration table maps every legacy object and field to its target, and
+      `docs/07_data_contracts.md` **no longer exists**; a grep of `docs/` returns zero claims that
+      vnstock returns prices in VND and zero references to `raw_market_price`, `stg_company_quarter`
+      or `(period_year, period_quarter)` outside that migration table
 - [ ] AC-P2-24 **(F18, mini 43)**: `scripts/lint_naming_convention.py` → runs → every Bronze table
       starts with `raw_` and every Silver table with `stg_`; zero unprefixed tables in either zone;
       `src/io/paths.py` dataset names match
@@ -768,6 +1260,78 @@ supports partition evolution, so `month` → `day` stays available without a rew
       recognized set → routes it to `ops.failed_records` with a `failure_reason` naming the unit;
       **it is never normalized by guess**. Every money-bearing Bronze table carries `source_name`
       and `source_unit` as `NOT NULL`
+
+### Reconciliation ACs (2026-09-10, M1 … M11)
+
+Each is WHO → ACTION → RESULT, and each names the observable a consumer sees. AC-P2-26 … AC-P2-31
+are **regression cases** that must fail against today's code before the fix and pass after.
+
+- [ ] AC-P2-26 **(M1, regression)**: Data engineer → builds the OBT for one ticker whose Q1-2023 and
+      Q2-2023 statements resolve to the **same `company_version_key`**, with `fact_distress_label`
+      holding `distress_label = 0` for `2023-Q1` and `distress_label = 1` for `2023-Q2` → the OBT row
+      for `2023-Q1` reads `distress_label = 0` and the row for `2023-Q2` reads `distress_label = 1`;
+      **neither row takes the other's label**, and `label_by_version` no longer exists in
+      `src/transforms/gold/obt_company_quarter_risk.py`
+- [ ] AC-P2-27 **(M3, regression)**: Data engineer → merges snapshot `{AAA, name="Alpha", t1}`, then
+      `{AAA, name="Alpha2", t2}` (t1 < t2), then **re-merges the first batch** → `dim_company` holds
+      exactly two rows; `company_version_key` values are distinct; **no row has
+      `valid_to_ts < valid_from_ts`**; the single `is_current` row is the `t2` version; and the
+      re-merged snapshot is either a no-op or an `ops.failed_records` row with
+      `failure_reason = 'late_scd2_snapshot'` — never an in-place history rewrite
+- [ ] AC-P2-28 **(M4, regression)**: Data engineer → loads close 100 for D1 (known at D1), close 110
+      for D2 (known at D2), then a **correction to 200 for D2 known at D9** → reading
+      `fact_market_price` as of D3 returns `close_price = 110` and `daily_return = +0.10` for D2;
+      the corrected vintage carries its own `daily_return` row; **the D3 read never changes when the
+      correction lands**, and no later vintage becomes the previous close of an earlier day
+- [ ] AC-P2-29 **(M5, regression)**: Data engineer → lands two `report_period`s for one ticker with
+      the **same `known_from_ts`** → `feat_company_financial_4q` holds **one** row for that
+      `(ticker, event_timestamp)`, carrying the newer period as `as_of_report_period` and the
+      aggregate over both; the PK insert does not fail and no row is silently discarded
+- [ ] AC-P2-30 **(M5)**: ML engineer → reads a `feat_company_financial_4q` row for a ticker with only
+      two known periods → every aggregate is `NULL`, `window_period_count = 2`,
+      `feature_completeness = 'insufficient'`; **no zero-fill and no forward-fill appear anywhere in
+      the feature output**, and a ticker with zero news in the window shows
+      `news_article_count = 0` with `sentiment_mean_30d IS NULL`
+- [ ] AC-P2-31 **(M7, regression)**: ML engineer → joins the label for `2023-Q2` to the statement
+      vintage that produced it and runs `src/ml/leakage_guard.py` → **`LeakageError` is raised**,
+      because the statement's `known_from_ts` (filing, after period end) is later than
+      `decision_ts` (period end); the previous-quarter statement in the same fixture passes
+- [ ] AC-P2-32 **(M2)**: Analyst → queries `gold.obt_company_quarter_risk` for a restated quarter →
+      **both vintages are present** with distinct `known_from_ts` and `is_latest_vintage` true for
+      exactly one; `gold.obt_company_quarter_risk_latest` returns exactly one row for that quarter
+- [ ] AC-P2-33 **(M6)**: Data engineer → lands `consolidated_audited` and `separate_unaudited`
+      statements for one `(ticker, report_period)` at the same `known_from_ts` → **both rows persist
+      under the unchanged PK**, `uq_ffs_latest` holds, and the row flagged `is_latest_vintage` is the
+      `consolidated_audited` one (precedence rank 1)
+- [ ] AC-P2-34 **(M6)**: Contract checker → receives a statement whose `statement_type` is absent or
+      unmapped → the row lands in `ops.failed_records` with
+      `failure_reason = 'unknown_statement_variant'`; **no row is written with a defaulted
+      `consolidated` variant**
+- [ ] AC-P2-35 **(M9)**: Analyst → joins `fact_financial_statement.report_period_end_date_key` to
+      `dim_date` → `fiscal_year`/`fiscal_quarter` match `report_period`; joining `date_key` instead
+      returns the **filing** date's attributes, and the data dictionary plus the column comments state
+      which key plays which role for every fact
+- [ ] AC-P2-36 **(M9)**: DQ runner → receives a `report_period` whose derived period end is not a
+      calendar quarter end → the row routes to `ops.failed_records` with
+      `failure_reason = 'fiscal_calendar_mismatch'`; `dim_date` generation asserts
+      `fiscal_year = year(calendar_date)` and `fiscal_quarter = quarter(calendar_date)`, and ADR-017
+      records the assumption with its evidence
+- [ ] AC-P2-37 **(M10)**: Data engineer → publishes the same alert event twice → **one row** in
+      `gold.fact_market_alert` keyed by `event_id`; the ERD's PK is `event_id`, the secondary UNIQUE
+      `(ticker, alert_type, event_timestamp)` holds, and `sql/schema_evidence.sql` contains no
+      `article_hash`, `raised_ts` or `published_ts` column that no builder writes
+- [ ] AC-P2-38 **(P2 ↔ P4 parity)**: Engineer → runs the pure-Python builder and the `*_spark`
+      builder over one fixture → the two outputs agree row-for-row on `is_latest_vintage`,
+      `daily_return`, `date_key`, `report_period_end_date_key` and the label columns; a divergence
+      fails the gate. P4 mirrors, it does not redefine (plan §File ownership, P4)
+- [ ] AC-P2-39 **(M8, hand-off to P5)**: Engineer → reads the P2 contract → each `feat_*` table
+      declares `event_timestamp`, `created_timestamp`, `known_from_ts`, its window-count column and
+      `feature_completeness`; P5's Feast sources bind to these tables and columns (P5
+      §Feast source parity), and no Feast source points at a fact, an OBT, or a single `data.parquet`
+- [ ] AC-P2-40 **(M11)**: Reviewer → greps the repo for the retired names → `docs/07_data_contracts.md`
+      is gone, `docs/architecture/data-contracts.md` carries the mapping, and no ADR, doc or contract
+      still asserts `is_distressed BOOLEAN`, `(period_year, period_quarter)`, `DOUBLE` money, or a
+      Silver-zone `fact_company_quarter_financials`
 
 ## Risk Assessment
 
@@ -812,16 +1376,83 @@ Mitigation: the migration uses explicit `AT TIME ZONE 'UTC'` and a before/after 
 on a known value. Response: roll back the migration transaction; it is written as one transaction.
 
 **Risk (F10):** the naming convention is documented but not enforced, and drifts again. Signal: a new
-table lands without a prefix and nothing complains. Mitigation: `lint_naming_convention.py` is wired
-into `scripts/run_quality_gates.py`, which is the repo's definition of done. Response: fix the name,
-not the lint.
+table lands without a prefix and nothing complains. Mitigation: `lint_naming_convention.py` is
+already wired as the `naming-convention` gate in `scripts/run_lakehouse_quality_gates.py:34`, which
+is the repo's definition of done. Response: fix the name, not the lint.
 
 **Risk:** raising instead of silently defaulting turns previously-passing pipeline runs into
 failures. Signal: `failed_records` volume jumps after P2. Mitigation: this is the intended
 behavior — those rows were silently corrupt. Route them to `ops.failed_records` with the new
 `failure_reason` and report the count as evidence. Response: none; do not restore the silent default.
+**Risk (M5):** the feature layer becomes an aggregation engine and quietly absorbs modelling
+decisions (imputation, winsorization, target encoding). Signal: a `feat_*` column whose value cannot
+be derived from the declared window and its inputs alone. Mitigation: the window contract lists the
+permitted aggregates, and `feature_completeness` / `window_*_count` make thin windows visible to the
+consumer instead of hidden by a default. Response: move the transformation into the P7/P11 model
+pipeline, where it is versioned with the model.
 
-## Unresolved — none
+**Risk (M5):** as-of snapshot rows multiply — one row per ticker per input arrival instead of one per
+input row. Signal: `feat_*` row count grows faster than the fact row count. Mitigation: the snapshot
+set is the distinct `known_from_ts` values of the entity's own inputs, which is bounded by the fact
+row count per ticker, not by their product; partitioning is by `month(event_timestamp)`. Response:
+restrict the snapshot set to filing instants plus a fixed daily grid, recorded in the contract — not
+by silently sampling.
+
+**Risk (M7):** moving `decision_ts` to the period end drops predictors that are legitimately
+available before the filing, weakening the model. Signal: P7 reports materially fewer usable feature
+rows. Mitigation: the choice is explicit, conservative and recorded, and the alternative is stated in
+§Label boundary; `label_available_ts` is retained so a horizon-based relaxation can be evaluated with
+evidence. Response: P7/P11 propose a horizon; the contract moves `decision_ts` deliberately — never
+by relaxing the guard's comparison.
+
+**Risk (M3):** the SCD2 rebuild path is used as a routine repair and silently rewrites history.
+Signal: `dim_company` row count changes on a day with no attribute change. Mitigation: rebuild is a
+separate entry point requiring the full ordered snapshot set, logged to `ops.pipeline_run_log`;
+the daily merge can only append. Response: revert the transaction and route the late snapshot to
+`ops.failed_records` instead.
+
+**Risk (M9):** `report_period_end_date_key` doubles the `dim_date` FK count per fact and a builder
+populates one but not the other. Signal: a NULL or unresolvable `report_period_end_date_key`.
+Mitigation: both keys are `NOT NULL` with declared FKs, and AC-P2-20's coverage check runs over both
+columns. Response: fail the build; a fact without its valid-time key cannot report a fiscal quarter.
+
+## Unresolved and requested dependency changes
+
+### Requested dependency changes (parent decides; frontmatter untouched)
+
+- **`src/ml/` shared-file exception.** P2's contract fixes require edits to `src/ml/leakage_guard.py`,
+  `src/ml/label_pipeline.py` and `src/transforms/compute_distress_labels.py`. Only the third is
+  inside P2's `owns` list. The plan's §File ownership assigns `src/ml/feast/` to P5 and ML pipelines
+  to P7, and leaves the guard/label projection unassigned. **Request:** name P2 the owner of
+  `src/ml/leakage_guard.py` and `src/ml/label_pipeline.py` for the duration of this phase, or
+  serialize those two files as an integration boundary like `pyproject.toml`. No frontmatter is
+  changed by this phase.
+- **P5 consumes a P2 column contract.** P5's Feast sources must bind to the `feat_*` tables and to
+  `created_timestamp`; that is an interface, not a new dependency edge — P5 already depends on P4,
+  which depends on P2.
+- **P4 parity assertion — RESOLVED 2026-09-10.** AC-P2-38 asserts Python↔Spark parity for
+  transforms P2 owns and jobs P4 owns. The request to confirm the parity check runs in P4's gate
+  as well is answered: `phase-04-data-plane.md` AC-P4-30 ports this exact check into P4's own
+  success criteria, so a P4-side drift fails there, not only in P2's regression suite.
+
+### Open items
+
+- **U-5 (fiscal calendar).** The calendar-fiscal identity is an assumption, not a verified fact: the
+  free tier exposes period labels only and no fiscal-year-end field. It is asserted at generation and
+  policed per row (§date_key roles), and it would be replaced by a per-issuer fiscal-year-end
+  registry — the same deferral shape as the Tier-2 entity registry (U-2). **Open:** whether any
+  in-scope issuer actually diverges. Measurable only once P4 lands real periods; until then the
+  `fiscal_calendar_mismatch` counter is the answer.
+- **U-6 (label horizon).** `decision_ts = report_period_end_ts` is the conservative default. Whether
+  a horizon-based cutoff (period end + k days) is better is a modelling question owned by P7/P11 and
+  is **not** decided here.
+- **U-7 (`ml.distress_label` key).** The reconciliation moves the upsert key from
+  `(ticker, event_timestamp, label_version)` to `(ticker, report_period, label_version)`. Any
+  consumer outside `src/ml/label_pipeline.py` that reads `ml.label_table` by `event_timestamp` must
+  be repointed by its owner; P2 repoints the writer and the DDL.
+
+### Closed earlier (retained for provenance)
+
 
 U-1, U-2 and U-3 were closed on 2026-09-02b (§Revision 2026-09-02b). **U-4 closed the same day** by
 installing `vnstock` 4.0.7 in a throwaway venv and calling it:

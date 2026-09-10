@@ -8,175 +8,86 @@ dependencies: ["phase-04-data-plane.md", "phase-05-cdc-streaming.md", "phase-06-
 owns: ["src/analytics/", "apps/", "platform/analytic/", "platform/api-serving/", "platform/keda/", "platform/web/", "charts/"]
 ---
 
-# Phase 9: API serving, KEDA, web, analytics, NGINX edge policy
+# Phase 9: API, analyst UI and protected session demo
 
 ## Overview
 
-Deploy the API-serving and analytics layers; migrate Next.js in-cluster; restore KEDA
-`ScaledObject`s; and implement the **NGINX edge policy** the rubric grades across nine rows but the
-previous plan never owned: every observability and API service hidden behind the single ingress,
-with basic auth, rate limiting, a domain and HTTPS. **Resident cost: 2-4 vCPU windowed.**
+Serve real API/MCP and analyst paths behind NGINX with authentication, rate limits and trusted
+domain/HTTPS. Preserve working auth and external API contracts; no forced Supabase/Vercel rewrite.
+No public URL 24/7 is required. Cloud Terraform remains P6 evidence, not implied by an HTTPS URL.
 
-Rubric rows landing here:
+## Requirements and architecture
 
-| Rows | Requirement | Points |
-|---|---|---|
-| ML 2-3, 5-6; LLM 9-10, 15-16 | FastAPI + pydantic validation + healthcheck; async | 12 |
-| ML 4, 7; LLM 11, 17 | Deploy to Kubernetes with Helm + `rollingupdate` + auto-fallback (`--atomic`) | 8 |
-| ML 8-9 | Autoscale the data-fetch API and the drift API | 4 |
-| ML 37-40; LLM 40-44 | Metric / log / trace / API / agent-UI / registry-UI services hidden behind NGINX | 18 |
-| ML 41; LLM 45 | Basic authentication and rate limiting | 4 |
-| ML 42; LLM 46 | Domain + HTTPS | 2 |
-| ML 45; LLM 49 | Web API metrics (req/s, request count, failure count) | 3 |
-| ML 33 | CI/CD for the inference engine — surface owned here, pipeline in P10 | 1 |
+Browser -> protected NGINX -> existing web/API -> LangGraph coordinator -> scoped MCP tools ->
+feature/drift services -> Feast/model and cutoff-filtered pgvector. Dashboards, logs, traces and
+registry UI are reachable through protected NGINX, not exposed by independent public Services.
+NGINX is the sole public application entry; a paid managed LoadBalancer is not intrinsically
+required. P0 must verify the actual no-spend ingress/domain route before use.
 
-## Requirements
+FastAPI/pydantic input validation, async handlers, health/readiness, request/error metrics,
+Helm RollingUpdate and actual automatic rollback remain required. Kubernetes multi-replica and
+API autoscaling must be exercised; short free-quota load windows suffice but mocked replica counts
+and static YAML do not. Retain KEDA if the existing pattern works; do not add a second autoscaler.
 
-- Functional:
-  - `prediction-api`, `feature-api`, `drift-api`, `feature-mcp`, `drift-mcp` all serve with FastAPI,
-    pydantic validation, `/healthz` and `/readyz`, and async handlers.
-  - Every service deploys by Helm with a `RollingUpdate` strategy and `helm upgrade --atomic`
-    auto-fallback proven by a deliberately broken release.
-  - KEDA scales `feature-api` and `drift-api` above minimum and back.
-  - Superset queries Trino over Iceberg Gold; the dbt (or SQL CronJob) Gold Data Mart refreshes daily
-    from Airflow and DataHub records the lineage edge.
-  - In-cluster Next.js serves authenticated analyst sessions with Postgres RLS, no Supabase.
-  - Exactly one external `LoadBalancer` (NGINX) fronts Grafana, the log viewer, Jaeger, the data-fetch
-    API, the agent test UI and the agent registry UI — none is directly exposed.
-  - Basic auth and a rate limit are enforced on the data-fetch API and the agent test UI.
-  - A domain resolves over HTTPS with a cert-manager-issued certificate.
-- Non-functional: Parquet Gold readers are removed only **after** the Iceberg Gold reader passes; the
-  external Vercel deployment is retired only after AC-P9-9 passes.
+Request contract carries ticker, cutoff_ts, question and server-controlled request/session identity.
+P8 records provider/model/prompt/corpus revisions; clients cannot choose arbitrary paid endpoints.
+Responses preserve external schemas and streaming event semantics; citations/vintage/missing-data
+metadata are versioned deliberately if the current API cannot carry them. Authentication derives
+principal server-side; session_id is not authorization. P5 defines feature retrieval identity; do
+not reintroduce company_id/company_key as a competing canonical key.
 
-## Architecture
+Current product auth stays unless a concrete accepted requirement demands migration. Analyst UI
+supports loading, completed, no eligible evidence, stale/missing features, auth expiry, rate-limit,
+provider unavailable and interrupted stream. A partial answer is visibly partial; retry is a new
+request, not silent appended text from another provider. Session reset/expiry clears agent state.
 
-```
-                        Internet
-                            │
-                    ┌───────▼────────┐
-                    │  NGINX Ingress │  ← the ONLY external LoadBalancer
-                    │  TLS (cert-mgr)│    domain + HTTPS
-                    │  basic auth    │    ML 41 / LLM 45
-                    │  rate limit    │
-                    └───────┬────────┘
-     ┌──────────┬───────────┼───────────┬───────────┬──────────────┐
-     ▼          ▼           ▼           ▼           ▼              ▼
-  Grafana   log viewer   Jaeger    feature-api   agent test UI  registry UI
- (ClusterIP)(ClusterIP)(ClusterIP)              (Next.js)      (Next.js)
+Analytics: expose financial/feature provenance and current/as-of views through existing UI/query
+surfaces. Trino/Superset/dbt are not mandatory new services for image fidelity; choose existing SQL
+or scheduled SQL refresh where sufficient, preserving any actual owned rubric output.
 
-ns: api-serving   prediction-api ── feature-api ── drift-api ── feature-mcp ── drift-mcp
-ns: keda          KEDA autoscales feature-api + drift-api
-ns: analytic      Trino ── Superset ── dbt / SQL CronJob (Gold Data Mart)
-ns: web           Next.js + Route Handlers ── Postgres RLS
-```
+## Ownership
 
-**R-1 fallback (retained):** if the target image's "Build Gold Data Mart" component is not dbt, run
-the same Airflow-daily CronJob issuing the same SQL against Trino without the dbt layer — strictly
-less work, no scope increase.
+Own apps/API/MCP handlers, web routes, charts and NGINX ingress. P8 owns agent state/inference;
+P5 owns feature contract; P6 owns mesh/Vault; P12 owns telemetry implementation. Required interfaces
+are agreed before editing shared response models and chart namespace fields.
 
-## Related Code Files
+## Implementation steps
 
-- Restore from archive: `charts/feature-api/templates/scaledobject.yaml`,
-  `charts/drift-api/templates/scaledobject.yaml`
-- Create: `platform/analytic/trino.yaml`, `superset.yaml`, `dbt-cronjob.yaml`
-- Create: `platform/api-serving/prediction-api.yaml`, `platform/keda/keda-operator.yaml`
-- Create: `platform/web/nextjs-deployment.yaml`
-- Create: `platform/ingress/basic-auth-secret.yaml`, `rate-limit-annotations.yaml`,
-  `certificate.yaml`, `ingress-observability.yaml`, `ingress-agent-ui.yaml`
-- Modify: `charts/*/templates/deployment.yaml` — explicit `RollingUpdate` with
-  `maxSurge`/`maxUnavailable`
-- Modify: `apps/feature-api/`, `apps/drift-api/`, `apps/feature-mcp/`, `apps/drift-mcp/` — pydantic
-  models, async handlers, `/healthz`, `/readyz`, Prometheus request metrics
-- Modify: `apps/web/` — remove every `@supabase/` import; Postgres RLS sessions; agent test UI;
-  agent registry UI
-- Modify: `src/analytics/` — bind to the live Trino client; add `trino` to `pyproject.toml`
-- Create: `dags/gold_data_mart.py`
+1. Inventory current external schemas/auth/session flows and preserve them in the P8 parity fixture.
+2. Harden input/async/health/readiness/metrics; distinguish alive from ready when dependencies fail.
+3. Deploy real Helm releases; induce a failed revision and observe rollback and continued service.
+4. Exercise feature/drift API autoscaling up and down under bounded load; capture actual metrics.
+5. Configure NGINX routes, basic auth where graded, rate limits and trusted TLS; verify no bypass
+   via public Service or unprotected UI route. Internal mesh auth is separate, not disabled.
+6. Bind ticker/cutoff queries to eligible Feast/pgvector data; latest dashboard view cannot be used
+   for historical answers. Present provenance and unavailable states, not generated missing values.
+7. Integrate session-only LangGraph UI behavior and stream interruption handling; verify two
+   simultaneous principals cannot observe each other's state/citations.
+8. Exercise real domain/HTTPS, API/MCP, prediction and analyst flows in the authorized demo window.
+   Stop session services after exporting evidence; publish access instructions without 24/7 claims.
 
-## Implementation Steps
+## Success criteria
 
-1. **API hardening** (2 d) — pydantic request/response models, async handlers, `/healthz` and
-   `/readyz`, and a Prometheus middleware exporting `req/s`, request count and failure count on all
-   five services.
-2. **Helm rollout semantics** (1 d) — explicit `RollingUpdate` in every chart; prove
-   `helm upgrade --atomic` rolls back by shipping a deliberately broken image tag and confirming the
-   previous ReplicaSet is restored.
-3. **Deploy `platform-api-serving`** (2 d) — all five services.
-4. **KEDA** (1 d) — restore both `ScaledObject`s; verify the metric source matches the current
-   deployment; drive load and observe scale up and back.
-5. **NGINX edge policy** (2 d) — convert Grafana, the log viewer and Jaeger to `ClusterIP` and route
-   them through NGINX; add basic-auth and rate-limit annotations on the data-fetch API and the agent
-   test UI; issue the certificate through cert-manager and bind the domain. Re-verify exactly one
-   external `LoadBalancer`.
-6. **`platform-analytic`** (2-3 d) — Trino with Iceberg + MinIO catalogs, Superset, dbt CronJob;
-   verify a Superset dashboard query returns Gold Data Mart rows from Iceberg with no direct
-   object-store credential in the browser path.
-7. **Gold Data Mart DAG** (1 d) — Airflow daily trigger → mart rebuild → DataHub lineage edge from
-   Silver/Gold to the mart.
-8. **In-cluster Next.js** (2-3 d) — Postgres RLS sessions, no Supabase; agent test UI and agent
-   registry UI as routes; authentication on the agent test UI.
-9. **End-to-end prediction** (1 d) — `prediction-api` receives `company_id`, fetches online features
-   from Feast/Redis through `feature-api`, returns a scored prediction.
-10. **Cutover** (1 d) — after AC-P9-9 passes, retire the external Vercel deployment and remove the
-    Parquet Gold readers.
+- [ ] AC-P9-1: Client -> submits invalid bodies and checks liveness/readiness -> precise 422 errors; live process distinguished from dependency-ready service; async request path exercised.
+- [ ] AC-P9-2: Operator -> deploys broken Helm revision with automatic fallback -> prior healthy version serves traffic after rollback; RollingUpdate configured.
+- [ ] AC-P9-3: Load client -> drives feature/drift API demand -> actual replica increase then scale-down observed with stable request/error metrics.
+- [ ] AC-P9-4: External client -> accesses API, dashboards, logs, traces, agent and registry UIs -> only intended NGINX routes work; direct public bypass fails.
+- [ ] AC-P9-5: Anonymous/authorized/over-limit client -> exercises graded API/UI routes -> 401/200/429 respectively; credentials never appear in logs.
+- [ ] AC-P9-6: Browser -> opens controlled Web API domain -> valid trusted certificate, HTTP redirects and protected endpoints; no self-signed/local-only substitute for unverified rubric expectations.
+- [ ] AC-P9-7: Prometheus -> scrapes actual Web API traffic -> request rate/count/failures distinguish successful and failed requests.
+- [ ] AC-P9-8: Analyst -> inspects risk data -> current/as-of values with source/vintage provenance and no browser object-store credential.
+- [ ] AC-P9-9: Two authenticated analysts -> run and reset independent sessions -> existing auth preserved, cross-session state denied and expiry/reset clears memory.
+- [ ] AC-P9-10: Scheduled data refresh -> updates selected analytical view -> as-of history retained and lineage shows real upstream dependencies.
+- [ ] AC-P9-11: Prediction API -> receives ticker and applicable feature cutoff -> retrieves P5-approved feature snapshot and returns versioned model score; missing/stale features are explicit.
+- [ ] AC-P9-12: Engineer -> cuts over active Gold readers -> Iceberg path passes first, all active consumers migrated and obsolete readers removed without deleting Bronze evidence.
+- [ ] AC-P9-STREAM: Analyst -> observes provider failure before/after first streamed content -> clear unavailable/interrupted state; no mixed-provider continuation or uncited fabricated result.
 
-## Success Criteria
+## Risks
 
-- [ ] AC-P9-1 **(ML 2-3, 5-6; LLM 9-10, 15-16)**: Client → posts an invalid body to each of the five
-      services → receives a pydantic 422 with field detail; `/healthz` and `/readyz` return 200; every
-      handler is async
-- [ ] AC-P9-2 **(ML 4, 7; LLM 11, 17)**: Operator → runs `helm upgrade --atomic` with a broken image
-      → the release rolls back automatically and the previous ReplicaSet serves traffic; the chart
-      declares `RollingUpdate`
-- [ ] AC-P9-3 **(ML 8-9)**: KEDA → observes load on `feature-api` and on `drift-api` → scales each
-      Deployment above minimum and back, using the restored `ScaledObject`s
-- [ ] AC-P9-4 **(ML 37-40; LLM 40-44)**: Operator → lists Services → Grafana, the log viewer, Jaeger,
-      `feature-api`, the agent test UI and the agent registry UI are all `ClusterIP` and reachable
-      **only** through NGINX; `kubectl get svc -A --field-selector spec.type=LoadBalancer` returns
-      exactly one row
-- [ ] AC-P9-5 **(ML 41; LLM 45)**: Anonymous client → requests the data-fetch API and the agent test
-      UI → receives 401; with credentials → 200; exceeding the configured rate → 429
-- [ ] AC-P9-6 **(ML 42; LLM 46)**: Browser → opens the configured domain over HTTPS → a valid
-      cert-manager certificate is served; plain HTTP redirects to HTTPS
-- [ ] AC-P9-7 **(ML 45; LLM 49)**: Prometheus → scrapes each Web API → `req/s`, total requests and
-      total failures are present with correct labels
-- [ ] AC-P9-8 **(ML 51 surface; LLM 43-44)**: Analyst → opens the Superset dashboard through NGINX →
-      sees current-quarter distress metrics with no direct object-store credential
-- [ ] AC-P9-9: In-cluster Next.js → serves an authenticated analyst session → Postgres RLS is
-      enforced; zero `@supabase/` imports remain; only then is the Vercel deployment retired
-- [ ] AC-P9-10: Airflow daily DAG → triggers the Gold Data Mart build → mart tables refresh and
-      DataHub records the lineage edge from Silver/Gold to the mart
-- [ ] AC-P9-11: `prediction-api` → receives `company_id` → fetches online features from Feast/Redis
-      through `feature-api` → returns a scored prediction
-- [ ] AC-P9-12: Engineer → greps `src/` for Parquet Gold readers → zero remain, and the Iceberg Gold
-      reader passed first
-
-## Risk Assessment
-
-**Risk (R-1):** the Gold Data Mart component is dbt only by logo inference. Signal: the dbt CLI
-cannot connect to Trino, or the schema is incompatible. Response: the recorded fallback — an Airflow
-CronJob issuing the same SQL against Trino. Strictly less work; scope does not increase.
-
-**Risk:** Supabase Auth dependencies are not fully removed. Signal: sessions fail without a Supabase
-URL. Mitigation: audit every `@supabase/` import before deploying. Response: keep Vercel live until
-all Supabase calls are gone — AC-P9-9 gates the retirement.
-
-**Risk:** a KEDA `ScaledObject` targets the wrong metric source after restore. Signal: no scaling
-under load. Mitigation: verify the source (`kafka-topic` or `prometheus`) matches the current
-deployment before load-testing. Response: update the metric source in the `ScaledObject`.
-
-**Risk:** converting Grafana / Jaeger to `ClusterIP` breaks an existing evidence path that used a
-direct URL. Signal: a P12 capture row cannot reach the dashboard. Mitigation: update the matrix rows
-in the same commit as the conversion. Response: capture through the NGINX path — which is what the
-rubric grades.
-
-**Risk:** basic auth breaks the agent-to-API call path inside the mesh. Signal: agents receive 401
-after AC-P9-5. Mitigation: apply auth at the **ingress**, not at the Service; in-mesh traffic does
-not traverse NGINX. Response: scope the auth annotation to the external Ingress resource only.
-
-**Risk:** the domain and certificate depend on DNS the project does not control. Signal: an ACME
-challenge fails. Mitigation: verify DNS delegation before requesting the certificate; the retained
-static IP is already allocated. Response: use a DNS-01 challenge, or record the gap and serve a
-self-signed certificate with the limitation documented — do not claim a valid chain that does not exist.
+Unavailable DNS/free ingress blocks the domain AC; document it rather than claiming localhost is
+cloud. Free-tier provider congestion can fail the demo: rehearse an honest unavailable response.
+NGINX ingress auth does not replace service-mesh authorization, and a session key never replaces
+principal authorization. API contract changes require explicit versioning and full caller cutover.
 
 ## Rubric Citations (phase-03 R-12 closure, appended 2026-09-05)
 

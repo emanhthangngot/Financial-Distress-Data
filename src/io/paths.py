@@ -11,17 +11,25 @@ DEFAULT_BUCKET = "financial-distress-lake"
 
 
 def dataset_object_key(bucket: str, layer: str, dataset_name: str) -> str:
+    """Return the v2 physical object key for one dataset."""
+    physical_names = {
+        ("bronze", "companies"): "raw_companies",
+        ("bronze", "financial_statements"): "raw_financial_statements",
+        ("bronze", "market_prices_daily"): "raw_market_prices_daily",
+        ("gold", "distress_labels"): "fact_distress_label",
+    }
+    dataset_name = physical_names.get((layer, dataset_name), dataset_name)
+    if layer == "silver" and dataset_name in {
+        "companies",
+        "financial_statements",
+        "market_prices_daily",
+    }:
+        dataset_name = f"stg_{dataset_name}"
     return f"{bucket}/{layer}/{dataset_name}/data.parquet"
 
 
-def lakehouse_dataset_object_keys(bucket: str = DEFAULT_BUCKET) -> list[str]:
-    # NOTE: these are the v1 physical MinIO object names, matching what
-    # src/jobs/lakehouse_spark_lakehouse_job.py actually reads/writes today.
-    # The v2 logical schema (sql/schema_evidence.sql, raw_/stg_/
-    # fact_distress_label) is landed; renaming the physical storage layer to
-    # match — and adding real partitioning — is deferred: it requires
-    # rewiring every read/write call in the Spark job in lockstep, not just
-    # this list, and is unverified without a running Spark+MinIO stack.
+def lakehouse_dataset_object_keys_by_name(bucket: str = DEFAULT_BUCKET) -> dict[str, str]:
+    """Return canonical v2 object keys indexed by logical dataset name."""
     datasets = [
         ("bronze", "companies"),
         ("bronze", "financial_statements"),
@@ -42,7 +50,15 @@ def lakehouse_dataset_object_keys(bucket: str = DEFAULT_BUCKET) -> list[str]:
         ("gold", "feat_company_news_30d"),
         ("gold", "feat_company_unified"),
     ]
-    return [dataset_object_key(bucket, layer, dataset_name) for layer, dataset_name in datasets]
+    return {
+        dataset_name: dataset_object_key(bucket, layer, dataset_name)
+        for layer, dataset_name in datasets
+    }
+
+
+def lakehouse_dataset_object_keys(bucket: str = DEFAULT_BUCKET) -> list[str]:
+    """Return canonical v2 physical keys in logical dataset order."""
+    return list(lakehouse_dataset_object_keys_by_name(bucket).values())
 
 
 def partitioned_object_key(bucket: str, layer: str, dataset_name: str, partition_value: str) -> str:

@@ -25,9 +25,9 @@ def test_module_import_does_not_pull_in_feast() -> None:
 
 
 EXPECTED_TTL = {
-    "company_financial_features": timedelta(days=100),
-    "company_risk_features": timedelta(days=100),
-    "market_price_features": timedelta(days=2),
+    "company_financial_features": timedelta(days=400),
+    "company_risk_features": timedelta(days=400),
+    "market_price_features": timedelta(days=45),
     "stream_market_features": timedelta(hours=1),
 }
 

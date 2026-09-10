@@ -28,10 +28,10 @@ which asserts `timestamp_field == "known_from_ts"` on every declared `FileSource
 
 | Feature view | Gold source | TTL | Reason |
 |---|---|---|---|
-| `company_financial_features` | `fact_financial_statement` | 100 days | A quarterly filing stays the authoritative view of the company until the next filing lands; 100 days is approximately one quarter plus filing lag, so nothing expires while it is still the newest truth. |
-| `company_risk_features` | `obt_company_quarter_risk` | 100 days | Derived from the same quarterly filing as `company_financial_features` (`obt_company_quarter_risk` joins the fact to the label), so it must not expire before its parent fact does. |
-| `market_price_features` | `fact_market_price` | 2 days | A daily bar is superseded by the next trading session; 2 days survives a weekend/holiday gap without ever serving a week-old price as current. |
-| `stream_market_features` | `fact_market_price` (batch fallback via `PushSource`) | 1 hour | Intraday aggregates describe the current trading hour only; a longer TTL would let the online API answer "live" with a stale tick. |
+| `company_financial_features` | `fact_financial_statement` | 400 days | A quarterly filing stays authoritative across a four-quarter window plus publication lag; 400 days prevents expiry before replacement. |
+| `company_risk_features` | `obt_company_quarter_risk` | 400 days | Derived from the quarterly financial fact and label; it shares the 400-day parent horizon so the risk leg cannot expire first. |
+| `market_price_features` | `fact_market_price` | 45 days | A 30-day daily market window plus a 15-day holiday and late-arrival buffer requires 45 days to avoid serving an incomplete feature. |
+| `stream_market_features` | `fact_market_price` (batch fallback via `PushSource`) | 1 hour | Intraday aggregates describe the current trading hour; a longer TTL would allow stale ticks to answer a live query. |
 
 `stream_market_features` has no Gold `FileSource` of its own — its `PushSource.batch_source` is
 `market_price_features`'s `FileSource`, so an online-store miss still resolves through the daily

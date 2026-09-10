@@ -171,7 +171,7 @@ the file format.
 | net_income | DOUBLE | YES | |
 | ebit | DOUBLE | YES | |
 | operating_cash_flow | DOUBLE | YES | |
-| is_distressed | BOOLEAN | NO | Computed from distress_labels |
+| is_distressed | BOOLEAN | NO | Computed from fact_distress_label |
 
 ## Gold Zone
 
@@ -310,7 +310,7 @@ the file format.
 | sentiment_score | DOUBLE | YES | -1.0 to 1.0 |
 | article_count | INTEGER | NO | |
 
-### `distress_labels`
+### `fact_distress_label`
 
 | Field | Value |
 | --- | --- |
@@ -337,12 +337,12 @@ the file format.
 | Field | Value |
 | --- | --- |
 | Owner DAG | ``dags/06_pyspark_silver_to_gold.py`` |
-| Source | Join of ``fact_financial_statement`` + ``distress_labels`` + ``dim_company`` |
+| Source | Join of ``fact_financial_statement`` + ``fact_distress_label`` + ``dim_company`` |
 | Refresh cadence | quarterly |
 | Primary keys | ``(ticker, period_year, period_quarter)`` |
 | Expected row count | 200 - 20000 |
 | Partition columns | none |
-| Upstream tables | ``fact_financial_statement``, ``distress_labels``, ``dim_company`` |
+| Upstream tables | ``fact_financial_statement``, ``fact_distress_label``, ``dim_company`` |
 | Downstream consumers | the platform ML features |
 
 | Column | Dtype | Nullable | Notes |
@@ -471,7 +471,7 @@ labels to produce the denormalized one-big-table for the ML team.
 | Dataset | Upstream | Downstream |
 | --- | --- | --- |
 | `fact_company_quarter_financials` | `stg_company_quarter` | `obt_company_quarter_risk` |
-| `obt_company_quarter_risk` | `fact_company_quarter_financials`, `distress_labels`, `dim_company` | the platform ML training |
+| `obt_company_quarter_risk` | `fact_company_quarter_financials`, `fact_distress_label`, `dim_company` | the platform ML training |
 | `dim_company` (DP2 view) | `stg_company` | OBT join, all feature tables |
 
 ## Lineage DP3

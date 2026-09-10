@@ -1,14 +1,14 @@
 ---
 phase: 4
-title: "Phase 4: Data plane — lakehouse, Iceberg, Spark, Airflow, DataHub, real source"
+title: "Phase 4: Data plane and Spark parity"
 status: pending
 priority: P1
-effort: "12-16 days"
+effort: "Re-estimate from unfinished ACs after P0 local/cloud gates; historical baseline 12-16 days"
 dependencies: ["phase-00-gates.md", "phase-02-data-model.md", "phase-03-contracts-rubric.md"]
 owns: ["src/lakehouse/", "src/collectors/", "src/generator/", "src/jobs/", "platform/lakehouse/", "platform/orchestration/", "platform/governance/"]
 ---
 
-# Phase 4: Data plane — lakehouse, Iceberg, Spark, Airflow, DataHub, real source
+# Phase 4: Data plane and Spark parity
 
 ## Overview
 
@@ -16,12 +16,34 @@ Restore MinIO, Postgres, Lakekeeper, Spark Operator, Airflow and DataHub; bind `
 live Iceberg REST catalog; implement Bronze→Silver→Gold on the **v2 contract** in Iceberg; wire the
 **real vnstock adapter**; teach the generator to emit **restatement vintages**; scale to 10-50M rows;
 freeze `gold.distress_holdout @ holdout-v1` pinned to a knowledge-time cutoff (the `_v1` suffix is
-dropped from the table name per P2 §Naming Convention — version lives in the Iceberg tag only).
-**Resident cost: 2-3 vCPU (stores always-on).**
+dropped from the table name per P2 §Naming Convention — version lives in the Iceberg tag only). No
+additional monetary spend (master §Decision ledger); component uptime and window length are what
+P0 `G2-window` measures, not a fixed vCPU/hours commitment made here.
 
 N-5 is revoked, so this is a **migration, not a parallel path**. Iceberg replaces the Parquet
 semantics; it does not run beside them. That is what makes G-2 ("one table format; zero shims")
 satisfiable for the first time.
+
+## Session decisions applied 2026-09-10 — P2 semantics mirror (M1–M11) and parity gate
+
+P2 (`phase-02-data-model.md` §Revision 2026-09-10) fixed eleven defects in the pure-Python
+reference builders and declared: **"P4 owns the Spark job wiring in `src/jobs/` and must mirror
+P2's semantics, with parity asserted (AC-P2-38)."** This phase does not redefine any of M1–M11; it
+ports the same fix to the `*_spark` transforms P4 owns and proves the two outputs agree:
+
+- Label join key becomes `(ticker, report_period, label_version)` (M1), not `company_version_key`,
+  in the Spark label-join job.
+- The Spark Silver→Gold job **retains every vintage** in `obt_company_quarter_risk`, publishing
+  `gold.obt_company_quarter_risk_latest` as a view, not by dropping rows in the writer (M2).
+- `merge_dim_company`'s Spark equivalent becomes idempotent and monotonic under out-of-order
+  replay — no re-minted version key, no negative interval (M3).
+- `daily_return` in `src/jobs/lakehouse_spark_lakehouse_job.py` computes over the as-of vintage
+  selection, not a bare `partitionBy(ticker).orderBy(trading_date)` window (M4).
+- Statement-variant precedence (M6), the two-column label/predictor boundary (M7) and the
+  `event_id`-grain DDL for news/alerts (M10) are ported unchanged from P2's resolution.
+- **AC-P2-38 parity is asserted inside this phase's own gate**, closing P2's open request
+  (`phase-02-data-model.md:1433-1435`): a P4-side drift in the ported logic fails here, not only
+  in P2's regression suite.
 
 ## Requirements
 
@@ -321,6 +343,12 @@ path**. Baseline numbers come from tag `evidence-baseline-pre-rebuild` (P3 step 
       calls + 1 listing call — completes inside its recorded wall-clock budget. **Community
       registration does not lift the 4-period statement cap** (§Free-tier data ceiling), so it is a
       throughput decision, not a coverage one
+- [ ] AC-P4-30 **(AC-P2-38 parity gate, ported into P4)**: CI job in this phase → runs the
+      pure-Python builder and the `*_spark` builder over the same P2 fixture → the two outputs
+      agree row-for-row on `is_latest_vintage`, `daily_return`, `date_key`,
+      `report_period_end_date_key` and the label columns (M1, M2, M4, M6, M9); a divergence
+      introduced in `src/jobs/lakehouse_spark_lakehouse_job.py` fails this phase's own gate, not
+      only P2's regression suite (`phase-02-data-model.md:1433-1435`)
 
 ## Risk Assessment
 

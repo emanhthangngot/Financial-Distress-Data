@@ -21,6 +21,7 @@ dev = [
 ]
 runtime = [
     "duckdb>=1.1",
+    "pytz>=2024.1",
     "kafka-python>=2.0",
     "minio>=7.2",
     "pyarrow>=17.0",

@@ -24,31 +24,28 @@ from typing import Any
 ENTITY_NAME = "ticker"
 
 FEATURE_VIEW_TTL: dict[str, timedelta] = {
-    "company_financial_features": timedelta(days=100),
-    "company_risk_features": timedelta(days=100),
-    "market_price_features": timedelta(days=2),
+    "company_financial_features": timedelta(days=400),
+    "company_risk_features": timedelta(days=400),
+    "market_price_features": timedelta(days=45),
     "stream_market_features": timedelta(hours=1),
 }
 
 FEATURE_VIEW_RATIONALE: dict[str, str] = {
     "company_financial_features": (
-        "A quarterly filing stays the authoritative view of the company until "
-        "the next filing lands; 100 days is approximately one quarter plus "
-        "filing lag, so nothing expires while it is still the newest truth."
+        "A quarterly filing stays authoritative across a four-quarter window "
+        "plus publication lag; 400 days prevents expiry before replacement."
     ),
     "company_risk_features": (
-        "Derived from the same quarterly filing as company_financial_features "
-        "(obt_company_quarter_risk joins the fact to the label), so it must "
-        "not expire before its parent fact does."
+        "Derived from the quarterly financial fact and label; it shares the "
+        "400-day parent horizon so the risk leg cannot expire first."
     ),
     "market_price_features": (
-        "A daily bar is superseded by the next trading session; 2 days "
-        "survives a weekend/holiday gap without ever serving a week-old "
-        "price as current."
+        "A 30-day daily market window plus a 15-day holiday and late-arrival "
+        "buffer requires 45 days to avoid serving an incomplete feature."
     ),
     "stream_market_features": (
-        "Intraday aggregates describe the current trading hour only; a "
-        "longer TTL would let the online API answer 'live' with a stale tick."
+        "Intraday aggregates describe the current trading hour; a longer TTL "
+        "would allow stale ticks to answer a live query."
     ),
 }
 
