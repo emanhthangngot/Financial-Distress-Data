@@ -349,9 +349,9 @@
       "owner": "P5",
       "image_location": "ns: dataflow",
       "change_class": "C",
-      "status": "omitted",
-      "reason": "Live cluster or external-system evidence unavailable in this checkout.",
-      "evidence_path": null
+      "status": "selected",
+      "reason": "Selected evidence-backed component; see evidence_path.",
+      "evidence_path": "docs/evidence/lakehouse_real_postgres_summary.json"
     },
     {
       "number": 36,

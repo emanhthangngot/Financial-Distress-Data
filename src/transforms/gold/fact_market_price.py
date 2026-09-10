@@ -152,7 +152,10 @@ def build_fact_market_price_spark(
                 / F.col("__previous_close")
             ),
         )
-        .withColumn("volatility_signal", F.abs(F.col("daily_return")) > F.lit(0.07))
+        .withColumn(
+            "volatility_signal",
+            F.coalesce(F.abs(F.col("daily_return")) > F.lit(0.07), F.lit(False)),
+        )
         .drop("__previous_close", "__row_id")
     )
     if fact.filter(F.col("known_from_ts").isNull()).limit(1).count():
