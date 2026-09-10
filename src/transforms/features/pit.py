@@ -23,14 +23,23 @@ def _as_of_rows(rows: list[dict[str, Any]], ticker: str, cutoff: datetime) -> li
         and _parse_timestamp(row.get("known_from_ts") or row.get("event_timestamp")) <= cutoff
     ]
     by_period: dict[Any, dict[str, Any]] = {}
-    for row in candidates:
-        period = row.get("report_period") or row.get("trading_date") or row.get("article_hash")
+    for index, row in enumerate(candidates):
+        period = (
+            row.get("report_period")
+            or row.get("trading_date")
+            or row.get("article_hash")
+            or row.get("event_id")
+            or f"__row_{index}"
+        )
         current = by_period.get(period)
         if current is None or _parse_timestamp(
             row.get("known_from_ts") or row.get("event_timestamp")
         ) > _parse_timestamp(current.get("known_from_ts") or current.get("event_timestamp")):
             by_period[period] = row
-    return list(by_period.values())
+    return sorted(
+        by_period.values(),
+        key=lambda row: _parse_timestamp(row.get("known_from_ts") or row.get("event_timestamp")),
+    )
 
 
 def _feature_metadata(
@@ -72,7 +81,10 @@ def build_feat_company_financial_4q(financial_rows: list[dict[str, Any]]) -> lis
             }
         )
         for cutoff in cutoffs:
-            window = _as_of_rows(ticker_rows, ticker, cutoff)[-4:]
+            window = sorted(
+                _as_of_rows(ticker_rows, ticker, cutoff),
+                key=lambda row: str(row.get("report_period") or ""),
+            )[-4:]
             count = len(window)
             values = {
                 field: (
@@ -109,13 +121,14 @@ def build_feat_company_market_30d(market_rows: list[dict[str, Any]]) -> list[dic
             }
         )
         for cutoff in cutoffs:
-            window = [
-                row
-                for row in _as_of_rows(ticker_rows, ticker, cutoff)
-                if cutoff.date().toordinal()
-                - _parse_timestamp(row["trading_date"]).date().toordinal()
-                < 30
-            ]
+            window = sorted(
+                [
+                    row
+                    for row in _as_of_rows(ticker_rows, ticker, cutoff)
+                    if _parse_timestamp(row["trading_date"]).date() <= cutoff.date()
+                ],
+                key=lambda row: _parse_timestamp(row["trading_date"]),
+            )[-30:]
             count = len(window)
             output = _feature_metadata(
                 ticker,
