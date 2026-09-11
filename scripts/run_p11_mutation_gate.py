@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
- 
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORT_DIR = REPO_ROOT / "plans/260831-1644-rebuild-target-mlops-architecture/reports"
 SUMMARY_PATH = REPORT_DIR / "p11-mutation-pilot-summary.json"
@@ -23,15 +23,16 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="p11-mutmut-") as workdir_name:
         workdir = Path(workdir_name)
         shutil.copytree(REPO_ROOT / "src", workdir / "src")
-        (workdir / "tests").symlink_to(REPO_ROOT / "tests", target_is_directory=True)
+        shutil.copytree(REPO_ROOT / "tests", workdir / "tests")
         (workdir / "pyproject.toml").write_text(
             "[tool.mutmut]\n"
             f'source_paths = ["{SOURCE_PATH}"]\n'
             f'pytest_add_cli_args_test_selection = ["{TEST_PATH}"]\n'
-            "mutate_only_covered_lines = true\n",
+            "mutate_only_covered_lines = false\n",
             encoding="utf-8",
         )
-        env = {**os.environ, "PYTHONPATH": str(REPO_ROOT)}
+        env = dict(os.environ)
+        env.pop("PYTHONPATH", None)
         run = subprocess.run(
             [sys.executable, "-m", "mutmut", "run"],
             cwd=workdir,
