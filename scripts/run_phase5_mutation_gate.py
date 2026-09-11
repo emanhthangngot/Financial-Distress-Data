@@ -75,6 +75,7 @@ def main() -> int:
     score = mutation_score(stats)
     summary = {
         "scope": MUTANT_PATTERN,
+        "minimum_score_exclusive": MINIMUM_MUTATION_SCORE,
         "score": score,
         "killed": int(stats["killed"]),
         "survived": int(stats["survived"]),
