@@ -1,6 +1,10 @@
 {
-  "scope": "src/ml/reproducibility_manifest.py",
-  "test_selection": "tests/platform/verification/test_mutmut_target.py",
+  "scope": [
+    "src/ml/reproducibility_manifest.py"
+  ],
+  "test_selection": [
+    "tests/platform/verification/test_mutmut_target.py"
+  ],
   "score": 15.05,
   "killed": 28,
   "survived": 69,
