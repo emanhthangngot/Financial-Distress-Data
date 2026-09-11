@@ -2,7 +2,7 @@
 
 ## Target-plan P11 scope
 
-This report is for AC-P11-3. The target scope is:
+This report is for AC-P11-3. The required target scope is:
 
 - `src/ml/`
 - `src/transforms/`
@@ -22,27 +22,28 @@ Pilot module and tests:
 
 The target test harness covers the git source-SHA success/failure paths and the `build_manifest` validation boundaries. It copies parametrized input dictionaries before mutation runs so mutmut's repeated in-process pytest calls do not alter test data.
 
-Latest run result:
+## Before/after survivor counts
 
-```text
-186 total
-37 killed
-85 survived
-0 timeout
-64 no_tests
-19.89% raw mutation score
-```
+| Run | Scope | Total | Killed | Survivors | No tests | Timeout |
+|---|---|---:|---:|---:|---:|---:|
+| Previous pilot | `reproducibility_manifest.py` | 186 | 37 | 85 | 64 | 0 |
+| Latest pilot | `reproducibility_manifest.py` | 186 | 56 | 66 | 64 | 0 |
 
-The real ML validation selection runs cleanly. The added boundary tests reduce `No Tests` from 89 to 64 and increase killed mutants from 31 to 37. The result remains below the target and still contains `No Tests`; it is not P11 acceptance evidence.
+The latest raw mutation score is `30.11%`. Score is reported for diagnosis only; AC-P11-3 is governed by survivor count and written disposition, not an invented percentage threshold.
+
+The real ML validation selection runs cleanly. The latest run reduced survivors by 19. `No Tests` remains 64, and survivors have not yet been individually killed or justified. The report therefore does not claim AC-P11-3 complete.
 
 Artifact: `plans/260831-1644-rebuild-target-mlops-architecture/reports/p11-mutation-pilot-summary.json`.
 
-## Current status
+## Next mutation work
+
+1. Add behavioral coverage for the remaining `No Tests` functions and branches in the pilot module.
+2. Record a disposition for every remaining survivor: killed by a new behavioral case or justified with the mutation name and invariant it does not violate.
+3. Expand `TARGET_MODULES` to `src/ml/`, `src/transforms/`, and `src/quality/` only after the bounded module pilot has complete survivor disposition.
+
+## Legacy separation
 
 - Legacy Phase 05 mutmut configuration remains pinned to `src/llm/rag/chunking.py`; its CI gate is unchanged.
 - Target P11 mutation runs use an isolated configuration/working directory because mutmut 3.7 reads `source_paths` from configuration and does not provide a scope override.
-- Target-scope mutation score: pilot captured, target threshold not met.
-- Survivor and `No Tests` justification: pending.
-- Full target scope expansion: pending until this pilot's classifications are made meaningful.
 
 No target-plan mutation AC is claimed complete by this document.
