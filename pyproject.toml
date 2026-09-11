@@ -95,10 +95,12 @@ markers = [
     "postgres: requires local initdb/pg_ctl binaries",
 ]
 
+[tool.coverage.report]
+fail_under = 90
+
 [tool.mutmut]
-# Phase 05's mutation gate is intentionally limited to small pure modules;
-# service/network boundaries are covered with fixtures and mocks instead.
-source_paths = ["src/llm/rag/chunking.py"]
+# Target-plan P11 mutation scope: ML, transforms and quality implementation.
+source_paths = ["src/ml", "src/transforms", "src/quality"]
 also_copy = [
     "src/drift",
     "src/generator",
@@ -106,6 +108,10 @@ also_copy = [
     "configs",
 ]
 pytest_add_cli_args_test_selection = [
-    "tests/platform/verification/test_mutmut_pure.py",
+    "tests/test_bitemporal_contract.py",
+    "tests/test_silver_to_gold.py",
+    "tests/test_runtime_adapters.py",
+    "tests/test_runtime_evidence.py",
+    "tests/platform/requirements/test_ml_ac_04_validation.py",
 ]
-mutate_only_covered_lines = false
+mutate_only_covered_lines = true
