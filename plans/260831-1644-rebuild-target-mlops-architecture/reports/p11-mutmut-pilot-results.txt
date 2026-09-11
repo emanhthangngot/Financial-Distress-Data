@@ -9,6 +9,31 @@
     ml.reproducibility_manifest.x__canonical_digest__mutmut_11: survived
     ml.reproducibility_manifest.x__canonical_digest__mutmut_12: survived
     ml.reproducibility_manifest.x__canonical_digest__mutmut_16: survived
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_1: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_2: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_3: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_4: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_5: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_6: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_7: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_8: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_9: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_10: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_11: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_12: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_13: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_14: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_15: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_16: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_17: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_18: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_19: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_20: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_21: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_22: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_23: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_24: no tests
+    ml.reproducibility_manifest.x_current_source_sha__mutmut_25: no tests
     ml.reproducibility_manifest.x_environment_digest__mutmut_3: survived
     ml.reproducibility_manifest.x_environment_digest__mutmut_5: survived
     ml.reproducibility_manifest.x_environment_digest__mutmut_6: survived
@@ -25,30 +50,109 @@
     ml.reproducibility_manifest.x_build_manifest__mutmut_2: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_3: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_6: survived
-    ml.reproducibility_manifest.x_build_manifest__mutmut_10: survived
-    ml.reproducibility_manifest.x_build_manifest__mutmut_11: survived
-    ml.reproducibility_manifest.x_build_manifest__mutmut_12: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_7: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_8: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_9: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_13: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_14: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_15: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_16: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_17: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_18: survived
-    ml.reproducibility_manifest.x_build_manifest__mutmut_21: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_19: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_20: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_22: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_23: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_24: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_25: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_26: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_27: survived
-    ml.reproducibility_manifest.x_build_manifest__mutmut_28: survived
-    ml.reproducibility_manifest.x_build_manifest__mutmut_29: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_30: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_31: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_32: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_33: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_34: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_38: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_39: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_40: survived
-    ml.reproducibility_manifest.x_build_manifest__mutmut_41: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_42: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_43: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_44: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_45: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_46: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_47: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_48: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_49: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_54: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_55: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_56: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_57: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_58: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_60: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_61: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_62: survived
+    ml.reproducibility_manifest.x_build_manifest__mutmut_64: survived
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_1: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_2: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_3: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_4: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_5: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_6: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_7: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_8: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_9: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_10: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_11: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_12: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_13: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_14: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_15: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_16: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_17: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_18: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_19: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_20: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_21: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_22: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_23: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_24: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_25: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_26: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_27: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_28: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_29: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_30: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_31: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_32: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_33: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_34: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_35: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_36: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_37: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_38: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_39: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_40: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_41: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_42: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_43: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_44: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_45: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_46: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_47: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_48: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_49: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_50: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_51: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_52: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_53: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_54: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_55: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_56: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_57: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_58: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_59: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_60: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_61: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_62: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_63: no tests
+    ml.reproducibility_manifest.x_manifest_from_env__mutmut_64: no tests
