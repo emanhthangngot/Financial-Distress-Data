@@ -11,8 +11,8 @@ This document maps the currently implemented ML validation cases to their input 
 | Manifest compute seconds | non-negative duration | `0`; negative duration | `test_manifest_and_data_version_are_deterministic`, `test_build_manifest_rejects_invalid_inputs` |
 | Manifest accelerator | non-empty accelerator; empty accelerator | empty string | `test_build_manifest_rejects_invalid_inputs` |
 | Manifest marginal cost | non-negative cost | `0`; negative cost | `test_manifest_and_data_version_are_deterministic`, `test_build_manifest_rejects_invalid_inputs` |
-| Git source SHA | successful git output; `CalledProcessError`; `OSError` | empty stdout | `test_current_source_sha_success_and_failures` |
-| Data version rows | original order; reversed order | empty input | `test_manifest_and_data_version_are_deterministic` |
+| Git source SHA | successful git output; `CalledProcessError`; `OSError` | **pending:** empty stdout | `test_current_source_sha_success_and_failures` covers success and failures; empty-output case pending |
+| Data version rows | original order; reversed order | **pending:** empty input | `test_manifest_and_data_version_are_deterministic` covers original/reversed rows; empty-input case pending |
 | Training inputs | reproducible local run; distributed two-worker run | two equal shards | `test_training_and_distributed_local_paths_are_reproducible` |
 
 ## Mapping rule
