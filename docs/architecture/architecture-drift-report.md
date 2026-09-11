@@ -34,10 +34,10 @@ The following are not active architecture requirements by themselves:
 
 - Rubric coverage verifier: pass, 161 rows / 300 points.
 - Selected architecture inventory verifier: pass.
-- Full repository quality gate: pass, 376 passed / 2 xfailed; naming, rubric, architecture, and evidence gates pass.
+- Full repository quality gate: pass, 378 passed / 2 xfailed; naming, rubric, architecture, and evidence gates pass.
 - Feast/streaming platform contract suite in isolated `.venv-platform`: pass, 25 tests.
 - Platform workflow contract suite in isolated `.venv-platform`: pass, 34 tests after aligning the verifier with the repository's phase2 workflow names.
 - Exhaustive target-component coverage tests: pass, 13 tests; missing-file, invalid-owner, missing-evidence, omission-reason, missing-component, selected-count, and bad-main failure paths exercised.
-- Phase 11 web coverage gate: pass, 28 tests; 96.72% line coverage and 95.65% branch coverage.
-- Phase 11 mutation gate: pass, 86.11% mutation score (62 killed / 72 total), above the exclusive 80% threshold.
-- Real Spark gold parity tests: pass, 2 tests; financial vintage election and market daily-return/volatility parity executed with local PySpark.
+- Legacy Phase 05 web coverage gate: pass, 28 tests; 96.72% line coverage and 95.65% branch coverage for `apps/feature-mcp` and `apps/drift-mcp`. This does **not** satisfy target-plan AC-P11-1.
+- Legacy Phase 05 mutation gate: pass, 86.11% mutation score (62 killed / 72 total) for `src/llm/rag/chunking.py`. This does **not** satisfy target-plan AC-P11-3; nine survivors remain without the required target-plan justification.
+- Real Spark gold parity tests: pass, 2 tests; financial vintage election and market daily-return/volatility parity executed with local PySpark. The slow tests are skipped when PySpark is unavailable, so target-plan AC-P11-8 remains open.
