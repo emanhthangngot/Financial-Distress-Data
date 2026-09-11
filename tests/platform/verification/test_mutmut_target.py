@@ -7,12 +7,12 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
-MUTANT_ROOT = Path(__file__).resolve().parents[3]
+_ROOT = Path(__file__).resolve().parents[3]
+MUTANT_ROOT = _ROOT if _ROOT.name == "mutants" else _ROOT
 
 
 def load_alias(alias: str, relative_path: str) -> ModuleType:
     path = MUTANT_ROOT / relative_path
-    assert MUTANT_ROOT.name == "mutants"
     assert path.is_relative_to(MUTANT_ROOT)
     assert path.exists()
     spec = importlib.util.spec_from_file_location(alias, path)
