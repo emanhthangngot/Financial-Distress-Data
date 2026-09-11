@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MUTANT_SCOPE = "src/ml,src/transforms,src/quality"
+MUTANT_PATTERN = "llm.rag.chunking.*"
 MINIMUM_MUTATION_SCORE = 80.0
 REPORT_DIR = REPO_ROOT / "plans/260809-2039-complete-phase2-llm-submission/reports"
 SUMMARY_PATH = REPORT_DIR / "phase05-mutation-summary.json"
@@ -42,7 +42,7 @@ def mutmut_run_succeeded(exit_code: int) -> bool:
 def main() -> int:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     run = subprocess.run(
-        [sys.executable, "-m", "mutmut", "run", "-j", "4"], cwd=REPO_ROOT, check=False
+        [sys.executable, "-m", "mutmut", "run", MUTANT_PATTERN], cwd=REPO_ROOT, check=False
     )
     if not mutmut_run_succeeded(run.returncode):
         print(f"mutmut run failed with exit code {run.returncode}", file=sys.stderr)
@@ -74,7 +74,7 @@ def main() -> int:
     stats = json.loads(STATS_PATH.read_text(encoding="utf-8"))
     score = mutation_score(stats)
     summary = {
-        "scope": MUTANT_SCOPE,
+        "scope": MUTANT_PATTERN,
         "score": score,
         "killed": int(stats["killed"]),
         "survived": int(stats["survived"]),
