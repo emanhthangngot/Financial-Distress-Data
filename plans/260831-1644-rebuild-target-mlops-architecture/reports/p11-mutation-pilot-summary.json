@@ -1,0 +1,11 @@
+{
+  "scope": "src/ml/reproducibility_manifest.py",
+  "test_selection": "tests/platform/verification/test_mutmut_target.py",
+  "score": 34.15,
+  "killed": 28,
+  "survived": 54,
+  "timeout": 0,
+  "no_tests": 0,
+  "total": 82,
+  "mutmut_run_exit_code": 0
+}
