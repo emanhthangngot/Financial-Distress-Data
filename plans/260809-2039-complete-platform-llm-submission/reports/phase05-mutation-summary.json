@@ -1,0 +1,11 @@
+{
+  "scope": "llm.rag.chunking.*",
+  "minimum_score_exclusive": 80.0,
+  "score": 86.11,
+  "killed": 62,
+  "survived": 9,
+  "timeout": 1,
+  "no_tests": 0,
+  "total": 72,
+  "mutmut_run_exit_code": 0
+}
