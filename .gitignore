@@ -11,6 +11,7 @@ AGENTS.md
 mutants/
 .venv/
 .venv-platform/
+plans/260809-2039-complete-platform-llm-submission/reports/phase05-web-coverage.data
 *.pyc
 *.egg-info/
 build/
