@@ -15,7 +15,10 @@ REPORT_DIR = REPO_ROOT / "plans/260831-1644-rebuild-target-mlops-architecture/re
 SUMMARY_PATH = REPORT_DIR / "p11-mutation-pilot-summary.json"
 RESULTS_PATH = REPORT_DIR / "p11-mutmut-pilot-results.txt"
 TARGET_MODULES = ["src/ml/reproducibility_manifest.py"]
-TEST_SELECTION = ["tests/platform/verification/test_mutmut_target.py"]
+TEST_SELECTION = [
+    "tests/platform/verification/test_mutmut_target.py",
+    "tests/platform/requirements/test_ml_ac_04_validation.py",
+]
 
 
 ALIAS_CONFTST = """\nfrom importlib.util import module_from_spec, spec_from_file_location
@@ -41,6 +44,7 @@ def main() -> int:
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="p11-mutmut-") as workdir_name:
         workdir = Path(workdir_name)
+        shutil.copytree(REPO_ROOT / "docs", workdir / "docs")
         shutil.copytree(REPO_ROOT / "src", workdir / "src")
         shutil.copytree(REPO_ROOT / "tests", workdir / "tests")
         conftest_path = workdir / "tests" / "conftest.py"
@@ -61,6 +65,7 @@ def main() -> int:
             '    "postgres: requires local initdb/pg_ctl binaries",\n'
             "]\n\n"
             "[tool.mutmut]\n"
+            'also_copy = ["docs", "src/ml"]\n'
             f"source_paths = {TARGET_MODULES!r}\n"
             f"pytest_add_cli_args_test_selection = [{selections}]\n"
             "mutate_only_covered_lines = false\n",

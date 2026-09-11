@@ -3,11 +3,12 @@
     "src/ml/reproducibility_manifest.py"
   ],
   "test_selection": [
-    "tests/platform/verification/test_mutmut_target.py"
+    "tests/platform/verification/test_mutmut_target.py",
+    "tests/platform/requirements/test_ml_ac_04_validation.py"
   ],
-  "score": 15.05,
-  "killed": 28,
-  "survived": 69,
+  "score": 16.67,
+  "killed": 31,
+  "survived": 66,
   "timeout": 0,
   "no_tests": 89,
   "total": 186,
