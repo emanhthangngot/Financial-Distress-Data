@@ -2,17 +2,23 @@
 
 ## Target-plan P11 baseline
 
-Coverage tooling was installed in the passing core environment with:
+Coverage tooling was installed in both declared environments:
 
 ```text
 uv pip install --python .venv/bin/python coverage pytest-cov
+uv pip install --python .venv-platform/bin/python psycopg[binary] hypothesis
 ```
 
-Measured command:
+Coverage was collected in parallel and combined:
 
 ```text
+rm -f .coverage .coverage.*
 .venv/bin/python -m coverage run --parallel-mode \
   --source=src/ml,src/transforms,src/quality -m pytest tests -q
+.venv-platform/bin/python -m coverage run --parallel-mode \
+  --source=src/ml,src/transforms,src/quality -m pytest \
+  tests/platform/requirements/test_ml_ac_04_validation.py \
+  tests/platform/verification/test_mutmut_target.py -q
 .venv/bin/python -m coverage combine
 .venv/bin/python -m coverage report -m
 ```
@@ -20,28 +26,22 @@ Measured command:
 Observed result:
 
 ```text
-378 passed, 2 xfailed, 1 warning
-1,955 statements
-868 missed
-56% total coverage
+Core: 378 passed, 2 xfailed, 1 warning
+Platform ML selection: 13 passed
+Combined: 1,955 statements, 605 missed, 69% total coverage
 ```
 
-`pyproject.toml` enforces `fail_under = 90`, so the threshold fails correctly.
+`pyproject.toml` enforces `fail_under = 90`, so the combined threshold still fails.
 
-## Module gaps
+Important module results:
 
-The ML scope remains substantially below the target. Examples from the report:
+- `src/ml/reproducibility_manifest.py`: 98%
+- `src/ml/ab_router.py`: 89%
+- `src/ml/data_versioning.py`: 74%
+- `src/ml/pipelines/training_pipeline.py`: 85%
+- `src/ml/feast/materialization.py`: 21%
+- `src/ml/label_pipeline.py`: 0%
+- `src/quality/contract_checker.py`: 87%
+- `src/transforms/features/pit.py`: 97%
 
-- `src/ml/contracts.py`: 100%
-- `src/ml/leakage_guard.py`: 68%
-- `src/ml/data_versioning.py`: 0%
-- `src/ml/reproducibility_manifest.py`: 0% in the core suite because its focused platform tests are not part of `tests/`
-- `src/ml/training_pipeline.py`: 0%
-
-The transforms and quality packages also contain modules below 90%, so AC-P11-1 remains open. This is a valid full-suite baseline: unlike the earlier platform attempt, collection completed without dependency errors.
-
-## Environment interpretation
-
-- Core `.venv`: complete repository suite passes and now has coverage tooling; measured total is 56%.
-- Platform `.venv-platform`: focused platform tests pass, but the complete repository collection lacks `psycopg` and `hypothesis`.
-- Target coverage acceptance remains open until the ML-track modules are exercised and every required module exceeds 90%.
+This is now a valid combined core + collectible platform ML baseline. AC-P11-1 remains open because the target ML-track modules are not all above 90% and the full platform suite still has unrelated PostgreSQL/rubric failures.
