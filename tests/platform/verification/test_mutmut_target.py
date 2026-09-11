@@ -7,8 +7,7 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
-_ROOT = Path(__file__).resolve().parents[3]
-MUTANT_ROOT = _ROOT if _ROOT.name == "mutants" else _ROOT
+MUTANT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def load_alias(alias: str, relative_path: str) -> ModuleType:
