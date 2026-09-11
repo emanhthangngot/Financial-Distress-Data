@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
+
+import pytest
 
 MUTANT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def load_alias(alias: str, relative_path: str) -> ModuleType:
+    existing = sys.modules.get("src.ml.reproducibility_manifest")
+    if existing is not None:
+        return existing
     path = MUTANT_ROOT / relative_path
     assert path.is_relative_to(MUTANT_ROOT)
     assert path.exists()
@@ -49,3 +55,53 @@ def test_reproducibility_manifest_alias_contract() -> None:
     assert manifest.snapshot_id == "snapshot-42"
     assert manifest.digest() == expected.digest()
     assert manifest.to_json() == expected.to_json()
+
+
+def test_current_source_sha_success_and_failures(monkeypatch: pytest.MonkeyPatch) -> None:
+    module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
+    monkeypatch.setattr(
+        module.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(stdout="abc123\n"),
+    )
+    assert module.current_source_sha() == "abc123"
+
+    def raise_called_process_error(*args: object, **kwargs: object) -> None:
+        raise subprocess.CalledProcessError(1, "git")
+
+    monkeypatch.setattr(module.subprocess, "run", raise_called_process_error)
+    assert module.current_source_sha() == "unknown"
+
+    def raise_os_error(*args: object, **kwargs: object) -> None:
+        raise OSError("git missing")
+
+    monkeypatch.setattr(module.subprocess, "run", raise_os_error)
+    assert module.current_source_sha() == "unknown"
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"snapshot_id": ""},
+        {"compute_source": "remote"},
+        {"compute_seconds": -1},
+        {"accelerator": ""},
+        {"marginal_cost_usd": -1},
+    ],
+)
+def test_build_manifest_rejects_invalid_inputs(overrides: dict[str, object]) -> None:
+    module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
+    overrides = dict(overrides)
+    kwargs: dict[str, object] = {
+        "source_sha": "abc",
+        "image_digest": "sha256:def",
+        "environment": {"lock": "ghi"},
+        "compute_source": "local",
+        "compute_seconds": 2,
+        "accelerator": "cpu",
+        "marginal_cost_usd": 0,
+    }
+    snapshot_id = str(overrides.pop("snapshot_id", "snapshot-42"))
+    kwargs.update(overrides)
+    with pytest.raises(ValueError):
+        module.build_manifest(snapshot_id, **kwargs)
