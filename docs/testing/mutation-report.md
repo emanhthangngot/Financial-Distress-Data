@@ -12,7 +12,7 @@ The legacy Phase 05 report under `plans/260809-2039-complete-phase2-llm-submissi
 
 ## Isolated pilot
 
-`scripts/run_p11_mutation_gate.py` runs mutmut in a temporary project with a separate `pyproject.toml`, copied `src`, `tests`, and `docs`, while preserving the repository `tests/conftest.py` and appending alias registration. The isolated config includes `pythonpath`, markers, and `also_copy = ["docs", "src/ml"]` so the platform rubric fixture and non-target ML imports resolve inside the mutants tree.
+`scripts/run_p11_mutation_gate.py` runs mutmut in a temporary project with a separate `pyproject.toml`, copied `src`, `tests`, and `docs`, while preserving the repository `tests/conftest.py` and appending alias registration. The isolated config includes `pythonpath`, markers, and `also_copy = ["docs", "src"]` so the platform rubric fixture and non-target ML imports resolve inside the mutants tree.
 
 Pilot module and tests:
 
@@ -20,22 +20,22 @@ Pilot module and tests:
 - `tests/platform/verification/test_mutmut_target.py`
 - `tests/platform/requirements/test_ml_ac_04_validation.py`
 
-Corrected run result:
+The target test harness covers the git source-SHA success/failure paths and the `build_manifest` validation boundaries. It copies parametrized input dictionaries before mutation runs so mutmut's repeated in-process pytest calls do not alter test data.
+
+Latest run result:
 
 ```text
 186 total
-31 killed
-66 survived
+37 killed
+85 survived
 0 timeout
-89 no_tests
-16.67% raw mutation score
+64 no_tests
+19.89% raw mutation score
 ```
 
-The real ML validation selection now collects and passes 7 clean tests. The mutation run reaches actual mutants and kills 31; the remaining `No Tests` classifications are untested functions/branches in the pilot module, not infrastructure collection failures.
+The real ML validation selection runs cleanly. The added boundary tests reduce `No Tests` from 89 to 64 and increase killed mutants from 31 to 37. The result remains below the target and still contains `No Tests`; it is not P11 acceptance evidence.
 
 Artifact: `plans/260831-1644-rebuild-target-mlops-architecture/reports/p11-mutation-pilot-summary.json`.
-
-The result is not acceptable P11 evidence because `no_tests > 0` and the score is below 90%. The untested branches and survivors require behavioral coverage or explicit justification.
 
 ## Current status
 
