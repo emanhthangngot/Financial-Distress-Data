@@ -95,6 +95,8 @@ markers = [
     "postgres: requires local initdb/pg_ctl binaries",
 ]
 
+[tool.coverage.report]
+fail_under = 90
 
 [tool.mutmut]
 # Phase 05's mutation gate is intentionally limited to small pure modules;
