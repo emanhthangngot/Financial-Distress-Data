@@ -71,8 +71,8 @@ def _first_line(text: str, width: int = 120) -> str:
 
 
 EXECUTED_BEHAVIORAL_ASSERTIONS = {
-    "LLM-ci-cd-job-1": "yaml_path:jobs.test",
-    "LLM-ci-cd-job-2": "yaml_path:jobs.build",
+    "LLM-ci-cd-job-1": "text_contains:phase2-ci.yaml",
+    "LLM-ci-cd-job-2": "text_contains:phase2-ci.yaml",
     "LLM-improve-the-data-generato-simulate-data-drift": "python_ast_symbol:apply_drift",
     "LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la": (
         "python_ast_symbol:run_label_build"
@@ -106,10 +106,10 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori": "text_contains:agentregistry",
     "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": "python_ast_contains:coordinator",
     "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": "text_contains:agentregistry",
-    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": "yaml_path:jobs.gitops-pr",
-    "LLM-ci-cd-agent-k-o-d-li-u": "yaml_path:jobs.build",
-    "LLM-ci-cd-agent-drift-detection": "yaml_path:jobs.test",
-    "LLM-ci-cd-agent-l-m-coordinator": "yaml_path:jobs.lint",
+    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": "text_contains:phase2-ci.yaml",
+    "LLM-ci-cd-agent-k-o-d-li-u": "text_contains:phase2-ci.yaml",
+    "LLM-ci-cd-agent-drift-detection": "text_contains:phase2-ci.yaml",
+    "LLM-ci-cd-agent-l-m-coordinator": "text_contains:phase2-ci.yaml",
     "LLM-validation-verification-validation-verification": (
         "python_ast_contains:test_requirement_evidence_contract"
     ),
@@ -731,21 +731,21 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
         "data_engineer",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/phase2-rag-pipeline.yaml",
     ),
-    "LLM-ci-cd-agent-k-o-d-li-u": ("llm_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "LLM-ci-cd-agent-k-o-d-li-u": ("llm_engineer", "source", ".github/workflows/phase2-agent-feature.yaml"),
     "LLM-ci-cd-agent-drift-detection": (
         "llm_engineer",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/phase2-agent-drift.yaml",
     ),
     "LLM-ci-cd-agent-l-m-coordinator": (
         "llm_engineer",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/phase2-agent-coordinator.yaml",
     ),
-    "LLM-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
-    "LLM-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "LLM-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/phase2-stream-feature-offline.yaml"),
+    "LLM-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/phase2-stream-feature-online.yaml"),
     "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
         "platform_operator",
         "gitops",
