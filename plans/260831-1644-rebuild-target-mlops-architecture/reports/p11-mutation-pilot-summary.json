@@ -6,9 +6,9 @@
     "tests/platform/verification/test_mutmut_target.py",
     "tests/platform/requirements/test_ml_ac_04_validation.py"
   ],
-  "score": 19.89,
-  "killed": 37,
-  "survived": 85,
+  "score": 30.11,
+  "killed": 56,
+  "survived": 66,
   "timeout": 0,
   "no_tests": 64,
   "total": 186,

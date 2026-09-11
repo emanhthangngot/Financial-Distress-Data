@@ -14,7 +14,8 @@ MUTANT_ROOT = Path(__file__).resolve().parents[3]
 
 
 def load_alias(alias: str, relative_path: str) -> ModuleType:
-    existing = sys.modules.get("src.ml.reproducibility_manifest")
+    key = "src." + alias
+    existing = sys.modules.get(key)
     if existing is not None:
         return existing
     path = MUTANT_ROOT / relative_path
@@ -59,12 +60,20 @@ def test_reproducibility_manifest_alias_contract() -> None:
 
 def test_current_source_sha_success_and_failures(monkeypatch: pytest.MonkeyPatch) -> None:
     module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
-    monkeypatch.setattr(
-        module.subprocess,
-        "run",
-        lambda *args, **kwargs: SimpleNamespace(stdout="abc123\n"),
-    )
-    assert module.current_source_sha() == "abc123"
+    recorded: list[tuple[tuple[object, ...], dict[str, object]]] = []
+
+    def successful_run(*args: object, **kwargs: object) -> SimpleNamespace:
+        recorded.append((args, kwargs))
+        return SimpleNamespace(stdout="abc123\n")
+
+    monkeypatch.setattr(module.subprocess, "run", successful_run)
+    assert module.current_source_sha(cwd="/x") == "abc123"
+    assert recorded == [
+        (
+            (["git", "rev-parse", "HEAD"],),
+            {"cwd": "/x", "check": True, "capture_output": True, "text": True},
+        )
+    ]
 
     def raise_called_process_error(*args: object, **kwargs: object) -> None:
         raise subprocess.CalledProcessError(1, "git")
