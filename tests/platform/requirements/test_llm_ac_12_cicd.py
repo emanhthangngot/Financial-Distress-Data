@@ -60,7 +60,7 @@ def test_requirement_evidence_contract(rubric_id: str) -> None:
     if row["artifact_repo"] == "gitops":
         if GITOPS_ROOT is None or not GITOPS_ROOT.is_dir():
             pytest.skip(
-                "gitops checkout not available: set PHASE2_GITOPS_ROOT to the "
+                "gitops checkout not available: set PLATFORM_GITOPS_ROOT to the "
                 "financial-distress-gitops working copy"
             )
         root = GITOPS_ROOT

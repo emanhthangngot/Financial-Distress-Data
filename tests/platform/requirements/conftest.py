@@ -20,10 +20,10 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 # Mirrors the auditor's --gitops-root: no baked assumption about a sibling
-# checkout. PHASE2_GITOPS_ROOT overrides; unset, GITOPS_ROOT is None and every
+# checkout. PLATFORM_GITOPS_ROOT overrides; unset, GITOPS_ROOT is None and every
 # gitops-artifact case skips with an explicit "not checked out" reason instead
 # of misreporting a missing checkout as a missing implementation artifact.
-_gitops_env = os.environ.get("PHASE2_GITOPS_ROOT")
+_gitops_env = os.environ.get("PLATFORM_GITOPS_ROOT")
 GITOPS_ROOT = Path(_gitops_env) if _gitops_env else None
 MATRIX_PATH = REPO_ROOT / "docs" / "platform" / "rubric-matrix.csv"
 

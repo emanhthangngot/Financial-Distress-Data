@@ -404,7 +404,7 @@ def _audit_phase1_no_mutation(matrix: list[dict[str, str]]) -> list[str]:
     for row in matrix:
         for value in row.values():
             lowered = value.lower()
-            if "dags/" in lowered and "dags/" not in lowered:
+            if "dags/" in lowered and "dags/drift_monitoring.py" not in lowered:
                 errors.append(f"{row.get('rubric_id', '?')}: matrix references a platform .AG path")
                 break
     return errors
@@ -427,7 +427,10 @@ def _phase1_mutation_from_changed(changed: list[str]) -> list[str]:
         ]
         if unexcepted:
             errors.append(f"Git diff modifies platform protected path '{path}'")
-    if any(entry.startswith("dags/") and not entry.startswith("dags/") for entry in changed):
+    if any(
+        entry.startswith("dags/") and not entry.startswith("dags/drift_monitoring.py")
+        for entry in changed
+    ):
         errors.append("Git diff modifies platform protected DAG path 'dags/'")
     return errors
 
