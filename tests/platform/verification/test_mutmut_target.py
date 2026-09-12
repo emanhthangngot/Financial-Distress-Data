@@ -113,6 +113,8 @@ def test_manifest_from_env_reads_values_and_defaults(
         "MARGINAL_COST_USD",
     ):
         monkeypatch.delenv(key, raising=False)
+    monkeypatch.setattr(module.platform, "python_version", lambda: "3.11.0")
+    monkeypatch.setattr(module.platform, "platform", lambda: "test-platform")
     monkeypatch.setenv(source_key, source_value)
     monkeypatch.setenv("IMAGE_DIGEST", "sha256:image")
     monkeypatch.setenv("REQUIREMENTS_LOCK_SHA", "lock-789")
@@ -127,8 +129,9 @@ def test_manifest_from_env_reads_values_and_defaults(
     assert manifest.snapshot_id == "snapshot-env"
     assert manifest.source_sha == source_value
     assert manifest.image_digest == "sha256:image"
-    assert manifest.environment_digest == module.environment_digest(
-        {"requirements_lock_sha": "lock-789"}
+    assert (
+        manifest.environment_digest
+        == "9a73ed4ebc32b14cccbe28e127cfbaa3b420c8170004a680278e5b6d7b283fd2"
     )
     assert manifest.data_version == "data-v1"
     assert manifest.compute_source == "local"
@@ -151,6 +154,8 @@ def test_manifest_from_env_defaults_optional_values(monkeypatch: pytest.MonkeyPa
         "MARGINAL_COST_USD",
     ):
         monkeypatch.delenv(key, raising=False)
+    monkeypatch.setattr(module.platform, "python_version", lambda: "3.11.0")
+    monkeypatch.setattr(module.platform, "platform", lambda: "test-platform")
     monkeypatch.setenv("GIT_SHA", "fallback-git")
     monkeypatch.setenv("COMPUTE_SOURCE", "gke")
     monkeypatch.setenv("COMPUTE_SECONDS", "0")
@@ -161,10 +166,28 @@ def test_manifest_from_env_defaults_optional_values(monkeypatch: pytest.MonkeyPa
 
     assert manifest.source_sha == "fallback-git"
     assert manifest.image_digest == "unknown"
-    assert manifest.environment_digest == module.environment_digest(
-        {"requirements_lock_sha": "unknown"}
+    assert (
+        manifest.environment_digest
+        == "229390a59be29bf43da92fefb171e0aedc1075951180ba89f44ae3d1db52120b"
     )
     assert manifest.data_version is None
+
+
+def test_manifest_from_env_uses_runtime_source_when_sha_vars_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
+    monkeypatch.setattr(module, "current_source_sha", lambda: "runtime-sha")
+    monkeypatch.setenv("COMPUTE_SOURCE", "local")
+    monkeypatch.setenv("COMPUTE_SECONDS", "1")
+    monkeypatch.setenv("ACCELERATOR", "cpu")
+    monkeypatch.setenv("MARGINAL_COST_USD", "0")
+    for key in ("SOURCE_SHA", "GIT_SHA"):
+        monkeypatch.delenv(key, raising=False)
+
+    manifest = module.manifest_from_env("snapshot-runtime")
+
+    assert manifest.source_sha == "runtime-sha"
 
 
 @pytest.mark.parametrize(

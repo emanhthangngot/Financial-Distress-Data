@@ -20,24 +20,28 @@ Pilot module and tests:
 - `tests/platform/verification/test_mutmut_target.py`
 - `tests/platform/requirements/test_ml_ac_04_validation.py`
 
-The target test harness covers git source-SHA success/failure paths, `build_manifest` validation boundaries, and `manifest_from_env` source fallback, optional defaults, and required-value failures. It copies parametrized input dictionaries before mutation runs so mutmut's repeated in-process pytest calls do not alter test data.
+The target test harness covers git source-SHA success/failure paths, `build_manifest` validation boundaries, and `manifest_from_env` source fallback, optional defaults, required-value failures, and runtime source fallback. The two digest assertions monkeypatch Python/platform identity to stable test values before asserting hard-coded hashes, avoiding self-referential comparisons and host-dependent results. It copies parametrized input dictionaries before mutation runs so mutmut's repeated in-process pytest calls do not alter test data.
 
 ## Before/after survivor counts
 
-| Run | Scope | Total | Killed | Survivors | No tests | Timeout |
-|---|---|---:|---:|---:|---:|---:|
-| Previous pilot | `reproducibility_manifest.py` | 186 | 56 | 66 | 64 | 0 |
-| Latest pilot | `reproducibility_manifest.py` | 186 | 138 | 48 | 0 | 0 |
+| Run | Scope | Total | Killed | Survivors | No tests | Timeout | Raw score |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Previous pilot | `reproducibility_manifest.py` | 186 | 56 | 66 | 64 | 0 | 30.11% |
+| Environment-wrapper tests | `reproducibility_manifest.py` | 186 | 138 | 48 | 0 | 0 | 74.19% |
+| Latest pilot | `reproducibility_manifest.py` | 186 | 157 | 29 | 0 | 0 | 84.41% |
 
-The latest raw mutation score is `74.19%`. Score is reported for diagnosis only; AC-P11-3 is governed by survivor count and written disposition, not an invented percentage threshold.
+The latest run exceeds the rubric mutation-score requirement of `>80%` for the bounded pilot, but it does not satisfy the full target-plan scope yet. AC-P11-3 additionally requires every survivor to be killed or justified in writing; 29 survivors remain without individual disposition.
 
-The latest direct target suite passes `14 tests`. The new environment-wrapper cases eliminated all 64 previous `No Tests` mutants; 48 survivors remain and have not yet been individually killed or justified. The report therefore does not claim AC-P11-3 complete.
+The latest direct target suite passes `15 tests`. A direct coverage run reports `100%` for `src/ml/reproducibility_manifest.py` (`55 statements, 0 missed`). This is module evidence, not a claim that all ML-track modules exceed the P11 90% requirement.
 
-Artifact: `plans/260831-1644-rebuild-target-mlops-architecture/reports/p11-mutation-pilot-summary.json`.
+Artifacts:
+
+- `plans/260831-1644-rebuild-target-mlops-architecture/reports/p11-mutation-pilot-summary.json`
+- `plans/260831-1644-rebuild-target-mlops-architecture/reports/p11-mutmut-pilot-results.txt`
 
 ## Next mutation work
 
-1. Inspect the remaining 48 survivors and add behavioral cases where a real invariant is missing.
+1. Inspect the remaining 29 survivors and add behavioral cases where a real invariant is missing.
 2. Record a disposition for every remaining survivor: killed by a behavioral case or justified with the mutation name and invariant it does not violate.
 3. Expand `TARGET_MODULES` to `src/ml/`, `src/transforms/`, and `src/quality/` only after the bounded module pilot has complete survivor disposition.
 

@@ -1,27 +1,8 @@
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_2: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_3: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_4: survived
     ml.reproducibility_manifest.x__canonical_digest__mutmut_5: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_7: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_8: survived
     ml.reproducibility_manifest.x__canonical_digest__mutmut_9: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_10: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_11: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_12: survived
     ml.reproducibility_manifest.x__canonical_digest__mutmut_16: survived
     ml.reproducibility_manifest.x_current_source_sha__mutmut_24: survived
     ml.reproducibility_manifest.x_current_source_sha__mutmut_25: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_5: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_6: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_7: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_8: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_9: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_11: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_12: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_13: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_14: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_15: survived
-    ml.reproducibility_manifest.x_environment_digest__mutmut_16: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_1: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_2: survived
     ml.reproducibility_manifest.x_build_manifest__mutmut_3: survived
