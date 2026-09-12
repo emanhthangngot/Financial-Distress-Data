@@ -248,3 +248,4 @@ def test_build_manifest_rejects_invalid_inputs(overrides: dict[str, object]) -> 
     kwargs.update(overrides)
     with pytest.raises(ValueError):
         module.build_manifest(snapshot_id, **kwargs)
+

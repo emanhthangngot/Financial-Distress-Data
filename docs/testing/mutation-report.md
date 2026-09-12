@@ -20,7 +20,7 @@ Pilot module and tests:
 - `tests/platform/verification/test_mutmut_target.py`
 - `tests/platform/requirements/test_ml_ac_04_validation.py`
 
-The target test harness covers git source-SHA success/failure paths, `build_manifest` validation boundaries, and `manifest_from_env` source fallback, optional defaults, required-value failures, and runtime source fallback. The two digest assertions monkeypatch Python/platform identity to stable test values before asserting hard-coded hashes, avoiding self-referential comparisons and host-dependent results. It copies parametrized input dictionaries before mutation runs so mutmut's repeated in-process pytest calls do not alter test data.
+The target test harness covers git source-SHA success/failure paths, `build_manifest` validation boundaries, `manifest_from_env` source fallback, optional defaults, required-value failures, and runtime source fallback. The `manifest_from_env` digest assertions monkeypatch Python/platform identity to stable test values; the canonical digest assertion independently covers sorted keys, compact separators, UTF-8 encoding, and `default=str`. These hard-coded hashes avoid self-referential comparisons and host-dependent results. It copies parametrized input dictionaries before mutation runs so mutmut's repeated in-process pytest calls do not alter test data.
 
 ## Before/after survivor counts
 
@@ -29,6 +29,7 @@ The target test harness covers git source-SHA success/failure paths, `build_mani
 | Previous pilot | `reproducibility_manifest.py` | 186 | 56 | 66 | 64 | 0 | 30.11% |
 | Environment-wrapper tests | `reproducibility_manifest.py` | 186 | 138 | 48 | 0 | 0 | 74.19% |
 | Latest pilot | `reproducibility_manifest.py` | 186 | 159 | 27 | 0 | 0 | 85.48% |
+
 The latest run exceeds the rubric mutation-score requirement of `>80%` for the bounded pilot, but it does not satisfy the full target-plan scope yet. AC-P11-3 additionally requires every survivor to be killed or justified in writing; 27 survivors remain without individual disposition.
 
 The latest direct target suite passes `16 tests`. A direct coverage run reports `100%` for `src/ml/reproducibility_manifest.py` (`55 statements, 0 missed`). This is module evidence, not a claim that all ML-track modules exceed the P11 90% requirement.
