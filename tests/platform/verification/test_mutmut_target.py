@@ -88,6 +88,15 @@ def test_current_source_sha_success_and_failures(monkeypatch: pytest.MonkeyPatch
     assert module.current_source_sha() == "unknown"
 
 
+def test_canonical_digest_uses_sorted_compact_json() -> None:
+    module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
+
+    assert (
+        module._canonical_digest({"b": [2, "x"], "a": {"nested": True}})
+        == "6bb320758eb0af731177624e89f555732a1c5c990c0ef557dc1112e5f6599cc6"
+    )
+
+
 @pytest.mark.parametrize(
     ("source_key", "source_value"),
     [
