@@ -19,6 +19,7 @@ This document maps the currently implemented ML validation cases to their input 
 
 Every row must map to a real `@pytest.mark.parametrize` case for AC-P11-2. The current legacy-style tests include several direct assertions rather than parametrization; those rows remain identified here so they can be converted without losing the boundary contract.
 
-## Open coverage
+## Open scope
 
-This table covers the bounded ML validation pilot only. Partitions for the full `src/ml/`, `src/transforms/`, and `src/quality/` target scope are pending.
+This table covers the bounded validation pilot. Full transform, quality, load, and runtime consumer
+partitions remain open independently of the explicitly deferred coverage criterion.
