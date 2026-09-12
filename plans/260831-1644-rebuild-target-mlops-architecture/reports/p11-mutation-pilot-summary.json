@@ -6,11 +6,11 @@
     "tests/platform/verification/test_mutmut_target.py",
     "tests/platform/requirements/test_ml_ac_04_validation.py"
   ],
-  "score": 30.11,
-  "killed": 56,
-  "survived": 66,
+  "score": 74.19,
+  "killed": 138,
+  "survived": 48,
   "timeout": 0,
-  "no_tests": 64,
+  "no_tests": 0,
   "total": 186,
   "mutmut_run_exit_code": 0
 }

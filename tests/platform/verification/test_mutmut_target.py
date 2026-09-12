@@ -89,6 +89,107 @@ def test_current_source_sha_success_and_failures(monkeypatch: pytest.MonkeyPatch
 
 
 @pytest.mark.parametrize(
+    ("source_key", "source_value"),
+    [
+        ("SOURCE_SHA", "source-123"),
+        ("GIT_SHA", "git-456"),
+    ],
+)
+def test_manifest_from_env_reads_values_and_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+    source_key: str,
+    source_value: str,
+) -> None:
+    module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
+    for key in (
+        "SOURCE_SHA",
+        "GIT_SHA",
+        "IMAGE_DIGEST",
+        "REQUIREMENTS_LOCK_SHA",
+        "DATA_VERSION",
+        "COMPUTE_SOURCE",
+        "COMPUTE_SECONDS",
+        "ACCELERATOR",
+        "MARGINAL_COST_USD",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv(source_key, source_value)
+    monkeypatch.setenv("IMAGE_DIGEST", "sha256:image")
+    monkeypatch.setenv("REQUIREMENTS_LOCK_SHA", "lock-789")
+    monkeypatch.setenv("DATA_VERSION", "data-v1")
+    monkeypatch.setenv("COMPUTE_SOURCE", "local")
+    monkeypatch.setenv("COMPUTE_SECONDS", "2.5")
+    monkeypatch.setenv("ACCELERATOR", "cpu")
+    monkeypatch.setenv("MARGINAL_COST_USD", "0.25")
+
+    manifest = module.manifest_from_env("snapshot-env")
+
+    assert manifest.snapshot_id == "snapshot-env"
+    assert manifest.source_sha == source_value
+    assert manifest.image_digest == "sha256:image"
+    assert manifest.environment_digest == module.environment_digest(
+        {"requirements_lock_sha": "lock-789"}
+    )
+    assert manifest.data_version == "data-v1"
+    assert manifest.compute_source == "local"
+    assert manifest.compute_seconds == 2.5
+    assert manifest.accelerator == "cpu"
+    assert manifest.marginal_cost_usd == 0.25
+
+
+def test_manifest_from_env_defaults_optional_values(monkeypatch: pytest.MonkeyPatch) -> None:
+    module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
+    for key in (
+        "SOURCE_SHA",
+        "GIT_SHA",
+        "IMAGE_DIGEST",
+        "REQUIREMENTS_LOCK_SHA",
+        "DATA_VERSION",
+        "COMPUTE_SOURCE",
+        "COMPUTE_SECONDS",
+        "ACCELERATOR",
+        "MARGINAL_COST_USD",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.setenv("GIT_SHA", "fallback-git")
+    monkeypatch.setenv("COMPUTE_SOURCE", "gke")
+    monkeypatch.setenv("COMPUTE_SECONDS", "0")
+    monkeypatch.setenv("ACCELERATOR", "gpu")
+    monkeypatch.setenv("MARGINAL_COST_USD", "0")
+
+    manifest = module.manifest_from_env("snapshot-defaults")
+
+    assert manifest.source_sha == "fallback-git"
+    assert manifest.image_digest == "unknown"
+    assert manifest.environment_digest == module.environment_digest(
+        {"requirements_lock_sha": "unknown"}
+    )
+    assert manifest.data_version is None
+
+
+@pytest.mark.parametrize(
+    "missing_key", ["COMPUTE_SOURCE", "COMPUTE_SECONDS", "ACCELERATOR", "MARGINAL_COST_USD"]
+)
+def test_manifest_from_env_rejects_missing_required_values(
+    monkeypatch: pytest.MonkeyPatch, missing_key: str
+) -> None:
+    module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
+    values = {
+        "SOURCE_SHA": "source-123",
+        "COMPUTE_SOURCE": "local",
+        "COMPUTE_SECONDS": "2",
+        "ACCELERATOR": "cpu",
+        "MARGINAL_COST_USD": "0",
+    }
+    for key, value in values.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.delenv(missing_key, raising=False)
+
+    with pytest.raises(ValueError):
+        module.manifest_from_env("snapshot-invalid")
+
+
+@pytest.mark.parametrize(
     "overrides",
     [
         {"snapshot_id": ""},
