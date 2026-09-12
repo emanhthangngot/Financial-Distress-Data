@@ -12,11 +12,14 @@ The legacy Phase 05 report under `plans/260809-2039-complete-phase2-llm-submissi
 
 ## Isolated pilot
 
-`scripts/run_p11_mutation_gate.py` runs mutmut in a temporary project with a separate `pyproject.toml`, copied `src`, `tests`, and `docs`, while preserving the repository `tests/conftest.py` and appending alias registration. The isolated config includes `pythonpath`, markers, and `also_copy = ["docs", "src/ml"]` so the platform rubric fixture and target ML imports resolve inside the mutants tree.
+The isolated config includes `pythonpath`, markers, and `also_copy = ["docs", "src/ml", "src/quality", "src/transforms", "src/metadata"]` so all target modules and their schema dependency resolve inside the mutants tree.
 
-Pilot module and tests:
+
+Pilot modules and tests:
 
 - `src/ml/reproducibility_manifest.py`
+- `src/quality/dq_checks.py`
+- `src/transforms/silver/core.py`
 - `tests/platform/verification/test_mutmut_target.py`
 - `tests/platform/requirements/test_ml_ac_04_validation.py`
 
@@ -28,11 +31,10 @@ The target test harness covers git source-SHA success/failure paths, `build_mani
 |---|---|---:|---:|---:|---:|---:|---:|
 | Previous pilot | `reproducibility_manifest.py` | 186 | 56 | 66 | 64 | 0 | 30.11% |
 | Environment-wrapper tests | `reproducibility_manifest.py` | 186 | 138 | 48 | 0 | 0 | 74.19% |
+| Latest bounded pilot | `reproducibility_manifest.py` | 186 | 159 | 27 | 0 | 0 | 85.48% |
 | Latest expanded pilot | `reproducibility_manifest.py`, `dq_checks.py`, `silver/core.py` | 692 | 358 | 283 | 51 | 0 | 51.73% |
 
 The expanded run exercises all three bounded target modules, but it does not satisfy AC-P11-3: 51 mutants had no tests and 283 survived without individual disposition. The earlier single-module pilot exceeded the rubric mutation-score requirement; the expanded score is not a passing gate.
-
-The latest direct target suite passes `18 tests`. The canonical digest and module alias tests are included in the direct suite; module-wide coverage and mutation disposition remain incomplete.
 
 Artifacts:
 
