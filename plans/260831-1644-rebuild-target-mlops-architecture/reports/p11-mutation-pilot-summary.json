@@ -6,13 +6,15 @@
   ],
   "test_selection": [
     "tests/platform/verification/test_mutmut_target.py",
-    "tests/platform/requirements/test_ml_ac_04_validation.py"
+    "tests/platform/requirements/test_ml_ac_04_validation.py",
+    "tests/test_dq_checks.py",
+    "tests/test_bronze_to_silver.py"
   ],
-  "score": 51.73,
-  "killed": 358,
-  "survived": 283,
+  "score": 61.71,
+  "killed": 427,
+  "survived": 265,
   "timeout": 0,
-  "no_tests": 51,
+  "no_tests": 0,
   "total": 692,
   "mutmut_run_exit_code": 0
 }

@@ -22,8 +22,8 @@ Pilot modules and tests:
 - `src/transforms/silver/core.py`
 - `tests/platform/verification/test_mutmut_target.py`
 - `tests/platform/requirements/test_ml_ac_04_validation.py`
-
-The target test harness covers git source-SHA success/failure paths, `build_manifest` validation boundaries, `manifest_from_env` source fallback, optional defaults, required-value failures, and runtime source fallback. The `manifest_from_env` digest assertions monkeypatch Python/platform identity to stable test values; the canonical digest assertion independently covers sorted keys, compact separators, UTF-8 encoding, and `default=str`. These hard-coded hashes avoid self-referential comparisons and host-dependent results. It copies parametrized input dictionaries before mutation runs so mutmut's repeated in-process pytest calls do not alter test data.
+- `tests/test_dq_checks.py`
+- `tests/test_bronze_to_silver.py`
 
 ## Before/after survivor counts
 
@@ -32,9 +32,13 @@ The target test harness covers git source-SHA success/failure paths, `build_mani
 | Previous pilot | `reproducibility_manifest.py` | 186 | 56 | 66 | 64 | 0 | 30.11% |
 | Environment-wrapper tests | `reproducibility_manifest.py` | 186 | 138 | 48 | 0 | 0 | 74.19% |
 | Latest bounded pilot | `reproducibility_manifest.py` | 186 | 159 | 27 | 0 | 0 | 85.48% |
-| Latest expanded pilot | `reproducibility_manifest.py`, `dq_checks.py`, `silver/core.py` | 692 | 358 | 283 | 51 | 0 | 51.73% |
+| Latest expanded pilot | `reproducibility_manifest.py`, `dq_checks.py`, `silver/core.py` | 692 | 427 | 265 | 0 | 0 | 61.71% |
 
-The expanded run exercises all three bounded target modules, but it does not satisfy AC-P11-3: 51 mutants had no tests and 283 survived without individual disposition. The earlier single-module pilot exceeded the rubric mutation-score requirement; the expanded score is not a passing gate.
+The expanded run exercises all three bounded target modules with the platform verification tests plus
+the existing DQ and Bronze→Silver suites. It eliminates the prior no-test bucket, but it does not
+satisfy AC-P11-3: 265 mutants still require individual kill-or-justify disposition. The earlier
+single-module pilot exceeded the rubric mutation-score requirement; the expanded score is not a
+passing gate.
 
 Artifacts:
 

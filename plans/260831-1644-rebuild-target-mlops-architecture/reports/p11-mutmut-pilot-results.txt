@@ -28,16 +28,12 @@
     quality.dq_checks.x_check_not_null__mutmut_3: survived
     quality.dq_checks.x_check_not_null__mutmut_6: survived
     quality.dq_checks.x_check_not_null__mutmut_7: survived
-    quality.dq_checks.x_check_not_null__mutmut_9: survived
     quality.dq_checks.x_check_not_null__mutmut_10: survived
     quality.dq_checks.x_check_not_null__mutmut_11: survived
     quality.dq_checks.x_check_not_null__mutmut_12: survived
-    quality.dq_checks.x_check_not_null__mutmut_16: survived
     quality.dq_checks.x_check_not_null__mutmut_17: survived
     quality.dq_checks.x_check_not_null__mutmut_18: survived
     quality.dq_checks.x_check_not_null__mutmut_19: survived
-    quality.dq_checks.x_check_not_null__mutmut_26: survived
-    quality.dq_checks.x_check_not_null__mutmut_27: survived
     quality.dq_checks.x_check_not_null__mutmut_29: survived
     quality.dq_checks.x_check_not_null__mutmut_30: survived
     quality.dq_checks.x_check_not_null__mutmut_31: survived
@@ -67,54 +63,30 @@
     quality.dq_checks.x_check_unique__mutmut_40: survived
     quality.dq_checks.x_check_unique__mutmut_41: survived
     quality.dq_checks.x_check_unique__mutmut_42: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_1: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_2: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_4: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_5: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_6: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_7: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_9: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_12: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_20: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_23: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_24: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_26: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_27: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_28: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_29: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_33: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_34: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_35: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_36: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_39: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_40: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_41: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_46: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_47: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_48: survived
-    quality.dq_checks.x_check_latest_vintage_unique__mutmut_49: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_51: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_52: survived
     quality.dq_checks.x_check_latest_vintage_unique__mutmut_53: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_1: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_9: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_11: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_12: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_13: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_15: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_16: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_18: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_19: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_20: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_21: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_25: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_26: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_27: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_28: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_32: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_33: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_34: survived
-    quality.dq_checks.x_check_null_rate_ceiling__mutmut_35: survived
     quality.dq_checks.x_check_null_rate_ceiling__mutmut_36: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_3: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_5: survived
@@ -122,41 +94,30 @@
     quality.dq_checks.x_check_referential_integrity__mutmut_7: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_9: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_10: survived
-    quality.dq_checks.x_check_referential_integrity__mutmut_12: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_13: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_14: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_15: survived
-    quality.dq_checks.x_check_referential_integrity__mutmut_19: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_20: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_21: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_22: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_23: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_24: survived
-    quality.dq_checks.x_check_referential_integrity__mutmut_29: survived
-    quality.dq_checks.x_check_referential_integrity__mutmut_30: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_32: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_33: survived
     quality.dq_checks.x_check_referential_integrity__mutmut_34: survived
     quality.dq_checks.x_check_retention__mutmut_3: survived
     quality.dq_checks.x_check_retention__mutmut_5: survived
-    quality.dq_checks.x_check_retention__mutmut_6: survived
     quality.dq_checks.x_check_retention__mutmut_7: survived
     quality.dq_checks.x_check_retention__mutmut_8: survived
-    quality.dq_checks.x_check_retention__mutmut_10: survived
     quality.dq_checks.x_check_retention__mutmut_11: survived
     quality.dq_checks.x_check_retention__mutmut_12: survived
     quality.dq_checks.x_check_retention__mutmut_13: survived
-    quality.dq_checks.x_check_retention__mutmut_17: survived
     quality.dq_checks.x_check_retention__mutmut_18: survived
     quality.dq_checks.x_check_retention__mutmut_19: survived
     quality.dq_checks.x_check_retention__mutmut_20: survived
     quality.dq_checks.x_check_retention__mutmut_21: survived
     quality.dq_checks.x_check_retention__mutmut_22: survived
     quality.dq_checks.x_check_retention__mutmut_25: survived
-    quality.dq_checks.x_check_retention__mutmut_26: survived
-    quality.dq_checks.x_check_retention__mutmut_27: survived
-    quality.dq_checks.x_check_retention__mutmut_28: survived
-    quality.dq_checks.x_check_retention__mutmut_29: survived
     quality.dq_checks.x_check_retention__mutmut_30: survived
     quality.dq_checks.x_check_retention__mutmut_31: survived
     quality.dq_checks.x_check_retention__mutmut_32: survived
@@ -189,7 +150,6 @@
     quality.dq_checks.x_check_freshness__mutmut_30: survived
     quality.dq_checks.x_check_freshness__mutmut_31: survived
     quality.dq_checks.x_check_freshness__mutmut_32: survived
-    quality.dq_checks.x_check_freshness__mutmut_38: survived
     quality.dq_checks.x_check_freshness__mutmut_39: survived
     quality.dq_checks.x_check_freshness__mutmut_40: survived
     quality.dq_checks.x_check_freshness__mutmut_41: survived
@@ -217,19 +177,9 @@
     quality.dq_checks.x_check_freshness__mutmut_63: survived
     quality.dq_checks.x_check_freshness__mutmut_64: survived
     quality.dq_checks.x_check_freshness__mutmut_65: survived
-    quality.dq_checks.x_check_freshness__mutmut_67: survived
-    quality.dq_checks.x_check_freshness__mutmut_68: survived
-    quality.dq_checks.x_check_freshness__mutmut_69: survived
     quality.dq_checks.x_check_freshness__mutmut_70: survived
-    quality.dq_checks.x_check_freshness__mutmut_74: survived
-    quality.dq_checks.x_check_freshness__mutmut_75: survived
-    quality.dq_checks.x_check_freshness__mutmut_76: survived
     quality.dq_checks.x_check_freshness__mutmut_77: survived
     quality.dq_checks.x_check_freshness__mutmut_80: survived
-    quality.dq_checks.x_check_freshness__mutmut_81: survived
-    quality.dq_checks.x_check_freshness__mutmut_82: survived
-    quality.dq_checks.x_check_freshness__mutmut_83: survived
-    quality.dq_checks.x_check_freshness__mutmut_84: survived
     quality.dq_checks.x_check_freshness__mutmut_87: survived
     quality.dq_checks.x_check_freshness__mutmut_88: survived
     quality.dq_checks.x_check_freshness__mutmut_89: survived
@@ -281,54 +231,35 @@
     transforms.silver.core.x__created_timestamp__mutmut_2: survived
     transforms.silver.core.x__created_timestamp__mutmut_8: survived
     transforms.silver.core.x__created_timestamp__mutmut_9: survived
-    transforms.silver.core.x_bronze_to_silver__mutmut_1: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_2: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_3: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_4: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_5: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_6: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_7: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_8: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_9: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_10: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_11: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_12: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_13: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_14: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_15: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_16: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_17: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_18: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_19: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_20: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_21: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_22: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_23: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_24: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_25: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_26: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_27: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_28: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_29: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_30: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_31: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_32: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_33: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_34: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_35: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_36: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_37: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_38: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_39: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_40: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_41: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_42: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_43: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_44: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_45: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_46: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_47: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_48: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_49: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_50: no tests
-    transforms.silver.core.x_bronze_to_silver__mutmut_51: no tests
+    transforms.silver.core.x_bronze_to_silver__mutmut_1: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_3: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_4: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_5: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_6: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_7: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_8: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_9: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_10: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_15: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_16: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_17: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_18: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_19: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_20: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_21: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_25: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_26: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_27: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_28: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_36: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_37: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_38: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_39: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_40: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_41: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_42: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_43: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_44: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_45: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_46: survived
+    transforms.silver.core.x_bronze_to_silver__mutmut_47: survived

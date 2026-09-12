@@ -22,6 +22,8 @@ TARGET_MODULES = [
 TEST_SELECTION = [
     "tests/platform/verification/test_mutmut_target.py",
     "tests/platform/requirements/test_ml_ac_04_validation.py",
+    "tests/test_dq_checks.py",
+    "tests/test_bronze_to_silver.py",
 ]
 
 
