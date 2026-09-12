@@ -1,16 +1,18 @@
 {
   "scope": [
-    "src/ml/reproducibility_manifest.py"
+    "src/ml/reproducibility_manifest.py",
+    "src/quality/dq_checks.py",
+    "src/transforms/silver/core.py"
   ],
   "test_selection": [
     "tests/platform/verification/test_mutmut_target.py",
     "tests/platform/requirements/test_ml_ac_04_validation.py"
   ],
-  "score": 85.48,
-  "killed": 159,
-  "survived": 27,
+  "score": 51.73,
+  "killed": 358,
+  "survived": 283,
   "timeout": 0,
-  "no_tests": 0,
-  "total": 186,
+  "no_tests": 51,
+  "total": 692,
   "mutmut_run_exit_code": 0
 }

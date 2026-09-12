@@ -249,3 +249,73 @@ def test_build_manifest_rejects_invalid_inputs(overrides: dict[str, object]) -> 
     with pytest.raises(ValueError):
         module.build_manifest(snapshot_id, **kwargs)
 
+
+def test_dq_checks_alias_contracts() -> None:
+    module = load_alias("quality.dq_checks", "src/quality/dq_checks.py")
+
+    assert module.check_not_null([{"ticker": "AAA"}], "companies", "ticker").status == "pass"
+    assert module.check_not_null([{"ticker": None}], "companies", "ticker").status == "fail"
+    assert (
+        module.check_unique(
+            [{"ticker": "AAA"}, {"ticker": "AAA"}], "companies", ["ticker"]
+        ).metric_value
+        == 1.0
+    )
+    assert (
+        module.check_latest_vintage_unique(
+            [{"ticker": "AAA", "is_latest_vintage": True}], "companies", ["ticker"]
+        ).status
+        == "pass"
+    )
+    assert (
+        module.check_null_rate_ceiling(
+            [{"key": None}, {"key": "v1"}], "facts", "key", ceiling=0.5
+        ).status
+        == "pass"
+    )
+    assert (
+        module.check_referential_integrity([{"key": "missing"}], {"known"}, "facts", "key").status
+        == "fail"
+    )
+    assert module.check_retention(10, 9, "facts").status == "pass"
+    assert (
+        module.check_freshness(
+            [{"event_timestamp": "2026-01-01T02:00:00Z"}],
+            "prices",
+            "2026-01-01T02:30:00Z",
+            60,
+        ).status
+        == "pass"
+    )
+
+
+def test_silver_core_alias_contracts() -> None:
+    module = load_alias("transforms.silver.core", "src/transforms/silver/core.py")
+
+    assert module.normalize_columns({" Ticker ": "AAA"}) == {"ticker": "AAA"}
+    assert module.align_to_schema({"ticker": "AAA"}, ["ticker"], ["name"]) == {
+        "ticker": "AAA",
+        "name": None,
+    }
+    with pytest.raises(ValueError, match="missing required fields"):
+        module.align_to_schema({}, ["ticker"], [])
+
+    rows = [
+        {"ticker": "AAA", "created_ts": "2026-01-01T00:00:00Z", "value": 1},
+        {"ticker": "AAA", "created_ts": "2026-01-02T00:00:00Z", "value": 2},
+    ]
+    assert module.deduplicate_latest(rows, ["ticker"]) == [rows[1]]
+    vintages = [
+        {
+            "ticker": "AAA",
+            "known_from_ts": "2025-01-01T00:00:00Z",
+            "created_ts": "2026-01-01T00:00:00Z",
+        },
+        {
+            "ticker": "AAA",
+            "known_from_ts": "2026-02-01T00:00:00Z",
+            "created_ts": "2026-01-01T00:00:00Z",
+        },
+    ]
+    preserved = module.deduplicate_preserve_vintage(vintages, ["ticker"])
+    assert [row["is_latest_vintage"] for row in preserved] == [False, True]

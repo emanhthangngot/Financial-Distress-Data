@@ -28,11 +28,11 @@ The target test harness covers git source-SHA success/failure paths, `build_mani
 |---|---|---:|---:|---:|---:|---:|---:|
 | Previous pilot | `reproducibility_manifest.py` | 186 | 56 | 66 | 64 | 0 | 30.11% |
 | Environment-wrapper tests | `reproducibility_manifest.py` | 186 | 138 | 48 | 0 | 0 | 74.19% |
-| Latest pilot | `reproducibility_manifest.py` | 186 | 159 | 27 | 0 | 0 | 85.48% |
+| Latest expanded pilot | `reproducibility_manifest.py`, `dq_checks.py`, `silver/core.py` | 692 | 358 | 283 | 51 | 0 | 51.73% |
 
-The latest run exceeds the rubric mutation-score requirement of `>80%` for the bounded pilot, but it does not satisfy the full target-plan scope yet. AC-P11-3 additionally requires every survivor to be killed or justified in writing; 27 survivors remain without individual disposition.
+The expanded run exercises all three bounded target modules, but it does not satisfy AC-P11-3: 51 mutants had no tests and 283 survived without individual disposition. The earlier single-module pilot exceeded the rubric mutation-score requirement; the expanded score is not a passing gate.
 
-The latest direct target suite passes `16 tests`. A direct coverage run reports `100%` for `src/ml/reproducibility_manifest.py` (`55 statements, 0 missed`). This is module evidence, not a claim that all ML-track modules exceed the P11 90% requirement.
+The latest direct target suite passes `18 tests`. The canonical digest and module alias tests are included in the direct suite; module-wide coverage and mutation disposition remain incomplete.
 
 Artifacts:
 
