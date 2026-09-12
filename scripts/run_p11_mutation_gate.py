@@ -14,7 +14,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORT_DIR = REPO_ROOT / "plans/260831-1644-rebuild-target-mlops-architecture/reports"
 SUMMARY_PATH = REPORT_DIR / "p11-mutation-pilot-summary.json"
 RESULTS_PATH = REPORT_DIR / "p11-mutmut-pilot-results.txt"
-TARGET_MODULES = ["src/ml/reproducibility_manifest.py"]
+TARGET_MODULES = [
+    "src/ml/reproducibility_manifest.py",
+    "src/quality/dq_checks.py",
+    "src/transforms/silver/core.py",
+]
 TEST_SELECTION = [
     "tests/platform/verification/test_mutmut_target.py",
     "tests/platform/requirements/test_ml_ac_04_validation.py",
@@ -65,7 +69,7 @@ def main() -> int:
             '    "postgres: requires local initdb/pg_ctl binaries",\n'
             "]\n\n"
             "[tool.mutmut]\n"
-            'also_copy = ["docs", "src/ml"]\n'
+            'also_copy = ["docs", "src/ml", "src/quality", "src/transforms", "src/metadata"]\n'
             f"source_paths = {TARGET_MODULES!r}\n"
             f"pytest_add_cli_args_test_selection = [{selections}]\n"
             "mutate_only_covered_lines = false\n",
