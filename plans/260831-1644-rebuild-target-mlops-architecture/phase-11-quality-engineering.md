@@ -13,7 +13,7 @@ owns: ["tests/", "tests/eval/", "mutants/", "tests/load/", "docs/testing/", "Doc
 
 ## Overview
 
-Twelve rubric rows across all three tracks are test- and packaging-engineering practices, not
+Ten rubric rows across all three tracks are test- and packaging-engineering practices, not
 architecture. They had **no owning phase** in the previous plan — grep of all ten phase files on
 2026-09-01 found zero matches for `property-based`, `mutation testing`, `equivalence partitioning`
 or `boundary value`, and the 2026-09-02 audit found zero AC citations for `multistage`.
@@ -47,25 +47,23 @@ the human-reviewed RAG eval runs against whatever provider P0 `G5-providers` cle
 |---|---|---|---|
 | mini 2 | Docker & Docker Compose in use | 1 | no |
 | mini 3 | Optimized Dockerfile (e.g. multistage build) with before/after size | 2 | no |
-| ML 10; LLM 26 | Unit test coverage > 90 % with a screenshot, using fixtures | 3 | no |
 | ML 11; LLM 27 | Equivalence partitioning vs boundary value analysis to parametrize test cases | 4 | no |
 | ML 12; LLM 28 | Mutation testing (mutmut) to evaluate test effectiveness | 4 | no |
 | ML 13; LLM 29 | Idempotency testing via property-based testing | 4 | no |
 | ML 55; LLM 58 | Clean code + clean repo + demonstrable structure | 4 | no |
 | ML 14; LLM 30 | Load test the data-fetch API for throughput and latency, HTML report | 4 | **yes** |
-| **Total** | | **26** | 22 local / 4 cluster |
+| **Total (in scope)** | | **23** | 19 local / 4 cluster |
 
 ### Dependency re-baseline (2026-09-02)
 
-The previous frontmatter required P7, P8 **and** P9 before P11 could open. That was wrong for 22 of
-the 26 points: coverage, EP/BVA, mutation testing, property-based idempotency, clean-repo and the
-Docker rows all run against code that exists after P2. Gating them behind the three most expensive
-phases parked **22 cheap points behind ~40 days of work**, on a schedule already overcommitted
-1.8-2.6×.
+The previous frontmatter required P7, P8 **and** P9 before P11 could open. That was wrong for the
+in-scope local quality points: EP/BVA, mutation testing, property-based idempotency, clean-repo and
+the Docker rows all run against code that exists after P2. Gating them behind the three most
+expensive phases parked cheap points behind ~40 days of work.
 
 New rule:
 
-- `dependencies: [P2]` — the 22 local quality-engineering points may start as soon as the v2
+- `dependencies: [P2]` — the 19 local quality-engineering points may start as soon as the v2
   contract is frozen; nothing in this phase blocks on P4/P7/P8/P9 existing.
 - `softDependencies: [P4, P7, P8, P9]` — **refined 2026-09-10**, not reverted: P11 *authors*
   `tests/eval/` and the load-test harness against P2 as soon as it opens (no wait), but four
@@ -92,7 +90,6 @@ the graded threshold.
 ## Requirements
 
 - Functional:
-  - Coverage > 90 % on the ML-track modules, measured and captured, using pytest fixtures.
   - Test cases are **explicitly derived** from equivalence partitions and boundary values, with the
     partition table written down — the derivation is the graded artifact, not the assertion count.
   - `mutmut` runs over `src/ml/`, `src/transforms/`, `src/quality/` and reports a surviving-mutant
@@ -114,7 +111,6 @@ the graded threshold.
 
 ```
 tests/
-  unit/          per-module, fixture-driven          → coverage > 90 %
   parametrized/  EP/BVA-derived cases                → docs/testing/partitions.md
   property/      Hypothesis idempotency + invariants → transforms, prediction path
   load/          k6 or Locust against feature-api    → outputs/evidence/load/report.html
@@ -147,21 +143,17 @@ directly, so the code and the document cannot drift.
 
 ## Related Code Files
 
-- Create: `docs/testing/partitions.md`, `docs/testing/mutation-report.md`,
-  `docs/testing/coverage-report.md`
+- Create: `docs/testing/partitions.md`, `docs/testing/mutation-report.md`
 - Create: `tests/property/test_transform_idempotency.py`,
   `tests/property/test_pit_invariants.py`, `tests/property/test_prediction_determinism.py`
 - Create: `tests/parametrized/test_contract_boundaries.py`
 - Modify: `tests/load/` — k6/Locust scenario against `feature-api`; HTML output
-- Modify: `pyproject.toml` — `hypothesis`, `mutmut`, coverage thresholds, `fail_under = 90`
+- Modify: `pyproject.toml` — `hypothesis`, `mutmut`
 - Modify: `mutants/` configuration — target `src/ml/`, `src/transforms/`, `src/quality/`
 - Delete: any dead module surfaced by the clean-repo audit
 
 ## Implementation Steps
 
-1. **Coverage baseline and gap closure** (2 d) — measure current coverage per module; add
-   fixture-driven unit tests until ML-track modules exceed 90 %; set `fail_under = 90` in
-   `pyproject.toml` so the threshold is enforced, not merely reached once.
 2. **EP/BVA derivation** (1-2 d) — write `docs/testing/partitions.md` first, then drive
    `@pytest.mark.parametrize` from it. The document is the deliverable; the tests are its consequence.
 3. **Property-based tests** (1-2 d) — Hypothesis strategies for the five invariants above. The PIT
@@ -179,8 +171,6 @@ directly, so the code and the document cannot drift.
 
 ## Success Criteria
 
-- [ ] AC-P11-1 **(ML 10; LLM 26)**: Engineer → runs coverage → ML-track modules report > 90 %; the
-      report is captured; `pyproject.toml` enforces `fail_under = 90`
 - [ ] AC-P11-2 **(ML 11; LLM 27)**: Reviewer → opens `docs/testing/partitions.md` → finds an
       equivalence-partition and boundary-value table per input, and each row maps to a
       `@pytest.mark.parametrize` case that exists
