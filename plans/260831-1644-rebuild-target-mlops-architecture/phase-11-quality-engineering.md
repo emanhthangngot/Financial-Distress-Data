@@ -47,7 +47,7 @@ the human-reviewed RAG eval runs against whatever provider P0 `G5-providers` cle
 |---|---|---|---|
 | mini 2 | Docker & Docker Compose in use | 1 | no |
 | mini 3 | Optimized Dockerfile (e.g. multistage build) with before/after size | 2 | no |
-| ML 11; LLM 27 | Equivalence partitioning vs boundary value analysis to parametrize test cases | 4 | no |
+| ML 10; LLM 26 | Unit test coverage > 90 % with a screenshot, using fixtures — explicitly deferred by user scope decision | 3 | no |
 | ML 12; LLM 28 | Mutation testing (mutmut) to evaluate test effectiveness | 4 | no |
 | ML 13; LLM 29 | Idempotency testing via property-based testing | 4 | no |
 | ML 55; LLM 58 | Clean code + clean repo + demonstrable structure | 4 | no |
@@ -154,22 +154,24 @@ directly, so the code and the document cannot drift.
 
 ## Implementation Steps
 
-2. **EP/BVA derivation** (1-2 d) — write `docs/testing/partitions.md` first, then drive
+1. **EP/BVA derivation** (1-2 d) — write `docs/testing/partitions.md` first, then drive
    `@pytest.mark.parametrize` from it. The document is the deliverable; the tests are its consequence.
-3. **Property-based tests** (1-2 d) — Hypothesis strategies for the five invariants above. The PIT
+2. **Property-based tests** (1-2 d) — Hypothesis strategies for the five invariants above. The PIT
    invariant is the important one: it states the leakage property directly rather than testing one
    fixture.
-4. **Mutation testing** (1 d) — run `mutmut` over the three target packages; triage every survivor;
+3. **Mutation testing** (1 d) — run `mutmut` over the three target packages; triage every survivor;
    either add a killing test or record why the mutant is semantically equivalent. Write
    `docs/testing/mutation-report.md` with before/after survivor counts.
-5. **Load test** (1 d) — run against `feature-api` inside a serving window; produce an HTML report
+4. **Load test** (1 d) — run against `feature-api` inside a serving window; produce an HTML report
    with req/s and p50/p95/p99 latency; record the concurrency at which p99 crosses the ML-gate
    threshold used by the P10 AnalysisTemplate.
-6. **Clean-repo audit** (1 d) — remove dead modules; merge the duplicate rubric-item scripts; delete
+5. **Clean-repo audit** (1 d) — remove dead modules; merge the duplicate rubric-item scripts; delete
    orphaned test artifacts (e.g. `.pyc` files with no `.py`); confirm ruff and black clean; confirm
    `docs/architecture/low-level-design.md` matches the shipped class structure.
 
 ## Success Criteria
+
+- [ ] AC-P11-1 **(ML 10; LLM 26)**: User-directed scope decision → defers coverage measurement, screenshot, and `fail_under` enforcement → P11 records the rubric points as explicitly unclaimed and does not create a coverage gate
 
 - [ ] AC-P11-2 **(ML 11; LLM 27)**: Reviewer → opens `docs/testing/partitions.md` → finds an
       equivalence-partition and boundary-value table per input, and each row maps to a
