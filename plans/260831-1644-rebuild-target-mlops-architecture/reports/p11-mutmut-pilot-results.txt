@@ -1,5 +1,3 @@
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_5: survived
-    ml.reproducibility_manifest.x__canonical_digest__mutmut_9: survived
     ml.reproducibility_manifest.x__canonical_digest__mutmut_16: survived
     ml.reproducibility_manifest.x_current_source_sha__mutmut_24: survived
     ml.reproducibility_manifest.x_current_source_sha__mutmut_25: survived

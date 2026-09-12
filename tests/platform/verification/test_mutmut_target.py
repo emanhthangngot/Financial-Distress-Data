@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
@@ -92,8 +93,8 @@ def test_canonical_digest_uses_sorted_compact_json() -> None:
     module = load_alias("ml.reproducibility_manifest", "src/ml/reproducibility_manifest.py")
 
     assert (
-        module._canonical_digest({"b": [2, "x"], "a": {"nested": True}})
-        == "6bb320758eb0af731177624e89f555732a1c5c990c0ef557dc1112e5f6599cc6"
+        module._canonical_digest({"z": "đồng", "a": datetime(2026, 1, 1)})
+        == "fab65381e5c091d55d8737c157024c6bb3e89a3af8c773f482b4f0c320d990cb"
     )
 
 
