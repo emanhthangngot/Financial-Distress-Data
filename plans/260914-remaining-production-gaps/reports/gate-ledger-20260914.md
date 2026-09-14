@@ -1,6 +1,6 @@
 # Remaining Production Gaps — Gate Ledger
 
-**Captured:** 2026-09-15T03:57:09+07:00
+**Captured:** 2026-09-15T04:02:03+07:00
 **Phase:** Gap 01 — Reconfirm gates and inventory
 **Source revision:** `ffe7c91` (local `dev` at refresh; unrelated user changes preserved)
 **Evidence baseline:** `evidence-baseline-pre-rebuild` resolves locally
@@ -17,7 +17,7 @@
 | External load balancers | PASS | GitOps commit `ae79945` set `kourier-system/kourier` to `ClusterIP`; Argo synced revision `ae79945` and the live Service type is `ClusterIP`. Cluster now reports exactly one external `LoadBalancer` (`ingress-nginx` at `34.21.242.110`) and exactly one external forwarding rule | Platform owner: keep NGINX as the sole external entry point |
 | Jenkins host/controller | UNVERIFIED | `fsds-evidence-worker` is `TERMINATED` and one GKE node remains Ready; no Jenkins health/controller inspection was performed; no root `Jenkinsfile` exists | Platform owner: identify or provision the approved controller, JCasC, backup and ephemeral-agent proof |
 | Provider access/limits | UNVERIFIED | No fresh Groq/Gemini/provider capability or quota check was performed | ML/agent owner: measure allowed free providers before pinning or evaluating models |
-| LangGraph runtime | UNVERIFIED | No checked-in LangGraph/LangChain implementation found in current source inventory | ML/agent owner: implement and measure parity before cutover |
+| LangGraph runtime | UNVERIFIED | No current `src/agents/langgraph_runtime.py` or tracked LangChain/LangGraph dependency exists; `.venv-platform` contains `langgraph-0.6.11` and related packages, but environment state is not a repository contract. An ignored CPython bytecode file `src/agents/__pycache__/langgraph_runtime.cpython-311.pyc` references a prior source path; `git log --all --diff-filter=D -- src/agents/langgraph_runtime.py` is empty and the preserved stash contains no LangGraph files | ML/agent owner: recover or reimplement the runtime from an attributable source revision, then measure parity before cutover |
 | Domain/HTTPS | UNVERIFIED | No fresh domain certificate/edge exercise was run in this local gate refresh | Serving owner: capture trusted HTTPS and auth/rate-limit evidence |
 | Kaggle/GPU capacity | UNVERIFIED | No Kaggle job or GPU capacity exercise was run in this refresh | ML owner: run only after access and spend controls are verified |
 
@@ -30,7 +30,8 @@
 - The producer CronJob is suspended after the bounded run; the temporary source-override ConfigMap was deleted. No PersistentVolume/PersistentDisk or cloud data was deleted.
 - Local source fixes are committed as `45db6f1`, `4bd9474`, `0b7c025`, `b5096f7`, `f29e18d`, `5dd81b2`, and `ffe7c91`. GitOps producer promotion `55611f1`, producer suspension `34030fb`, timestamp-safe image promotion `94b1d5d`, and nullable-timestamp image promotion `d6d7c59` are pushed over SSH. The final Artifact Registry digest is `sha256:0460ccf3ee0257f5e9de5b18f6242add8de6a6f342c18f5a24d6bbe454fb5c55`; the final bounded Job ran with that digest and no source override against the checked-in generated-fixture profile, not an external live-source adapter.
 - Argo `platform-data` is now `Synced/Healthy` at GitOps revision `b6d1448`; the active-key resealed `dataflow-credentials` is managed by SealedSecrets, and the idempotent schema migration Job completed successfully after its credentials were aligned to the Secret's database/user keys.
-- The earlier bounded producer Job `lakehouse-gold-producer-live-1789416417` completed successfully on the existing GKE node, but its artifacts are superseded because the writer converted nullable timestamps to the Unix epoch. Its output is retained only as debugging history.
+- Current Argo reconciliation is mixed: `platform-data` is `Synced/Healthy` at `b6d1448`, `platform-agents` is `Synced/Healthy`, `platform-security` is `Synced/Degraded` with no non-Synced resource listed and a stale health transition (`2026-09-12T03:13:23Z`), `platform-observability` is `OutOfSync/Degraded` waiting for healthy `Certificate/distresslens-duckdns-tls`, and `platform-llm` is `OutOfSync/Healthy` because Knative rejects an in-place `fd.dev/experiment` label change without a revision-name change. These are external platform blockers, not reasons to start unbounded local rebuild work.
+- The earlier bounded producer Job `lakehouse-gold-producer-live-1789416417` completed successfully on the existing GKE node, but its artifacts were superseded because the writer converted nullable timestamps to the Unix epoch; its fixed-key MinIO objects were overwritten by the final run and are not retained as evidence.
 
 ## Inventory reconciliation
 
@@ -71,6 +72,8 @@ No new billable resource was created. The approved evidence VM was stopped witho
 - `kubectl -n dataflow get configmap lakehouse-pipeline-source-fix --ignore-not-found`
 - `curl POST http://127.0.0.1:18085/v1/features/by-id` for `NVL` risk features
 - `kubectl -n argocd get app platform-data` (after active-key reseal and schema migration reconciliation: `Synced/Healthy`, revision `b6d1448`)
+- `kubectl -n argocd get app platform-data platform-observability platform-security platform-agents platform-llm -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,REV:.status.sync.revision`
+- `kubectl -n argocd get app platform-observability platform-security platform-llm -o json` with filtered status/resource inspection
 - `.venv-platform/bin/python scripts/run_platform_e2e.py --timeout 30 --json`
 - Prometheus `/api/v1/targets` query for the five platform services
 - `.venv/bin/python -m pytest tests/platform/test_platform_e2e_runner.py tests/test_cluster_pipeline.py -q`
@@ -83,4 +86,4 @@ No new billable resource was created. The approved evidence VM was stopped witho
 
 ## Phase result
 
-The dated inventory refresh is current and evidence-backed. The baseline tag and single-external-entry-point invariant are closed, and the final timestamp/null-safe producer completed a bounded generated-fixture run with Feast materialization; the dataflow application is now `Synced/Healthy` and its schema migration completed. Phase 01 remains **BLOCKED/PARTIAL** because an approved window, teardown deadline and backup/export destination are unrecorded, the GKE node is still running, and provider access, Jenkins host, domain/HTTPS, Kaggle capacity and row-level stale/recapture reconciliation are unproven. No production-ready claim is made.
+The dated inventory refresh is current and evidence-backed. The baseline tag and single-external-entry-point invariant are closed, and the final timestamp/null-safe producer completed a bounded generated-fixture run with Feast materialization; the dataflow application is now `Synced/Healthy` and its schema migration completed. Current observability and LLM Argo apps are not converged, and the security app remains degraded, so the live platform is not a clean prerequisite set. Phase 01 remains **BLOCKED/PARTIAL** because an approved window, teardown deadline and backup/export destination are unrecorded, the GKE node is still running, provider access, Jenkins host, domain/HTTPS, Kaggle capacity and row-level stale/recapture reconciliation are unproven, and the observability/LLM platform blockers remain open. No production-ready claim is made.
