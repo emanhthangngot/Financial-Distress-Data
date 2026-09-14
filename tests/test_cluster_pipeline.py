@@ -102,6 +102,7 @@ def test_write_minio_outputs_maps_all_payload_dataset_names(
     assert "financial-distress-lake/silver/stg_market_prices_daily/data.parquet" in written
     assert "financial-distress-lake/gold/fact_distress_label/data.parquet" in written
     assert len(written) == len(dataset_names) - 1
+    assert len(set(written)) == len(written)
 
 
 def test_produce_gold_uses_configured_lakehouse_adapter_and_canonical_writer(
