@@ -374,7 +374,7 @@ def warm_model(timeout: float) -> dict[str, Any]:
                             last_error = str(exc)
                 time.sleep(POLL_SECONDS)
             raise RuntimeError(f"model warm-up failed: {last_error}")
-    except Exception as exc:
+    except BaseException as exc:
         if scaled_revision is not None:
             try:
                 _restore_model_revision(scaled_revision)
