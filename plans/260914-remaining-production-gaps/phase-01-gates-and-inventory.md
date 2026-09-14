@@ -23,9 +23,9 @@ production resources until zero-spend capacity is demonstrated.
 
 ## Acceptance criteria
 
-- [x] Operator -> refreshes the gate ledger -> each blocker has evidence, owner and next action.
-- [x] Operator -> checks available capacity and spend -> no unapproved paid resource can be created.
-- [x] Evidence owner -> compares baseline tag and current artifacts -> completed evidence is retained and only stale rows are scheduled for recapture.
+- [ ] Operator -> refreshes the gate ledger -> each blocker has evidence, owner and next action.
+- [ ] Operator -> checks available capacity and spend -> no unapproved paid resource can be created.
+- [ ] Evidence owner -> compares baseline tag and current artifacts -> completed evidence is retained and only stale rows are scheduled for recapture.
 
 ## Files
 
