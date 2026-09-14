@@ -545,6 +545,12 @@ def write_minio_outputs(payload: EvidencePayload, bucket: str) -> None:
 
     dataset_names = [name for name in payload.datasets if name != "failed_records"]
     object_key_by_name = lakehouse_dataset_object_keys_by_name(bucket)
+    missing = sorted(set(dataset_names) - object_key_by_name.keys())
+    if missing:
+        raise ValueError(f"missing lakehouse object-key mappings for payload datasets: {missing}")
+    object_keys = [object_key_by_name[name] for name in dataset_names]
+    if len(object_keys) != len(set(object_keys)):
+        raise ValueError("duplicate lakehouse object keys for payload datasets")
     for name in dataset_names:
         write_minio_dataset(client, bucket, object_key_by_name[name], payload.datasets[name])
 

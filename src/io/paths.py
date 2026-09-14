@@ -57,7 +57,7 @@ def lakehouse_dataset_object_keys_by_name(bucket: str = DEFAULT_BUCKET) -> dict[
 
 
 def lakehouse_dataset_object_keys(bucket: str = DEFAULT_BUCKET) -> list[str]:
-    """Return canonical v2 physical keys in logical dataset order."""
+    """Return canonical physical keys in payload dataset order."""
     return list(lakehouse_dataset_object_keys_by_name(bucket).values())
 
 

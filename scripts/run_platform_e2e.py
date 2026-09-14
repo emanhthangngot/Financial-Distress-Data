@@ -311,52 +311,76 @@ def _active_model_deployment() -> str | None:
     return str(items[0]["metadata"]["name"]) if items else None
 
 
+def _restore_model_revision(deployment: str) -> None:
+    _kubectl(
+        "scale",
+        "deployment",
+        deployment,
+        "-n",
+        "default",
+        "--replicas=0",
+    )
+
+
 def warm_model(timeout: float) -> dict[str, Any]:
     scaled_revision: str | None = None
     deadline = time.monotonic() + timeout
-    with port_forward("agentgateway-system", "agentgateway-proxy", 8080, timeout) as base_url:
-        last_error = ""
-        while time.monotonic() < deadline:
-            try:
-                status, response = http_json(
-                    f"{base_url}/v1/chat/completions",
-                    method="POST",
-                    payload=model_payload(),
-                    timeout=30,
-                )
-                if status == 200 and isinstance(response, dict):
-                    choices = response.get("choices") or []
-                    if choices:
-                        return {
-                            "http_status": status,
-                            "model": model_payload()["model"],
-                            "scaled_revision": scaled_revision,
-                        }
-                last_error = f"gateway status={status}: {response}"
-            except RuntimeError as exc:
-                last_error = str(exc)
+    try:
+        with port_forward("agentgateway-system", "agentgateway-proxy", 8080, timeout) as base_url:
+            last_error = ""
+            while time.monotonic() < deadline:
+                try:
+                    status, response = http_json(
+                        f"{base_url}/v1/chat/completions",
+                        method="POST",
+                        payload=model_payload(),
+                        timeout=30,
+                    )
+                    if status == 200 and isinstance(response, dict):
+                        choices = response.get("choices") or []
+                        if choices:
+                            return {
+                                "http_status": status,
+                                "model": model_payload()["model"],
+                                "scaled_revision": scaled_revision,
+                            }
+                    last_error = f"gateway status={status}: {response}"
+                except RuntimeError as exc:
+                    last_error = str(exc)
 
-            # The direct stable Service deliberately bypasses Knative's
-            # activator. If hibernation left the active revision at zero, the
-            # runner performs the bounded operational warm-up once; it does
-            # not modify the GitOps manifest or leave an arbitrary replica count.
-            if scaled_revision is None:
-                deployment = _active_model_deployment()
-                if deployment:
-                    try:
-                        data = _kubectl_json(
-                            "get", "deployment", deployment, "-n", "default", "-o", "json"
-                        )
-                        replicas = int((data.get("spec") or {}).get("replicas", 0) or 0)
-                        if replicas == 0:
-                            _kubectl(
-                                "scale", "deployment", deployment, "-n", "default", "--replicas=1"
+                # The direct stable Service deliberately bypasses Knative's
+                # activator. If hibernation left the active revision at zero, the
+                # runner performs the bounded operational warm-up once. The caller
+                # restores that zero-replica state after the coordinator round-trip.
+                if scaled_revision is None:
+                    deployment = _active_model_deployment()
+                    if deployment:
+                        try:
+                            data = _kubectl_json(
+                                "get", "deployment", deployment, "-n", "default", "-o", "json"
                             )
-                            scaled_revision = deployment
-                    except (RuntimeError, json.JSONDecodeError) as exc:
-                        last_error = str(exc)
-            time.sleep(POLL_SECONDS)
-    raise RuntimeError(f"model warm-up failed: {last_error}")
+                            replicas = int((data.get("spec") or {}).get("replicas", 0) or 0)
+                            if replicas == 0:
+                                _kubectl(
+                                    "scale",
+                                    "deployment",
+                                    deployment,
+                                    "-n",
+                                    "default",
+                                    "--replicas=1",
+                                )
+                                scaled_revision = deployment
+                        except (RuntimeError, json.JSONDecodeError) as exc:
+                            last_error = str(exc)
+                time.sleep(POLL_SECONDS)
+            raise RuntimeError(f"model warm-up failed: {last_error}")
+    except Exception as exc:
+        if scaled_revision is not None:
+            try:
+                _restore_model_revision(scaled_revision)
+            except RuntimeError as restore_exc:
+                raise RuntimeError(f"{exc}; model restore failed: {restore_exc}") from exc
+        raise
 
 
 def validate_coordinator_response(response: Any) -> dict[str, Any]:
@@ -520,8 +544,22 @@ def run(argv: list[str]) -> int:
                 )[1],
             )
         )
-    steps.append(_run_step("model-warmup-via-agentgateway", lambda: warm_model(args.timeout)))
-    steps.append(_run_step("coordinator-live-roundtrip", lambda: run_coordinator(args.timeout)))
+    model_step = _run_step("model-warmup-via-agentgateway", lambda: warm_model(args.timeout))
+    steps.append(model_step)
+    scaled_revision = model_step.detail.get("scaled_revision")
+    try:
+        steps.append(_run_step("coordinator-live-roundtrip", lambda: run_coordinator(args.timeout)))
+    finally:
+        if isinstance(scaled_revision, str):
+            steps.append(
+                _run_step(
+                    "model-hibernation-restore",
+                    lambda: (
+                        _restore_model_revision(scaled_revision),
+                        {"deployment": scaled_revision, "replicas": 0},
+                    )[1],
+                )
+            )
     steps.append(_run_step("prometheus-targets", lambda: run_telemetry(args.timeout)))
     if args.web_url:
         steps.append(_run_step("web-http-probe", lambda: run_web_probe(args.web_url, args.timeout)))
