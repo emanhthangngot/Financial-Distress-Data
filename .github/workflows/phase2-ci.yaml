@@ -62,7 +62,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-phase2.txt
+          python -m pip install -e ".[dev,runtime,platform]"
+          python -m pip install -r requirements-platform.txt
       - name: pytest (fast loop, no Docker services)
         env:
           TEST_SELECTOR: ${{ matrix.deployable.test_selector }}
@@ -85,7 +86,8 @@ jobs:
       - name: Install Phase 2 verification dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements-phase2.txt
+          python -m pip install -e ".[dev,runtime,platform]"
+          python -m pip install -r requirements-platform.txt
       - name: Enforce Web API fixture/mock coverage gate
         run: python scripts/run_phase5_web_gate.py
       - name: Enforce pure-module mutation gate
