@@ -1,8 +1,8 @@
 # Remaining Production Gaps — Gate Ledger
 
-**Captured:** 2026-09-15T01:32:11+07:00
+**Captured:** 2026-09-15T03:10:02+07:00
 **Phase:** Gap 01 — Reconfirm gates and inventory
-**Source revision:** `5f35d08` (local `dev` at refresh)
+**Source revision:** `4bd9474` (local `dev` at refresh; unrelated user changes preserved)
 **Evidence baseline:** `evidence-baseline-pre-rebuild` resolves locally
 
 ## Status
@@ -20,6 +20,15 @@
 | LangGraph runtime | UNVERIFIED | No checked-in LangGraph/LangChain implementation found in current source inventory | ML/agent owner: implement and measure parity before cutover |
 | Domain/HTTPS | UNVERIFIED | No fresh domain certificate/edge exercise was run in this local gate refresh | Serving owner: capture trusted HTTPS and auth/rate-limit evidence |
 | Kaggle/GPU capacity | UNVERIFIED | No Kaggle job or GPU capacity exercise was run in this refresh | ML owner: run only after access and spend controls are verified |
+
+## Current runtime evidence
+
+- Live producer Job `lakehouse-gold-producer-live-1789416417` completed successfully on the existing GKE node. Result: `gold_rows=843`, `risk_rows=16`, `risk_tickers=[HPG,NVL]`, and Feast `company_risk_features` materialization for `NVL` completed with registry revision `1a5d6979c8f43a3d`.
+- Feature MCP direct read for `NVL` returned non-null materialized values: `current_ratio=0.4`, `debt_to_asset=0.9`, `roa=-0.03`, `z_score=-1.3011`, `distress_label=1`, `training_eligible=true`, with the generated distress reason retained.
+- `.venv-platform/bin/python scripts/run_platform_e2e.py --timeout 30 --json` returned `status=PASS`: all required workloads/services, model warm-up through AgentGateway, coordinator round-trip, five Prometheus application targets, and five Jaeger services passed.
+- Prometheus target API independently reported `up=1` for `coordinator`, `feature-agent`, `drift-agent`, `feature-mcp`, and `drift-mcp` after the monitoring namespace NetworkPolicy correction.
+- The producer CronJob is suspended after the bounded run; the temporary source-override ConfigMap was deleted. No PersistentVolume/PersistentDisk or cloud data was deleted.
+- Local source fixes are committed as `45db6f1` and `4bd9474`. The GitOps producer digest commit `55611f1` exists locally but could not be pushed because the GitHub credential helper timed out; the live cluster used the pushed Artifact Registry digest `sha256:89155a837c7c3b7f39e4ae19c7b01bf58eef7e4430f5d636855e23593d1d3f65` plus the temporary source mount for the real-data run. This is not yet durable GitOps proof.
 
 ## Inventory reconciliation
 
@@ -54,6 +63,15 @@ No new billable resource was created. The approved evidence VM was stopped witho
 - `gcloud billing budgets create --billing-account=01DCB8-DBCF3D-13358B --display-name=fsds-evidence-guardrail --last-period-amount --threshold-rule=percent=0.5/0.9/1.0`
 - `gcloud compute forwarding-rules list`, `gcloud compute addresses list`
 - GitOps edit + push: `platform/inference/vendored/03-net-kourier.yaml` → `ClusterIP` (`ae79945`)
+- `kubectl -n dataflow get job lakehouse-gold-producer-live-1789416417` and job logs
+- `curl POST http://127.0.0.1:18085/v1/features/by-id` for `NVL` risk features
+- `.venv-platform/bin/python scripts/run_platform_e2e.py --timeout 30 --json`
+- Prometheus `/api/v1/targets` query for the five platform services
+- `.venv/bin/python -m pytest tests/test_cluster_pipeline.py -q`
+- `.venv/bin/ruff check src/io/minio_writer.py src/io/paths.py tests/test_cluster_pipeline.py`
+- `.venv/bin/black --check src/io/minio_writer.py src/io/paths.py tests/test_cluster_pipeline.py`
+- local Docker build/push of `lakehouse-pipeline` to Artifact Registry (`source-mapfix` succeeded; `source-timestampfix` was canceled before export because the root filesystem reached 100%)
+- GitOps commits: `5b0cf4a`, `e9cec0c`; local-only producer promotion `55611f1`
 
 ## Phase result
 
