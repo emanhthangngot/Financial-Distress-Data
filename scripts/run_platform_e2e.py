@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
 import socket
 import subprocess
 import sys
@@ -322,7 +323,41 @@ def _restore_model_revision(deployment: str) -> None:
     )
 
 
-def warm_model(timeout: float) -> dict[str, Any]:
+@contextmanager
+def _model_signal_guard(deployment_ref: list[str | None]) -> Iterator[None]:
+    previous_handlers = {
+        signal.SIGINT: signal.getsignal(signal.SIGINT),
+        signal.SIGTERM: signal.getsignal(signal.SIGTERM),
+    }
+
+    def handle_signal(signum: int, _frame: Any) -> None:
+        try:
+            deployment = deployment_ref[0]
+            if deployment is not None:
+                _restore_model_revision(deployment)
+                deployment_ref[0] = None
+        finally:
+            for signal_number, handler in previous_handlers.items():
+                signal.signal(signal_number, handler)
+        if signum == signal.SIGINT:
+            raise KeyboardInterrupt
+        raise SystemExit(128 + signum)
+
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
+    try:
+        yield
+    finally:
+        for signal_number, handler in previous_handlers.items():
+            signal.signal(signal_number, handler)
+
+
+def warm_model(
+    timeout: float,
+    deployment_ref: list[str | None] | None = None,
+) -> dict[str, Any]:
+    if deployment_ref is None:
+        deployment_ref = [None]
     scaled_revision: str | None = None
     deadline = time.monotonic() + timeout
     try:
@@ -370,14 +405,17 @@ def warm_model(timeout: float) -> dict[str, Any]:
                                     "--replicas=1",
                                 )
                                 scaled_revision = deployment
+                                deployment_ref[0] = deployment
                         except (RuntimeError, json.JSONDecodeError) as exc:
                             last_error = str(exc)
                 time.sleep(POLL_SECONDS)
             raise RuntimeError(f"model warm-up failed: {last_error}")
     except BaseException as exc:
-        if scaled_revision is not None:
+        target = deployment_ref[0] or scaled_revision
+        if target is not None:
             try:
-                _restore_model_revision(scaled_revision)
+                _restore_model_revision(target)
+                deployment_ref[0] = None
             except RuntimeError as restore_exc:
                 raise RuntimeError(f"{exc}; model restore failed: {restore_exc}") from exc
         raise
@@ -544,22 +582,42 @@ def run(argv: list[str]) -> int:
                 )[1],
             )
         )
-    model_step = _run_step("model-warmup-via-agentgateway", lambda: warm_model(args.timeout))
-    steps.append(model_step)
-    scaled_revision = model_step.detail.get("scaled_revision")
+    deployment_ref: list[str | None] = [None]
     try:
-        steps.append(_run_step("coordinator-live-roundtrip", lambda: run_coordinator(args.timeout)))
-    finally:
-        if isinstance(scaled_revision, str):
-            steps.append(
-                _run_step(
-                    "model-hibernation-restore",
-                    lambda: (
-                        _restore_model_revision(scaled_revision),
-                        {"deployment": scaled_revision, "replicas": 0},
-                    )[1],
-                )
+        with _model_signal_guard(deployment_ref):
+            model_step = _run_step(
+                "model-warmup-via-agentgateway",
+                lambda: warm_model(args.timeout, deployment_ref),
             )
+            steps.append(model_step)
+            try:
+                steps.append(
+                    _run_step("coordinator-live-roundtrip", lambda: run_coordinator(args.timeout))
+                )
+            finally:
+                if deployment_ref[0] is not None:
+
+                    def restore_model() -> dict[str, Any]:
+                        deployment = deployment_ref[0]
+                        assert deployment is not None
+                        _restore_model_revision(deployment)
+                        deployment_ref[0] = None
+                        return {"deployment": deployment, "replicas": 0}
+
+                    steps.append(_run_step("model-hibernation-restore", restore_model))
+    finally:
+        if deployment_ref[0] is not None:
+            try:
+                _restore_model_revision(deployment_ref[0])
+                deployment_ref[0] = None
+            except RuntimeError as exc:
+                steps.append(
+                    Step(
+                        "model-hibernation-restore-fallback",
+                        "FAIL",
+                        error=str(exc),
+                    )
+                )
     steps.append(_run_step("prometheus-targets", lambda: run_telemetry(args.timeout)))
     if args.web_url:
         steps.append(_run_step("web-http-probe", lambda: run_web_probe(args.web_url, args.timeout)))
