@@ -25,6 +25,54 @@ def test_gold_event_timestamp_is_written_as_timezone_aware_parquet_type() -> Non
     assert str(table.schema.field("event_timestamp").type) == "timestamp[us, tz=UTC]"
 
 
+def test_write_minio_outputs_maps_all_payload_dataset_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import src.jobs.lakehouse_evidence_job as evidence_job
+
+    dataset_names = [
+        "bronze_companies",
+        "bronze_financial_statements",
+        "bronze_market_prices",
+        "silver_companies",
+        "silver_financial_statements",
+        "silver_market_prices",
+        "gold_dim_company",
+        "gold_dim_date",
+        "gold_fact_financial_statement",
+        "gold_fact_market_price",
+        "gold_fact_market_alert",
+        "gold_fact_news_sentiment",
+        "gold_distress_labels",
+        "gold_obt_company_quarter_risk",
+        "gold_feat_company_financial_4q",
+        "gold_feat_company_market_30d",
+        "gold_feat_company_news_30d",
+        "gold_feat_company_unified",
+        "failed_records",
+    ]
+    payload = evidence_job.EvidencePayload(
+        datasets={name: [] for name in dataset_names},
+        object_keys=[],
+        row_counts={name: 0 for name in dataset_names},
+        stream_batches=[],
+    )
+    written: list[str] = []
+    monkeypatch.setattr(evidence_job, "_minio_client", lambda: object())
+    monkeypatch.setattr(evidence_job, "_ensure_bucket", lambda client, bucket: None)
+    monkeypatch.setattr(
+        evidence_job,
+        "write_minio_dataset",
+        lambda client, bucket, object_key, rows: written.append(object_key),
+    )
+
+    evidence_job.write_minio_outputs(payload, "financial-distress-lake")
+    assert "financial-distress-lake/bronze/raw_market_prices_daily/data.parquet" in written
+    assert "financial-distress-lake/silver/stg_market_prices_daily/data.parquet" in written
+    assert "financial-distress-lake/gold/fact_distress_label/data.parquet" in written
+    assert len(written) == len(dataset_names) - 1
+
+
 def test_produce_gold_uses_configured_lakehouse_adapter_and_canonical_writer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

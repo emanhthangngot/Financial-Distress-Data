@@ -29,30 +29,30 @@ def dataset_object_key(bucket: str, layer: str, dataset_name: str) -> str:
 
 
 def lakehouse_dataset_object_keys_by_name(bucket: str = DEFAULT_BUCKET) -> dict[str, str]:
-    """Return canonical v2 object keys indexed by logical dataset name."""
+    """Return canonical object keys indexed by payload dataset name."""
     datasets = [
-        ("bronze", "companies"),
-        ("bronze", "financial_statements"),
-        ("bronze", "market_prices_daily"),
-        ("silver", "companies"),
-        ("silver", "financial_statements"),
-        ("silver", "market_prices_daily"),
-        ("gold", "dim_company"),
-        ("gold", "dim_date"),
-        ("gold", "fact_financial_statement"),
-        ("gold", "fact_market_alert"),
-        ("gold", "fact_market_price"),
-        ("gold", "fact_news_sentiment"),
-        ("gold", "distress_labels"),
-        ("gold", "obt_company_quarter_risk"),
-        ("gold", "feat_company_financial_4q"),
-        ("gold", "feat_company_market_30d"),
-        ("gold", "feat_company_news_30d"),
-        ("gold", "feat_company_unified"),
+        ("bronze", "companies", "bronze_companies"),
+        ("bronze", "financial_statements", "bronze_financial_statements"),
+        ("bronze", "market_prices_daily", "bronze_market_prices"),
+        ("silver", "companies", "silver_companies"),
+        ("silver", "financial_statements", "silver_financial_statements"),
+        ("silver", "market_prices_daily", "silver_market_prices"),
+        ("gold", "dim_company", "gold_dim_company"),
+        ("gold", "dim_date", "gold_dim_date"),
+        ("gold", "fact_financial_statement", "gold_fact_financial_statement"),
+        ("gold", "fact_market_alert", "gold_fact_market_alert"),
+        ("gold", "fact_market_price", "gold_fact_market_price"),
+        ("gold", "fact_news_sentiment", "gold_fact_news_sentiment"),
+        ("gold", "distress_labels", "gold_distress_labels"),
+        ("gold", "obt_company_quarter_risk", "gold_obt_company_quarter_risk"),
+        ("gold", "feat_company_financial_4q", "gold_feat_company_financial_4q"),
+        ("gold", "feat_company_market_30d", "gold_feat_company_market_30d"),
+        ("gold", "feat_company_news_30d", "gold_feat_company_news_30d"),
+        ("gold", "feat_company_unified", "gold_feat_company_unified"),
     ]
     return {
-        dataset_name: dataset_object_key(bucket, layer, dataset_name)
-        for layer, dataset_name in datasets
+        payload_name: dataset_object_key(bucket, layer, dataset_name)
+        for layer, dataset_name, payload_name in datasets
     }
 
 

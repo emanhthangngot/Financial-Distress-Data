@@ -54,8 +54,8 @@ REQUIRED_WORKLOADS: tuple[Workload, ...] = (
     Workload("deployment", "agents-sandbox", "coordinator"),
     Workload("deployment", "agentgateway-system", "agentgateway-proxy"),
     Workload("deployment", "kagent", "agentregistry"),
-    Workload("deployment", "monitoring", "jaeger"),
-    Workload("daemonset", "monitoring", "otel-collector"),
+    Workload("deployment", "observability", "jaeger"),
+    Workload("daemonset", "observability", "otel-collector"),
     Workload("deployment", "monitoring", "monitoring-grafana"),
     Workload(
         "statefulset",
@@ -73,7 +73,7 @@ REQUIRED_SERVICES: tuple[tuple[str, str, str], ...] = (
     ("coordinator", "agents-sandbox", "coordinator"),
     ("agentgateway", "agentgateway-system", "agentgateway-proxy"),
     ("agentregistry", "kagent", "agentregistry"),
-    ("jaeger", "monitoring", "jaeger"),
+    ("jaeger", "observability", "jaeger"),
     ("prometheus", "monitoring", "monitoring-kube-prometheus-prometheus"),
 )
 
@@ -436,7 +436,7 @@ def run_telemetry(timeout: float) -> dict[str, Any]:
         down = sorted(name for name, value in observed.items() if value != 1.0)
         if missing or down:
             raise RuntimeError(f"Prometheus targets missing={missing} down={down}")
-    with port_forward("monitoring", "jaeger", 16686, timeout) as base_url:
+    with port_forward("observability", "jaeger", 16686, timeout) as base_url:
         expected_services = {
             "coordinator-agent",
             "feature-agent",
