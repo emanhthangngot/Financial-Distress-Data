@@ -2,7 +2,7 @@
 
 **Captured:** 2026-09-15T04:02:03+07:00
 **Phase:** Gap 01 — Reconfirm gates and inventory
-**Source revision:** `ffe7c91` (last source change; current `HEAD` `f76004a` contains ledger-only documentation edits; unrelated user changes preserved)
+**Source revision:** `ffe7c91` (last source change; all subsequent commits contain ledger-only documentation edits; unrelated user changes preserved)
 **Evidence baseline:** `evidence-baseline-pre-rebuild` resolves locally
 
 ## Status
