@@ -49,6 +49,10 @@ After this entry was drafted, GitOps authentication was restored through the rep
 
 The read-only review then reproduced a NULL-destroying epoch substitution for nullable timestamp fields in the first image. Source commit `0b7c025` preserves Arrow NULLs and keeps `report_release_date` on its prior non-timestamp path; the final image promotion `d6d7c59` carries that fix. A second bounded Job, `lakehouse-gold-producer-live-1789416418`, succeeded with the final digest and replaced the first run as clean evidence. Commit `b5096f7` also makes the platform E2E runner restore a hibernated model revision after its coordinator follow-up or on warm-up failure. Phase 01 remains BLOCKED/PARTIAL because the full Argo application is still degraded on the pre-existing dataflow SealedSecret and the external authorization and evidence gates remain open.
 
+## Final reconciliation
+
+The active-key reseal initially exposed a stale schema-migration credential contract. GitOps commit `b6d1448` changed the migration Job to consume the database and user keys from `dataflow-credentials`; after replacing only the failed Job object, the idempotent migration completed. Argo `platform-data` is now `Synced/Healthy`. No persistent volume, disk, backup, or cloud data was deleted.
+
 AgentWiki publish skipped. Local journal is the source of truth.
 
 > Historical work record — not durable authority. Prefer docs/specs/ADRs for current decisions.
