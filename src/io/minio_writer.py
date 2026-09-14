@@ -19,7 +19,6 @@ _TIMESTAMP_FIELDS = {
     "known_from_ts",
     "label_available_ts",
     "published_ts",
-    "report_release_date",
     "valid_from_ts",
     "valid_to_ts",
 }
@@ -49,14 +48,14 @@ def _arrow_type(values: list[Any]) -> Any:
     return pa.string()
 
 
-def _timestamp_values(field: str, values: list[Any]) -> list[datetime] | None:
+def _timestamp_values(field: str, values: list[Any]) -> list[datetime | None] | None:
     """Return timezone-aware datetimes for timestamp contract fields."""
     if field not in _TIMESTAMP_FIELDS or not values:
         return None
-    converted: list[datetime] = []
+    converted: list[datetime | None] = []
     for value in values:
         if value is None:
-            converted.append(datetime(1970, 1, 1, tzinfo=UTC))
+            converted.append(None)
             continue
         if isinstance(value, datetime):
             parsed = value

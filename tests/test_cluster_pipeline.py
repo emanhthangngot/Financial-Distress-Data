@@ -32,6 +32,30 @@ def test_gold_event_timestamp_is_written_as_timezone_aware_parquet_type() -> Non
     assert str(table.schema.field("known_from_ts").type) == "timestamp[us, tz=UTC]"
 
 
+def test_nullable_timestamp_fields_preserve_nulls_in_parquet() -> None:
+    import pyarrow.parquet as pq
+
+    import src.io.minio_writer as minio_writer
+
+    table = pq.read_table(
+        __import__("io").BytesIO(
+            minio_writer.rows_to_parquet_bytes(
+                [
+                    {
+                        "valid_from_ts": "2026-01-01T00:00:00+00:00",
+                        "valid_to_ts": None,
+                        "report_release_date": None,
+                    }
+                ]
+            )
+        )
+    )
+
+    assert str(table.schema.field("valid_to_ts").type) == "timestamp[us, tz=UTC]"
+    assert table.column("valid_to_ts").null_count == 1
+    assert str(table.schema.field("report_release_date").type) == "string"
+
+
 def test_write_minio_outputs_maps_all_payload_dataset_names(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
