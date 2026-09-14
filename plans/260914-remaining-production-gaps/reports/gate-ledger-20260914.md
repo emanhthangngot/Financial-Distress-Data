@@ -1,8 +1,8 @@
 # Remaining Production Gaps — Gate Ledger
 
-**Captured:** 2026-09-15T03:44:12+07:00
+**Captured:** 2026-09-15T03:51:31+07:00
 **Phase:** Gap 01 — Reconfirm gates and inventory
-**Source revision:** `b5096f7` (local `dev` at refresh; unrelated user changes preserved)
+**Source revision:** `5dd81b2` (local `dev` at refresh; unrelated user changes preserved)
 **Evidence baseline:** `evidence-baseline-pre-rebuild` resolves locally
 
 ## Status
@@ -28,7 +28,7 @@
 - `.venv-platform/bin/python scripts/run_platform_e2e.py --timeout 30 --json` returned `status=PASS`: all required workloads/services, model warm-up through AgentGateway, coordinator round-trip, five Prometheus application targets, and five Jaeger services passed. The runner now leaves a hibernated model revision available through the coordinator round-trip and restores it on warm-up failure or after the follow-up step.
 - Prometheus target API independently reported `up=1` for `coordinator`, `feature-agent`, `drift-agent`, `feature-mcp`, and `drift-mcp` after the monitoring namespace NetworkPolicy correction.
 - The producer CronJob is suspended after the bounded run; the temporary source-override ConfigMap was deleted. No PersistentVolume/PersistentDisk or cloud data was deleted.
-- Local source fixes are committed as `45db6f1`, `4bd9474`, `0b7c025`, `b5096f7`, and `f29e18d`. GitOps producer promotion `55611f1`, producer suspension `34030fb`, timestamp-safe image promotion `94b1d5d`, and nullable-timestamp image promotion `d6d7c59` are pushed over SSH. The final Artifact Registry digest is `sha256:0460ccf3ee0257f5e9de5b18f6242add8de6a6f342c18f5a24d6bbe454fb5c55`; the final bounded Job ran with that digest and no source override against the checked-in generated-fixture profile, not an external live-source adapter.
+- Local source fixes are committed as `45db6f1`, `4bd9474`, `0b7c025`, `b5096f7`, `f29e18d`, and `5dd81b2`. GitOps producer promotion `55611f1`, producer suspension `34030fb`, timestamp-safe image promotion `94b1d5d`, and nullable-timestamp image promotion `d6d7c59` are pushed over SSH. The final Artifact Registry digest is `sha256:0460ccf3ee0257f5e9de5b18f6242add8de6a6f342c18f5a24d6bbe454fb5c55`; the final bounded Job ran with that digest and no source override against the checked-in generated-fixture profile, not an external live-source adapter.
 - Argo `platform-data` is now `Synced/Healthy` at GitOps revision `b6d1448`; the active-key resealed `dataflow-credentials` is managed by SealedSecrets, and the idempotent schema migration Job completed successfully after its credentials were aligned to the Secret's database/user keys.
 - The earlier bounded producer Job `lakehouse-gold-producer-live-1789416417` completed successfully on the existing GKE node, but its artifacts are superseded because the writer converted nullable timestamps to the Unix epoch. Its output is retained only as debugging history.
 
@@ -76,6 +76,7 @@ No new billable resource was created. The approved evidence VM was stopped witho
 - `.venv/bin/python -m pytest tests/platform/test_platform_e2e_runner.py tests/test_cluster_pipeline.py -q`
 - `.venv/bin/ruff check scripts/run_platform_e2e.py tests/platform/test_platform_e2e_runner.py src/io/minio_writer.py src/io/paths.py src/jobs/lakehouse_evidence_job.py`
 - `.venv/bin/black --check scripts/run_platform_e2e.py tests/platform/test_platform_e2e_runner.py src/io/minio_writer.py src/io/paths.py src/jobs/lakehouse_evidence_job.py`
+- `.venv/bin/python scripts/run_lakehouse_quality_gates.py` (`378 passed, 2 xfailed`; ruff, black, compose config, naming, rubric, target architecture and evidence audit all passed)
 - local Docker build/push of `lakehouse-pipeline` to Artifact Registry (`source-mapfix`, `source-timestampfix`, and final `source-timestamp-nullfix`; final digest `sha256:0460ccf3ee0257f5e9de5b18f6242add8de6a6f342c18f5a24d6bbe454fb5c55`)
 - `kubectl apply -f platform/data/schema-migration.yaml` and successful `platform-schema-v1` Job logs
 - GitOps commits pushed: `5b0cf4a`, `e9cec0c`, `55611f1`, `34030fb`, `94b1d5d`, `d6d7c59`, `be8e2a3`, `4c24600`, `b6d1448`
