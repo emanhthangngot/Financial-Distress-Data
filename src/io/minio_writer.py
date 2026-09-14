@@ -12,6 +12,18 @@ import io
 from datetime import UTC, datetime
 from typing import Any
 
+_TIMESTAMP_FIELDS = {
+    "created_ts",
+    "decision_ts",
+    "event_timestamp",
+    "known_from_ts",
+    "label_available_ts",
+    "published_ts",
+    "report_release_date",
+    "valid_from_ts",
+    "valid_to_ts",
+}
+
 
 def _field_names(rows: list[dict[str, Any]]) -> list[str]:
     names: list[str] = []
@@ -38,8 +50,8 @@ def _arrow_type(values: list[Any]) -> Any:
 
 
 def _timestamp_values(field: str, values: list[Any]) -> list[datetime] | None:
-    """Return timezone-aware datetimes for Feast event timestamps."""
-    if field != "event_timestamp" or not values:
+    """Return timezone-aware datetimes for timestamp contract fields."""
+    if field not in _TIMESTAMP_FIELDS or not values:
         return None
     converted: list[datetime] = []
     for value in values:
