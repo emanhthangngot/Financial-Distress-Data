@@ -2,7 +2,7 @@
 
 **Captured:** 2026-09-15T04:02:03+07:00
 **Phase:** Gap 01 — Reconfirm gates and inventory
-**Source revision:** `ffe7c91` (last source change; `81c02b5`/current `HEAD` contains ledger-only documentation edits; unrelated user changes preserved)
+**Source revision:** `ffe7c91` (last source change; current `HEAD` `f76004a` contains ledger-only documentation edits; unrelated user changes preserved)
 **Evidence baseline:** `evidence-baseline-pre-rebuild` resolves locally
 
 ## Status
@@ -41,7 +41,12 @@
 - Durable Kourier cutover: the earlier direct Service deletion was reverted by Argo self-heal, so the desired state in `financial-distress-gitops` was changed to `ClusterIP` instead; Argo reconciled and the external rule was released.
 - Current cluster has one Ready `e2-standard-8` node and a single external entry point `34.21.242.110`; `kourier-internal` remains `ClusterIP` for in-cluster Knative routing.
 - Baseline/current evidence diff: `git diff --stat evidence-baseline-pre-rebuild..HEAD -- docs/platform/evidence` reports two modified files and no additions or deletions. Both changes update the retired `PHASE2_PG_DSN` name to `PLATFORM_PG_DSN`; no executed evidence artifact was removed.
-- Unified rubric reconciliation: 161 rows / 300 points = 60 LLM rows executed (100 points), 57 ML rows design-only (100 points), and 44 mini rows pending (100 points). All 60 executed rows have existing evidence files. The 57 missing ML evidence files are explicitly `design_only`, not stale executed artifacts; the 44 mini rows remain pending and are not scheduled for recapture in Phase 01.
+- Unified rubric reconciliation from `docs/rubric-matrix-unified.csv`: 161 rows / 300 points = 60 LLM rows executed (100 points), 57 ML rows design-only (100 points), and 44 mini rows pending (100 points). All 60 executed rows have existing evidence files. The 57 missing ML evidence files are explicitly `design_only`, not stale executed artifacts.
+- Mini recapture schedule — P2 owner, 7 rows / 17 points: `mini-26-data-storage-how-to-optimize-your-data-storage-dat`; `mini-39-documentation-schema-design-visualize-tables-on-al`; `mini-40-documentation-schema-design-dim-table-with-scd-2`; `mini-41-documentation-schema-design-feature-tables-feat_-t`; `mini-42-documentation-schema-design-relationship-between-d`; `mini-43-documentation-schema-design-naming-convention`; `mini-44-novel-ideas-idea-1-idea-1`.
+- Mini recapture schedule — P4 owner, 26 rows / 59 points: `mini-04` through `mini-19` generator/processing rows; `mini-25`; `mini-27` through `mini-30`; `mini-33` through `mini-36`; `mini-45`. Exact row IDs and evidence paths remain in `docs/rubric-matrix-unified.csv`; all are `pending` and require fresh evidence, not stale-artifact replacement.
+- Mini recapture schedule — P5 owner, 9 rows / 21 points: `mini-20` through `mini-24`; `mini-31`; `mini-32`; `mini-37`; `mini-38`. Exact row IDs and evidence paths remain in `docs/rubric-matrix-unified.csv`; all are `pending`.
+- Mini recapture schedule — P11 owner, 2 rows / 3 points: `mini-02`; `mini-03`. Exact row IDs and evidence paths remain in `docs/rubric-matrix-unified.csv`; all are `pending`.
+- The 44 mini rows are now explicitly scheduled by owning phase; they are not silently treated as missing ML evidence or as stale executed artifacts.
 - Stale path mappings, not evidence recaptures: 13 rows reference absent `.github/workflows/platform-ci.yaml`; the active reusable workflow is `.github/workflows/phase2-ci.yaml`. Six executed LLM rows retain their evidence and need a matrix-path correction only; seven ML rows remain design-only and genuinely unbuilt. Four additional ML design-only rows reference absent GitOps `charts/feature-api`/`charts/drift-api`; the current chart inventory is `fastapi-service`, `feature-mcp`, `drift-mcp` and `web`. Those four rows need path reconciliation, while the underlying ML API deliverables remain unbuilt.
 - Row-level stale/path inventory: executed rows requiring matrix-path correction = `LLM-ci-cd-agent-drift-detection`, `LLM-ci-cd-agent-k-o-d-li-u`, `LLM-ci-cd-agent-l-m-coordinator`, `LLM-ci-cd-ci-cd-cho-rag-data-pipeline`, `LLM-ci-cd-job-1`, `LLM-ci-cd-job-2`; design-only rows with the same workflow mapping = `ML-ci-cd-cho-real-time-drift-detection-`, `ML-ci-cd-ci-cd-cho-pipelines`, `ML-ci-cd-inference-engine`, `ML-ci-cd-job-1`, `ML-ci-cd-job-2`, `ML-ci-cd-training-pipeline`, `ML-ci-cd-web-api`; chart mappings = `ML-autoscale-autoscale-web-api-k-o-d-li-u-v`, `ML-web-api-k-o-d-li-u-to-k8s-with-helm-rollingupdate`, `ML-autoscale-web-api-cho-drift-detection`, `ML-web-api-cho-real-time-dri-to-k8s-with-helm-rollingupdate`.
 - AC3 result: retained executed evidence is accounted for, no stale executed artifact is scheduled for recapture, and every identified stale mapping has an explicit correction action under its existing rubric owner. Mini pending rows and ML design-only rows stay deferred to their owning phases.
@@ -86,6 +91,7 @@ No new billable resource was created. The approved evidence VM was stopped witho
 - `.venv/bin/python scripts/run_lakehouse_quality_gates.py` (`378 passed, 2 xfailed`; ruff, black, compose config, naming, rubric, target architecture and evidence audit all passed)
 - local Docker build/push of `lakehouse-pipeline` to Artifact Registry (`source-mapfix`, `source-timestampfix`, and final `source-timestamp-nullfix`; final digest `sha256:0460ccf3ee0257f5e9de5b18f6242add8de6a6f342c18f5a24d6bbe454fb5c55`)
 - `kubectl apply -f platform/data/schema-migration.yaml` and successful `platform-schema-v1` Job logs
+- GitOps commits pushed: `ae79945`, `8052af9`, `ec5a305`, `4d26f08`, `c213119`, `5b0cf4a`, `e9cec0c`, `55611f1`, `34030fb`, `94b1d5d`, `d6d7c59`, `be8e2a3`, `4c24600`, `b6d1448`.
 
 ## Phase result
 
