@@ -11,6 +11,7 @@ RUN cd /service/feature_repo/structured && \
     PYTHONPATH=/service \
     FEAST_REGISTRY_PATH=/service/feature_repo/structured/registry.db \
     FEAST_REDIS_HOST=platform-redis.dataflow.svc.cluster.local \
+    FEAST_REDIS_PORT=6379 \
     feast apply
 COPY apps/feature-mcp/app ./app
 USER 65532:65532

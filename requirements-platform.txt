@@ -1,0 +1,7 @@
+# Platform-only runtime dependencies for Feast materialization and feature services.
+feast[aws,redis]==0.65.0
+redis>=5,<7
+s3fs>=2024.6
+psycopg[binary]>=3.2
+pandas>=2.2
+pyarrow>=17.0

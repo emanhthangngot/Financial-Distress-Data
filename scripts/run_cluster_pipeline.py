@@ -5,15 +5,25 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from src.collectors.fixture_config import load_fixture_config
-from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
-from src.io.paths import DEFAULT_BUCKET
-from src.jobs.lakehouse_evidence_job import build_evidence_payload, write_minio_outputs
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from src.collectors.fixture_config import load_fixture_config  # noqa: E402
+from src.collectors.source_adapters.vnstock_fixture_adapter import (  # noqa: E402
+    VnstockFixtureAdapter,
+)
+from src.io.paths import DEFAULT_BUCKET  # noqa: E402
+from src.jobs.lakehouse_evidence_job import (  # noqa: E402
+    build_evidence_payload,
+    write_minio_outputs,
+)
 
 DEFAULT_CLUSTER_CONFIG = "configs/cluster-collector-config.yaml"
 RISK_FEATURES = (
@@ -38,6 +48,7 @@ def configure_s3_environment() -> None:
     os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
     os.environ.setdefault("AWS_EC2_METADATA_DISABLED", "true")
     os.environ.setdefault("FEAST_REDIS_HOST", "platform-redis")
+    os.environ.setdefault("FEAST_REDIS_PORT", "6379")
     os.environ.setdefault(
         "FEAST_REGISTRY_PATH",
         f"s3://{os.environ.get('FINANCIAL_DISTRESS_BUCKET', DEFAULT_BUCKET)}"
