@@ -1,8 +1,8 @@
 # Remaining Production Gaps — Gate Ledger
 
-**Captured:** 2026-09-15T03:10:02+07:00
+**Captured:** 2026-09-15T03:24:04+07:00
 **Phase:** Gap 01 — Reconfirm gates and inventory
-**Source revision:** `4bd9474` (local `dev` at refresh; unrelated user changes preserved)
+**Source revision:** `b5096f7` (local `dev` at refresh; unrelated user changes preserved)
 **Evidence baseline:** `evidence-baseline-pre-rebuild` resolves locally
 
 ## Status
@@ -23,12 +23,14 @@
 
 ## Current runtime evidence
 
-- Live producer Job `lakehouse-gold-producer-live-1789416417` completed successfully on the existing GKE node. Result: `gold_rows=843`, `risk_rows=16`, `risk_tickers=[HPG,NVL]`, and Feast `company_risk_features` materialization for `NVL` completed with registry revision `1a5d6979c8f43a3d`.
+- The first bounded producer Job `lakehouse-gold-producer-live-1789416417` exposed a nullable-timestamp defect and is not used as clean evidence. After preserving `None` in the Parquet timestamp writer, the final Job `lakehouse-gold-producer-live-1789416418` completed successfully on the existing GKE node with `gold_rows=843`, `risk_rows=16`, `risk_tickers=[HPG,NVL]`, and Feast `company_risk_features` materialization for `NVL` completed with registry revision `8da8a16e6d4fbbf9`.
 - Feature MCP direct read for `NVL` returned non-null materialized values: `current_ratio=0.4`, `debt_to_asset=0.9`, `roa=-0.03`, `z_score=-1.3011`, `distress_label=1`, `training_eligible=true`, with the generated distress reason retained.
-- `.venv-platform/bin/python scripts/run_platform_e2e.py --timeout 30 --json` returned `status=PASS`: all required workloads/services, model warm-up through AgentGateway, coordinator round-trip, five Prometheus application targets, and five Jaeger services passed.
+- `.venv-platform/bin/python scripts/run_platform_e2e.py --timeout 30 --json` returned `status=PASS`: all required workloads/services, model warm-up through AgentGateway, coordinator round-trip, five Prometheus application targets, and five Jaeger services passed. The runner now leaves a hibernated model revision available through the coordinator round-trip and restores it on warm-up failure or after the follow-up step.
 - Prometheus target API independently reported `up=1` for `coordinator`, `feature-agent`, `drift-agent`, `feature-mcp`, and `drift-mcp` after the monitoring namespace NetworkPolicy correction.
 - The producer CronJob is suspended after the bounded run; the temporary source-override ConfigMap was deleted. No PersistentVolume/PersistentDisk or cloud data was deleted.
-- Local source fixes are committed as `45db6f1` and `4bd9474`. GitOps producer promotion `55611f1`, producer suspension `34030fb`, and timestamp-safe image promotion `94b1d5d` are pushed over SSH. The live cluster used the pushed Artifact Registry digest `sha256:89155a837c7c3b7f39e4ae19c7b01bf58eef7e4430f5d636855e23593d1d3f65` plus a temporary source mount for the timestamp-safe real-data run; the source mount was removed. The durable timestamp-safe digest is `sha256:be91a7bb6843bf8f73b73d55f9dc2f131b1070a1a22041954258025d216ec40d`, but it was not separately exercised in-cluster.
+- Local source fixes are committed as `45db6f1`, `4bd9474`, and `0b7c025`. GitOps producer promotion `55611f1`, producer suspension `34030fb`, timestamp-safe image promotion `94b1d5d`, and nullable-timestamp image promotion `d6d7c59` are pushed over SSH. The final Artifact Registry digest is `sha256:0460ccf3ee0257f5e9de5b18f6242add8de6a6f342c18f5a24d6bbe454fb5c55`; the final bounded Job ran with that digest and no source override.
+- Argo `platform-data` observes revision `d6d7c59` but remains `OutOfSync/Degraded` because the pre-existing `dataflow-credentials` SealedSecret cannot be decrypted by the active controller key. The live producer CronJob was patched to the final digest and matches the pushed desired image/suspend state; full application convergence remains unproven.
+- The earlier bounded producer Job `lakehouse-gold-producer-live-1789416417` completed successfully on the existing GKE node, but its artifacts are superseded because the writer converted nullable timestamps to the Unix epoch. Its output is retained only as debugging history.
 
 ## Inventory reconciliation
 
@@ -54,7 +56,7 @@ No new billable resource was created. The approved evidence VM was stopped witho
 - `gcloud compute project-info describe`
 - `gcloud compute regions describe asia-southeast1`
 - `gcloud beta billing accounts describe 01DCB8-DBCF3D-13358B`
-- `gcloud billing budgets list --billing-account=01DCB8-DBCF3D-13358B` (pass: no budgets configured)
+- `gcloud billing budgets list --billing-account=01DCB8-DBCF3D-13358B` (budget exists: `fsds-evidence-guardrail`)
 - `gcloud container clusters list`
 - `gcloud compute instances list`
 - `kubectl get nodes -o wide`
@@ -63,16 +65,20 @@ No new billable resource was created. The approved evidence VM was stopped witho
 - `gcloud billing budgets create --billing-account=01DCB8-DBCF3D-13358B --display-name=fsds-evidence-guardrail --last-period-amount --threshold-rule=percent=0.5/0.9/1.0`
 - `gcloud compute forwarding-rules list`, `gcloud compute addresses list`
 - GitOps edit + push: `platform/inference/vendored/03-net-kourier.yaml` → `ClusterIP` (`ae79945`)
-- `kubectl -n dataflow get job lakehouse-gold-producer-live-1789416417` and job logs
+- `kubectl -n dataflow get job lakehouse-gold-producer-live-1789416417` and job logs (superseded debugging run)
+- `kubectl -n dataflow get job lakehouse-gold-producer-live-1789416418` and final job logs
+- `kubectl -n dataflow get cronjob lakehouse-gold-producer` (final digest, `suspend=true`)
+- `kubectl -n dataflow get configmap lakehouse-pipeline-source-fix --ignore-not-found`
 - `curl POST http://127.0.0.1:18085/v1/features/by-id` for `NVL` risk features
+- `kubectl -n argocd get app platform-data` (revision `d6d7c59`, `OutOfSync/Degraded` on the pre-existing dataflow SealedSecret)
 - `.venv-platform/bin/python scripts/run_platform_e2e.py --timeout 30 --json`
 - Prometheus `/api/v1/targets` query for the five platform services
-- `.venv/bin/python -m pytest tests/test_cluster_pipeline.py -q`
-- `.venv/bin/ruff check src/io/minio_writer.py src/io/paths.py tests/test_cluster_pipeline.py`
-- `.venv/bin/black --check src/io/minio_writer.py src/io/paths.py tests/test_cluster_pipeline.py`
-- local Docker build/push of `lakehouse-pipeline` to Artifact Registry (`source-mapfix` succeeded; `source-timestampfix` was canceled before export because the root filesystem reached 100%)
-- GitOps commits: `5b0cf4a`, `e9cec0c`; local-only producer promotion `55611f1`
+- `.venv/bin/python -m pytest tests/platform/test_platform_e2e_runner.py tests/test_cluster_pipeline.py -q`
+- `.venv/bin/ruff check scripts/run_platform_e2e.py tests/platform/test_platform_e2e_runner.py src/io/minio_writer.py src/io/paths.py src/jobs/lakehouse_evidence_job.py`
+- `.venv/bin/black --check scripts/run_platform_e2e.py tests/platform/test_platform_e2e_runner.py src/io/minio_writer.py src/io/paths.py src/jobs/lakehouse_evidence_job.py`
+- local Docker build/push of `lakehouse-pipeline` to Artifact Registry (`source-mapfix`, `source-timestampfix`, and final `source-timestamp-nullfix`; final digest `sha256:0460ccf3ee0257f5e9de5b18f6242add8de6a6f342c18f5a24d6bbe454fb5c55`)
+- GitOps commits pushed: `5b0cf4a`, `e9cec0c`, `55611f1`, `34030fb`, `94b1d5d`, `d6d7c59`
 
 ## Phase result
 
-The dated inventory refresh is current and evidence-backed. Two gates are now closed: the baseline tag, and the single-external-entry-point invariant. Phase 01 remains **BLOCKED/PARTIAL** because an approved window, teardown deadline and backup/export destination are unrecorded, the GKE node is still running, and provider access, Jenkins host, domain/HTTPS, Kaggle capacity and row-level stale/recapture reconciliation are unproven. No production-ready claim is made.
+The dated inventory refresh is current and evidence-backed. The baseline tag and single-external-entry-point invariant are closed, and the final timestamp/null-safe producer completed a bounded real-data run with Feast materialization. Phase 01 remains **BLOCKED/PARTIAL** because the full `platform-data` Argo application is `OutOfSync/Degraded` on the pre-existing dataflow SealedSecret, an approved window, teardown deadline and backup/export destination are unrecorded, the GKE node is still running, and provider access, Jenkins host, domain/HTTPS, Kaggle capacity and row-level stale/recapture reconciliation are unproven. No production-ready claim is made.

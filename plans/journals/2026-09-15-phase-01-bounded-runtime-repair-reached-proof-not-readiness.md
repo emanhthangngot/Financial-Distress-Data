@@ -45,6 +45,10 @@ Platform owner: obtain an approved window, teardown deadline, and backup/export 
 
 After this entry was drafted, GitOps authentication was restored through the repository's SSH remote. Producer promotion `55611f1`, suspension `34030fb`, and timestamp-safe image promotion `94b1d5d` were pushed. The final Artifact Registry digest is `sha256:be91a7bb6843bf8f73b73d55f9dc2f131b1070a1a22041954258025d216ec40d`; the bounded job itself remains the run with the temporary source mount, while no second cloud run was started.
 
+## Review correction
+
+The read-only review then reproduced a NULL-destroying epoch substitution for nullable timestamp fields in the first image. Source commit `0b7c025` preserves Arrow NULLs and keeps `report_release_date` on its prior non-timestamp path; the final image promotion `d6d7c59` carries that fix. A second bounded Job, `lakehouse-gold-producer-live-1789416418`, succeeded with the final digest and replaced the first run as clean evidence. Commit `b5096f7` also makes the platform E2E runner restore a hibernated model revision after its coordinator follow-up or on warm-up failure. Phase 01 remains BLOCKED/PARTIAL because the full Argo application is still degraded on the pre-existing dataflow SealedSecret and the external authorization and evidence gates remain open.
+
 AgentWiki publish skipped. Local journal is the source of truth.
 
 > Historical work record — not durable authority. Prefer docs/specs/ADRs for current decisions.
