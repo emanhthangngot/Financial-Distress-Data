@@ -1,4 +1,4 @@
-# platform .eport — align the contract, the repos and the audit mechanics
+# platform report — align the contract, the repos and the audit mechanics
 
 Status: complete. All 10 implementation steps done, all 7 success criteria met.
 

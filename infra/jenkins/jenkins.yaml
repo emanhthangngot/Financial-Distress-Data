@@ -1,0 +1,54 @@
+# Jenkins Configuration as Code. This file is declarative input for an approved
+# controller; it does not create a controller or mutate a Kubernetes cluster.
+jenkins:
+  numExecutors: 0
+  mode: EXCLUSIVE
+  disableRememberMe: true
+  systemMessage: "Financial Distress CI: controller-only, ephemeral agents, GitOps handoff only."
+  remotingSecurity:
+    enabled: true
+  markupFormatter: plainText
+  clouds:
+    - kubernetes:
+        name: fsds-ephemeral-agents
+        namespace: jenkins-agents
+        containerCapStr: "2"
+        podLabels:
+          - key: app.kubernetes.io/part-of
+            value: financial-distress-ci
+        templates:
+          - name: fsds-ci
+            label: fsds-ci
+            nodeUsageMode: EXCLUSIVE
+            idleMinutes: 1
+            yaml: |-
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                labels:
+                  app.kubernetes.io/part-of: financial-distress-ci
+              spec:
+                serviceAccountName: jenkins-agent
+                automountServiceAccountToken: false
+                restartPolicy: Never
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+                containers:
+                  - name: ci
+                    image: python:3.12-slim
+                    command: ["sleep"]
+                    args: ["99d"]
+                    resources:
+                      requests:
+                        cpu: "250m"
+                        memory: "512Mi"
+                      limits:
+                        cpu: "1"
+                        memory: "1Gi"
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                        drop: ["ALL"]

@@ -31,7 +31,7 @@
     <section class="columns">
       <div class="panel">
         <h2>Optimization Journey</h2>
-        <div class="step"><strong>1. Baseline</strong> Bronze rows are read and transformed with Spark-compatible DataFrame jobs in <code>src/jobs/stage1_spark_lakehouse_job.py</code>.</div>
+        <div class="step"><strong>1. Baseline</strong> Bronze rows are read and transformed with Spark-compatible DataFrame jobs in <code>src/jobs/lakehouse_spark_lakehouse_job.py</code>.</div>
         <div class="step"><strong>2. Skew handling</strong> Generator evidence records skew; transforms deduplicate by business keys and latest <code>created_ts</code>.</div>
         <div class="step"><strong>3. High cardinality</strong> Stable deterministic keys avoid expensive fuzzy joins and keep facts keyed by <code>company_key</code>.</div>
         <div class="step"><strong>4. Schema evolution</strong> Nullable legacy columns are accepted in Silver contracts instead of breaking old partitions.</div>
@@ -44,7 +44,7 @@
           <thead><tr><th>Rubric row</th><th>Proof</th><th>Status</th></tr></thead>
           <tbody>
             <tr><td>Baseline without optimization</td><td><code>dags/05_transform_bronze_to_silver.py</code>, <code>dags/06_pyspark_silver_to_gold.py</code></td><td>covered</td></tr>
-            <tr><td>Handle skew</td><td><code>stage1_generator_characteristics.json</code> and Silver dedup tests</td><td>covered</td></tr>
+            <tr><td>Handle skew</td><td><code>lakehouse_generator_characteristics.json</code> and Silver dedup tests</td><td>covered</td></tr>
             <tr><td>Handle high cardinality</td><td>Stable <code>company_key</code> and DuckDB index benchmark</td><td>covered</td></tr>
             <tr><td>Handle schema evolution</td><td>Legacy nullable column policy in generator config and schema registry</td><td>covered</td></tr>
             <tr><td>Other offline problem</td><td>2% duplicate rate before dedup, failed-record routing</td><td>covered</td></tr>

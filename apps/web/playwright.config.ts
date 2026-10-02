@@ -3,10 +3,10 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * Evidence run configuration.
  *
- * Three viewports, because the phase-02 contract names 1440, 1024 and 390 and a
- * layout that only works at one of them has not been proved. Role and plane
- * state are supplied per project through the fixture session's environment
- * variables, so one suite can exercise every role without a live Supabase
+ * Three viewports prove 1440, 1024 and 390 layouts; a layout that only works
+ * at one viewport has not been proved. Role and plane state are supplied per
+ * project through the fixture session's environment variables, so one suite
+ * can exercise every role without a live Supabase.
  * project.
  *
  * Screenshots are the deliverable here, not a side effect: `--update-snapshots`

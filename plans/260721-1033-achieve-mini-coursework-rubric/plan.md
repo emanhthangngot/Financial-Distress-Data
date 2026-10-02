@@ -27,7 +27,7 @@ Execution contract: [45-row rubric implementation matrix](./reports/rubric-imple
 
 ## Planning Assumptions
 
-- Full checked-in rubric remains authoritative; internal “platform .ubset” wording does not reduce scope.
+- Full checked-in rubric remains authoritative; internal “platform subset” wording does not reduce scope.
 - Use **PyFlink** initially to preserve the Python-first repository. Switch to Java only if a required API or connector cannot be verified in PyFlink.
 - Use **DataHub**, not a substitute, because the rubric names DataHub explicitly.
 - Keep raw Parquet + MinIO unless storage experiments prove a table format is needed; do not add Iceberg/Delta only for appearance.

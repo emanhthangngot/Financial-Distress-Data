@@ -42,8 +42,8 @@ import { getLiveAgentRegistry } from "./live-registry-adapter";
  *   `outbox_events`, `profiles`, `session_transition_rule`. No tables exist for
  *   company records, SHAP explanations, search rows, agent registry, or the
  *   GitOps plane (planes, budgets, revision, pipelines, promotions,
- *   experiments, observability). Those belong to the ML and GitOps planes that
- *   are built in later phases.
+ *   experiments, observability). Those belong to the ML and GitOps planes,
+ *   which are deployed independently of this data port.
  *
  * - So `listSavedReports` and `getSavedReport` read the real `saved_reports`
  *   table through an RLS-scoped request client, and stamp `origin: SUPABASE`.

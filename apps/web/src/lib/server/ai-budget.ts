@@ -8,7 +8,7 @@ import {
 import { checkQuota, checkRateLimit } from "./guards";
 
 /**
- * Server wrapper over the phase-01 AI budget RPCs.
+ * Server wrapper over the production AI budget RPCs.
  *
  * `consumeAiBudget` performs the atomic consume-and-check per user per window and
  * returns a typed decision. It reuses the exact denial copy in `guards.ts` by

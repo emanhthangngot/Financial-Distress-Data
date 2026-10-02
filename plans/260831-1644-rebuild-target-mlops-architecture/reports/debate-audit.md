@@ -42,7 +42,7 @@
 
 4. **KServe 0.18 CRD migration is conditionally irreversible (C5–C6).** The plan requires migrating from 0.14.1 to 0.18. If the CRD objects are not exported before upgrade, P6 becomes one-way (downgrade requires manual manifests). Rollback becomes a manual recovery, not an Argo resync. **Impact:** if issues surface in 0.18 after P6, the cluster cannot revert to 0.14.1 without manual intervention. **Timeline:** pre-upgrade object export must happen in P6, not skipped.
 
-5. **Evidence purge (decision #1) forfeits 100 verified LLM points (C19, proposal Concerns #4).** The proposal deletes all platform .LM evidence artifacts (60 rows / 100 points) and regenerates from zero into a unified tree. If the new unified matrix fails to re-achieve 100 LLM points, those points are lost and the evidence score regresses. The credit window is finite (2026-11-06), and re-earning points post-purge carries schedule risk. **Impact:** evidence score down 100 points minimum until re-earned; no guarantee of recovery before expiry. **Timeline:** decision locked by user; auditor notes the risk against the revised capacity picture.
+5. **Evidence purge (decision #1) forfeits 100 verified LLM points (C19, proposal Concerns #4).** The proposal deletes all platform LLM evidence artifacts (60 rows / 100 points) and regenerates from zero into a unified tree. If the new unified matrix fails to re-achieve 100 LLM points, those points are lost and the evidence score regresses. The credit window is finite (2026-11-06), and re-earning points post-purge carries schedule risk. **Impact:** evidence score down 100 points minimum until re-earned; no guarantee of recovery before expiry. **Timeline:** decision locked by user; auditor notes the risk against the revised capacity picture.
 
 ---
 
@@ -98,7 +98,7 @@ The capacity blocker (C1–C3) combined with evidence purge risk (Concerns #4) a
 **Acceptance Criteria:**
 
 - P0–P7 completes and evidence passes before 2026-10-31 (4-week buffer before 2026-11-06 expiry).
-- LLM + BI analytics live with 79 points verified; platform .egression suite passes throughout.
+- LLM + BI analytics live with 79 points verified; platform regression suite passes throughout.
 - All three ADR amendments (005, 013, 014) are complete and accepted before their phases.
 - Jenkins CI/CD and Vault/ESO secrets stack proven in sandbox before production use.
 - If quota increase is granted by 2026-10-15, P8–P10 can begin; otherwise, phase completes at P7 with LLM scope achieved.
@@ -147,7 +147,7 @@ The capacity blocker (C1–C3) combined with evidence purge risk (Concerns #4) a
 1. **BLOCKER — GCP CPUS_ALL_REGIONS quota.** Binding cap is 12 vCPU; 10 committed; plan always-on floor is 12–16 vCPU. No resident subset fits without increase. Gate G0 is a hard stop; no workaround in the proposal.
 2. **BLOCKER — Quota increase timeline unknown.** Proposal does not state when quota request will be approved. Plan execution is contingent on external decision outside the team's control. Counter-proposal defers ML track to remove this dependency from critical path.
 3. **BLOCKER — No spot node pool in Terraform.** Budget depends on one; building it is P0; spot quota is a second gate. If denied, always-on cost jumps to ~USD 280–350/month, exhausting credit in 30 days.
-4. **CONCERN — Evidence purge forfeits 100 verified LLM points.** Decision #1 deletes all platform .vidence; re-earning LLM points inside the credit window carries schedule risk. User has locked this; auditor notes the risk against revised capacity picture.
+4. **CONCERN — Evidence purge forfeits 100 verified LLM points.** Decision #1 deletes all platform evidence; re-earning LLM points inside the credit window carries schedule risk. User has locked this; auditor notes the risk against revised capacity picture.
 5. **CONCERN — Path audit incomplete (C9).** Claim "all 26 rubric paths resolve, 18 live + 8 archived, 0 missing" requires script verification; spot checks pass but exhaustive count not run.
 6. **CONCERN — Three ADR amendments must land before phases.** ADR-013, ADR-005, ADR-014 must be amended before P1, P3, P5 respectively; delays to amendment completion propagate to phase start dates.
 7. **UNRESOLVED — dbt component role inferred from image orange mark.** Proposal marks identification as `[INFERENCE]`; no confirmation that "Build Gold Data Mart" is dbt vs. other SQL tool.

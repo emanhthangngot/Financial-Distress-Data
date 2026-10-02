@@ -44,8 +44,8 @@ Out of scope:
 .venv/bin/python -m black --check src dags tests scripts
 docker compose config
 .venv/bin/python scripts/audit_rubric_coverage.py
-.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
-.venv/bin/python scripts/stage1_readiness_report.py
+.venv/bin/python scripts/audit_lakehouse_evidence.py docs/evidence --check
+.venv/bin/python scripts/lakehouse_readiness_report.py
 ```
 
 Screenshot verification:
@@ -64,7 +64,7 @@ format.
 Reviewer -> opens this spec -> sees every rubric section mapped to work, proof, and commands.
 Reviewer -> opens docs/evidence/reviewer_screenshots/*.png -> sees visual proof for the previously weak UI-heavy rubric rows.
 Rubric audit runner -> runs scripts/audit_rubric_coverage.py -> reports 100 covered points.
-Quality gate runner -> runs scripts/run_stage1_quality_gates.py -> tests, lint, formatting, Docker Compose config, and evidence audit pass.
+Quality gate runner -> runs scripts/run_lakehouse_quality_gates.py -> tests, lint, formatting, Docker Compose config, and evidence audit pass.
 Student -> submits repository -> can truthfully claim the platform local-first evidence, not enterprise/live-service evidence.
 ```
 
@@ -126,7 +126,7 @@ Work completed:
 Proof:
 
 - `configs/collector_config.yaml`
-- `docs/evidence/stage1_generator_characteristics.json`
+- `docs/evidence/lakehouse_generator_characteristics.json`
 - `tests/test_generator_characteristics_evidence.py`
 
 Acceptance:
@@ -145,7 +145,7 @@ Work completed:
 Proof:
 
 - `configs/collector_config.yaml`
-- `docs/evidence/stage1_generator_characteristics.json`
+- `docs/evidence/lakehouse_generator_characteristics.json`
 
 Acceptance:
 
@@ -182,7 +182,7 @@ Proof:
 
 - `configs/collector_config.yaml`
 - `tests/test_bronze_to_silver.py`
-- `docs/evidence/stage1_generator_characteristics.json`
+- `docs/evidence/lakehouse_generator_characteristics.json`
 
 Acceptance:
 
@@ -218,8 +218,8 @@ Work completed:
 
 Proof:
 
-- `docs/evidence/stage1_real_minio_objects.json`
-- `docs/evidence/stage1_minio_objects.txt`
+- `docs/evidence/lakehouse_real_minio_objects.json`
+- `docs/evidence/lakehouse_minio_objects.txt`
 
 Acceptance:
 
@@ -238,7 +238,7 @@ Proof:
 
 - `src/streaming/problem_factory.py`
 - `src/streaming/kafka_to_bronze_consumer.py`
-- `docs/evidence/stage1_generator_characteristics.json`
+- `docs/evidence/lakehouse_generator_characteristics.json`
 
 Acceptance:
 
@@ -274,7 +274,7 @@ Work completed:
 Proof:
 
 - `configs/collector_config.yaml`
-- `docs/evidence/stage1_generator_characteristics.json`
+- `docs/evidence/lakehouse_generator_characteristics.json`
 
 Acceptance:
 
@@ -322,7 +322,7 @@ Proof:
 
 - `dags/05_transform_bronze_to_silver.py`
 - `dags/06_pyspark_silver_to_gold.py`
-- `src/jobs/stage1_spark_lakehouse_job.py`
+- `src/jobs/lakehouse_spark_lakehouse_job.py`
 - `docs/05_storage_optimization.md`
 - `docs/evidence/reviewer_screenshots/spark_optimization_evidence.png`
 
@@ -445,8 +445,8 @@ Work completed:
 Proof:
 
 - `src/transforms/silver_to_gold.py`
-- `src/jobs/stage1_spark_lakehouse_job.py`
-- `docs/evidence/stage1_real_duckdb_validation.json`
+- `src/jobs/lakehouse_spark_lakehouse_job.py`
+- `docs/evidence/lakehouse_real_duckdb_validation.json`
 - `docs/evidence/reviewer_screenshots/airflow_dp2_dp3_evidence.png`
 
 Acceptance:
@@ -605,5 +605,5 @@ Reviewer -> runs scripts/capture_ui_screenshots.py against the running stack -> 
 | Formatting | `.venv/bin/python -m black --check src dags tests scripts` | pass |
 | Compose syntax | `docker compose config` | pass |
 | Rubric coverage | `.venv/bin/python scripts/audit_rubric_coverage.py` | 100 covered points |
-| Runtime evidence | `.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check` | pass |
-| Readiness | `.venv/bin/python scripts/stage1_readiness_report.py` | coursework ready |
+| Runtime evidence | `.venv/bin/python scripts/audit_lakehouse_evidence.py docs/evidence --check` | pass |
+| Readiness | `.venv/bin/python scripts/lakehouse_readiness_report.py` | coursework ready |

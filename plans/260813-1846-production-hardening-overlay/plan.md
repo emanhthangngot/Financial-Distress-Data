@@ -39,7 +39,7 @@ missing behaviour. Full breakdown:
 What remains in scope is exactly what phases 1–2 were already building:
 
 1. **Close the protection gap and unify the repo layout** (phase 1) — six
-   `src/` packages hold unprotected platform .ehaviour; phase naming leaks into
+   `src/` packages hold unprotected platform behaviour; phase naming leaks into
    `infra/`, compose services, and CI workflow names.
 2. **A GitOps offline validation gate** (phase 2) — the control repo gets CI,
    a render/policy/digest-pin script, and agent rules.
@@ -138,7 +138,7 @@ No cloud quota needed for anything still in scope.
 Total: **~5 working days** (phase 1 + phase 2). Phases 3-12 are cancelled —
 see the Overview for what happens to their already-written artifacts.
 
-**platform .uns first by explicit user decision (2026-08-13):** layout unification
+**platform runs first by explicit user decision (2026-08-13):** layout unification
 before optimisation. That reasoning is now moot for the cancelled phases but
 still holds for phase 1 itself.
 
@@ -188,8 +188,8 @@ evidence capture system, both of which serve the LLM submission directly.
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | A change silently touches a `PHASE1_PROTECTED` path and breaks the unsubmitted LLM gate | Medium | **Critical** | Every phase ends by running the strict `--track LLM` gate; phase 1 adds a pre-commit protected-path check so the failure surfaces before commit |
-| **platform protected code | **Confirmed, already true** | **Critical** | platform .tep 2 extends `PHASE1_PROTECTED` with all six platform .ackages and adds file-level exceptions for the two shared ones. Tightening only — cannot cost points |
-| De-phasing renames break a path the rubric matrix declares | Medium | High | Measured before acting: `evidence_path`, `test` and `validation_command` point into `docs/platform/` and `tests/platform/` on all 60 LLM rows; `infra/phase2` on **zero**. platform .enames only Tier 1 (no gate meaning) |
+| **platform code sits in packages the gate does not protect** — `src/security/` is imported by the already-protected `src/transforms/spark_session.py`, so protected code depends on unprotected code | **Confirmed, already true** | **Critical** | platform step 2 extends `PHASE1_PROTECTED` with all six platform packages and adds file-level exceptions for the two shared ones. Tightening only — cannot cost points |
+| De-phasing renames break a path the rubric matrix declares | Medium | High | Measured before acting: `evidence_path`, `test` and `validation_command` point into `docs/phase2/` and `tests/phase2/` on all 60 LLM rows; `infra/phase2` on **zero**. platform renames only Tier 1 (no gate meaning) |
 | Committing the archived ML scaffolding accidentally wires it back into active CI or the deployable catalog | Low | Medium | Archive commit touches only files already excluded from `configs/phase2-deployables.yaml` and `.github/workflows/`; verified by re-running `run_phase2_quality_gates.py` after the commit |
 | Evidence captured before this descope goes stale | Medium | Medium | Re-run `--check-artifacts` and the strict LLM gate after every commit in this pass, not only at the end |
 
@@ -206,7 +206,7 @@ before and after any revert.
 
 ## Success Criteria
 
-- [x] Strict two-repository auditor passes `--track LLM` at 100/100 on a committed, clean tree with correctly stamped `source_sha`/`gitops_sha` — a real run, not a projected one (`scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 --gitops-root ../financial-distress-gitops --ml 100 --llm 100` -> exit 0, "platform .ubric matrix is complete and consistent"; both trees confirmed clean via `git status --porcelain=v1 --untracked-files=all`)
+- [x] Strict two-repository auditor passes `--track LLM` at 100/100 on a committed, clean tree with correctly stamped `source_sha`/`gitops_sha` — a real run, not a projected one (`scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 --gitops-root ../financial-distress-gitops --ml 100 --llm 100` -> exit 0, "platform rubric matrix is complete and consistent"; both trees confirmed clean via `git status --porcelain=v1 --untracked-files=all`)
 - [ ] `scripts/capture_phase2_evidence.py` regenerates the full LLM evidence set in one command — script exists and its config was trimmed to LLM-only sections this pass, but a full regeneration run has not been executed/verified in this session
 - [ ] GitOps repo CI is green and blocks a tag-based (non-digest-pinned) image reference and a secret-bearing change — `validate-gitops.yml` and the digest/secret checks in `validate-gitops.sh` exist and pass on current `main`, but no PR was opened to prove the negative case blocks a merge
 - [x] Zero `artifact_path` entries missing from disk for LLM rows (`--check-artifacts` PASS, zero missing; confirmed again by the 100/100 strict run above)

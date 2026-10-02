@@ -33,10 +33,10 @@ candidate paths is the live one.
 | Concern | Authoritative source |
 |---|---|
 | Rubric matrix (source of truth for all 60 LLM rows) | `docs/platform/rubric-matrix.csv` |
-| Evidence contract + strict gate logic | `scripts/audit_phase2_evidence.py` |
+| Evidence contract + strict gate logic | `scripts/audit_platform_evidence.py` |
 | Evidence capture checklist (commands + claims) | `configs/evidence-checklist.yaml` |
 | Deployable image catalog (build source of truth) | `configs/platform-deployables.yaml` |
-| Shared build/sign CI workflow | `.github/workflows/platform-ci.yaml` |
+| Shared build/sign CI workflow | `.github/workflows/production-ci.yaml` |
 | GitOps offline validation gate | `financial-distress-gitops/scripts/validate-gitops.sh` |
 | GitOps control-repo rules | `financial-distress-gitops/AGENTS.md` |
 | Feature-pull / drift-detection Web APIs | `apps/feature-mcp/`, `apps/drift-mcp/` |

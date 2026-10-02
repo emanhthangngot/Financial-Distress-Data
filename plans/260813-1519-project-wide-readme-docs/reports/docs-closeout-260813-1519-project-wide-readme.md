@@ -11,7 +11,7 @@ submission reviewer pages.
 - Documented the separate `financial-distress-gitops` ownership boundary,
   current agentgateway -> KServe/Knative serving path, product commands, live
   28-check E2E command, and two-repository freeze command.
-- Replaced stale platform .KS/Istio/Envoy-active architecture descriptions with
+- Replaced stale platform EKS/Istio/Envoy-active architecture descriptions with
   the ADR-010 GKE/NGINX/agentgateway/kagent/KServe topology.
 - Updated coursework, system architecture, repository map, project file map,
   and all linked submission reviewer pages to distinguish logical coverage,

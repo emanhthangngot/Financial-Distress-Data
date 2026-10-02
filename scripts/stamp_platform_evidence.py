@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Commit and stamp platform .vidence without rewriting implementation history.
+"""Commit and stamp platform evidence without rewriting implementation history.
 
 The workflow is intentionally explicit about paths. It stages only the paths
 provided by the caller, so unrelated worktree changes are never swept into a

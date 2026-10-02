@@ -58,7 +58,7 @@ DQ rules, Gold output semantics, or evidence outputs defined in
   CSV -> finds its source-row digest, acceptance ID, implementation repo/file,
   behavior-validation command, contract test, and planned evidence artifact in
   `docs/platform/rubric-matrix.{md,csv}` without inference.
-- **Developer** -> runs `python scripts/audit_phase2_evidence.py
+- **Developer** -> runs `python scripts/audit_platform_evidence.py
   --matrix-only --strict` on a deliberately incomplete fixture -> receives a
   failing result naming the missing contract field.
 - **Test runner** -> executes `pytest tests/platform/test_rubric_matrix.py
@@ -139,8 +139,8 @@ DQ rules, Gold output semantics, or evidence outputs defined in
 
 ## 8. Evidence Contract
 
-- **Evidence auditor** -> runs `python scripts/audit_phase2_evidence.py
-  --require-executed --run-validations --lakehouse-base "$PHASE1_BASE_SHA"
+- **Evidence auditor** -> runs `python scripts/audit_platform_evidence.py
+  --require-executed --run-validations --lakehouse-base "$PLATFORM_BASE_SHA"
   --gitops-root "$GITOPS_CHECKOUT" --ml 100 --llm 100` at submission time ->
   every scored row has an existing, rubric_id-referencing evidence artifact,
   the the platform diff is clean against the frozen baseline, and evidence SHAs

@@ -1,8 +1,8 @@
-"""Typed configuration for deterministic platform .rift scenarios.
+"""Typed configuration for deterministic platform drift scenarios.
 
 Mirrors ``src/generator/config.py``'s style (frozen dataclasses, strict
-unknown/missing-key validation) without importing it — platform .ust not
-couple to a platform .rivate helper (AGENTS.md; judgment call recorded in
+unknown/missing-key validation) without importing it — platform must not
+couple to a platform private helper (AGENTS.md; judgment call recorded in
 ``plans/260802-1037-unified-platform-ml-llm-gitops/phase-04-implementation-notes.md``,
 section 6).
 """

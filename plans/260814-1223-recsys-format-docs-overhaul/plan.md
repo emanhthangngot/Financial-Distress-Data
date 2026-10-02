@@ -76,7 +76,7 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
 
 | Decision | Choice | Consequence |
 |---|---|---|
-| Live capture | GKE evidence plane is alive | platform .e-captures Argo/kagent/Grafana/Jaeger/gateway fresh instead of reusing stale shots |
+| Live capture | GKE evidence plane is alive | platform re-captures Argo/kagent/Grafana/Jaeger/gateway fresh instead of reusing stale shots |
 | Image layout | Hybrid | Narrative images live in `docs/pngs/`; canonical evidence images stay at their audit-pinned paths |
 | Docs scope | Full + ML deferred index | Both rubric tabs get narrative doc sets; ML rows get an explicit deferred table |
 
@@ -88,7 +88,7 @@ requirement — the reference's own LLM tab is 18/21 rows "Work in progress"):
 | 2 | Every rubric area has one narrative doc with numbered steps, quoted real code, repo-relative source links, and Image proof + Image note per screenshot | P1 |
 | 3 | Every subsystem has a small architecture diagram; the system has one composed large diagram; all sources are tracked and regenerable | P1 |
 | 4 | Screenshots show the actual tool UI clearly, are descriptively named, and each states what it proves and what it does not | P1 |
-| 5 | The whole docs tree passes `check_documentation.py` (no broken links, no doc over 800 lines) and the platform .vidence audit stays green | P1 |
+| 5 | The whole docs tree passes `check_documentation.py` (no broken links, no doc over 800 lines) and the platform evidence audit stays green | P1 |
 | 6 | ML-track rows are presented as an explicit deferred/design-only table, never as unexplained gaps | P2 |
 
 ## Phases
@@ -132,7 +132,7 @@ Dependencies: 1 blocks all. 2 and 3 run in parallel after 1. 4 and 5 need 2+3.
       adapted to LLM track, with zero RecSys content copied
 - [ ] `docs/submission/rubric-final-coursework-(final-llm)/` covers all 21 LLM
       rubric areas; no area reads "Work in progress"
-- [ ] `docs/submission/rubric-(mini-coursework)/` covers all 9 platform .reas
+- [ ] `docs/submission/rubric-(mini-coursework)/` covers all 9 platform areas
 - [ ] `docs/submission/ml-track-deferred.md` lists all 19 ML areas with an
       explicit deferred/design-only reason each
 - [ ] Seven small subsystem diagrams + one composed system diagram exist, with

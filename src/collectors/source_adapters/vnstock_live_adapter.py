@@ -14,8 +14,9 @@ Unit facts this adapter encodes (ADR-020, measured against vnstock 4.0.7 this se
   (F17). ``docs/07_data_contracts.md`` must not claim vnstock returns prices in VND.
 - The free tier hard-caps financial statements at 4 periods per ``period=`` value, regardless of
   the requested date range (measured: ``period='quarter'`` always returns exactly the four most
-  recent quarters). Periods outside that window are never fetched — the caller (an Airflow DAG /
-  generator fallback) decides how to fill the gap, not this adapter.
+  recent quarters). Requested quarters older than that window are recorded as ``tier_period_cap``
+  failures and, when configured, filled by the existing fixture generator with explicit synthetic
+  provenance.
 
 SECURITY: ``vnstock`` depends on ``vnai``, which runs a first-use setup routine
 (``vnai.setup()``) that does hardware fingerprinting and, observed 2026-09-05 in this
@@ -32,8 +33,9 @@ instruction file, or audit those files immediately after.
 
 from __future__ import annotations
 
+import os
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
 # Balance sheet / income statement / cash flow item_id -> our schema field.
@@ -65,11 +67,24 @@ class MetadataSink(Protocol):
     def upsert_collector_checkpoint(self, **kwargs: Any) -> None: ...
 
 
+class FinancialStatementFallback(Protocol):
+    """Generator boundary used only to fill tier-capped statement periods."""
+
+    source_name: str
+
+    def fetch_financial_statements(
+        self, ticker: str, start_year: int, end_year: int
+    ) -> list[dict[str, Any]]: ...
+
+
 class VnstockUnavailableError(RuntimeError):
     """Raised when ``vnstock`` is not installed. Opt-in adapter, not a hard dependency."""
 
 
 def _import_vnstock() -> Any:
+    os.environ.setdefault("VNSTOCK_DISABLE_AGENT_SETUP", "1")
+    os.environ.setdefault("VNSTOCK_DISABLE_GLOBAL_AGENT", "1")
+    os.environ.setdefault("VNSTOCK_TELEMETRY", "off")
     try:
         import vnstock
     except ImportError as exc:
@@ -108,10 +123,11 @@ def _retry(
 class VnstockLiveAdapter:
     """Real vnstock adapter. Same three-method interface as VnstockFixtureAdapter.
 
-    ``source_name`` is per-instance, not a class attribute, because the source varies per call:
-    KBS for prices, VCI for statements (both explorers deliver whole đồng for statements; only
-    KBS was measured for the ×1000 price scale, so prices always resolve through KBS here).
+    ``source_name`` identifies the adapter. Individual rows use explorer-specific source names:
+    KBS for prices and VCI for statements.
     """
+
+    source_name = "vnstock"
 
     def __init__(
         self,
@@ -121,12 +137,16 @@ class VnstockLiveAdapter:
         min_request_delay_seconds: float = 1.0,
         metadata_sink: MetadataSink | None = None,
         run_id: str | None = None,
+        financial_statement_fallback: FinancialStatementFallback | None = None,
+        fallback_source_unit: str | None = None,
     ) -> None:
         self.max_retries = max_retries
         self.retry_backoff_seconds = retry_backoff_seconds
         self.min_request_delay_seconds = min_request_delay_seconds
         self.metadata_sink = metadata_sink
         self.run_id = run_id
+        self.financial_statement_fallback = financial_statement_fallback
+        self.fallback_source_unit = fallback_source_unit
 
     def _throttle(self) -> None:
         if self.min_request_delay_seconds > 0:
@@ -229,14 +249,10 @@ class VnstockLiveAdapter:
     def fetch_financial_statements(
         self, ticker: str, start_year: int, end_year: int
     ) -> list[dict[str, Any]]:
-        """Fetches whatever the free tier's 4-period cap allows.
+        """Fetch the live window and synthesize only requested quarters older than it."""
+        if start_year > end_year:
+            raise ValueError("start_year must be less than or equal to end_year")
 
-        ``start_year``/``end_year`` are accepted for interface compatibility with
-        ``VnstockFixtureAdapter`` but the free tier ignores requested ranges — it always
-        returns the four most recent quarters (measured, ADR-020). Periods before that
-        window are never fetched by this adapter; the caller falls through to the generator.
-        """
-        del start_year, end_year
         vnstock = _import_vnstock()
         ticker = ticker.upper()
         self._throttle()
@@ -270,7 +286,7 @@ class VnstockLiveAdapter:
         period_columns = [
             c for c in balance_sheet.columns if c not in ("item", "item_en", "item_id")
         ]
-        now = datetime.now(UTC).isoformat()
+        now = datetime.now(UTC)
         rows: list[dict[str, Any]] = []
         for column in period_columns:
             report_period = _period_string(column)
@@ -287,15 +303,112 @@ class VnstockLiveAdapter:
                     if not matches.empty:
                         value = matches.iloc[0]
                         fields[field_name] = None if value != value else float(value)  # NaN check
+            fiscal_year = int(report_period[:4])
+            fiscal_quarter = int(report_period[-1])
             fields["ticker"] = ticker
             fields["report_period"] = report_period
+            fields["fiscal_year"] = fiscal_year
+            fields["fiscal_quarter"] = fiscal_quarter
+            fields["statement_variant"] = "consolidated_unaudited"
             fields["source_system"] = "vnstock"
             fields["source_name"] = "vnstock_vci"
             fields["source_unit"] = "VND"  # whole đồng, ADR-020
-            fields["known_from_ts"] = now
-            fields["created_ts"] = now
+            fields["is_synthetic"] = False
+            fields["known_from_ts"] = now.isoformat()
+            fields["created_ts"] = now.isoformat()
             rows.append(fields)
             self._checkpoint(ticker)
+
+        available_periods = {row["report_period"] for row in rows}
+        if not available_periods:
+            return rows
+        requested_periods = {
+            f"{year}Q{quarter}"
+            for year in range(start_year, end_year + 1)
+            for quarter in range(1, 5)
+        }
+        oldest_available_period = min(available_periods)
+        capped_periods = sorted(
+            period
+            for period in requested_periods - available_periods
+            if period < oldest_available_period
+        )
+        if not capped_periods:
+            for offset, row in enumerate(sorted(rows, key=lambda item: str(item["report_period"]))):
+                knowledge_ts = (now + timedelta(microseconds=offset)).isoformat()
+                row["known_from_ts"] = knowledge_ts
+                row["created_ts"] = knowledge_ts
+            return rows
+
+        failure_payload = {
+            "ticker": ticker,
+            "requested_periods": sorted(requested_periods),
+            "available_periods": sorted(available_periods),
+            "missing_periods": capped_periods,
+        }
+        self._route_failure("raw_financial_statements", "tier_period_cap", failure_payload)
+
+        fallback = self.financial_statement_fallback
+        if fallback is None:
+            for offset, row in enumerate(sorted(rows, key=lambda item: str(item["report_period"]))):
+                knowledge_ts = (now + timedelta(microseconds=offset)).isoformat()
+                row["known_from_ts"] = knowledge_ts
+                row["created_ts"] = knowledge_ts
+            return rows
+        fallback_start_year = int(capped_periods[0][:4])
+        fallback_end_year = int(capped_periods[-1][:4])
+        try:
+            fallback_rows = fallback.fetch_financial_statements(
+                ticker, fallback_start_year, fallback_end_year
+            )
+        except Exception as exc:  # noqa: BLE001
+            self._route_failure(
+                "raw_financial_statements",
+                "generator_fallback_failed",
+                {**failure_payload, "error": str(exc)},
+            )
+            return rows
+
+        fallback_name = getattr(fallback, "source_name", "configured_generator")
+        for fallback_row in fallback_rows:
+            if not isinstance(fallback_row, dict):
+                self._route_failure(
+                    "raw_financial_statements",
+                    "invalid_generator_row",
+                    {"ticker": ticker, "row": repr(fallback_row)},
+                )
+                continue
+            report_period = str(fallback_row.get("report_period", ""))
+            fallback_ticker = str(fallback_row.get("ticker", "")).upper()
+            if report_period not in capped_periods or fallback_ticker != ticker:
+                continue
+            source_unit = fallback_row.get("source_unit", self.fallback_source_unit)
+            if source_unit != "VND":
+                self._route_failure(
+                    "raw_financial_statements",
+                    "unknown_source_unit",
+                    {
+                        "ticker": ticker,
+                        "report_period": report_period,
+                        "source_unit": source_unit,
+                    },
+                )
+                continue
+            synthetic_row = dict(fallback_row)
+            synthetic_row["source_system"] = "generator"
+            synthetic_row["source_name"] = fallback_name
+            synthetic_row["source_unit"] = "VND"
+            synthetic_row["is_synthetic"] = True
+            # Generated rows become known at the fallback run time, not at their historical
+            # report-period timestamp; this keeps fact joins inside the current company version.
+            synthetic_row["known_from_ts"] = now.isoformat()
+            rows.append(synthetic_row)
+        # The source returns newest periods first. Re-assign a monotonic batch timestamp in
+        # report-period order so the newest vintage remains the latest Feast event.
+        for offset, row in enumerate(sorted(rows, key=lambda item: str(item["report_period"]))):
+            knowledge_ts = (now + timedelta(microseconds=offset)).isoformat()
+            row["known_from_ts"] = knowledge_ts
+            row["created_ts"] = knowledge_ts
         return rows
 
     # -- market prices ----------------------------------------------------
@@ -334,7 +447,7 @@ class VnstockLiveAdapter:
             endpoint="Quote.history", ticker=ticker, report_period=None, status="success"
         )
 
-        now = datetime.now(UTC).isoformat()
+        now = datetime.now(UTC)
         rows: list[dict[str, Any]] = []
         for record in history.to_dict("records"):
             trading_date = record["time"]
@@ -357,10 +470,14 @@ class VnstockLiveAdapter:
                     "source_system": "vnstock",
                     "source_name": "vnstock_kbs",
                     "source_unit": "VND",  # normalized here, was nghìn đồng on the wire
-                    "known_from_ts": now,
-                    "created_ts": now,
+                    "known_from_ts": now.isoformat(),
+                    "created_ts": now.isoformat(),
                 }
             )
+        for offset, row in enumerate(sorted(rows, key=lambda item: str(item["trading_date"]))):
+            knowledge_ts = (now + timedelta(microseconds=offset)).isoformat()
+            row["known_from_ts"] = knowledge_ts
+            row["created_ts"] = knowledge_ts
         self._checkpoint(ticker)
         return rows
 

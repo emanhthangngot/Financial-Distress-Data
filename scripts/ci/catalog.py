@@ -1,4 +1,4 @@
-"""Parse and validate the platform .eployable catalog.
+"""Parse and validate the platform deployable catalog.
 
 The module intentionally contains no CI or network code so local preflight and
 unit tests exercise the same decisions as a future workflow adapter.

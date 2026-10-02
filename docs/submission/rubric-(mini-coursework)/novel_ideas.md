@@ -49,7 +49,7 @@ submitted to the DP3 gate and correctly raises `PipelineValidationError`. A
 second, orthogonal proof in the same evidence file: the evidence manifest's
 own tamper-detection correctly flags a controlled artifact mutation — the
 checked-in artifacts are the clean run, not the tampered one. Full evidence:
-[`docs/evidence/novel/phase8-novel-ideas.json`](../../evidence/novel/phase8-novel-ideas.json).
+[`docs/evidence/novel/novel-ideas.json`](../../evidence/novel/novel-ideas.json).
 
 ## Part II — Idea 2: declarative ingestion manifest
 

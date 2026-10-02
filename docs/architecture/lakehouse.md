@@ -83,7 +83,7 @@ Below is the execution flow map from raw sources to reviewer inspection:
 | - 01_collect_company_master_data.py    |                                | - Kafka Producer (kafka_producer.py)   |
 | - 02_collect_financial_statement_api.py|                                |   Topics: financial.price_events       |
 | - 03_collect_market_price_api.py       |                                |           news_events, alert_events    |
-| - stage1_real_e2e_pipeline.py          |                                | - MicroBatchConsumer                   |
+| - lakehouse_real_e2e_pipeline.py          |                                | - MicroBatchConsumer                   |
 +-------------------+--------------------+                                |   (kafka_to_bronze_consumer.py)        |
                     |                                                     +-------------------+--------------------+
                     |                                                                         |
@@ -291,8 +291,8 @@ Nằm trong thư mục `dags/`:
 * [07_run_data_quality_checks.py](../../dags/07_run_data_quality_checks.py): DAG kiểm tra chất lượng DQ toàn hệ thống.
 * [08_minio_duckdb_register_tables.py](../../dags/08_minio_duckdb_register_tables.py): DAG tự động cập nhật SQL views trên DuckDB.
 * [09_data_governance.py](../../dags/09_data_governance.py): DAG đồng bộ dữ liệu quản trị metadata.
-* [stage1_local_evidence_pipeline.py](../../dags/lakehouse_local_evidence_pipeline.py): DAG kiểm thử nhẹ sinh evidence nhanh cho môi trường CI.
-* [stage1_real_e2e_pipeline.py](../../dags/lakehouse_real_e2e_pipeline.py): **DAG E2E Cốt Lõi**, kết nối toàn bộ luồng thu thập $\rightarrow$ Kafka $\rightarrow$ MinIO $\rightarrow$ PySpark $\rightarrow$ Postgres $\rightarrow$ DuckDB.
+* [lakehouse_local_evidence_pipeline.py](../../dags/lakehouse_local_evidence_pipeline.py): DAG kiểm thử nhẹ sinh evidence nhanh cho môi trường CI.
+* [lakehouse_real_e2e_pipeline.py](../../dags/lakehouse_real_e2e_pipeline.py): **DAG E2E Cốt Lõi**, kết nối toàn bộ luồng thu thập $\rightarrow$ Kafka $\rightarrow$ MinIO $\rightarrow$ PySpark $\rightarrow$ Postgres $\rightarrow$ DuckDB.
 
 ---
 
@@ -334,11 +334,11 @@ Toàn bộ minh chứng thực thi the platform được lưu trữ tại [docs/
 |---|---|---|
 | **PyTest Test Suite** | 464 Passed Tests | `Developer -> runs pytest -> 464 tests pass in < 3s` |
 | **Local Services** | Healthcheck Logs | `Airflow/Kafka/MinIO/Postgres -> startup -> All services healthy` |
-| **Real E2E Pipeline** | `stage1_real_airflow_dag_test.txt` | `Airflow -> triggers E2E DAG -> Execution SUCCESS` |
-| **Bronze/Silver/Gold Parquet**| `stage1_real_minio_objects.json` | `PySpark -> writes to MinIO -> Parquet files partitioned correctly` |
-| **PostgreSQL Metadata** | `stage1_real_postgres_summary.json`| `PostgresMetadataWriter -> writes run logs & DQ -> PostgreSQL populated` |
-| **DQ Failure Probe** | `stage1_dq_failure_probe.json` | `DQ Engine -> catches invalid row -> Isolates row to failed_records` |
-| **DuckDB Validation** | `stage1_real_duckdb_validation.json`| `DuckDB -> queries MinIO Parquet -> Views yield correct query results` |
+| **Real E2E Pipeline** | `lakehouse_real_airflow_dag_test.txt` | `Airflow -> triggers E2E DAG -> Execution SUCCESS` |
+| **Bronze/Silver/Gold Parquet**| `lakehouse_real_minio_objects.json` | `PySpark -> writes to MinIO -> Parquet files partitioned correctly` |
+| **PostgreSQL Metadata** | `lakehouse_real_postgres_summary.json`| `PostgresMetadataWriter -> writes run logs & DQ -> PostgreSQL populated` |
+| **DQ Failure Probe** | `lakehouse_dq_failure_probe.json` | `DQ Engine -> catches invalid row -> Isolates row to failed_records` |
+| **DuckDB Validation** | `lakehouse_real_duckdb_validation.json`| `DuckDB -> queries MinIO Parquet -> Views yield correct query results` |
 
 ---
 

@@ -136,6 +136,8 @@ cutoff_ts)`, aggregating a declared window over the as-of vintage) and declares 
 - Create: `docs/architecture/feature-contracts.md` (TTL table + rationale)
 - Modify: `pyproject.toml` — add `confluent-kafka`, `apache-flink`, `feast`
 - Modify: `dags/feature_materialize.py` — incremental materialize offline → online (ML 18)
+- Produce for P10: focused behavior commands, image/manifests, GitOps targets and runtime smoke for
+  `stream-feature-offline`, `stream-feature-online`, materialization and DP3 lanes
 
 ## Implementation Steps
 
@@ -158,6 +160,8 @@ cutoff_ts)`, aggregating a declared window over the as-of vintage) and declares 
    Postgres offline store; confirm `LeakageError` without the knowledge-time filter and a pass with it.
 10. **Teardown test** (1 d) — delete `platform-streaming`; verify `pg_replication_slots` returns
     zero rows for the connector slot.
+11. **Jenkins handoff** — register the four P5 delivery contracts in P10's artifact catalog; each
+    keeps a distinct Jenkins result and deployed revision even when implementation is shared.
 
 ## Success Criteria
 
@@ -178,6 +182,7 @@ cutoff_ts)`, aggregating a declared window over the as-of vintage) and declares 
       filter; passes with it
 - [ ] AC-P5-8: Platform operator → tears down `platform-streaming` → `pg_replication_slots` returns
       zero rows for the connector slot
+- [ ] AC-P5-JENKINS: P10 Jenkins catalog -> consumes P5 delivery contracts -> offline, online, materialization and DP3 lanes each exercise a real record through their declared store and expose an attributable deployed revision.
 
 ### Mini-track streaming and DP3 rows (added 2026-09-02)
 

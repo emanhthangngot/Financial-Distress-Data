@@ -11,9 +11,8 @@ import { createRequestClient } from "./supabase";
  * `role` is never accepted as input here, by construction: the only field
  * this action reads from the form is `displayName`, and the client it writes
  * through carries the caller's own access token, so the request runs under
- * RLS -- the owner-only column grant added in
- * `supabase/migrations/20260814200000_phase2_profile_identity.sql` refuses a
- * role write at the database even if a caller tried to smuggle one in.
+ * RLS -- the owner-only column grant in the profile identity migration refuses
+ * a role write at the database even if a caller tried to smuggle one in.
  */
 
 export interface ActionResult {

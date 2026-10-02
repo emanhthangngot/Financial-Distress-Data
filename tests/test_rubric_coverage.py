@@ -84,17 +84,17 @@ def test_dockerfile_optimize_evidence() -> None:
 
 def test_generator_offline_skew_evidence() -> None:
     # W17 generator produces skew; W20 evidence captures characteristics
-    p = EVIDENCE / "stage1_generator_characteristics.json"
+    p = EVIDENCE / "lakehouse_generator_characteristics.json"
     if not p.exists():
-        pytest.xfail("stage1_generator_characteristics.json is generated at runtime")
+        pytest.xfail("lakehouse_generator_characteristics.json is generated at runtime")
     data = json.loads(p.read_text(encoding="utf-8"))
     assert "skew" in json.dumps(data).lower() or "cardinality" in json.dumps(data).lower()
 
 
 def test_generator_offline_cardinality_evidence() -> None:
-    p = EVIDENCE / "stage1_generator_characteristics.json"
+    p = EVIDENCE / "lakehouse_generator_characteristics.json"
     if not p.exists():
-        pytest.xfail("stage1_generator_characteristics.json is generated at runtime")
+        pytest.xfail("lakehouse_generator_characteristics.json is generated at runtime")
     text = p.read_text(encoding="utf-8").lower()
     assert "cardinality" in text or "approx_count_distinct" in text
 

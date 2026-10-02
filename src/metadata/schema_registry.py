@@ -137,7 +137,10 @@ DEFAULT_CONTRACTS = {
             "statement_variant",
             "report_release_date",
             "event_timestamp",
+            "source_system",
+            "is_synthetic",
         ],
+        field_types={"is_synthetic": "boolean"},
         enum_values={
             "statement_variant": [
                 "consolidated_audited",
@@ -160,10 +163,9 @@ DEFAULT_CONTRACTS = {
             "event_timestamp",
         ],
     ),
-    # v2 (phase-02-data-model.md): raw_/stg_ prefixes, known_from_ts, DECIMAL
+    # Target data-model contract: raw_/stg_ prefixes, known_from_ts, DECIMAL
     # money/ratio types, source_unit fail-closed on every money-bearing
-    # contract (U-1d, AC-P2-25). v1 contracts above are retained, not
-    # replaced — ops.schema_version_registry keeps both versions.
+    # contract. Legacy contracts above remain during the migration window.
     "raw_companies": SchemaContract(
         "raw_companies",
         "v2",
@@ -176,11 +178,13 @@ DEFAULT_CONTRACTS = {
         [
             "ticker",
             "report_period",
+            "source_system",
             "source_name",
             "source_unit",
             "known_from_ts",
             "created_ts",
             "ingest_batch_id",
+            "is_synthetic",
         ],
         ["total_assets", "total_liabilities", "total_equity"],
         field_types={
@@ -189,6 +193,7 @@ DEFAULT_CONTRACTS = {
             "total_equity": "decimal",
             "known_from_ts": "timestamp",
             "created_ts": "timestamp",
+            "is_synthetic": "boolean",
         },
     ),
     "raw_market_prices_daily": SchemaContract(

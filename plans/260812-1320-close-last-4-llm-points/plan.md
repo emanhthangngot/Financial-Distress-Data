@@ -79,14 +79,14 @@ the outer handler is `await`-ing. Candidate mechanisms — an `httpx.AsyncClient
 opened in the parent lifespan but used from the mounted MCP sub-app's task
 group; uvicorn connection handling under `stateless_http=True`; CPU throttling
 at the 500m limit; a listen-address mismatch — are distinguishable only by
-running it. platform .xists to settle that **before** any code is edited.
+running it. platform exists to settle that **before** any code is edited.
 
 The fix direction is nonetheless independent of the mechanism and is the one
 phase 4 already named: **stop making the loopback call**. A service must not
 HTTP-call its own process to reach a pure function that is already imported
 into it (`_calculate_drift`, `main.py:130-137`). Removing the hop deletes the
 5s timeout, one serialization round-trip, and this entire failure class.
-platform .till runs first, because if the local reproduction shows the hang is
+platform still runs first, because if the local reproduction shows the hang is
 environmental (NetworkPolicy, DNS, listen address) the same removal is still
 correct but the cluster needs a second fix too — and shipping only the code
 change would burn a cluster window discovering that.
@@ -162,7 +162,7 @@ three agent jobs.
 
 - No new observability feature, metric, exporter, or dashboard. Every series
   both rows need already exists in `src/observability/telemetry.py`.
-- No change to platform .ode, DAGs, or pipelines (`AGENTS.md` "Don't Touch").
+- No change to platform code, DAGs, or pipelines (`AGENTS.md` "Don't Touch").
 - No AWS/EKS/Argo asset added to this repo — platform changes land in
   `financial-distress-gitops`.
 - No rewrite of an evidence claim to match observed reality. If a row cannot be
@@ -175,11 +175,11 @@ three agent jobs.
 This plan was worth 4 points and cost one cluster window. It would have been
 abandoned, not extended, if any of these had held:
 
-- platform .annot reproduce the hang locally **and** cannot name a concrete
+- platform cannot reproduce the hang locally **and** cannot name a concrete
   cluster-side cause within its 3h box.
 - Phase 3's cluster window passes 4h without a successful coordinator
   round-trip.
-- Any fix would require editing a platform .AG, a pipeline, or an evidence file's
+- Any fix would require editing a platform DAG, a pipeline, or an evidence file's
   claim.
 
 On abandonment, the fallback would have been to revert nothing that already

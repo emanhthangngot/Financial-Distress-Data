@@ -1,0 +1,26 @@
+{
+  "captured_at_utc": "2026-09-15T03:50:00Z",
+  "scope": ["src", "dags", "scripts", "infra", "Jenkinsfile", "pyproject.toml"],
+  "secret_scan": {
+    "patterns": ["AWS access keys", "private keys", "hard-coded API/secret/password/token literals"],
+    "result": "no matches"
+  },
+  "dangerous_execution_scan": {
+    "patterns": ["eval", "exec", "os.system", "shell=True"],
+    "result": "no matches",
+    "note": "The benign variable name `token` in scripts/_platform_rubric_items.py is not executable code and did not match this scan."
+  },
+  "tracked_environment_files": {
+    "command": "git ls-files .env .env.local .env.production",
+    "result": "none"
+  },
+  "dependency_audit": {
+    "command": "uvx pip-audit",
+    "result": "No known vulnerabilities found"
+  },
+  "agentkit_security_skill": {
+    "result": "not run",
+    "reason": "AgentKit security-scan requires ANTHROPIC_API_KEY in this environment"
+  },
+  "conclusion": "No secret or dangerous-execution finding was observed in the checked scope; uvx pip-audit reported no known vulnerabilities."
+}

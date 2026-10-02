@@ -42,4 +42,4 @@ reviewer index, not the final freeze seal.
 ## Verification
 
 - `.venv-platform/bin/python -m pytest tests/platform/requirements/ -k llm -q` — 31 passed.
-- `.venv-platform/bin/python scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --gitops-root <gitops-repo> --lakehouse-base <sha>` — rerun after SHA restamping; the strict final freeze gate must report zero findings without acceptance cuts.
+- `.venv-platform/bin/python scripts/audit_platform_evidence.py --require-executed --run-validations --track LLM --gitops-root <gitops-repo> --lakehouse-base <sha>` — rerun after SHA restamping; the strict final freeze gate must report zero findings without acceptance cuts.

@@ -74,7 +74,7 @@ and nothing signs today.
 
 Note the three real bugs phase-04 already fixed in that template (hardcoded
 `--base main` when the GitOps default branch is `master`; missing
-`packages: write`; startup failure) and do not reintroduce them. platform .lready
+`packages: write`; startup failure) and do not reintroduce them. platform already
 replaced the `eval` on the `test_selector` input and wired in the phase-2
 dependency manifest — without that, these four workflows would run against an
 environment that cannot import FastAPI, Feast or MCP.
@@ -130,7 +130,7 @@ classes matching their documented contracts and design patterns
 ## Implementation Steps
 
 1. (Cluster down) Write the equivalence/boundary, Hypothesis and fixture/mock
-   Web API tests. Reach >90% coverage on the platform .LM code; capture the
+   Web API tests. Reach >90% coverage on the platform LLM code; capture the
    report showing both the figure and the fixture/mock usage.
 2. (Cluster down) Run `mutmut` on the declared subset. **Drive it to >80%** —
    this is scored text. Record the real score and the surviving-mutant list.
@@ -156,7 +156,7 @@ classes matching their documented contracts and design patterns
 
 - [x] Developer -> merges source code for any of the four new deployables -> obtains one **signed** immutable digest and one GitOps PR whose merge visibly changes the running pod's image.
 - [x] Maintainer -> adds a hypothetical new deployable -> edits one list entry, not the workflow body.
-- [x] Test runner -> runs the platform .LM suite -> reports >90% coverage with visible fixture and mock usage on the Web API tests, plus passing equivalence/boundary and Hypothesis idempotency tests.
+- [x] Test runner -> runs the platform LLM suite -> reports >90% coverage with visible fixture and mock usage on the Web API tests, plus passing equivalence/boundary and Hypothesis idempotency tests.
 - [x] Test runner -> runs `mutmut` on the declared subset -> reports a score **above 80%**, with the surviving-mutant list recorded.
 - [x] Load tester -> runs Locust against the Web API kéo dữ liệu through the gateway -> receives an HTML report with p95 latency, throughput, error rate, concurrency and test parameters.
 - [x] Operator -> compares cold and warm agent modes -> sees improved startup and TTFT with a documented cost difference and replica spread.
@@ -191,7 +191,7 @@ rows not yet in scope>"` passes.
   modules with the tightest tests, timebox the tooling shakeout on cluster-down
   time (step 2), and if the bar proves unreachable, record the real score
   honestly rather than restating the threshold as retired.
-- **Coverage >90% on brand-new platform .ode.** Mitigation: step 1 runs with the
+- **Coverage >90% on brand-new platform code.** Mitigation: step 1 runs with the
   cluster down, before the capture rush; mock the model and cluster boundaries.
 - **Rewiring the digest key touches the one CI path that already works.**
   Mitigation: prove the loop on a single service before adding the four callers;

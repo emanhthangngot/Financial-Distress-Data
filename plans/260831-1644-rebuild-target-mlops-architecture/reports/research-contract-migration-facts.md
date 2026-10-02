@@ -8,8 +8,8 @@
 
 | Authority | Date | Status | Key decisions | Source |
 |---|---|---|---|---|
-| **platform .ontracts** | Ongoing | Immutable | Bronze/Silver/Gold semantics, no mutations | `docs/mini_coursework.md:1,29-41` |
-| **platform .LM submission** | 2026-08-13 | Locked (pending freeze) | GKE, GitHub Actions, KServe 0.14.1/Knative, agentgateway, Feast (Redis/MinIO) | `docs/coursework.md:1-65` |
+| **platform contracts** | Ongoing | Immutable | Bronze/Silver/Gold semantics, no mutations | `docs/mini_coursework.md:1,29-41` |
+| **platform LLM submission** | 2026-08-13 | Locked (pending freeze) | GKE, GitHub Actions, KServe 0.14.1/Knative, agentgateway, Feast (Redis/MinIO) | `docs/coursework.md:1-65` |
 | **ADR-010** | 2026-08-07 | Superseding | KServe/Knative restored, Istio/Vault/Jenkins/Envoy dropped, Helm-only render | `docs/platform/adr/adr-010-llm-only-scope-and-platform-simplification.md:1-116` |
 | **ADR-002** | 2026-08-02 | Immutable | Two repositories (source monorepo + GitOps control repo) | `docs/platform/adr/adr-002-two-repositories.md:1-30` |
 | **Plan 260818-0832** | 2026-08-18 | Debate baseline | Unified ML+LLM (161 rows), 48 vCPU, Jenkins+Vault, Istio full sidecar, Kubeflow/Ray/MLflow, Iceberg/Spark/Trino | `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:1-310` |
@@ -22,10 +22,10 @@
 ### Rubric scope (canonical source: `docs/platform/rubric-matrix.csv`)
 | Track | Rows | Points | Status | Evidence location |
 |---|---|---|---|---|
-| Mini-coursework | 44 | 100 | platform .ource of truth (location unsourced) | `docs/mini_coursework.md:1` |
+| Mini-coursework | 44 | 100 | platform source of truth (location unsourced) | `docs/mini_coursework.md:1` |
 | ML | 57 | 100 | Design-only (deferred) | `docs/platform/rubric-matrix.csv` (marked design_only) |
 | LLM | 60 | 100 | Submitted (pending freeze) | `docs/platform/evidence/llm/` + GitOps SHA restamp pending |
-| **Total** | **161** | **300** | Rebuild target (all three); platform .ubmission (LLM only) | Split by track acceptance |
+| **Total** | **161** | **300** | Rebuild target (all three); platform submission (LLM only) | Split by track acceptance |
 
 ### Acceptance criteria mapping
 - **LLM-AC-01..20:** 20 distinct criteria for LLM track `docs/platform/acceptance-criteria.md:56-143`
@@ -50,7 +50,7 @@
 
 ---
 
-## IV. Current State Component Inventory (platform .LM)
+## IV. Current State Component Inventory (platform LLM)
 
 ### Inference and model serving
 | Component | Version | Current config | Notes |
@@ -111,7 +111,7 @@ Source: `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:36,42-48,
 ### Data and ML training (new)
 | Component | Target | Current | Breaking? | Mitigation |
 |---|---|---|---|---|
-| **Lakehouse format** | Iceberg + Spark | DuckDB/Parquet (Phase 1) | **Yes** (additive) | Phase 2: parallel Iceberg write path; platform .nchanged |
+| **Lakehouse format** | Iceberg + Spark | DuckDB/Parquet (platform) | **Yes** (additive) | platform: parallel Iceberg write path; platform unchanged |
 | **Offline store** | Postgres | MinIO | **Yes** (schema change) | Phase 3: Postgres Feast offline; MinIO for versioning only |
 | **Data pipeline** | Debezium → Kafka → Flink | Kafka (Phase 1) | **Additive** | Phase 3: streaming CDC path |
 | **Analytics** | Trino + Superset | None | New | Phase 4: install; window-scheduled residency |
@@ -152,10 +152,10 @@ Source: `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:50-88`
 | **Service mesh** | None | Istio full sidecar | Jobs break with sidecars; requires native sidecars (K8s 1.33+) | Phase 4: Kubernetes 1.35.6 GKE verified; install Istio; verify Job termination |
 | **Secrets** | sealed-secrets in Git | Vault + external-secrets | CI/CD driver change required | Phase 7: Jenkins migration includes Vault cutover |
 | **CI/CD** | GitHub Actions | Jenkins | Existing workflows not portable | Phase 7: rewrite Actions as declarative Jenkins pipelines |
-| **Data plane** | DuckDB/Parquet (Phase 1) | Iceberg/Spark on GKE | Additive (platform .nchanged) | Phase 2: parallel Iceberg write; platform lakehouse unaffected |
+| **Data plane** | DuckDB/Parquet (platform) | Iceberg/Spark on GKE | Additive (platform unchanged) | platform: parallel Iceberg write; platform lakehouse unaffected |
 | **Feature store offline** | MinIO | Postgres | Schema change (point-in-time semantics) | Phase 3: Postgres Feast definition; ML retrofit depends on this |
 | **Model promotion** | None (no approval) | Frozen holdout gate | New control on ML track | Phase 5: holdout PVC + Iceberg tag pinning + Jenkins lane |
-| **Evidence tree** | Split (docs/evidence + docs/platform/evidence) | Unified (single tree, 161 rows) | Requires purging all platform .LM artifacts | Debate decision: forfeit 100 points, rebuild to 300 total |
+| **Evidence tree** | Split (docs/evidence + docs/phase2/evidence) | Unified (single tree, 161 rows) | Requires purging all platform LLM artifacts | Debate decision: forfeit 100 points, rebuild to 300 total |
 | **Namespace visual** | 3 separate namespaces shown | Likely grouped in fdd-architecture-full-4k.png | Risk: diagram implies manifest consolidation (security regression) | Phase 4: inspect diagram; confirm visual grouping ≠ namespace collapse |
 
 ---
@@ -166,9 +166,9 @@ Source: `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:50-88`
 |---|---|---|
 | Two repositories (source + GitOps) | ADR-002 | Audit trail, least-privilege CI/CD |
 | Digest-only GitOps (no code commits to cluster state) | ADR-002 | GitOps reproducibility |
-| platform .ontracts immutable | `docs/mini_coursework.md`, `docs/coursework.md:7` | platform .egression suite, all dependent work |
+| platform contracts immutable | `docs/mini_coursework.md`, `docs/coursework.md:7` | platform regression suite, all dependent work |
 | Point-in-time training isolation (frozen holdout gate) | Plan 260818 decision 14 | Model safety; risk of promotion on stale data |
-| Three rubrics scored (if rebuild) or LLM-only (if platform .inal) | Mutual exclusion: 161 rows XOR 60 rows | Evidence tree restructure + 100 point forfeit |
+| Three rubrics scored (if rebuild) or LLM-only (if platform final) | Mutual exclusion: 161 rows XOR 60 rows | Evidence tree restructure + 100 point forfeit |
 | Namespace boundaries preserved (agentgateway-system ↔ kagent ↔ agents-sandbox) | Plan 260818-0028:77-115 | NetworkPolicy egress scoping; sandbox security tier |
 
 ---
@@ -242,7 +242,7 @@ Source: `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:50-88`
 **Status: DONE_WITH_CONCERNS**
 
 **Summary:**  
-Contract migration facts compiled from platform .LM authority (ADR-010, coursework.md) and Plan 260818 rebuild baseline. Authority chain locked (immutable platform . ADR-010 + namespace boundaries; debate-permissible Plan 260818). GitOps repo inspected; current component versions documented (KServe 0.14.1, Knative 1.16.0, net-kourier, sealed-secrets, no Istio/Vault/Jenkins). All contradictions cited with resolution paths.
+Contract migration facts compiled from platform LLM authority (ADR-010, coursework.md) and Plan 260818 rebuild baseline. Authority chain locked (immutable platform + ADR-010 + namespace boundaries; debate-permissible Plan 260818). GitOps repo inspected; current component versions documented (KServe 0.14.1, Knative 1.16.0, net-kourier, sealed-secrets, no Istio/Vault/Jenkins). All contradictions cited with resolution paths.
 
 **Core contradiction:**  
 platform data plane, evidence purge + regeneration). Upgrade path known; schedule risk high (~30 hrs/wk for 8 weeks, no slack, USD 223 budget remaining).

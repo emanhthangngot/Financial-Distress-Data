@@ -1,8 +1,8 @@
-# platform .eview — Status Report (2026-08-03, local, uncommitted)
+# platform Review — Status Report (2026-08-03, local, uncommitted)
 
 ## Verdict
 
-**platform .hưa hoàn thành. Checklist KHÔNG tick** — chỉ mới xong phần foundation (DB/auth layer), chưa có product shell (UI) như tiêu đề phase yêu cầu.
+**platform chưa hoàn thành. Checklist KHÔNG tick** — chỉ mới xong phần foundation (DB/auth layer), chưa có product shell (UI) như tiêu đề phase yêu cầu.
 
 Plan status field hiện: `status: todo` — giữ nguyên, đúng thực tế.
 
@@ -39,7 +39,7 @@ Tất cả 5 success criteria đều cần UI/E2E flow (Playwright) để verify
 
 ## platform .`phase-01-start.md`) — tham chiếu nhanh
 
-Đã đóng, checklist tick đủ, qua 3 vòng review (Session 1-3), status `in_review`. Không phải phần review yêu cầu lần này nhưng đối chiếu để xác nhận platform .uild đúng trên nền spec đã lock (rubric matrix, ADR, class contracts) — không phát hiện lệch spec ở phần đã làm của Phase 2.
+Đã đóng, checklist tick đủ, qua 3 vòng review (Session 1-3), status `in_review`. Không phải phần review yêu cầu lần này nhưng đối chiếu để xác nhận platform build đúng trên nền spec đã lock (rubric matrix, ADR, class contracts) — không phát hiện lệch spec ở phần đã làm của platform.
 
 ## Đề xuất
 

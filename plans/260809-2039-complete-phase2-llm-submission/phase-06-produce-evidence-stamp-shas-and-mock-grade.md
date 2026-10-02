@@ -73,7 +73,7 @@ modules**, not just a prose document — `src/llm/embedding_registry.py` and
   output is blocked or rewritten, and the decision is linked to its OTel trace
   and the evidence manifest. This also feeds phase 4's PII-safety metric.
 
-**SHA stamping — now convergent.** platform .hanged the auditor to accept a
+**SHA stamping — now convergent.** platform changed the auditor to accept a
 `source_sha`/`gitops_sha` that is HEAD **or an ancestor of HEAD**, provided the
 diff from that commit to HEAD touches only SHA lines in evidence files. That
 makes the loop terminate:
@@ -104,7 +104,7 @@ PATH="$PWD/.venv-phase2/bin:$PATH" \
   # append --accept-design-only <rubric_id>,... for any row taken off the cut ladder
 ```
 
-`PHASE1_BASE_SHA` is the immutable 40-hex commit immediately before platform .ork
+`PHASE1_BASE_SHA` is the immutable 40-hex commit immediately before platform work
 — never a moving branch name.
 
 **Grader access to the private GitOps repo.** Decision 2026-08-09: the control
@@ -149,7 +149,7 @@ grading time.
    deployable a node, every primary edge described, with a flow legend), the
    repo map and the TOC. Update `docs/coursework.md` to state the LLM-only scope
    and the honest ML deferral.
-5. Re-run the platform .ate (`.venv/bin/python scripts/run_stage1_quality_gates.py`)
+5. Re-run the platform gate (`.venv/bin/python scripts/run_stage1_quality_gates.py`)
    to prove no regression and that `.venv` was never mutated.
 6. Flip the final five rows to `executed`, regenerate the CSV and requirement
    tests, and confirm all 60 LLM rows are `executed` except any cut row.
@@ -177,7 +177,7 @@ grading time.
 - [ ] Reviewer -> reads `docs/platform/novel-ideas.md` -> finds working proof for both ideas backed by the two named modules, not descriptions.
 - [ ] Reviewer -> opens `README.md` -> finds a numbered deployment diagram where every deployable is a node and every primary edge is described.
 - [ ] Cost owner -> reads `docs/submission/cost.md` -> sees per-session deltas including the evidence VM, a final balance under USD 100 of the free-trial credit, and no billing upgrade.
-- [ ] platform .aintainer -> runs the Stage 1 gate -> passes unchanged.
+- [ ] platform maintainer -> runs the platform gate -> passes unchanged.
 
 ## Risk Assessment
 

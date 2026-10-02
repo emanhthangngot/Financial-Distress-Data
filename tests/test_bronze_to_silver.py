@@ -25,6 +25,33 @@ def test_schema_evolution_missing_nullable_field_is_allowed():
     assert silver[0]["retained_earnings"] is None
 
 
+def test_silver_preserves_synthetic_financial_provenance() -> None:
+    contract = InMemorySchemaRegistry().get_current("financial_statements")
+    silver, failed = bronze_to_silver(
+        [
+            {
+                "ticker": "AAA",
+                "report_period": "2025Q4",
+                "fiscal_year": 2025,
+                "fiscal_quarter": 4,
+                "total_assets": 1000,
+                "total_liabilities": 500,
+                "equity": 500,
+                "created_ts": "2026-01-01T00:00:00+00:00",
+                "source_system": "generator",
+                "is_synthetic": True,
+            }
+        ],
+        contract.required,
+        contract.nullable,
+        ["ticker", "report_period"],
+    )
+
+    assert failed == []
+    assert silver[0]["source_system"] == "generator"
+    assert silver[0]["is_synthetic"] is True
+
+
 def test_deduplicate_keeps_latest_created_ts():
     contract = InMemorySchemaRegistry().get_current("companies")
     silver, failed = bronze_to_silver(

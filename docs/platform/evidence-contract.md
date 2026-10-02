@@ -1,7 +1,7 @@
 # the platform Evidence Contract
 
 This document defines what counts as proof for every scored rubric row in the
-ML and LLM tracks. It is enforced by `scripts/audit_phase2_evidence.py` and
+ML and LLM tracks. It is enforced by `scripts/audit_platform_evidence.py` and
 `tests/platform/test_rubric_matrix.py`.
 
 ## Evidence Types
@@ -40,7 +40,7 @@ explains what its images prove. No orphan screenshot dumps.
 
 ## Frozen the platform Base
 
-`PHASE1_BASE_SHA=ddbcbe7bd41ae4883954b8a247efdc67c7329078`
+`PLATFORM_BASE_SHA=ddbcbe7bd41ae4883954b8a247efdc67c7329078`
 (`fix(generators): resolve generator package collision`). This is the commit
 the strict linter diffs the current source `HEAD` against to prove no the platform
 protected path moved; it is frozen because it is the last commit before the platform
@@ -52,11 +52,11 @@ in every strict run recorded in `plans/260811-1627-close-llm-rubric-to-100/`.
 
 ```bash
 # Phase-01: matrix completeness + no the platform mutation
-python scripts/audit_phase2_evidence.py --matrix-only --strict
+python scripts/audit_platform_evidence.py --matrix-only --strict
 
 # Phase-08: evidence files exist, reference their rubric_id
-python scripts/audit_phase2_evidence.py --require-executed --run-validations \
-  --lakehouse-base "$PHASE1_BASE_SHA" --gitops-root "$GITOPS_CHECKOUT" \
+python scripts/audit_platform_evidence.py --require-executed --run-validations \
+  --lakehouse-base "$PLATFORM_BASE_SHA" --gitops-root "$GITOPS_CHECKOUT" \
   --ml 100 --llm 100
 ```
 
@@ -74,7 +74,7 @@ reachable ancestor of (or equal to) the current source/GitOps checkout `HEAD`
 — any commit after an evidence SHA must touch only that evidence file's own
 SHA lines under `docs/platform/evidence/`, or the ancestor rule fails the row —
 or when the protected the platform diff cannot be verified against the frozen
-40-hex `$PHASE1_BASE_SHA`, or when any
+40-hex `$PLATFORM_BASE_SHA`, or when any
 evidence metadata key is present with a blank value or a value that cannot be
 real: `execution_timestamp` must parse as ISO-8601, and `source_sha` plus
 `gitops_sha` must each be an exact 40-hex commit. A key line with no value is

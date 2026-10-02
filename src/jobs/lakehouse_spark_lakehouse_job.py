@@ -8,6 +8,7 @@ and the OBT builder. Invoked by the Spark DAGs and by the local evidence script.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any
 
 from src.io.minio_writer import clear_minio_prefix
@@ -22,14 +23,64 @@ from src.transforms.gold.fact_market_alert import build_fact_market_alert_spark
 from src.transforms.gold.fact_market_price import build_fact_market_price_spark
 from src.transforms.gold.fact_news_sentiment import build_fact_news_sentiment_spark
 
-SPARK_HADOOP_AWS_PACKAGE = "org.apache.hadoop:hadoop-aws:3.3.4"
-SPARK_AWS_SDK_PACKAGE = "com.amazonaws:aws-java-sdk-bundle:1.12.262"
+_AWS_CONNECTOR_COORDINATE_BY_HADOOP_VERSION = {
+    "3.3.4": "com.amazonaws:aws-java-sdk-bundle:1.12.262",
+    "3.5.0": "software.amazon.awssdk:bundle:2.35.4",
+}
+
+
+def _pyspark_jars_dir() -> Path:
+    try:
+        import pyspark
+    except ImportError as exc:
+        raise RuntimeError("PySpark is required to resolve the bundled Hadoop version.") from exc
+
+    package_file = getattr(pyspark, "__file__", None)
+    if package_file is None:
+        raise RuntimeError("The installed PySpark package has no filesystem location.")
+    return Path(package_file).resolve().parent / "jars"
+
+
+def _bundled_hadoop_version() -> str:
+    jars_dir = _pyspark_jars_dir()
+    versions_by_artifact: dict[str, set[str]] = {}
+    for artifact in ("hadoop-client-api", "hadoop-client-runtime"):
+        prefix = f"{artifact}-"
+        versions_by_artifact[artifact] = {
+            jar.name[len(prefix) : -len(".jar")]
+            for jar in jars_dir.glob(f"{prefix}*.jar")
+            if jar.name.endswith(".jar")
+        }
+
+    missing = [artifact for artifact, versions in versions_by_artifact.items() if not versions]
+    versions = set().union(*versions_by_artifact.values())
+    if missing or len(versions) != 1:
+        details = ", ".join(
+            f"{artifact}={sorted(artifact_versions)}"
+            for artifact, artifact_versions in versions_by_artifact.items()
+        )
+        raise RuntimeError(
+            "Unable to resolve one bundled Hadoop version from the installed PySpark jars "
+            f"at {jars_dir}: {details}"
+        )
+    return versions.pop()
+
+
+def _spark_runtime_packages() -> str:
+    hadoop_version = _bundled_hadoop_version()
+    connector_coordinate = _AWS_CONNECTOR_COORDINATE_BY_HADOOP_VERSION.get(hadoop_version)
+    if connector_coordinate is None:
+        raise RuntimeError(
+            "No verified cloud-storage connector coordinate for the Hadoop version "
+            f"bundled with PySpark: {hadoop_version}"
+        )
+    return f"org.apache.hadoop:hadoop-aws:{hadoop_version},{connector_coordinate}"
 
 
 def spark_runtime_config(minio_endpoint: str | None = None) -> dict[str, str]:
     endpoint = minio_endpoint or os.getenv("MINIO_ENDPOINT", "http://minio:9000")
     return {
-        "spark.jars.packages": f"{SPARK_HADOOP_AWS_PACKAGE},{SPARK_AWS_SDK_PACKAGE}",
+        "spark.jars.packages": _spark_runtime_packages(),
         "spark.hadoop.fs.s3a.endpoint": endpoint,
         "spark.hadoop.fs.s3a.access.key": require("MINIO_ROOT_USER"),
         "spark.hadoop.fs.s3a.secret.key": require("MINIO_ROOT_PASSWORD"),
@@ -531,6 +582,7 @@ def build_obt_company_quarter_risk_spark(financial_fact_df: Any, labels_df: Any)
 
 
 def build_feat_company_financial_4q_spark(obt_df: Any) -> Any:
+    from pyspark.sql import Window
     from pyspark.sql import functions as F
 
     known_from_ts = F.coalesce(
@@ -539,16 +591,25 @@ def build_feat_company_financial_4q_spark(obt_df: Any) -> Any:
         F.col("event_timestamp"),
         F.col("created_ts"),
     )
-    return (
+    normalized = (
         obt_df.withColumn("ticker", F.upper(F.col("ticker")))
         .withColumn("known_from_ts", known_from_ts)
         .withColumn("event_timestamp", F.col("known_from_ts"))
+        .withColumn("created_timestamp", F.to_timestamp(F.col("created_ts")))
         .withColumn("feature_family", F.lit("financial_4q"))
+    )
+    window = Window.partitionBy("ticker").orderBy(F.col("known_from_ts")).rowsBetween(-3, 0)
+    return (
+        normalized.withColumn("window_period_count", F.count("*").over(window))
+        .withColumn("feature_completeness", F.col("window_period_count") / F.lit(4.0))
         .select(
             "ticker",
             "report_period",
             "event_timestamp",
             "known_from_ts",
+            "created_timestamp",
+            "window_period_count",
+            "feature_completeness",
             "current_ratio",
             "debt_to_asset",
             "debt_to_equity",

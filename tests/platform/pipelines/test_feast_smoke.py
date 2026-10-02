@@ -63,6 +63,7 @@ def test_structured_definitions_parse_and_register(tmp_path: Path) -> None:
     assert "Created entity ticker" in result.stdout
     for view_name in (
         "company_financial_features",
+        "company_financial_4q_features",
         "company_risk_features",
         "market_price_features",
         "stream_market_features",

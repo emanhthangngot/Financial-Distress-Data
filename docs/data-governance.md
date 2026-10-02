@@ -39,7 +39,7 @@ uv run --python 3.12 --with acryl-datahub==1.6.0 \
   --emit \
   --server http://localhost:8080 \
   --run-id coursework-20260730T120200-bf92b2cdf0 \
-  --output docs/evidence/datahub/phase7-runtime.json
+  --output docs/evidence/datahub/runtime.json
 ```
 
 The command fails unless every representative output has a schema, upstream
@@ -55,7 +55,7 @@ also receives a successful `AssertionRunEvent` containing the governance
 | `build_offline_features` | Gold dimension and facts | `gold.feat_company_unified` |
 
 Runtime URNs and counts are recorded in
-[`phase7-runtime.json`](evidence/datahub/phase7-runtime.json).
+[`runtime.json`](evidence/datahub/runtime.json).
 
 ## Failure Semantics
 

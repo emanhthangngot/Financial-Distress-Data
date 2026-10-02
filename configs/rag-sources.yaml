@@ -1,4 +1,4 @@
-# platform .AG trusted-source registry (RagIngestionService.fetch_documents).
+# platform RAG trusted-source registry (RagIngestionService.fetch_documents).
 #
 # Committed fixture corpus, not a live HTTP fetch (confirmed 2026-08-08 —
 # plans/260802-1037-unified-platform-ml-llm-gitops/phase-04-implementation-notes.md,

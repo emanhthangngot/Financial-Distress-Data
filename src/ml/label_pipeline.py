@@ -1,4 +1,4 @@
-"""platform .abel table build.
+"""platform label table build.
 
 Wraps ``src.transforms.compute_distress_labels.compute_labels`` (platform,
 read-only import — AGENTS.md forbids editing platform) and reshapes its

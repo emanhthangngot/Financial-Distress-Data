@@ -1,6 +1,6 @@
 # Evidence — CI/CD for the LLM coordinator agent
 
-Proves `.github/workflows/platform-agent-coordinator.yaml` runs the reusable
+Proves `.github/workflows/production-agent-coordinator.yaml` runs the reusable
 CI template end to end for the `coordinator` deployable: build → cosign sign
 → push immutable GHCR digest → open a GitOps PR rewriting the real
 `coordinator` `Deployment` in `platform/agents/agent-deployments.yaml`.
@@ -10,7 +10,7 @@ CI template end to end for the `coordinator` deployable: build → cosign sign
 - source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/coordinator
-- command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `platform-agent-coordinator.yaml` on the `push` event
+- command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `production-agent-coordinator.yaml` on the `push` event
 - expected_result: `lint`, `test`, `build`, `phase5-verification`, `gitops-pr` all succeed; `gitops-pr` rewrites the `coordinator` `Deployment`'s `image:` field with a real digest and opens a PR against `master`
 - actual_result: run [31410264103](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410264103) — all 5 jobs succeeded; opened [financial-distress-gitops#29](https://github.com/emanhthangngot/financial-distress-gitops/pull/29) rewriting the `coordinator` Deployment's `image:` to `sha256:4f6b7b62c8385334d581b4cb52bf09556bb0f30b5d83dcbc19be631bd7a0d4ea`; merged into `master`
 - redaction_status: reviewed — source repository is public, GitOps repository is private; no secret values in this file

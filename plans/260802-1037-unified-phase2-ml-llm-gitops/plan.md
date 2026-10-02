@@ -1,6 +1,6 @@
 ---
-title: "Unified platform .L + LLM GitOps"
-description: "platform .inal coursework, LLM track only, delivered on a Terraform-provisioned GKE evidence cluster paid from GCP free-trial credit, with a persistent low-cost product plane. The ML track is deferred to a post-deadline retrofit."
+title: "Unified platform ML + LLM GitOps"
+description: "platform final coursework, LLM track only, delivered on a Terraform-provisioned GKE evidence cluster paid from GCP free-trial credit, with a persistent low-cost product plane. The ML track is deferred to a post-deadline retrofit."
 status: pending
 priority: P1
 effort: "7 days to submission (LLM track); ML retrofit a further 4-5 days"
@@ -11,11 +11,11 @@ blocks: [260809-2039-complete-phase2-llm-submission]
 created: 2026-08-02
 ---
 
-# Unified platform .L + LLM GitOps
+# Unified platform ML + LLM GitOps
 
 ## Overview
 
-Active phase: **explicit platform .inal coursework**. Preserve the verified local platform lakehouse, keep application work in one source monorepo (`src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, and thin `dags/phase2/` wrappers), then deploy rubric evidence through a separate least-privilege GitOps control repository.
+Active phase: **explicit platform final coursework**. Preserve the verified local platform lakehouse, keep application work in one source monorepo (`src/ml/`, `src/drift/`, `src/llm/`, `src/agents/`, `apps/`, and thin `dags/phase2/` wrappers), then deploy rubric evidence through a separate least-privilege GitOps control repository.
 
 **Scope revision — 2026-08-07.** The coursework accepts one of the two tracks. With 7 days to the deadline and zero executed evidence, this plan delivers the **LLM track only: 60 rows / 100 points**. The 57 ML rows stay in `docs/platform/rubric-matrix.csv` unchanged and phase-05 stays in place as the retrofit backlog — the phase-08 auditor's canonical-coverage check requires all 117 rows present regardless of which track is submitted, and freezing the ML rows is what keeps the retrofit additive rather than rework. Track selection is enforced by a new `--track` filter on `scripts/audit_phase2_evidence.py`, not by deleting rows. Rationale and the retrofit contract: `phase-05-deliver-ml-track.md`.
 
@@ -82,7 +82,7 @@ never the test suite or observability, which carry more points across more rows.
 - The LLM chain is kagent `Agent` -> kagent `ModelConfig` -> agentgateway AI backend -> a KServe `InferenceService` serving a custom model server on CPU (vLLM-CPU or llama.cpp) behind an llm-d router, running on Knative Serving. **Restored 2026-08-07**: the earlier cut assumed a 16 GB k3d box; GKE has ~43 GB allocatable, and canonical row 2 (2 pts) links a KServe/llm-d deployment guide verbatim. Envoy Gateway and Envoy AI Gateway stay dropped — agentgateway is the gateway the agent rows name. MCP and A2A use agentgateway routes.
 - Helm is the only render tool. **Kustomize is dropped**, so one resource has exactly one owner by construction and the duplicate-owner CI check is unnecessary.
 - Observability is Prometheus + Grafana for metrics, Loki + Grafana Explore for logs, and Jaeger for traces, each exposed as its own gateway-reachable viewer route (canonical rows 40/41/42, 2 pts each). GKE Cloud Logging/Monitoring are disabled — scored via Loki/Grafana, and Cloud Logging bills per GB. **ECK/Kibana is dropped** — the rubric row says "ví dụ Kibana", an example. Secrets are GitHub Actions secrets + OIDC + sealed-secrets; **Vault is dropped**.
-- The single source monorepo owns code, tests, schemas, Dockerfiles, Airflow platform .rappers, and evidence docs. `emanhthangngot/financial-distress-gitops` is a separate control repo owning Terraform, Ansible, Helm charts, Argo CD applications, policies, and environment values; this is not a microservice-per-repo design.
+- The single source monorepo owns code, tests, schemas, Dockerfiles, Airflow platform wrappers, and evidence docs. `emanhthangngot/financial-distress-gitops` is a separate control repo owning Terraform, Ansible, Helm charts, Argo CD applications, policies, and environment values; this is not a microservice-per-repo design.
 - Ansible evidence is mandatory and now honest work the project needs: a role-based playbook configures the Terraform-provisioned GCE VM (Docker, kubectl, kubeconfig, benchmark client) and proves `changed=0` on a second run.
 - Feast defines an offline store from day one even though only the online store is read this week. This is load-bearing for the phase-05 retrofit; see that file's deferral contract.
 
@@ -101,7 +101,7 @@ never the test suite or observability, which carry more points across more rows.
 - [ ] Analyst -> uses the product when the evidence cluster is off -> sees persisted reports plus an honest evidence-plane state instead of a broken workflow.
 - [ ] Platform operator -> runs `make gcp-down` overnight and `make gcp-up` each morning -> receives a recorded cost delta, node pools resized to zero with PVCs preserved, and never upgrades the trial billing account.
 - [ ] Source CI -> publishes a signed immutable image digest -> opens a checked GitOps PR; only the merged Git change is reconciled by Argo CD.
-- [ ] platform .aintainer -> runs existing quality gates -> observes no change to collectors, Gold contracts, DQ semantics, or local evidence behavior, proving `.venv` was never mutated by platform .ependencies.
+- [ ] platform maintainer -> runs existing quality gates -> observes no change to collectors, Gold contracts, DQ semantics, or local evidence behavior, proving `.venv` was never mutated by platform dependencies.
 - [ ] Platform operator -> runs the Ansible evidence-host role twice -> observes a healthy host and `changed=0` on the second run.
 - [ ] ML retrofitter -> resumes phase-05 after the deadline -> finds the Feast offline store defined, the label table present, both Web APIs generic, and the 57 ML rows unchanged, so the remaining work is additive.
 - [ ] Product reviewer -> opens `UI-APPROVED-01`, `UI-APPROVED-02` and `UI-APPROVED-03` -> matches the approved information hierarchy at desktop/tablet/mobile viewports and finds provenance, disclaimer, RBAC and degraded-state proof.
@@ -170,7 +170,7 @@ never the test suite or observability, which carry more points across more rows.
 - [x] Phase-01: linter `--matrix-only --strict` verify planned evidence path; `--require-executed` để dành phase-08.
 
 #### Impact on Phases
-- platform .phase-01): toàn bộ action items trên.
+- platform (phase-01): toàn bộ action items trên.
 - Phase 8 (phase-08): `--require-executed` chỉ kích hoạt khi evidence đã chạy; không đổi contract matrix.
 
 ### Whole-Plan Consistency Sweep
@@ -180,7 +180,7 @@ and closed these design-level gaps: mandatory role-based Ansible execution,
 actual KFP API retraining after Airflow drift detection, correct kagent
 `ModelConfig` ownership, active F5 NGINX OSS instead of retired ingress-nginx,
 source-row/digest completeness, resolvable acceptance IDs, real repo/file
-artifact ownership, exact 40-hex evidence SHAs, platform .AG isolation, and a
+artifact ownership, exact 40-hex evidence SHAs, platform DAG isolation, and a
 credential-free S3 evidence return path. Phase 8 still requires real runtime
 evidence before any 100/100 claim is valid.
 
@@ -208,8 +208,8 @@ LLM-only submission and defer phase 5. Supervised by `kongming`.
    TLS. The rows *do* require an agent sandbox, a reachable log-viewer service
    and a reachable trace-viewer service.
 6. `.venv` holds only `pytest`, `ruff`, `black`, `duckdb`, `pyspark`. Every
-   platform .ython dependency is absent, and installing them into `.venv` risks
-   the platform .ate that phase-08 must re-run clean.
+   platform Python dependency is absent, and installing them into `.venv` risks
+   the platform gate that phase-08 must re-run clean.
 7. The local machine has ~5 GB free RAM — insufficient for the platform stack.
 
 **Confirmed decisions:**

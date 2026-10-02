@@ -1,0 +1,47 @@
+name: Production — web
+
+# apps/web is a Next.js app, not a Python service: production-ci.yaml's lint/test
+# jobs only run ruff/black/pytest, so they cannot meaningfully gate it (an
+# empty selector would lint/test the whole repo instead of nothing). The
+# real gate for apps/web already exists and runs on every push/PR to
+# main/dev: ci.yml's `contracts` job (`pnpm typecheck`, `pnpm test`,
+# Playwright a11y). lint_paths/test_selector below cover the one Python
+# artifact that touches the web deployable — the API-adapter contract test —
+# so this caller's lint/test jobs do real, if narrow, work instead of a
+# silent no-op. Decision recorded 2026-08-11; this remains a continuous
+# production caller and re-runs when its own path changes.
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "apps/web/**"
+      - "packages/contracts/**"
+      - "tests/platform/verification/test_web_api_adapters.py"
+      - ".github/workflows/production-web.yaml"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "apps/web/**"
+      - "packages/contracts/**"
+      - "tests/platform/verification/test_web_api_adapters.py"
+      - ".github/workflows/production-web.yaml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/production-ci.yaml
+    with:
+      deployables: >-
+        [{"name":"web","image_context":".","dockerfile":"apps/web/Dockerfile",
+        "test_selector":"tests/platform/verification -k 'web_api_adapters'",
+        "lint_paths":"tests/platform/verification/test_web_api_adapters.py",
+        "gitops_path":"apps/dev/web/values.yaml","gitops_target_type":"values","gitops_target_kind":"","gitops_target_selector":""}]
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

@@ -1,1 +1,1 @@
-"""Tests for bounded platform .gents."""
+"""Tests for bounded platform agents."""

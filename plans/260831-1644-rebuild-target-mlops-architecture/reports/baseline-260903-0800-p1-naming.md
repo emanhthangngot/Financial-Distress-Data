@@ -1,4 +1,4 @@
-# platform .aming Cutover Baseline
+# platform Naming Cutover Baseline
 
 **Captured:** 2026-09-03
 **Tool:** `scripts/verify_naming_cutover.py`

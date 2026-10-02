@@ -19,7 +19,7 @@ under-reported.
 | Full tests 311 passed | `.venv/bin/python -m pytest tests` -> 311 passed, 1.46s |
 | Ruff / Black | ruff PASS; black 328 files unchanged |
 | Docker Compose config | PASS |
-| platform .ate + GitOps | 72 passed, 1 skipped; kubeconform 302 resources, 190 valid, 0 invalid/errors; Helm lint 6 charts, terraform fmt/validate PASS |
+| platform gate + GitOps | 72 passed, 1 skipped; kubeconform 302 resources, 190 valid, 0 invalid/errors; Helm lint 6 charts, terraform fmt/validate PASS |
 | Strict real-digest gate fails on 4 API values | exact: `apps/dev/{drift,feature}-api/values.yaml`, `charts/{drift,feature}-api/values.yaml`, all `sha256:0000…` |
 | ML gate 57 `design_only` | confirmed (59 findings = 57 design_only + 2 missing-arg) |
 | Matrix strict | `--matrix-only --strict` PASS |
@@ -75,9 +75,9 @@ entirely `design_only`-driven.
 
 ### 3. "Full tests: 311 passed" is mislabeled
 
-`tests/phase2` collects **zero** tests under `.venv` (platform .eps live in
-`.venv-phase2`). Real platform .overage: `.venv-phase2 -m pytest tests/phase2` ->
-**557 passed, 35 skipped in 55s**. The 311 figure is the platform .uite only, and
+`tests/phase2` collects **zero** tests under `.venv` (platform deps live in
+`.venv-phase2`). Real platform coverage: `.venv-phase2 -m pytest tests/phase2` ->
+**557 passed, 35 skipped in 55s**. The 311 figure is the platform suite only, and
 the 72-passed gate figure is a gate subset, not the phase-2 suite. Neither is
 wrong; the label "Full tests" is.
 

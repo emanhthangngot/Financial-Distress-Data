@@ -129,7 +129,7 @@ Ta có `scripts/run_phase5_mutation_gate.py` + `mutants/` + `tests/load/`, nhưn
 | 15-image catalog, multi-node-pool autoscale, KEDA HTTP scaler đầy đủ | Vượt xa 4 deployable của ta. |
 | Istio mTLS + Vault + External Secrets đầy đủ | Ta đã có Sealed Secrets + NetworkPolicy default-deny — đủ cho rows security đang khai. |
 | Triton/ONNX packaging, BST model | Domain khác (recsys sequence model ≠ financial distress). |
-| Superset/dbt/Trino/DataHub full | platform .a đã có DataHub + DuckDB; không mở rộng. |
+| Superset/dbt/Trino/DataHub full | platform ta đã có DataHub + DuckDB; không mở rộng. |
 
 ---
 
@@ -197,7 +197,7 @@ Gom 8 spec deployable đang inline trong workflow thành 1 file: `name`, `docker
 Module thuần: parse catalog, resolve gitops path, dựng digest-bump patch. Test ở `tests/platform/` — bao gồm test khẳng định **mọi `gitops_values_path` trong catalog tồn tại trong repo gitops**. Đây là chỗ bắt drift `platform/ml/` vs `platform/llm/` ngay tại unit test.
 
 **P2.3 · Mở rộng one-shot gate**
-`scripts/run_stage1_quality_gates.py` giữ nguyên (Phase 1). Thêm target platform .ong song: `bash -n` mọi shell script + gọi validate của repo gitops khi có `--gitops-root`.
+`scripts/run_stage1_quality_gates.py` giữ nguyên (platform). Thêm target platform song song: `bash -n` mọi shell script + gọi validate của repo gitops khi có `--gitops-root`.
 
 ### P3 — Cost/quota, mở khoá ML window (≈0.5 ngày)
 

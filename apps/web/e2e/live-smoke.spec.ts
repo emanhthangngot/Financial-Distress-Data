@@ -11,8 +11,8 @@ import { loadLiveEnv } from "./live-env";
  * evidence control room renders for them. Lifecycle mutations are enabled at a
  * password-only (AAL1) session -- this deployment relaxes the AAL2 step-up
  * requirement (`STEP_UP_REQUIRED` in `@distresslens/contracts`, mirrored by
- * `meets_step_up()` in `supabase/migrations/20260814200100_phase2_step_up_relaxation.sql`)
- * because it has no MFA enrollment path. `auth-lifecycle.spec.ts` covers the
+ * `meets_step_up()` in the profile security migration) because it has no MFA
+ * enrollment path. `auth-lifecycle.spec.ts` covers the
  * signup/signin/refresh/switch/signout loop this plan added; this file stays
  * focused on the pre-existing operator-role read/write proof.
  *

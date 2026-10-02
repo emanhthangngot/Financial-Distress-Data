@@ -25,7 +25,7 @@ Status: **completed** — 4/4 phases, 23/23 tasks
 | Live auth browser | 6/6 passed |
 | Cross-device analyst browser suite | 60/60 passed |
 | Web typecheck/lint/build | Passed |
-| platform .epository gate | 311 pytest passed; Ruff, Black, Compose config, evidence audit passed |
+| platform repository gate | 311 pytest passed; Ruff, Black, Compose config, evidence audit passed |
 | Code review | 9/10; zero critical issues |
 
 ## Risks and follow-up

@@ -1,4 +1,4 @@
-# platform .rogress Report
+# platform Progress Report
 
 Date: 2026-07-22  
 Status: Completed
@@ -30,9 +30,9 @@ Status: Completed
 The foundation is complete, but the repository is not yet submission-ready. The auditor
 correctly reports 0/100 for `docs/evidence` because no final `run-manifest.json` and
 `rubric-evidence.yaml` exist yet. Later phases must implement and capture the 45 rubric
-criteria; platform .ntentionally does not fabricate or accept evidence.
+criteria; platform intentionally does not fabricate or accept evidence.
 
 ## Next Gate
 
-platform .ay begin only after review of this report. Its scope is correcting existing runtime
+platform may begin only after review of this report. Its scope is correcting existing runtime
 contracts before expanding generator, Spark, Flink, Airflow, and governance behavior.

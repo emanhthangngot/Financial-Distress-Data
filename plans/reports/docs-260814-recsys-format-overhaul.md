@@ -44,8 +44,8 @@ deliberately deferred (see below). 9 commits on `dev`, none pushed/merged.
 Nothing. The plan's own Phase 7 step 1 ("inbound-link sweep... only then
 delete") surfaced a blast radius bigger than anticipated:
 
-- `docs/mini_coursework.md` — the platform .pec authority, explicitly in
-  `AGENTS.md`'s "Don't Touch" zone — references the numbered platform .ocs
+- `docs/mini_coursework.md` — the platform spec authority, explicitly in
+  `AGENTS.md`'s "Don't Touch" zone — references the numbered platform docs
   (`01_data_generator.md`, `02_schema_design.md`, etc.) 5 times.
 - The old flat `docs/submission/{ci_cd,iac,observability,routing_gateway,
   security,validation_verification,cost}.md` are still linked from the old
@@ -95,5 +95,5 @@ index-table diff (README vs Phase 4/5 indexes)   0 drift
   dual-tracked (spec + narrative absorb) indefinitely, or should
   `docs/mini_coursework.md` itself be edited to point at the new narrative
   docs so retirement becomes possible? That edit is out of this plan's
-  scope as written and touches platform .pec authority — needs an explicit
+  scope as written and touches platform spec authority — needs an explicit
   user decision, not an agent judgment call.

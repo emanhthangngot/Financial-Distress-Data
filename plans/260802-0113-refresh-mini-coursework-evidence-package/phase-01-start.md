@@ -7,7 +7,7 @@ status: completed
 
 ## Overview
 
-Confirm platform .oundaries, the current rubric as the scoring source, and the audited blockers.
+Confirm platform boundaries, the current rubric as the scoring source, and the audited blockers.
 
 ## Requirements
 

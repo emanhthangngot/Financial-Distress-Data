@@ -1,8 +1,8 @@
-"""ML track class contracts (platform .esign contract, phase-01).
+"""ML track class contracts for the production platform.
 
 These are *signature contracts*, not implementations. They lock the five
 named ML classes before implementation begins. Each method carries a
-docstring that states its behaviour and the platform .esign reference.
+docstring that states its behaviour and the platform design reference.
 
 The contracts are intentionally side-effect free (documentation-level):
 implementations live under ``src/ml/`` in later phases and must satisfy

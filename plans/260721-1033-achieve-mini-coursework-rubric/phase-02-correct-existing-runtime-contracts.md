@@ -70,7 +70,7 @@ python -m black --check src tests
 - Two-run SCD2 query output.
 - Atomic-publication failure probe.
 - Rejected-record PostgreSQL query output.
-- Completion report: [platform .untime contracts](./reports/phase-02-260722-1349-runtime-contracts.md).
+- Completion report: [platform runtime contracts](./reports/phase-02-260722-1349-runtime-contracts.md).
 
 ## Success Criteria
 

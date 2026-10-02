@@ -1,10 +1,9 @@
 import type { StateCopy, UiState } from "@distresslens/contracts";
 
 /**
- * The route/state inventory from phase-02, with the copy each non-success state
- * renders. Keeping the copy here rather than inline in components is what makes
- * "every state explains the safe next action" checkable: a test walks this
- * catalog, and a route that invents an unlisted state fails to typecheck.
+ * The route/state inventory, with the copy each non-success state renders.
+ * Keeping the copy here rather than inline in components makes the invariant
+ * checkable: a test walks this catalog, and an unlisted route fails to typecheck.
  */
 
 export const PRODUCT_ROUTES = [

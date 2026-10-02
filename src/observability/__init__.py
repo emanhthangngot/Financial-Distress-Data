@@ -1,4 +1,4 @@
-"""Dependency-light observability primitives for platform .ervices."""
+"""Dependency-light observability primitives for platform services."""
 
 from .telemetry import (
     CONTENT_TYPE_LATEST,

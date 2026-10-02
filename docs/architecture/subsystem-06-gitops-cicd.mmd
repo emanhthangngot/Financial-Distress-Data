@@ -8,7 +8,7 @@ flowchart LR
     classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
 
     SRC["source commit<br/>Financial-Distress-Data"]:::edge
-    CI["GitHub Actions<br/>.github/workflows/ci.yml"]:::service
+    CI["GitHub Actions + Jenkins contract<br/>production-ci.yaml / Jenkinsfile"]:::service
     IMG["signed immutable image digest<br/>GHCR"]:::store
     GITOPS["GitOps PR<br/>financial-distress-gitops (private)"]:::service
     ARGO["Argo CD<br/>argocd namespace, 13 Applications"]:::service

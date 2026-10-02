@@ -1,4 +1,4 @@
-# platform .tage 2 — slice delivery report
+# platform Stage 2 — slice delivery report
 
 Branch: `feat/phase2-stage2-frontend-ui-uplift`
 Plan: `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
@@ -169,7 +169,7 @@ loading/success/failure states; analyst, registry and admin navigation are
 separate; the disclaimer appears on company, explanation, assistant, comparison
 and export; EKS-off UI is useful and labels cached data; Playwright manifests
 carry route/state/viewport/provenance/redaction; verification commands pass;
-platform .iles untouched.
+platform files untouched.
 
 Not met: RLS role/action coverage, outbox proof against a real database, cost
 cap and quota enforcement at a live product boundary, and the accessibility

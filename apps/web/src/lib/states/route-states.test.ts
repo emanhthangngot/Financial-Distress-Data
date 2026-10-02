@@ -8,8 +8,8 @@ import {
 } from "./route-states";
 
 /**
- * The route/state inventory from phase-02. Listed here independently of the
- * catalog so a state silently dropped from the catalog fails rather than
+ * The route/state inventory is listed independently of the catalog so a state
+ * silently dropped from the catalog fails rather than shrinking the product.
  * quietly shrinking what the product promises to handle.
  */
 const REQUIRED_STATES: Record<ProductRoute, readonly string[]> = {
@@ -24,7 +24,7 @@ const REQUIRED_STATES: Record<ProductRoute, readonly string[]> = {
 };
 
 describe("route state catalog", () => {
-  it("covers every route in the phase-02 inventory", () => {
+  it("covers every route in the route/state inventory", () => {
     expect([...PRODUCT_ROUTES].sort()).toEqual(Object.keys(REQUIRED_STATES).sort());
   });
 

@@ -24,7 +24,7 @@ artifacts are the clean run and the mismatch is the controlled proof that
 tampering is detected. Unit tests also cover unsafe
 paths and duplicate records.
 
-Runtime result: [`phase8-novel-ideas.json`](evidence/novel/phase8-novel-ideas.json).
+Runtime result: [`novel-ideas.json`](evidence/novel/novel-ideas.json).
 
 ## Limitations
 

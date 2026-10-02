@@ -1,0 +1,85 @@
+{
+  "captured_at": "2026-09-15T10:47:39+07:00",
+  "renderer": "/home/pearspringmind/.omp/agent/skills/ak-diagram/scripts/render.py",
+  "mode": "browser-rendered HTML, PNG and SVG",
+  "diagrams": [
+    {
+      "source": "docs/architecture/system-overview.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/system-overview.html",
+        "png": "docs/architecture/rendered/system-overview.png",
+        "svg": "docs/architecture/rendered/system-overview.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/deployment.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/deployment.html",
+        "png": "docs/architecture/rendered/deployment.png",
+        "svg": "docs/architecture/rendered/deployment.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/subsystem-01-lakehouse.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/subsystem-01-lakehouse.html",
+        "png": "docs/architecture/rendered/subsystem-01-lakehouse.png",
+        "svg": "docs/architecture/rendered/subsystem-01-lakehouse.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/subsystem-02-llm-inference-platform.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/subsystem-02-llm-inference-platform.html",
+        "png": "docs/architecture/rendered/subsystem-02-llm-inference-platform.png",
+        "svg": "docs/architecture/rendered/subsystem-02-llm-inference-platform.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/subsystem-03-rag-pipeline.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/subsystem-03-rag-pipeline.html",
+        "png": "docs/architecture/rendered/subsystem-03-rag-pipeline.png",
+        "svg": "docs/architecture/rendered/subsystem-03-rag-pipeline.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/subsystem-04-agent-plane.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/subsystem-04-agent-plane.html",
+        "png": "docs/architecture/rendered/subsystem-04-agent-plane.png",
+        "svg": "docs/architecture/rendered/subsystem-04-agent-plane.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/subsystem-05-product-plane.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/subsystem-05-product-plane.html",
+        "png": "docs/architecture/rendered/subsystem-05-product-plane.png",
+        "svg": "docs/architecture/rendered/subsystem-05-product-plane.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/subsystem-06-gitops-cicd.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/subsystem-06-gitops-cicd.html",
+        "png": "docs/architecture/rendered/subsystem-06-gitops-cicd.png",
+        "svg": "docs/architecture/rendered/subsystem-06-gitops-cicd.svg"
+      }
+    },
+    {
+      "source": "docs/architecture/subsystem-07-observability-drift.mmd",
+      "rendered": {
+        "html": "docs/architecture/rendered/subsystem-07-observability-drift.html",
+        "png": "docs/architecture/rendered/subsystem-07-observability-drift.png",
+        "svg": "docs/architecture/rendered/subsystem-07-observability-drift.svg"
+      }
+    }
+  ],
+  "visual_check": {
+    "source": "docs/architecture/system-overview.mmd",
+    "result": "PASS",
+    "observed": "The renderer generated HTML, PNG and SVG assets for all nine Mermaid sources; the system overview was also opened in a headless browser.",
+    "surface": "headless browser and renderer output under docs/architecture/rendered/"
+  }
+}

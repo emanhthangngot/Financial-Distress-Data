@@ -98,8 +98,8 @@ puts a stop-and-escalate gate in front of everything that provisions.
 3. **N-3** No namespace merging of `agentgateway-system`, `kagent`, `agents-sandbox`.
 4. **N-4** No replacement of GitHub as the source host. The image draws Developer → GitHub →
    Webhook Trigger → Jenkins. Only GitHub **Actions** is removed.
-5. **N-5** No changes to platform .ronze/Silver/Gold semantics. Iceberg is a parallel write
-   path; the platform .arquet pipeline and its regression suite stay green throughout.
+5. **N-5** No changes to platform Bronze/Silver/Gold semantics. Iceberg is a parallel write
+   path; the platform Parquet pipeline and its regression suite stay green throughout.
 6. **N-6** No fixing of the tracked-Terraform-state exposure. It is recorded as a standing
    concern (§9, C25) but sits outside the target image and outside this transformation.
 7. **N-7** No implementation in this document. Planning only.
@@ -271,7 +271,7 @@ existing `apps/feature-mcp/`, `apps/drift-mcp/`, `apps/feature-api/`, `apps/drif
 | **ADR-009** (NGINX sole entry) | **No change** | Image confirms NGINX is the only external ingress; Istio Gateway is ClusterIP |
 | **ADR-002** (two repos) | **No change** | Image retains `financial-distress-gitops` |
 | `docs/coursework.md`, `docs/system-architecture.md` | Rewrite to target state at P9 | Currently describe the superseded baseline |
-| `docs/mini_coursework.md` | **Authority retained**; no lock conflict found | platform .ontracts unchanged by this plan |
+| `docs/mini_coursework.md` | **Authority retained**; no lock conflict found | platform contracts unchanged by this plan |
 
 `AGENTS.md:24` names `.github/workflows/ci.yml` as the CI that runs the definition-of-done gate;
 P8 must update that line when the workflows are deleted.
@@ -296,7 +296,7 @@ Class A and D are cheap and de-risk everything downstream; they front-load.
 
 ### 4.2 Parallel-write, never in-place, for data
 
-Iceberg lands as a **parallel** namespace alongside the platform .arquet tables. The Phase 1
+Iceberg lands as a **parallel** namespace alongside the platform Parquet tables. The platform
 pipeline, its DAGs and `scripts/run_stage1_quality_gates.py` stay green for the whole
 transformation. Cutover of readers happens once, at P7, when Trino/Superset/dbt point at Iceberg
 and nothing still reads the Parquet Gold path. Only then are the Parquet Gold readers removed —
@@ -684,7 +684,7 @@ group exists precisely so a rollback blast radius equals one group.
 |---|---|---|
 | P0 | Nothing applied. Discard the branch record. | Fully |
 | P1 | Revert source commits. Evidence-tree deletion is recovered from git history. | Fully |
-| P2 | Delete `platform-lakehouse` / `platform-orchestration` Applications. Iceberg tables are a **parallel** namespace; platform .arquet is untouched and its gate stays green. | Fully, except namespace rename (needs the P2 snapshot) |
+| P2 | Delete `platform-lakehouse` / `platform-orchestration` Applications. Iceberg tables are a **parallel** namespace; platform Parquet is untouched and its gate stays green. | Fully, except namespace rename (needs the P2 snapshot) |
 | P3 | Delete `platform-streaming` / `platform-features`. Debezium replication slot must be dropped explicitly — an orphaned slot pins Postgres WAL and will fill the disk. Named as a mandatory rollback step. | Fully, with the slot-drop step |
 | P4 | Set `istio-injection` labels off, revert `platform-istio`; mTLS returns to no-mesh. Vault: revert `platform-vault`; sealed-secrets is still present and authoritative until P8, so no consumer breaks. | Fully |
 | P5 | Delete `platform-kubeflow` / `platform-tracking` / `platform-serving-ml`. MLflow's Postgres and MinIO artifacts persist for re-attach. | Fully |
@@ -729,7 +729,7 @@ All criteria in `WHO -> ACTION -> RESULT` per `AGENTS.md:43,51`.
 - AC-P2-4: Bronze Iceberg writer -> receives a duplicate business key -> appends only, never updates in place, and dedupe resolves to latest `created_ts` (`AGENTS.md:7,9`).
 - AC-P2-5: Data engineer -> tags the holdout table -> `gold.distress_holdout_v1` resolves at tag `holdout-v1` and a time-travel read at that tag returns a byte-identical row set across two calls.
 - AC-P2-6: Generator -> runs at target scale -> Bronze holds 10-50M rows / 5-20 GB (`plan.md:43`).
-- AC-P2-7: `scripts/run_stage1_quality_gates.py` -> runs after the Iceberg path exists -> passes, proving the platform .arquet path is unaffected.
+- AC-P2-7: `scripts/run_stage1_quality_gates.py` -> runs after the Iceberg path exists -> passes, proving the platform Parquet path is unaffected.
 
 **P3 — CDC, streaming, features**
 - AC-P3-1: Debezium connector -> is registered against source Postgres -> Kafka Connect reports `RUNNING` and the configured topic receives an initial-snapshot record set matching the source row count.
@@ -1048,7 +1048,7 @@ CSV normalization task.
 It preserves every lock: the three-namespace agent isolation boundary survives because the image
 itself nests a `Sandbox` box inside `ns: agents`; Argo CD remains the sole mutator with Jenkins
 restricted to digest-only `bump-gitops`; Bronze/Silver/Gold semantics are unchanged and Iceberg
-lands as a parallel path with the platform .ate green throughout. **Zero `BREAKS-LOCK`
+lands as a parallel path with the platform gate green throughout. **Zero `BREAKS-LOCK`
 declarations.** Six decision gates (quota, cost, spot, KServe 0.18 CRDs, native sidecars, vLLM
 CPU) plus a phase-local Knative-net-layer gate front-load the branch decisions, and rollback is
 per-Argo-Application with exactly three non-reversible steps enumerated and each given a

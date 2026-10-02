@@ -32,7 +32,7 @@ Three layers, with an explicit rule about which layer owns what:
 ```text
 Layer 1 — canonical evidence (immutable location)
   docs/platform/evidence/llm/*.md        60 rows, audit-gate pinned prefix
-  docs/evidence/**                     platform .enerated artifacts
+  docs/evidence/**                     platform generated artifacts
       ^ never moved, never hand-edited
 
 Layer 2 — narrative (new, reviewer-facing)
@@ -47,7 +47,7 @@ Layer 3 — entry point
 
 Image policy under the accepted hybrid decision:
 
-- New captures taken in platform .re written **directly** to `docs/pngs/`.
+- New captures taken in platform are written **directly** to `docs/pngs/`.
 - An existing screenshot needed by a narrative doc is **copied** to `docs/pngs/`
   under a descriptive name; the original stays at its audit-pinned path. The
   copy is recorded in the manifest with its source path so the duplication is
@@ -118,5 +118,5 @@ Image policy under the accepted hybrid decision:
   **Mitigation:** the contract embeds one full worked example section copied in
   *structure* (not text) from the reference, so later phases pattern-match.
 - **Risk:** premature deletion of a doc still linked by the audit matrix.
-  **Mitigation:** platform .nly marks; Phase 7 deletes after link rewiring and a
+  **Mitigation:** platform only marks; Phase 7 deletes after link rewiring and a
   green audit run.

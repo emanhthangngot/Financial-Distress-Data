@@ -1,4 +1,4 @@
-"""Test the platform .ubric matrix and evidence contract linter.
+"""Test the platform rubric matrix and evidence contract linter.
 
 All tests must fail first (SDD test-seed rule) before the supporting
 implementation exists — a meaningful failure, not an import error.
@@ -8,7 +8,7 @@ Validate:
   - Total points: ML 100, LLM 100.
   - Semantic IDs are unique and stable (no spreadsheet line numbers).
   - Acceptance criteria are in WHO -> ACTION -> RESULT format.
-  - platform .ontracts are not mutated.
+  - platform contracts are not mutated.
   - Class contracts exist (src/ml/contracts.py, src/llm/contracts.py).
   - Novel ideas are documented.
 """
@@ -38,15 +38,15 @@ PLATFORM_PROTECTED = [
     "tests/test_lakehouse",
 ]
 
-# ── platform .vidence_audit script ───────────────────────────────────────
+# ── platform evidence_audit script ───────────────────────────────────────
 AUDIT_SCRIPT = REPO_ROOT / "scripts" / "audit_platform_evidence.py"
 
 
-class TestPhase1ContractNoMutation:
-    """platform .ust not be mutated by platform .atrix or linter."""
+class TestProtectedPathContract:
+    """platform must not be mutated by platform matrix or linter."""
 
     def test_audit_script_exists(self) -> None:
-        """audit_platform_evidence.py must exist before platform .ates can run."""
+        """audit_platform_evidence.py must exist before platform gates can run."""
         assert (
             AUDIT_SCRIPT.exists()
         ), f"{AUDIT_SCRIPT} missing — create scripts/audit_platform_evidence.py"
@@ -60,12 +60,12 @@ class TestPhase1ContractNoMutation:
             if path.lower() in text:
                 pytest.fail(
                     f"Matrix references platform protected path '{path}' — "
-                    "platform .ust not mutate platform."
+                    "platform must not mutate platform."
                 )
-        assert "dags/" in text, "platform .irflow wrappers must be mapped explicitly"
+        assert "dags/" in text, "platform Airflow wrappers must be mapped explicitly"
 
-    def test_phase1_mutation_from_changed_paths(self) -> None:
-        """A git diff that touches a platform .ath must be flagged."""
+    def test_protected_path_mutation_from_changed_paths(self) -> None:
+        """A git diff that touches a platform path must be flagged."""
         import importlib.util
 
         if not AUDIT_SCRIPT.exists():
@@ -76,33 +76,33 @@ class TestPhase1ContractNoMutation:
         spec.loader.exec_module(mod)
 
         # A diff touching a collector must fail
-        errors = mod._phase1_mutation_from_changed(["src/collectors/some_adapter.py"])
+        errors = mod._protected_path_mutation_from_changed(["src/collectors/some_adapter.py"])
         assert any("src/collectors/" in e for e in errors)
 
-        # A diff touching only platform .iles must pass
-        ok = mod._phase1_mutation_from_changed(
+        # A diff touching only platform files must pass
+        ok = mod._protected_path_mutation_from_changed(
             [
                 "docs/platform/architecture.md",
                 "scripts/audit_platform_evidence.py",
                 "dags/drift_monitoring.py",
             ]
         )
-        assert ok == [], f"expected no platform .utation, got {ok}"
-        dag_errors = mod._phase1_mutation_from_changed(["dags/01_collect_company_master_data.py"])
-        assert dag_errors, "an existing platform .AG change must fail"
+        assert ok == [], f"expected no platform mutation, got {ok}"
+        dag_errors = mod._protected_path_mutation_from_changed(["dags/01_collect_company_master_data.py"])
+        assert dag_errors, "an existing protected DAG change must fail"
 
         # A diff confined to the opt-in Flink job home carve-out must pass:
-        # it holds no platform .urst/late-arrival/dedup logic by design.
-        flink_ok = mod._phase1_mutation_from_changed(
+        # it holds no platform burst/late-arrival/dedup logic by design.
+        flink_ok = mod._protected_path_mutation_from_changed(
             [
                 "src/streaming/flink/jobs/price_event_job.py",
                 "src/streaming/flink/jobs/README.md",
             ]
         )
-        assert flink_ok == [], f"expected no platform .utation, got {flink_ok}"
+        assert flink_ok == [], f"expected no platform mutation, got {flink_ok}"
 
         # But any other file directly under src/streaming/ must still fail.
-        streaming_errors = mod._phase1_mutation_from_changed(
+        streaming_errors = mod._protected_path_mutation_from_changed(
             ["src/streaming/kafka_to_bronze_consumer.py"]
         )
         assert streaming_errors, "a core streaming file change must still fail"
@@ -304,7 +304,7 @@ class TestRubricMatrix:
             if owner and owner not in roles:
                 pytest.fail(f"{row.get('rubric_id','?')}: owner '{owner}' not a recognized role")
 
-    def test_evidence_paths_in_phase2_evidence_dir(self) -> None:
+    def test_evidence_paths_in_production_evidence_dir(self) -> None:
         """All planned evidence_path must be under docs/platform/evidence/."""
         import csv
         import io
@@ -524,7 +524,7 @@ class TestClassContracts:
         path = REPO_ROOT / relpath
         assert path.exists(), f"{path} not created — 5 class stubs required"
         spec = importlib.util.spec_from_file_location(
-            "phase2_" + relpath.replace("/", "_").replace(".py", ""), path
+            "production_" + relpath.replace("/", "_").replace(".py", ""),
         )
         assert spec and spec.loader
         mod = importlib.util.module_from_spec(spec)
@@ -573,7 +573,7 @@ class TestClassContracts:
 
 
 class TestNovelIdeas:
-    """Two novel ideas per track must be documented before platform .ode begins."""
+    """Two novel ideas per track must be documented before platform code begins."""
 
     def test_novel_ideas_doc_exists(self) -> None:
         path = REPO_ROOT / "docs" / "platform" / "novel-ideas.md"
@@ -599,7 +599,7 @@ class TestNovelIdeas:
 
 
 class TestArchitectureDocs:
-    """System architecture docs must reflect the platform .wo-plane design."""
+    """System architecture docs must reflect the platform two-plane design."""
 
     def test_platform_architecture_doc_exists(self) -> None:
         path = REPO_ROOT / "docs" / "platform" / "architecture.md"
@@ -613,7 +613,7 @@ class TestArchitectureDocs:
         assert len(adrs) >= 9, f"Expected ≥ 9 ADRs, found {len(adrs)}"
 
     def test_coursework_doc_rewritten(self) -> None:
-        """docs/coursework.md must reference platform .lan, no longer say K8s
+        """docs/coursework.md must reference platform plan, no longer say K8s
         /AWS/LLM are optional."""
         path = REPO_ROOT / "docs" / "coursework.md"
         assert path.exists()
@@ -954,7 +954,7 @@ class TestLinterSmoke:
             timeout=30,
         )
         assert result.returncode == 1, (
-            f"missing artifact must fail phase-08 audit, got {result.returncode}: "
+            f"missing artifact must fail production audit, got {result.returncode}: "
             f"{result.stdout[-400:]}"
         )
         assert (
@@ -962,7 +962,7 @@ class TestLinterSmoke:
         ), f"failure must name the missing artifact, got: {result.stdout[-400:]}"
 
 
-class TestPhase2PromotionHardening:
+class TestProductionPromotionHardening:
     """Adversarial regression tests for generated artifacts and promotion gates."""
 
     @staticmethod
@@ -1016,7 +1016,7 @@ class TestPhase2PromotionHardening:
     def test_python_symbol_rejects_placeholder_bodies(self, tmp_path: Path, body: str) -> None:
         helper = self._load_module(
             REPO_ROOT / "tests/platform/requirements/conftest.py",
-            "phase2_generated_contract_helper",
+            "production_generated_contract_helper",
         )
         artifact = tmp_path / "behavior.py"
         artifact.write_text(body, encoding="utf-8")
@@ -1040,7 +1040,7 @@ class TestPhase2PromotionHardening:
     ) -> None:
         helper = self._load_module(
             REPO_ROOT / "tests/platform/requirements/conftest.py",
-            "phase2_generated_placeholder_helper",
+            "production_generated_placeholder_helper",
         )
         suffix = ".ipynb" if assertion.startswith("notebook") else ".yaml"
         artifact = tmp_path / f"artifact{suffix}"
@@ -1051,7 +1051,7 @@ class TestPhase2PromotionHardening:
     def test_generic_python_requires_behavior_beyond_imports(self, tmp_path: Path) -> None:
         helper = self._load_module(
             REPO_ROOT / "tests/platform/requirements/conftest.py",
-            "phase2_generated_python_helper",
+            "production_generated_python_helper",
         )
         artifact = tmp_path / "service.py"
         artifact.write_text('"""service"""\nimport os\n', encoding="utf-8")
@@ -1067,7 +1067,7 @@ class TestPhase2PromotionHardening:
     ) -> None:
         helper = self._load_module(
             REPO_ROOT / "tests/platform/requirements/conftest.py",
-            "phase2_generated_class_helper",
+            "production_generated_class_helper",
         )
         artifact = tmp_path / "service.py"
         artifact.write_text(
@@ -1083,7 +1083,7 @@ class TestPhase2PromotionHardening:
     def test_generic_python_rejects_metadata_only_assignment(self, tmp_path: Path) -> None:
         helper = self._load_module(
             REPO_ROOT / "tests/platform/requirements/conftest.py",
-            "phase2_generated_assignment_helper",
+            "production_generated_assignment_helper",
         )
         artifact = tmp_path / "service.py"
         artifact.write_text("SERVICE = None\n", encoding="utf-8")
@@ -1093,7 +1093,7 @@ class TestPhase2PromotionHardening:
     def test_generic_yaml_rejects_metadata_only_configmap(self, tmp_path: Path) -> None:
         helper = self._load_module(
             REPO_ROOT / "tests/platform/requirements/conftest.py",
-            "phase2_generated_configmap_helper",
+            "production_generated_configmap_helper",
         )
         artifact = tmp_path / "service.yaml"
         artifact.write_text(
@@ -1106,7 +1106,7 @@ class TestPhase2PromotionHardening:
     def test_generic_text_rejects_one_token_skeleton(self, tmp_path: Path) -> None:
         helper = self._load_module(
             REPO_ROOT / "tests/platform/requirements/conftest.py",
-            "phase2_generated_text_helper",
+            "production_generated_text_helper",
         )
         artifact = tmp_path / "service.md"
         artifact.write_text("service\n", encoding="utf-8")
@@ -1116,7 +1116,7 @@ class TestPhase2PromotionHardening:
     def test_executed_row_requires_explicit_behavioral_override(self) -> None:
         rubric = self._load_module(
             REPO_ROOT / "scripts/_platform_rubric_items.py",
-            "phase2_rubric_executed_assertion",
+            "production_rubric_executed_assertion",
         )
         row = {
             "rubric_id": "LLM-unreviewed-executed-row",
@@ -1127,7 +1127,7 @@ class TestPhase2PromotionHardening:
             rubric._validate_executed_behavioral_assertion(row)
 
     def test_ancestor_sha_allows_only_evidence_sha_delta(self, tmp_path: Path) -> None:
-        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_ancestor")
+        audit = self._load_module(AUDIT_SCRIPT, "production_audit_ancestor")
         self._git(tmp_path, "init", "-b", "main")
         evidence = tmp_path / "docs/platform/evidence/llm/row.md"
         evidence.parent.mkdir(parents=True)
@@ -1156,7 +1156,7 @@ class TestPhase2PromotionHardening:
         )
 
     def test_nonancestor_sha_is_rejected(self, tmp_path: Path) -> None:
-        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_nonancestor")
+        audit = self._load_module(AUDIT_SCRIPT, "production_audit_nonancestor")
         self._git(tmp_path, "init", "-b", "main")
         (tmp_path / "base.txt").write_text("base\n", encoding="utf-8")
         base_sha = self._commit(tmp_path, "base")
@@ -1179,12 +1179,12 @@ class TestPhase2PromotionHardening:
         ],
     )
     def test_secret_denylist_rejects_adversarial_forms(self, body: str, finding: str) -> None:
-        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_secrets")
+        audit = self._load_module(AUDIT_SCRIPT, "production_audit_secrets")
         errors = audit._audit_evidence_secrets("row", "row.md", body)
         assert any(finding in error for error in errors)
 
     def test_accept_design_only_rejects_non_design_rows(self) -> None:
-        audit = self._load_module(AUDIT_SCRIPT, "phase2_audit_cuts")
+        audit = self._load_module(AUDIT_SCRIPT, "production_audit_cuts")
         for evidence_type in ("executed", "stretch", "invalid"):
             row = {"rubric_id": "row", "evidence_type": evidence_type}
             errors = audit._audit_executed([row], None, {"row"})
@@ -1205,7 +1205,7 @@ class TestPhase2PromotionHardening:
             for row in rows
             if row["track"] == "LLM" and row["evidence_type"] == "design_only"
         ]
-        gitops_root = os.environ.get("PHASE2_GITOPS_ROOT")
+        gitops_root = os.environ.get("PRODUCTION_GITOPS_ROOT")
         args = [
             sys.executable,
             str(AUDIT_SCRIPT),
@@ -1227,7 +1227,7 @@ class TestPhase2PromotionHardening:
         )
         if gitops_root is None:
             pytest.skip(
-                "PHASE2_GITOPS_ROOT unset; the matrix has at least one executed "
+                "PRODUCTION_GITOPS_ROOT unset; the matrix has at least one executed "
                 "gitops-artifact row and its behavioral validation needs a "
                 "checked-out GitOps repo"
             )

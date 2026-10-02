@@ -191,8 +191,8 @@ def _extract_section(text: str, heading: str) -> str:
 
 
 def test_naming_convention_lint_script_passes() -> None:
-    """scripts/lint_naming_convention.py (phase-02 §Naming Convention, F9/F10/F18) exits 0
-    against the repo's bronze/silver/gold/ops SQL DDL."""
+    """scripts/lint_naming_convention.py exits 0 against the repo's
+    bronze/silver/gold/ops SQL DDL."""
     import subprocess
     import sys
 

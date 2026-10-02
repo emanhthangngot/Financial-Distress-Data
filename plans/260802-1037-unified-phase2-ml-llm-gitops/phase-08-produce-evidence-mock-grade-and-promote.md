@@ -48,8 +48,8 @@ Doing this by hand at 3am on day 7 is the most likely late failure in the plan.
 
 ## Mandatory Evidence Runs
 
-1. Run the platform .ull quality/evidence gate to prove no regression — this also
-   proves `.venv` was never mutated by platform .ependencies.
+1. Run the platform full quality/evidence gate to prove no regression — this also
+   proves `.venv` was never mutated by platform dependencies.
 2. Run coverage, mutation (`mutmut`, on its declared module subset),
    equivalence/boundary, Hypothesis and security gates for the LLM track.
 3. Capture the GCP evidence run: `terraform apply` plan/output, the DuckDNS
@@ -110,9 +110,9 @@ behavior-validation gates. Added in phase-03; without it this command fails with
 57 errors regardless of how good the LLM evidence is.
 
 Before promotion, record `PHASE1_BASE_SHA` as the immutable 40-hex commit
-immediately before platform .ork. Do not substitute a moving branch name. The
+immediately before platform work. Do not substitute a moving branch name. The
 gate compares every evidence source/GitOps SHA with the two checked-out
-`HEAD`s and rejects protected platform .hanges against that frozen baseline.
+`HEAD`s and rejects protected platform changes against that frozen baseline.
 Both source and GitOps checkouts must be clean; the recorded commits therefore
 contain the implementation, manifests, and evidence that the auditor reads.
 - Link/image integrity, duplicate/stale screenshot, secret/PII, timestamp/version and rubric-total checks.

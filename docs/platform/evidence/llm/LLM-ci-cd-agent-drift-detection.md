@@ -1,6 +1,6 @@
 # Evidence — CI/CD for the drift-detection agent
 
-Proves `.github/workflows/platform-agent-drift.yaml` runs the reusable CI
+Proves `.github/workflows/production-agent-drift.yaml` runs the reusable CI
 template end to end for the `drift-agent` deployable: build → cosign sign →
 push immutable GHCR digest → open a GitOps PR rewriting the real
 `drift-agent` `Deployment` in `platform/agents/agent-deployments.yaml`.
@@ -10,7 +10,7 @@ push immutable GHCR digest → open a GitOps PR rewriting the real
 - source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/drift-agent
-- command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `platform-agent-drift.yaml` on the `push` event
+- command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `production-agent-drift.yaml` on the `push` event
 - expected_result: `lint`, `test`, `build`, `phase5-verification`, `gitops-pr` all succeed; `gitops-pr` rewrites the `drift-agent` `Deployment`'s `image:` field with a real digest and opens a PR against `master`
 - actual_result: run [31410267509](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410267509) — all 5 jobs succeeded; opened [financial-distress-gitops#27](https://github.com/emanhthangngot/financial-distress-gitops/pull/27) rewriting the `drift-agent` Deployment's `image:` to `sha256:b29bdbf2c7859d28c3c8eea7fcda6df8a262014f37a664f077dfbc93e4ca7b47`; merged into `master`
 - redaction_status: reviewed — source repository is public, GitOps repository is private; no secret values in this file

@@ -1,4 +1,4 @@
-"""HTTP runtime for the three platform .gents.
+"""HTTP runtime for the three platform agents.
 
 The runtime only assembles the tested agent classes with MCP and model
 transports. Agent reasoning, scope enforcement and hop bounds remain in the
@@ -326,13 +326,28 @@ def create_app() -> FastAPI:
         model,
         telemetry=telemetry,
     )
-    coordinator = Coordinator(
-        HttpSpecialistClient(os.getenv("FEATURE_AGENT_URL", "http://feature-agent"), telemetry),
-        HttpSpecialistClient(os.getenv("DRIFT_AGENT_URL", "http://drift-agent"), telemetry),
-        max_hops=int(os.getenv("MAX_AGENT_HOPS", "2")),
-        timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0")),
-        telemetry=telemetry,
-    )
+    backend = os.getenv("AGENT_ORCHESTRATION_BACKEND", "legacy").lower()
+    coordinator: Any | None = None
+    if role == "coordinator" and backend == "langgraph":
+        from src.agents.langgraph_runtime import LangGraphCoordinator
+
+        coordinator = LangGraphCoordinator(
+            feature,
+            drift,
+            max_hops=int(os.getenv("MAX_AGENT_HOPS", "2")),
+            timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0")),
+            telemetry=telemetry,
+        )
+    elif role == "coordinator" and backend == "legacy":
+        coordinator = Coordinator(
+            HttpSpecialistClient(os.getenv("FEATURE_AGENT_URL", "http://feature-agent"), telemetry),
+            HttpSpecialistClient(os.getenv("DRIFT_AGENT_URL", "http://drift-agent"), telemetry),
+            max_hops=int(os.getenv("MAX_AGENT_HOPS", "2")),
+            timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0")),
+            telemetry=telemetry,
+        )
+    elif backend not in {"legacy", "langgraph"}:
+        raise ValueError("unsupported AGENT_ORCHESTRATION_BACKEND")
     application = FastAPI(title=f"{role}-agent", version="1.0.0")
     application.state.telemetry = telemetry
 

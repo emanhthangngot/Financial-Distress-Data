@@ -47,7 +47,7 @@ python scripts/export_docker_optimization.py
 | **Reduction** | **43.86%** |
 
 Machine-readable proof:
-[`docs/evidence/docker/phase8-image-sizes.json`](../../evidence/docker/phase8-image-sizes.json).
+[`docs/evidence/docker/image-sizes.json`](../../evidence/docker/image-sizes.json).
 
 Docker Compose also persists PostgreSQL, MinIO, Kafka, and Flink state in
 named volumes; PostgreSQL, MinIO, and Kafka expose health checks so

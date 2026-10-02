@@ -1,4 +1,4 @@
-"""Pins the platform .eusable workflow and its list-driven callers."""
+"""Pins the platform reusable workflow and its list-driven callers."""
 
 from __future__ import annotations
 
@@ -12,25 +12,25 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
-REUSABLE = WORKFLOWS_DIR / "platform-ci.yaml"
+REUSABLE = WORKFLOWS_DIR / "production-ci.yaml"
 CALLERS = (
-    WORKFLOWS_DIR / "platform-rag-pipeline.yaml",
-    WORKFLOWS_DIR / "platform-stream-feature-offline.yaml",
-    WORKFLOWS_DIR / "platform-stream-feature-online.yaml",
-    WORKFLOWS_DIR / "platform-agent-feature.yaml",
-    WORKFLOWS_DIR / "platform-agent-drift.yaml",
-    WORKFLOWS_DIR / "platform-agent-coordinator.yaml",
+    WORKFLOWS_DIR / "production-rag-pipeline.yaml",
+    WORKFLOWS_DIR / "production-stream-feature-offline.yaml",
+    WORKFLOWS_DIR / "production-stream-feature-online.yaml",
+    WORKFLOWS_DIR / "production-agent-feature.yaml",
+    WORKFLOWS_DIR / "production-agent-drift.yaml",
+    WORKFLOWS_DIR / "production-agent-coordinator.yaml",
 )
 # platform-feature-api.yaml / platform-drift-api.yaml deleted 2026-08-14 — ML-track
 # deployables removed from the catalog; their standalone per-app CI workflows
 # would fail on push (no GHCR write:packages scope) with zero LLM benefit.
 
-# Pinned 2026-08-08 (slice 4D) — a platform .I change must update this
+# Pinned 2026-08-08 (slice 4D) — a platform CI change must update this
 # constant deliberately, not as a silent side effect of an unrelated diff.
-CI_YML_SHA256 = "a24aceb639dbef1b00f35e720d5327afb5f97e21d20af2f2309448957ff72904"
+CI_YML_SHA256 = "41f107015008d9e3123725a4cfe82494542e98e4a86619d01fc9805ce82cc4c6"
 
 
-def test_all_phase2_workflow_files_exist() -> None:
+def test_all_production_workflow_files_exist() -> None:
     assert REUSABLE.is_file()
     for caller in CALLERS:
         assert caller.is_file(), caller
@@ -89,7 +89,7 @@ def test_each_caller_supplies_every_required_input(path: Path) -> None:
 def test_each_caller_references_the_reusable_workflow(path: Path) -> None:
     parsed = yaml.safe_load(path.read_text(encoding="utf-8"))
     ci_job = parsed["jobs"]["ci"]
-    assert ci_job["uses"] == "./.github/workflows/platform-ci.yaml"
+    assert ci_job["uses"] == "./.github/workflows/production-ci.yaml"
 
 
 @pytest.mark.parametrize("path", CALLERS, ids=lambda p: p.name)
@@ -130,18 +130,18 @@ def test_reusable_workflow_signs_and_consumes_digest_handoffs() -> None:
     assert "pipelines/${" not in text
 
 
-def test_phase5_verification_blocks_image_builds() -> None:
+def test_production_verification_blocks_image_builds() -> None:
     parsed = yaml.safe_load(REUSABLE.read_text(encoding="utf-8"))
 
-    assert parsed["jobs"]["phase5-verification"]["needs"] == "test"
-    assert parsed["jobs"]["build"]["needs"] == ["test", "phase5-verification"]
+    assert parsed["jobs"]["production-verification"]["needs"] == "test"
+    assert parsed["jobs"]["build"]["needs"] == ["test", "production-verification"]
 
 
 def test_ci_yml_is_byte_unchanged() -> None:
     ci_yml = WORKFLOWS_DIR / "ci.yml"
     digest = hashlib.sha256(ci_yml.read_bytes()).hexdigest()
     assert digest == CI_YML_SHA256, (
-        "ci.yml (platform .ate) changed — if this is a deliberate platform .I "
+        "ci.yml (platform gate) changed — if this is a deliberate platform CI "
         "change, update CI_YML_SHA256 explicitly; if not, revert it"
     )
 

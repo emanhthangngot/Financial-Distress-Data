@@ -140,7 +140,7 @@ normalizes by default; the HNSW index is already `vector_cosine_ops`
 
 ### D-E6 — Evidence run reaches the endpoint by `kubectl port-forward`, not a public route
 
-Airflow is platform .nd local (`AGENTS.md` boundary); it is not in GKE. So the
+Airflow is platform and local (`AGENTS.md` boundary); it is not in GKE. So the
 RAG pipeline is a client **outside** the cluster. Two concrete options:
 
 | Option | Verdict |
@@ -454,7 +454,7 @@ Contract details that matter:
 
 Verify: `.venv/bin/python -m pytest tests -k embedding`, then the full
 `AGENTS.md` gate `.venv/bin/python scripts/run_stage1_quality_gates.py` before
-declaring done (the new module must not break the platform .ast loop — that is
+declaring done (the new module must not break the platform fast loop — that is
 D4's whole point).
 
 ### Phase E4 — Verification / evidence (1h)
@@ -526,7 +526,7 @@ start, and the persistent LB IP that stays billed while hibernated.
 ## 4. Backwards compatibility & rollback
 
 **Compatibility:** additive everywhere.
-- No platform .ile, DAG, or docker-compose service is touched.
+- No platform file, DAG, or docker-compose service is touched.
 - No existing gitops file changes except `VERSIONS.md` (append-only rows).
 - `model-server.yaml`, `llm-d-router.yaml` untouched / not created.
 - PGVector `vector(384)` unchanged (D-E4). Rows produced by this backend carry a
@@ -558,7 +558,7 @@ one, that is out of scope and needs its own confirmation.
 | Integration | ISVC reaches `READY=True`; `/health` 200 | E1 gate | yes |
 | E2E | Vietnamese `/v1/embeddings` → 384-dim, normalized, semantically sane | `scripts/smoke_embedding_endpoint.py` | yes |
 | E2E | scale 0→1→0 observed; cold vs warm latency recorded | E4 step 2 | yes |
-| Regression | platform .ate still green | `scripts/run_stage1_quality_gates.py` | no |
+| Regression | platform gate still green | `scripts/run_stage1_quality_gates.py` | no |
 
 The unit layer must run in `.venv` with **no** network and **no** new
 dependency — that is the gate `AGENTS.md` calls definition of done.
@@ -589,7 +589,7 @@ dependency — that is the gate `AGENTS.md` calls definition of done.
 - [ ] Smoke script -> POSTs two Vietnamese sentences to `/v1/embeddings` through the port-forward with the Knative `Host` header -> HTTP 200, 2 vectors, each exactly 384 floats, L2 norm within 1e-3 of 1.0, and the two Vietnamese sentences more cosine-similar to each other than to an English control.
 - [ ] Operator -> lets the revision scale to zero, then issues one request -> observes replicas `0 -> 1`, records cold-start seconds and warm-call milliseconds as two distinct numbers.
 - [ ] `TeiHttpEmbedder` -> embeds the same text twice -> returns byte-identical 384-float vectors.
-- [ ] Developer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> passes, proving the new module did not leak a dependency into the platform .ast loop.
+- [ ] Developer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> passes, proving the new module did not leak a dependency into the platform fast loop.
 - [ ] Reviewer -> greps `platform/inference/model-server.yaml` and `docs/platform/evidence/llm/` -> finds the placeholder unchanged and **no** new evidence file, confirming this slice claimed zero rubric rows.
 - [ ] Platform operator -> runs `make gcp-down` after user confirmation -> `make gcp-status` shows both pools at 0.
 

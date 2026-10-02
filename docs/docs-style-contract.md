@@ -27,12 +27,12 @@ Two hard rules enforced by `scripts/check_documentation.py`
   to a file that exists, checked from every `docs/**.md` and from `README.md`.
   Absolute URLs (`://`) and in-page anchors (`#...`) are exempt.
 
-One invariant enforced by `scripts/audit_phase2_evidence.py`: every
+One invariant enforced by `scripts/audit_platform_evidence.py`: every
 `evidence_path` cell in the rubric matrix must start with
-`docs/platform/evidence/` (checked at `scripts/audit_phase2_evidence.py:319`;
+`docs/platform/evidence/` (checked at `scripts/audit_platform_evidence.py:319`;
 the same prefix is asserted again in the diff-scope check around
-`scripts/audit_phase2_evidence.py:655` and the secret-scan sweep around
-`scripts/audit_phase2_evidence.py:790`). Narrative docs never move or rename
+`scripts/audit_platform_evidence.py:655` and the secret-scan sweep around
+`scripts/audit_platform_evidence.py:790`). Narrative docs never move or rename
 files under that prefix — they link into it.
 
 ## 2. Three-layer model

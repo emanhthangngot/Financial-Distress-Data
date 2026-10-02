@@ -1,5 +1,5 @@
 -- platform schema: roles, evidence session state machine, outbox,
--- saved reports, audit log. Additive only; does not touch platform .ostgres
+-- saved reports, audit log. Additive only; does not touch Phase 1 PostgreSQL
 -- schemas (ops / ml).
 
 create type app_role as enum (

@@ -1,10 +1,10 @@
-# platform .uardrails report
+# platform guardrails report
 
 Status: DONE
 
 ## Summary
 
-- Extended `scripts/audit_phase2_evidence.py` platform .rotection coverage for
+- Extended `scripts/audit_phase2_evidence.py` platform protection coverage for
   `src/security`, `src/evidence`, `src/lakehouse`, `src/jobs`,
   `src/orchestration`, `src/io`, and `src/governance`.
 - Added shared-package carve-outs for `src/io/paths.py` and

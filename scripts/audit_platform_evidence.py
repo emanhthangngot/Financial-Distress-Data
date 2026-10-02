@@ -5,19 +5,19 @@ Usage:
   python scripts/audit_platform_evidence.py --matrix-only --strict
   python scripts/audit_platform_evidence.py --matrix-only --matrix PATH
   python scripts/audit_platform_evidence.py --require-executed --run-validations \
-    --platform-base "$PHASE1_BASE_SHA" --gitops-root ../financial-distress-gitops \
+    --platform-base "$PLATFORM_BASE_SHA" --gitops-root ../financial-distress-gitops \
     --ml 100 --llm 100
 
 Modes:
   --matrix-only     Validate the rubric-matrix.csv completeness and integrity
-                    (phase-01). Checks that every scored row exists with the
+                    (continuous production contract). Checks that every scored row exists with the
                     required fields (including the reproducible `test` command
                     and a role-based owner), both tracks total the expected
                     points, every role owns at least one row, and no platform
                     contract mutation is referenced.
   --matrix PATH     Audit a specific rubric-matrix CSV (fixture-based tests).
   --strict          With --matrix-only: fail (exit 1) on any issue. Without it,
-                    warnings still exit 0 (used during phase-01 bring-up).
+                    warnings still exit 0 (used during continuous bring-up).
   --check-artifacts Validate every row's implementation artifact path without
                      requiring evidence metadata. Missing artifacts fail for
                      executed rows and are warnings for design_only/stretch.
@@ -87,11 +87,11 @@ PLATFORM_PROTECTED = [
 # confined to this carve-out is not a platform behavior mutation.
 # `sql/init_ml.sql` is the the platform ml schema (plan-pinned:
 # phase-04-implementation-notes.md section 1) — a new file, never touching
-# `sql/init_ops.sql` or any other platform .QL.
+# `sql/init_project_metadata.sql` or any other platform SQL.
 PLATFORM_PROTECTED_EXCEPTIONS = [
     "src/streaming/flink/jobs/",
     "sql/init_ml.sql",
-    # Shared package carve-outs: these helpers are owned by platform .nd may
+    # Shared package carve-outs: these helpers are owned by platform and may
     # evolve without weakening protection for the rest of the package.
     "src/io/paths.py",
     "src/governance/lineage.py",
@@ -395,7 +395,7 @@ def _audit_matrix(
     return errors
 
 
-def _audit_phase1_no_mutation(matrix: list[dict[str, str]]) -> list[str]:
+def _audit_protected_paths(matrix: list[dict[str, str]]) -> list[str]:
     errors: list[str] = []
     blob = "\n".join(",".join(row.values()) for row in matrix).lower()
     for path in PLATFORM_PROTECTED:
@@ -405,16 +405,16 @@ def _audit_phase1_no_mutation(matrix: list[dict[str, str]]) -> list[str]:
         for value in row.values():
             lowered = value.lower()
             if "dags/" in lowered and "dags/" not in lowered:
-                errors.append(f"{row.get('rubric_id', '?')}: matrix references a platform .AG path")
+                errors.append(f"{row.get('rubric_id', '?')}: matrix references a platform DAG path")
                 break
     return errors
 
 
-def _phase1_mutation_from_changed(changed: list[str]) -> list[str]:
+def _protected_path_mutation_from_changed(changed: list[str]) -> list[str]:
     """Return errors when a git diff touches platform protected paths.
 
     `changed` is a list of repo-relative paths (e.g. from `git diff --name-only`).
-    The working tree or branch must not modify platform .ollectors, transforms,
+    The working tree or branch must not modify platform collectors, transforms,
     quality, catalog, metadata, streaming, generator, dags, sql, or their docs.
     """
     errors: list[str] = []
@@ -432,25 +432,23 @@ def _phase1_mutation_from_changed(changed: list[str]) -> list[str]:
     return errors
 
 
-def _audit_phase1_git_diff(base: str) -> list[str]:
-    """Run the platform .o-mutation gate and fail closed when unverifiable.
+def _audit_protected_path_git_diff(base: str) -> list[str]:
+    """Run the platform no-mutation gate and fail closed when unverifiable.
 
     Compares the working tree against ``<base>`` (default ``origin/dev``) and
     also lists untracked files, because ``git diff --name-only`` never reports
-    brand-new files. A platform .ath touched by *either* source is a failure.
+    brand-new files. A platform path touched by *either* source is a failure.
 
     Fail-closed: if the baseline cannot be resolved (missing ref, git error,
     non-zero exit) the gate returns an error instead of silently passing, so an
     unverifiable baseline never turns the mutation check into a no-op.
 
-    ``PHASE1_HYGIENE_OVERRIDE=1`` suppresses only the protected-path findings
+    ``PRODUCTION_HYGIENE_OVERRIDE=1`` suppresses only the protected-path findings
     below, after the baseline has been resolved and the diff computed — a
     missing/unresolvable baseline still fails closed regardless of this var.
-    It exists for platform's own architecture-hygiene work (moving/renaming
-    platform .iles without changing platform behavior), which this gate cannot
-    distinguish from a platform .ask mutating platform . it only sees changed
-    paths, not intent. Unset by default so a real platform .ask is still
-    blocked.
+    It exists for architecture-hygiene work (moving/renaming files without
+    changing platform behavior), which this gate cannot distinguish from a
+    platform task mutating platform — it only sees changed paths, not intent.
     """
     import subprocess
 
@@ -518,8 +516,8 @@ def _audit_phase1_git_diff(base: str) -> list[str]:
         return [f"git check failed: untracked listing errored — {detail}"]
     changed.extend(line.strip() for line in untracked.stdout.splitlines() if line.strip())
 
-    findings = _phase1_mutation_from_changed(changed)
-    if findings and os.environ.get("PHASE1_HYGIENE_OVERRIDE") == "1":
+    findings = _protected_path_mutation_from_changed(changed)
+    if findings and os.environ.get("PRODUCTION_HYGIENE_OVERRIDE") == "1":
         return []
     return findings
 
@@ -1010,9 +1008,9 @@ def _audit_behavior_validations(matrix: list[dict[str, str]]) -> list[str]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Audit platform .ubric evidence contract")
+    parser = argparse.ArgumentParser(description="Audit platform rubric evidence contract")
     parser.add_argument(
-        "--matrix-only", action="store_true", help="Validate the rubric matrix only (phase-01)"
+        "--matrix-only", action="store_true", help="Validate the rubric matrix only (production)"
     )
     parser.add_argument(
         "--matrix",
@@ -1069,13 +1067,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--git-base",
         default="origin/dev",
-        help="Base ref for the matrix-only platform .o-mutation check "
+        help="Base ref for the matrix-only platform no-mutation check "
         "(default: origin/dev; an unresolvable baseline fails the gate)",
     )
     parser.add_argument(
         "--platform-base",
         default=None,
-        help="Frozen 40-hex platform .aseline commit required by the promotion gate",
+        help="Frozen 40-hex platform baseline commit required by the promotion gate",
     )
     args = parser.parse_args(argv)
 
@@ -1105,7 +1103,7 @@ def main(argv: list[str] | None = None) -> int:
                 enforce_explicit_implementation=args.matrix is None,
             )
         )
-        errors.extend(_audit_phase1_no_mutation(matrix))
+        errors.extend(_audit_protected_paths(matrix))
         if args.matrix is None:
             errors.extend(_audit_canonical_coverage(matrix))
 
@@ -1157,7 +1155,7 @@ def main(argv: list[str] | None = None) -> int:
                 if not args.platform_base or not _is_full_git_sha(args.platform_base):
                     errors.append("final promotion requires --platform-base as a frozen 40-hex SHA")
                 else:
-                    errors.extend(_audit_phase1_git_diff(args.platform_base))
+                    errors.extend(_audit_protected_path_git_diff(args.platform_base))
                     errors.extend(_audit_frozen_revisions(scoped, args.gitops_root))
         errors.extend(_audit_required_docs())
 
@@ -1178,8 +1176,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.matrix_only:
         errors.extend(_audit_required_docs())
-        # platform .ust not be mutated in the repository diff either.
-        errors.extend(_audit_phase1_git_diff(args.git_base))
+        # platform must not be mutated in the repository diff either.
+        errors.extend(_audit_protected_path_git_diff(args.git_base))
 
     # ── Output ────────────────────────────────────────────────────────
     for warning in warnings:
@@ -1191,7 +1189,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n{len(errors)} finding(s) — {'FAIL' if fail else 'exit 0 (non-strict)'}")
         return 1 if fail else 0
 
-    print("✅ platform .ubric matrix is complete and consistent.")
+    print("✅ platform rubric matrix is complete and consistent.")
     return 0
 
 

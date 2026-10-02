@@ -1,7 +1,7 @@
 # Submission reviewer index
 
 Human-facing index into `docs/platform/evidence/llm/` — not a relocation.
-`scripts/audit_phase2_evidence.py`'s `_audit_matrix` pins every row's
+`scripts/audit_platform_evidence.py`'s `_audit_matrix` pins every row's
 `evidence_path` under `docs/platform/evidence/`; these pages link to that
 canonical location, they don't hold the evidence itself. See
 `docs/platform/evidence-contract.md` for what counts as proof.

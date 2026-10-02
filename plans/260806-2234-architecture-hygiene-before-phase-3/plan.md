@@ -37,8 +37,8 @@ accumulated structural defects that a folder audit surfaced on 2026-08-06:
 - `tests/` is 40 flat files. AGENTS.md documents a "Time-Costly" test class
   (Docker/Kafka/Flink) in prose, but nothing in the tree or in pytest encodes it.
 
-This plan fixes exactly those five. It changes no platform .ipeline semantics, no
-data contract, no platform .roduct code, and adds no new capability.
+This plan fixes exactly those five. It changes no platform pipeline semantics, no
+data contract, no platform product code, and adds no new capability.
 
 ## Goals
 
@@ -61,7 +61,7 @@ data contract, no platform .roduct code, and adds no new capability.
 | 5 | [Declare the Python package boundary](./phase-05-declare-the-python-package-boundary.md) | 2h | Pending |
 | 6 | [Encode test cost classes as pytest markers](./phase-06-encode-test-cost-classes-as-pytest-markers.md) | 1-2h | Pending |
 
-platform .ust run first so every later phase has a diff baseline. Phases 2-6 are
+platform must run first so every later phase has a diff baseline. Phases 2-6 are
 independent of each other and land as **one PR per phase** (validation session 1)
 — five small PRs on `fix/` and `chore/` branches, each independently revertable.
 This keeps the Flink repair, which cannot be fully verified without booting the
@@ -80,7 +80,7 @@ opt-in profile, isolated from the low-risk phases behind it.
 
 ## Constraints
 
-- platform .ipeline behavior, DAG IDs, task IDs, Gold contracts, and DQ semantics
+- platform pipeline behavior, DAG IDs, task IDs, Gold contracts, and DQ semantics
   must not change. AGENTS.md "Don't Touch" applies in full.
 - Never edit a test's expected value to make it pass. If a move breaks a test,
   the move is wrong.

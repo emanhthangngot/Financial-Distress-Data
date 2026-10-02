@@ -47,13 +47,13 @@ than the reference event — the same point-in-time discipline
 
 ```bash
 python scripts/build_schema_evidence.py \
-  --output warehouse.db --report docs/evidence/schema/phase8-schema-audit.json
+  --output warehouse.db --report docs/evidence/schema/schema-audit.json
 ```
 
 Open `warehouse.db` in DBeaver and inspect the `bronze`, `silver`, and
 `gold` schemas. The generated audit records 15 tables, six foreign keys,
 feature timestamp coverage, and SCD2 history. Full evidence:
-[`docs/evidence/schema/phase8-schema-audit.json`](../../evidence/schema/phase8-schema-audit.json).
+[`docs/evidence/schema/schema-audit.json`](../../evidence/schema/schema-audit.json).
 
 ## Limitations
 

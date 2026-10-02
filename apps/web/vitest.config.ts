@@ -17,10 +17,9 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "html", "json-summary"],
       // Scoped to product logic (src/lib) and the four interactive surfaces
-      // this stage's component tests were written for (assistant, the ops
-      // action button, the disclaimer banner, the nav rail). The other
-      // dozens of presentational components under src/components shipped in
-      // an earlier phase with Playwright as their only proof and stay there
+      // covered by component tests (assistant, the ops action button, the
+      // disclaimer banner, and the nav rail). The other presentational
+      // components under src/components use Playwright as their proof
       // — gating the whole tree here would demand render tests for markup
       // that already has end-to-end coverage, which is padding, not a
       // meaningful check.

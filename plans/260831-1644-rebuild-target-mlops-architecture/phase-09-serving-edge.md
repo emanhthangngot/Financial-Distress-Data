@@ -31,15 +31,19 @@ and static YAML do not. Retain KEDA if the existing pattern works; do not add a 
 
 Request contract carries ticker, cutoff_ts, question and server-controlled request/session identity.
 P8 records provider/model/prompt/corpus revisions; clients cannot choose arbitrary paid endpoints.
-Responses preserve external schemas and streaming event semantics; citations/vintage/missing-data
-metadata are versioned deliberately if the current API cannot carry them. Authentication derives
-principal server-side; session_id is not authorization. P5 defines feature retrieval identity; do
-not reintroduce company_id/company_key as a competing canonical key.
+Responses preserve external schemas and streaming event semantics. P8's single stream adapter maps
+typed LangGraph events into that contract; clients never consume provider-native or framework-native
+chunks directly. Citations/vintage/missing-data metadata are versioned deliberately if the current
+API cannot carry them. Authentication derives principal server-side; session_id is not
+authorization. P5 defines feature retrieval identity; do not reintroduce
+company_id/company_key as a competing canonical key.
 
 Current product auth stays unless a concrete accepted requirement demands migration. Analyst UI
 supports loading, completed, no eligible evidence, stale/missing features, auth expiry, rate-limit,
-provider unavailable and interrupted stream. A partial answer is visibly partial; retry is a new
-request, not silent appended text from another provider. Session reset/expiry clears agent state.
+provider unavailable, interrupted stream and resumed-or-aborted graph execution. A partial answer
+is visibly partial; retry is a new request, not silent appended text from another provider. Session
+reset/expiry clears agent state. Agent readiness requires its Postgres checkpointer and scoped MCP
+dependencies; liveness must remain true when one dependency is unavailable.
 
 Analytics: expose financial/feature provenance and current/as-of views through existing UI/query
 surfaces. Trino/Superset/dbt are not mandatory new services for image fidelity; choose existing SQL
@@ -61,8 +65,9 @@ are agreed before editing shared response models and chart namespace fields.
    via public Service or unprotected UI route. Internal mesh auth is separate, not disabled.
 6. Bind ticker/cutoff queries to eligible Feast/pgvector data; latest dashboard view cannot be used
    for historical answers. Present provenance and unavailable states, not generated missing values.
-7. Integrate session-only LangGraph UI behavior and stream interruption handling; verify two
-   simultaneous principals cannot observe each other's state/citations.
+7. Integrate session-only LangGraph UI behavior and the typed-event SSE adapter; interrupt a stream
+   and restart a graph replica between nodes. Verify two simultaneous principals cannot observe each
+   other's state/citations and the client sees either durable resume or an explicit incomplete end.
 8. Exercise real domain/HTTPS, API/MCP, prediction and analyst flows in the authorized demo window.
    Stop session services after exporting evidence; publish access instructions without 24/7 claims.
 
@@ -81,6 +86,7 @@ are agreed before editing shared response models and chart namespace fields.
 - [ ] AC-P9-11: Prediction API -> receives ticker and applicable feature cutoff -> retrieves P5-approved feature snapshot and returns versioned model score; missing/stale features are explicit.
 - [ ] AC-P9-12: Engineer -> cuts over active Gold readers -> Iceberg path passes first, all active consumers migrated and obsolete readers removed without deleting Bronze evidence.
 - [ ] AC-P9-STREAM: Analyst -> observes provider failure before/after first streamed content -> clear unavailable/interrupted state; no mixed-provider continuation or uncited fabricated result.
+- [ ] AC-P9-LANGGRAPH: Browser -> receives a graph stream across one replica restart -> public SSE ordering and request ID remain stable, completed tool effects are not duplicated, and the UI shows resumed completion or an explicit incomplete terminal state.
 
 ## Risks
 

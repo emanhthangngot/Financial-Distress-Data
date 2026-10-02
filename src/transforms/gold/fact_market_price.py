@@ -127,11 +127,11 @@ def build_fact_market_price_spark(
             "left",
         )
         .join(
-            prior_dates,
-            F.col("current.__row_id") == F.col("__row_id"),
+            prior_dates.alias("prior"),
+            F.col("current.__row_id") == F.col("prior.__row_id"),
             "left",
         )
-        .filter(F.col("previous.trading_date") == F.col("__prior_date"))
+        .filter(F.col("previous.trading_date") == F.col("prior.__prior_date"))
         .groupBy(F.col("current.__row_id").alias("__row_id"))
         .agg(
             F.max_by(
@@ -152,7 +152,10 @@ def build_fact_market_price_spark(
                 / F.col("__previous_close")
             ),
         )
-        .withColumn("volatility_signal", F.abs(F.col("daily_return")) > F.lit(0.07))
+        .withColumn(
+            "volatility_signal",
+            F.coalesce(F.abs(F.col("daily_return")) > F.lit(0.07), F.lit(False)),
+        )
         .drop("__previous_close", "__row_id")
     )
     if fact.filter(F.col("known_from_ts").isNull()).limit(1).count():

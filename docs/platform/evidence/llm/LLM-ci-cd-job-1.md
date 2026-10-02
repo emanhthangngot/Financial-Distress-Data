@@ -1,10 +1,10 @@
 # Evidence — CI/CD Job 1 (stream feature → OFFLINE)
 
-Proves `.github/workflows/platform-stream-feature-offline.yaml` calling the
-reusable `.github/workflows/platform-ci.yaml` template (lint → test → build →
+Proves `.github/workflows/production-stream-feature-offline.yaml` calling the
+reusable `.github/workflows/production-ci.yaml` template (lint → test → build →
 push immutable GHCR digest → open a GitOps digest-bump PR) runs end to end on
 a real push to `dev`, deploying `src/ml/feast/offline_job.py`
-(`dags/platform/phase2_stream_feature_offline.py`).
+(`dags/platform/stream_feature_offline.py`).
 
 - rubric_id: LLM-ci-cd-job-1
 - execution_timestamp: 2026-08-09T06:41:12+00:00
@@ -35,8 +35,7 @@ sha256:a0f8f194774d07ce9df95bd0cdbe3481910c8cc3c9ec4f15588658ad6db9cb67
 ## Prerequisite fixes made to unblock this run
 
 Three real bugs found and fixed while getting this row from `startup_failure`
-to `success`, all in `.github/workflows/platform-ci.yaml` / the three caller
-workflows:
+all in `.github/workflows/production-ci.yaml` / the three caller workflows:
 
 1. Callers lacked `permissions: packages: write` — the repo's default
    `GITHUB_TOKEN` permission is read-only, so the nested `build` job's

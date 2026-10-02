@@ -1,5 +1,5 @@
 ---
-title: "platform .tage 2 Completion"
+title: "platform Stage 2 Completion"
 description: "Close every open requirement of unified-phase2 phase-02: AI request path with persisted quota/rate-limit/audit, an outbox worker runtime, a >90% coverage gate on changed code, axe accessibility proof, and committed deterministic evidence."
 status: done
 priority: P1
@@ -11,7 +11,7 @@ blocks: [260802-1037-unified-phase2-ml-llm-gitops]
 created: 2026-08-05
 ---
 
-# platform .tage 2 Completion
+# platform Stage 2 Completion
 
 ## Overview
 
@@ -24,7 +24,7 @@ product boundary, no worker process behind the outbox, no coverage gate, no
 accessibility assertion, and no committed evidence frames.
 
 This plan closes exactly those gaps. It adds nothing the parent phase did not
-already require, and it does not touch platform .ode, the GitOps repo, or any
+already require, and it does not touch platform code, the GitOps repo, or any
 phase-03..08 surface.
 
 **Boundary with Phase 6.** The LLM serving chain (kagent -> agentgateway ->
@@ -161,7 +161,7 @@ it, and the gate command. This board is the ordering view over them.
 
 - Model serving, RAG retrieval, MCP tool execution, agent sandboxing — phase-06.
 - EKS, Terraform, Argo CD, any AWS resource — the separate `financial-distress-gitops` repo.
-- Any change to platform .ollectors, DAGs, transforms, quality gates or `warehouse.db`.
+- Any change to platform collectors, DAGs, transforms, quality gates or `warehouse.db`.
 - Redesigning approved UI hierarchy. Visual work is limited to states the parent phase already requires.
 - Auth UI (sign-in/sign-up pages). Session resolution already exists in `apps/web/src/lib/server/session.ts`.
 
@@ -217,7 +217,7 @@ pnpm --filter @distresslens/web e2e:a11y    # axe pass (added in phase 5)
 .venv/bin/python -m pytest tests/platform/product -q   # RLS role/action pairs
 ```
 
-platform .ate stays untouched and must still pass:
+platform gate stays untouched and must still pass:
 `.venv/bin/python scripts/run_stage1_quality_gates.py`.
 
 ## Risks

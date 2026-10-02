@@ -40,7 +40,7 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("docs/evidence/docker/phase8-image-sizes.json"),
+        default=Path("docs/evidence/docker/image-sizes.json"),
     )
     args = parser.parse_args()
     report = comparison(image_size_bytes(args.baseline), image_size_bytes(args.optimized))

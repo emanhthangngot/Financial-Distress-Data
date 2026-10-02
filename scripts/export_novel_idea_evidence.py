@@ -30,7 +30,7 @@ def run_probes(run_id: str) -> dict[str, object]:
         manifest = build_run_manifest(
             evidence_dir=root,
             run_id=run_id,
-            git_sha="phase8-probe",
+            git_sha="production-probe",
             config_paths=[],
             artifacts=[("metric.json", "metrics")],
         )
@@ -90,7 +90,7 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("docs/evidence/novel/phase8-novel-ideas.json"),
+        default=Path("docs/evidence/novel/novel-ideas.json"),
     )
     args = parser.parse_args()
     report = run_probes(args.run_id)

@@ -24,7 +24,7 @@ stamp it just produced.
   SHAs; the strict two-repo gate exiting 0 with no `--accept-design-only`; a
   scrubbed GitOps mirror published for the grader; a row-by-row mock grade
   against the canonical CSV.
-- Non-functional: `.venv` untouched; the platform .stage 1) gate green; no evidence
+- Non-functional: `.venv` untouched; the platform (stage 1) gate green; no evidence
   rewritten to match a claim.
 
 ## Architecture
@@ -114,7 +114,7 @@ file, artifact, points a hostile grader would award, one-line reason.
 5. Verify the ancestor rule on a throwaway commit, then run
    `scripts/stamp_phase2_evidence.py` — GitOps first, then source, one dedicated
    stamp commit each. Never `--amend`.
-6. Run the final gate. Expect `platform .ubric matrix is complete and consistent.`
+6. Run the final gate. Expect `platform rubric matrix is complete and consistent.`
    Commit nothing afterwards. If a gap appears, fix the system, re-capture that
    scenario, and repeat from step 4 — not by editing a claim.
 7. Re-run the stage 1 gate: `.venv/bin/python scripts/run_stage1_quality_gates.py`

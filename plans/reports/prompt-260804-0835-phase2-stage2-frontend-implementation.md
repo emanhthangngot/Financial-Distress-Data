@@ -1,12 +1,12 @@
 ---
 name: phase2-stage2-frontend-implementation
-description: Implement the DistressLens platform .roduct shell, approved UI baseline, Supabase/RLS boundary, outbox lifecycle worker and deterministic UX evidence.
+description: Implement the DistressLens platform product shell, approved UI baseline, Supabase/RLS boundary, outbox lifecycle worker and deterministic UX evidence.
 ---
 
-# platform .tage 2 implementation prompt
+# platform Stage 2 implementation prompt
 
 You are the lead frontend engineer, product designer and product-plane
-integrator for the DistressLens coursework repository. Complete platform .tage
+integrator for the DistressLens coursework repository. Complete platform Stage
 2 from implementation through verification. Work in the existing repository;
 do not create a second app, a microservice-per-repo layout, or a fake demo that
 only looks complete in a screenshot.
@@ -14,13 +14,13 @@ only looks complete in a screenshot.
 ## Mission
 
 Turn the current product foundation into a working, typed, accessible
-DistressLens product shell that satisfies the platform .lan and the three
+DistressLens product shell that satisfies the platform plan and the three
 approved visual references. Finish the analyst, company/AI, agent, registry
 and admin/evidence surfaces; connect them to Supabase/RLS and the typed session
 contract; implement the durable outbox worker behavior; and leave reproducible
 Playwright evidence for every required state.
 
-Do not claim platform .s complete until the Definition of Done at the end is
+Do not claim platform is complete until the Definition of Done at the end is
 true. The current report is a gap report, not proof of completion:
 `plans/reports/review-260803-2249-phase2-status.md`.
 
@@ -64,7 +64,7 @@ live/cached states.
   and durable mutation path are still required.
 - The GitOps repository owns infrastructure desired state. This repository
   owns product routes, typed contracts, tests and evidence descriptions only.
-- platform .ode and behavior are frozen. Do not edit platform .AGs, collectors,
+- platform code and behavior are frozen. Do not edit platform DAGs, collectors,
   Gold semantics or `docs/evidence/**` for this task.
 
 ## Design read and aesthetic direction
@@ -84,7 +84,7 @@ Use these design dials for the dashboard/product surface:
 
 Break default-style mode collapse before choosing the direction: derive a
 repeatable seed from the request text (for example, the character count of
-`DistressLens platform .tage 2`) and use it to select one candidate from the
+`DistressLens platform Stage 2`) and use it to select one candidate from the
 frontend-design direction menu. If the seeded direction conflicts with the
 financial-operations audience or the supplied screenshots, move to the
 adjacent direction and record why. Do not silently fall back to a generic SaaS
@@ -296,7 +296,7 @@ Implement or extend only the relevant boundaries:
 - `docs/platform/product.md`, `docs/platform/security/rbac.md` and
   `docs/platform/evidence/product/` when implementation changes the contract.
 
-Do not edit platform .ipeline code, generated `warehouse.db`, `outputs/**`,
+Do not edit platform pipeline code, generated `warehouse.db`, `outputs/**`,
 `docs/evidence/**`, or GitOps desired state from this repository.
 
 ## Verification commands
@@ -339,7 +339,7 @@ a weaker assertion.
 - [ ] Playwright screenshots/manifests contain route, state, viewport,
       provenance and redaction fields.
 - [ ] Accessibility and frontend-design self-review gates pass.
-- [ ] Verification commands pass; platform .iles and semantics are unchanged.
+- [ ] Verification commands pass; platform files and semantics are unchanged.
 - [ ] Only after all boxes pass may `phase-02...md` move from `todo` to
       `in_review` or `complete`, with reviewer evidence linked.
 

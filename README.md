@@ -55,13 +55,13 @@ Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), 
 │   ├── catalog/           - DuckDB catalog and validation helpers
 │   ├── io/                - MinIO and local IO helpers
 │   ├── jobs/               - Runtime evidence job wrappers
-│   ├── ml/                - platform .L class contracts and adapters (isolated)
-│   ├── drift/              - platform .rift detection + generator-config simulation
+│   ├── ml/                - platform ML class contracts and adapters (isolated)
+│   ├── drift/              - platform drift detection + generator-config simulation
 │   ├── llm/                - platform (LLM) contracts, RAG pipeline, embedding registry, citation/PII guard
-│   └── agents/             - platform .oordinator/feature/drift agent orchestration
-├── apps/                  - platform .ext.js product app + feature-api/feature-mcp/drift-api/drift-mcp services
+│   └── agents/             - platform coordinator/feature/drift agent orchestration
+├── apps/                  - platform Next.js product app + feature-api/feature-mcp/drift-api/drift-mcp services
 ├── packages/              - Shared TypeScript contracts and UI helpers
-├── supabase/              - platform .igrations, RLS, and outbox schema
+├── supabase/              - platform migrations, RLS, and outbox schema
 ├── feature_repo/          - Feast structured/RAG feature definitions
 ├── notebooks/             - Agent/MCP demonstration notebooks (LLM evidence track)
 ├── configs/               - Collector, Spark, source, drift, and DQ config files
@@ -72,7 +72,7 @@ Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), 
 │   ├── architecture/       - Subsystem + composed Mermaid diagram sources
 │   ├── pngs/                - Reviewer screenshot/diagram pool (manifest-tracked)
 │   └── platform/evidence/    - Canonical, audit-pinned LLM evidence rows (immutable location)
-├── images/                - platform .pec-mandated architecture diagrams
+├── images/                - platform spec-mandated architecture diagrams
 ├── infra/                 - Container build/bootstrap assets (airflow/, flink/, kafka/)
 ├── scripts/               - Local E2E, DQ-failure, evidence-audit, and doc-gate runners
 ├── plans/                 - Implementation plans, phase files, and reports
@@ -81,7 +81,7 @@ Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), 
 └── README.md              - This file
 ```
 
-platform .ode under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is additive and never mutates platform .ipeline behavior. The GKE deployment manifests are intentionally **not** in this repository — the separate private control repository [`financial-distress-gitops`](docs/architecture/repository-map.md#separate-deployment-repository) owns Terraform, Helm values, Argo CD applications, image digests, policies, ingress, model serving, agents, and observability desired state. Full ownership map: [`docs/architecture/repository-map.md`](docs/architecture/repository-map.md); Python package boundary details: same doc.
+platform code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is additive and never mutates platform pipeline behavior. The GKE deployment manifests are intentionally **not** in this repository — the separate private control repository [`financial-distress-gitops`](docs/architecture/repository-map.md#separate-deployment-repository) owns Terraform, Helm values, Argo CD applications, image digests, policies, ingress, model serving, agents, and observability desired state. Full ownership map: [`docs/architecture/repository-map.md`](docs/architecture/repository-map.md); Python package boundary details: same doc.
 
 ## 🗂️ Coursework Documentation
 
@@ -139,7 +139,7 @@ docker compose up -d
 .venv/bin/python scripts/check_lakehouse_services.py
 ```
 
-Full local setup, Docker Compose profiles (incl. opt-in Flink), product/platform .hecks, service URLs, platform evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.
+Full local setup, Docker Compose profiles (incl. opt-in Flink), product/platform checks, service URLs, platform evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.
 
 ## 📌 Project Status
 

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Runs dags/platform/phase2_rag_ingest.py's callable
+# Runs dags/platform/rag_ingest.py's callable
 # (src.llm.rag_pipeline.run_ingestion_task) as a standalone deployable —
 # same code the Airflow PythonOperator calls, packaged separately per
 # phase-04-implementation-notes.md section 2's "two processes, two images"

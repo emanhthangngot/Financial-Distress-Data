@@ -1,11 +1,11 @@
 # End-to-end integration verification
 
 Date: 2026-08-12
-Scope: platform .eb → coordinator → agents → MCP → model gateway → telemetry path
+Scope: platform web → coordinator → agents → MCP → model gateway → telemetry path
 
 ## Result
 
-Overall result: **PASS for the required platform .ervice path**.
+Overall result: **PASS for the required platform service path**.
 
 The final live run used:
 
@@ -48,4 +48,4 @@ Screenshot: `/home/pearspringmind/.codex/visualizations/2026/08/12/019ff4c9-ca84
 
 The live GKE cluster still uses the currently synced web/drift image digests because Argo self-heals direct image changes. The new source path was validated with the local source web/agents, live feature-MCP and live agentgateway/model, and a locally built drift-MCP image. The GitOps working tree contains the durable OTLP NetworkPolicy and `phase2-e2e` Make target, but the normal Git commit/PR/Argo sync is still required to promote the new image/configuration to the cluster.
 
-`platform-agents` is `OutOfSync/Degraded` from an unrelated pre-existing kagent sync failure: the `agents.kagent.dev` CRD is rejected for oversized annotations and dependent `Agent` resources cannot be mapped. The required platform .gents themselves are ready and the live E2E runner passes.
+`platform-agents` is `OutOfSync/Degraded` from an unrelated pre-existing kagent sync failure: the `agents.kagent.dev` CRD is rejected for oversized annotations and dependent `Agent` resources cannot be mapped. The required platform agents themselves are ready and the live E2E runner passes.

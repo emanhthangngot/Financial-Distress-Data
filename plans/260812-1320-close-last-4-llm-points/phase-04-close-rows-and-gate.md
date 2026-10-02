@@ -79,7 +79,7 @@ last thing this phase does is confirm nothing is left to write.
 5. Ensure both worktrees are clean — commit or stash every plan file, report,
    and untracked directory, including this plan's own reports.
 6. Run the strict gate with **no** `--accept-design-only`. Expect
-   `platform .ubric matrix is complete and consistent.`
+   `platform rubric matrix is complete and consistent.`
 7. Run `.venv/bin/python scripts/run_stage1_quality_gates.py` — Phase 1
    no-regression, exit 0.
 8. Update `260811-1627`'s plan status and mark this plan complete.

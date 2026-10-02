@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""P1 naming cutover verifier.
+"""Production naming-cutover verifier.
 
 Exits 0 when the working tree contains zero ``phase1`` / ``phase2`` / ``stage1``
 tokens outside the documented exceptions; exits 1 otherwise and prints every
 match so the cutover can be driven against a decreasing list.
 
-Recorded exceptions (ADR-019,
-``plans/260831-1644-rebuild-target-mlops-architecture/phase-01-naming-cutover.md``):
+Recorded exceptions:
 
   - ``supabase/migrations/**``   applied-migration filenames; renaming re-applies
   - ``plans/**``                 historical planning records
@@ -14,15 +13,6 @@ Recorded exceptions (ADR-019,
   - ``__pycache__/**``           Python bytecode cache
   - non-source ops               ``.codex``, ``.agents``, ``.claude``,
                                  ``images/``, ``docs/pngs/``, ``docs/submission/``
-  - GitHub workflows             ``.github/workflows/**`` — the cutover map
-                                 defers the workflow prefix rename to P10
-                                 (delivery phase). The GitHub OAuth token
-                                 used to push this work does not carry the
-                                 ``workflow`` scope required to push
-                                 changes to ``.github/workflows/``; the
-                                 files retain their original content until
-                                 P10 or until a token with the workflow
-                                 scope is granted.
   - build/dependency outputs     ``.next``, ``dist``, ``build``, ``out``,
                                  ``coverage``, ``.pnpm-store``, ``.ruff_cache``,
                                  ``.pytest_cache``, ``.hypothesis``,
@@ -51,7 +41,6 @@ EXCLUDE_DIR_NAMES = frozenset(
         ".pytest_cache",
         ".hypothesis",
         ".venv",
-        ".venv-phase2",
         ".venv-platform",
         "supabase",
         "plans",
@@ -71,15 +60,8 @@ EXCLUDE_DIR_NAMES = frozenset(
     }
 )
 
-# ``docs`` is excluded wholesale (PNG images, submission zips, and historical
-# narrative all reference phase vocabulary); P1 class D touches the doc
-# cutover separately under that exclusion.
-
-# Every GitHub Actions workflow file under ``.github/workflows/`` is
-# excluded because the OAuth token used to push this work does not carry
-# the ``workflow`` scope (see recorded exceptions in the docstring).
-WORKFLOW_EXCEPTED_DIR = ".github"
-WORKFLOW_EXCEPTED_SUBDIR = "workflows"
+# ``docs`` is excluded wholesale: it carries PNG images, submission archives,
+# and frozen historical narrative, none of which is source of truth for names.
 
 EXCLUDE_SUFFIX = frozenset(
     {
@@ -136,14 +118,6 @@ PATTERNS = [
 ]
 
 
-def _is_workflow_file(rel_parts: tuple[str, ...], name: str) -> bool:
-    if WORKFLOW_EXCEPTED_DIR not in rel_parts:
-        return False
-    if WORKFLOW_EXCEPTED_SUBDIR not in rel_parts:
-        return False
-    return name.lower().endswith((".yaml", ".yml"))
-
-
 def _is_excluded_path(path: Path) -> bool:
     if path.resolve() == SELF_PATH:
         return True
@@ -154,8 +128,6 @@ def _is_excluded_path(path: Path) -> bool:
             return True
         if part.startswith(".venv"):
             return True
-    if _is_workflow_file(parts, path.name):
-        return True
     if path.suffix.lower() in EXCLUDE_SUFFIX:
         return True
     return False
@@ -180,7 +152,7 @@ def _scan_contents(path: Path) -> list[tuple[str, int, str]]:
         return hits
     for line_no, line in enumerate(text.splitlines(), start=1):
         for pattern in PATTERNS:
-            for _match in pattern.finditer(line):
+            if pattern.search(line):
                 hits.append((pattern.pattern, line_no, line.rstrip()[:240]))
     return hits
 
@@ -202,24 +174,10 @@ def main() -> int:
             content_hits += 1
     total = name_hits + content_hits
 
-    # Count deferred workflow files loud and clear
-    deferred_workflow_hits = 0
-    workflow_dir = REPO_ROOT / ".github" / "workflows"
-    if workflow_dir.exists():
-        for wf in workflow_dir.glob("*.y*ml"):
-            for pattern in PATTERNS:
-                if pattern.search(wf.name):
-                    deferred_workflow_hits += 1
-            for _pattern, _, _ in _scan_contents(wf):
-                deferred_workflow_hits += 1
-
     print("")
     print(f"path-name matches:   {name_hits}")
     print(f"content matches:     {content_hits}")
     print(f"total matches:       {total}")
-    print(
-        f"deferred (workflows): {deferred_workflow_hits} (P10 scope / token lacks workflow scope)"
-    )
     return 0 if total == 0 else 1
 
 

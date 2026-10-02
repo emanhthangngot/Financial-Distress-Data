@@ -4,7 +4,7 @@ The production deployment uses an Iceberg REST catalog (Lakekeeper).  The
 source repository deliberately keeps the unit-test contract local and
 network-free: :func:`load_catalog` validates the same connection settings and
 returns an in-memory catalog implementing the table/snapshot operations used by
-the platform .obs.  A real REST client can be substituted at the boundary
+the platform jobs.  A real REST client can be substituted at the boundary
 without changing callers.
 """
 
@@ -247,7 +247,7 @@ class LocalIcebergTable:
 
 
 class LocalIcebergCatalog:
-    """In-memory implementation of the subset used by platform .ontracts."""
+    """In-memory implementation of the subset used by platform contracts."""
 
     def __init__(self, config: CatalogConfig | None = None) -> None:
         self.config = config or CatalogConfig()

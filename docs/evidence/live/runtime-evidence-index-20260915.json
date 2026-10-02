@@ -1,0 +1,37 @@
+{
+  "captured_at_utc": "2026-09-15T03:25:00Z",
+  "repository_revision": "working tree; source and evidence changes are uncommitted",
+  "redaction": {
+    "credentials": "none captured",
+    "secret_values": "none",
+    "policy": "provider keys, database passwords and bearer tokens excluded"
+  },
+  "verified_local": [
+    {"area": "live source adapter", "command": ".venv/bin/python -m pytest tests/test_vnstock_live_adapter.py -q", "result": "13 passed"},
+    {"area": "Spark value parity", "command": ".venv/bin/python -m pytest tests/platform/test_spark_gold_value_parity.py -q", "result": "7 passed"},
+    {"area": "Feast knowledge-time identity", "command": ".venv-platform/bin/python -m pytest tests/platform/pipelines/test_feast_known_from_ts_axis.py tests/platform/pipelines/test_feast_smoke.py -q", "result": "5 passed"},
+    {"area": "LangGraph pilot", "command": ".venv-platform/bin/python -m pytest tests/platform/agents/test_langgraph_runtime.py -q", "result": "7 passed"},
+    {"area": "delivery contracts", "command": ".venv-platform/bin/python -m pytest tests/platform/verification/test_delivery_contract.py -q", "result": "8 passed"},
+    {"area": "protected dependency/auth failure", "command": ".venv-platform/bin/python -m pytest tests/platform/apps/test_feature_api_and_mcp.py tests/platform/apps/test_drift_api_and_mcp.py tests/platform/test_platform_e2e_runner.py -q", "result": "19 passed"},
+    {"area": "platform contract regression", "command": ".venv-platform/bin/python -m pytest tests/platform/agents tests/platform/pipelines/test_feast_definitions_ttl.py tests/platform/pipelines/test_feast_known_from_ts_axis.py tests/platform/pipelines/test_feast_smoke.py tests/platform/test_lakehouse_cluster_parity.py tests/platform/test_platform_e2e_runner.py tests/platform/requirements/test_llm_ac_12_cicd.py -q", "result": "50 passed; warnings only"},
+    {"area": "repository quality gates", "command": ".venv/bin/python scripts/run_lakehouse_quality_gates.py", "result": "384 passed, 2 xfailed; Ruff, Black, Compose, naming, rubric, architecture and evidence audits passed"},
+    {"area": "real-source Gold pipeline", "command": "CLUSTER_SOURCE_MODE=online CLUSTER_TICKERS=VNM .venv/bin/python scripts/run_cluster_pipeline.py produce-gold", "artifact": "docs/evidence/live/real-source-cluster-vnm-20260915.json", "result": "local VCI/KBS input; 1 real company, 4 real financial periods, 6 explicitly synthetic tier-cap backfill periods, 499 market rows, Gold/feature outputs written to local MinIO"},
+    {"area": "real-source Feast materialization", "command": "PLATFORM_VERIFY_TICKER=VNM .venv-platform/bin/python scripts/run_cluster_pipeline.py materialize-risk", "artifact": "docs/evidence/live/real-source-cluster-vnm-20260915.json", "result": "company_risk_features materialized to local Redis; offline/online vintage identity verified for VNM at known_from_ts 2026-09-15T03:16:44+00:00; registry revision 1f9f619f68c6fd3d"}
+  ],
+  "verified_external_read_only": [
+    {"area": "vnstock VCI", "artifact": "docs/evidence/live/real-source-vci-vnm-20260915.json", "result": "VNM balance sheet returned 122 rows and four live quarter columns"},
+    {"area": "vnstock KBS", "artifact": "docs/evidence/live/real-source-vci-vnm-20260915.json", "result": "VNM quote history returned 171 rows; adapter output is VND"}
+  ],
+  "operator_actions": [
+    {"area": "GCP node-pool scale-down", "result": "Reversible resize request for fsds-evidence/primary-pool to zero nodes is still RECONCILING; no cluster deletion requested"}
+  ],
+  "not_verified": [
+    "provider-backed model execution and parity",
+    "PostgreSQL LangGraph checkpointer restart",
+    "fresh cluster Feast materialization after current code",
+    "live Jenkins controller and ephemeral-agent lifecycle",
+    "protected HTTPS/edge/rate-limit path",
+    "real-source end-to-end request through the production plane"
+  ],
+  "operator_gate": "No bounded GCP resource window was authorized; existing GKE node remains an operator-managed residual resource."
+}
