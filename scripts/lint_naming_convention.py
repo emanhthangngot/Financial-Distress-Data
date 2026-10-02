@@ -1,5 +1,5 @@
 """
-Naming convention linter (plan phase-02-data-model.md, Step 7 / F9, F10, F18).
+Naming convention linter (naming-convention contract, Step 7 / F9, F10, F18).
 
 Parses the SQL DDL files that are the source of truth for table and column
 names (``sql/schema_evidence.sql`` for bronze/silver/gold, ``sql/init_ops.sql``

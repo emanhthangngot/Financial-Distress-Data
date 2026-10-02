@@ -1,4 +1,4 @@
-"""Scheduled platform .rift monitoring and retrain trigger wrapper."""
+"""Scheduled platform drift monitoring and retrain trigger wrapper."""
 
 from __future__ import annotations
 

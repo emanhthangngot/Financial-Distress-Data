@@ -34,8 +34,8 @@ The repository currently implements a local-first Stage 1 data engineering found
 - PostgreSQL metadata DDL in `sql/init_project_metadata.sql`.
 - Runtime evidence job wrappers in `src/jobs/`, local IO helpers in `src/io/`,
   DuckDB validation runner in `src/catalog/duckdb_runner.py`, and the primary
-  Airflow evidence DAGs `dags/stage1_local_evidence_pipeline.py` and
-  `dags/stage1_real_e2e_pipeline.py`.
+  Airflow evidence DAGs `dags/lakehouse_local_evidence_pipeline.py` and
+  `dags/lakehouse_real_e2e_pipeline.py`.
 - Runtime audit helpers in `scripts/`, including the real E2E runner, DQ failure
   probe, evidence summary auditor, service readiness check, quality gate runner,
   and reviewer-facing readiness report.
@@ -826,7 +826,7 @@ Current behavior:
 - DAGs are import-safe when Airflow is not installed.
 - DAGs use `PythonOperator` if Airflow imports are available.
 - DAG tasks call fixture-backed collectors or smoke helper functions.
-- `stage1_real_e2e_pipeline` executes the the platform local runtime path: fixture
+- `lakehouse_real_e2e_pipeline` executes the the platform local runtime path: fixture
   Bronze materialization, Kafka produce/consume, Spark Bronze/Silver/Gold,
   DQ gate, PostgreSQL metadata writes, DuckDB validation, and MinIO evidence
   publishing.
@@ -865,7 +865,7 @@ Useful commands:
 cp .env.example .env
 docker compose config
 docker compose up -d
-.venv/bin/python scripts/check_stage1_services.py
+.venv/bin/python scripts/check_lakehouse_services.py
 ```
 
 Runtime note:
@@ -879,10 +879,10 @@ audit summary, while enterprise production claims remain out of scope.
 Current local quality commands:
 
 ```bash
-.venv/bin/python scripts/run_stage1_quality_gates.py
-.venv/bin/python scripts/run_stage1_quality_gates.py --include-services  # after docker compose up -d
-.venv/bin/python scripts/stage1_readiness_report.py
-.venv/bin/python scripts/stage1_readiness_report.py --include-services --include-quality-gates  # after docker compose up -d
+.venv/bin/python scripts/run_lakehouse_quality_gates.py
+.venv/bin/python scripts/run_lakehouse_quality_gates.py --include-services  # after docker compose up -d
+.venv/bin/python scripts/lakehouse_readiness_report.py
+.venv/bin/python scripts/lakehouse_readiness_report.py --include-services --include-quality-gates  # after docker compose up -d
 ```
 
 The one-shot gate runs:
@@ -892,7 +892,7 @@ The one-shot gate runs:
 .venv/bin/python -m ruff check src dags tests scripts
 .venv/bin/python -m black --check src dags tests scripts
 docker compose config
-.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
+.venv/bin/python scripts/audit_lakehouse_evidence.py docs/evidence --check
 ```
 
 The GitHub Actions workflow runs the same one-shot gate for `main` and `dev`
@@ -918,11 +918,11 @@ tests/test_streaming.py
 Acceptance criteria:
 
 ```text
-Developer -> runs scripts/run_stage1_quality_gates.py -> PyTest, Ruff, Black, Docker Compose config, and evidence audit gates pass.
-Developer -> runs scripts/run_stage1_quality_gates.py --include-services after docker compose up -d -> quality gates and service readiness checks pass.
-Developer -> runs scripts/check_stage1_services.py after docker compose up -d -> required local services, Kafka topics, MinIO bucket, PostgreSQL readiness, and Airflow imports pass.
-Reviewer -> runs scripts/stage1_readiness_report.py -> receives a pass/fail summary that uses checked-in evidence and explicitly labels the project as production-inspired, not production-ready.
-Reviewer -> runs scripts/stage1_readiness_report.py --include-services --include-quality-gates after docker compose up -d -> receives a combined evidence, service readiness, and quality gate report.
+Developer -> runs scripts/run_lakehouse_quality_gates.py -> PyTest, Ruff, Black, Docker Compose config, and evidence audit gates pass.
+Developer -> runs scripts/run_lakehouse_quality_gates.py --include-services after docker compose up -d -> quality gates and service readiness checks pass.
+Developer -> runs scripts/check_lakehouse_services.py after docker compose up -d -> required local services, Kafka topics, MinIO bucket, PostgreSQL readiness, and Airflow imports pass.
+Reviewer -> runs scripts/lakehouse_readiness_report.py -> receives a pass/fail summary that uses checked-in evidence and explicitly labels the project as production-inspired, not production-ready.
+Reviewer -> runs scripts/lakehouse_readiness_report.py --include-services --include-quality-gates after docker compose up -d -> receives a combined evidence, service readiness, and quality gate report.
 GitHub Actions -> runs on dev pull request or push -> executes the Stage 1 quality gate runner successfully.
 ```
 
@@ -936,17 +936,17 @@ docs/evidence/
 
 Expected evidence artifacts:
 
-- `scripts/run_stage1_quality_gates.py` output.
-- `scripts/check_stage1_services.py` output after the local stack starts.
+- `scripts/run_lakehouse_quality_gates.py` output.
+- `scripts/check_lakehouse_services.py` output after the local stack starts.
 - PostgreSQL table screenshots or query exports for `ops`.
 - MinIO bucket screenshots showing Bronze/Silver/Gold paths after data is written.
 - DuckDB SQL query outputs against Gold views.
 - DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 - Airflow DAG screenshots if the local Airflow services are run.
-- Machine-readable audit summary from `scripts/audit_stage1_evidence.py`.
-- Reviewer-facing readiness report from `scripts/stage1_readiness_report.py`,
+- Machine-readable audit summary from `scripts/audit_lakehouse_evidence.py`.
+- Reviewer-facing readiness report from `scripts/lakehouse_readiness_report.py`,
   optionally exported as JSON with `--output`.
-- DQ failure probe artifact from `scripts/run_stage1_dq_failure_probe.py`.
+- DQ failure probe artifact from `scripts/run_lakehouse_dq_failure_probe.py`.
 
 Evidence should distinguish executed local runtime proof from design-only or
 out-of-scope production capabilities.
@@ -984,19 +984,19 @@ foundation with runtime evidence, not as enterprise-ready production.
 
 Recommended evidence refresh steps:
 
-1. Run quality gates locally with `scripts/run_stage1_quality_gates.py`.
+1. Run quality gates locally with `scripts/run_lakehouse_quality_gates.py`.
 2. Start the full local Docker stack with `docker compose up -d`.
-3. Run `scripts/check_stage1_services.py` to confirm PostgreSQL, MinIO, Kafka,
+3. Run `scripts/check_lakehouse_services.py` to confirm PostgreSQL, MinIO, Kafka,
    and Airflow are ready.
 4. Confirm Airflow DAG import errors are empty.
-5. Run `scripts/run_stage1_real_e2e.py` with a unique execution date and an
+5. Run `scripts/run_lakehouse_real_e2e.py` with a unique execution date and an
    evidence export directory.
-6. Run `scripts/run_stage1_dq_failure_probe.py` to prove critical DQ halt
+6. Run `scripts/run_lakehouse_dq_failure_probe.py` to prove critical DQ halt
    semantics are persisted before failure.
-7. Run `scripts/audit_stage1_evidence.py` against the E2E evidence directory.
-8. Run `scripts/audit_stage1_evidence.py docs/evidence --check` after copying
+7. Run `scripts/audit_lakehouse_evidence.py` against the E2E evidence directory.
+8. Run `scripts/audit_lakehouse_evidence.py docs/evidence --check` after copying
    the export artifacts into the submission evidence package.
-9. Run `scripts/stage1_readiness_report.py --json --output /tmp/stage1_readiness_report.json`
+9. Run `scripts/lakehouse_readiness_report.py --json --output /tmp/stage1_readiness_report.json`
    for the final reviewer-facing the platform readiness summary.
 10. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 11. Keep evidence claims tied only to artifacts that were produced by an actual

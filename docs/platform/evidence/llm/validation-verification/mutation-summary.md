@@ -9,7 +9,7 @@
 - No tests: 0
 - Targets: src/llm/rag/chunking.py
 - Mutant filters: none — full-module scope via `llm.rag.chunking.*`
-- Command: `python scripts/run_phase5_mutation_gate.py`
+- Command: `python scripts/run_production_mutation_gate.py`
 - Captured: 2026-08-14 (re-verified; canonical run 2026-08-10 recorded the
   identical 86.11%/62/9/1/72 — deterministic, no drift)
 

@@ -1,7 +1,7 @@
 """Outbox worker lease/fencing integration tests.
 
 Runs against the same ephemeral real Postgres as the RLS suite
-(`conftest.py::phase2_conn`). Unlike `test_rbac_rls.py`, these tests commit
+(`conftest.py::production_conn`). Unlike `test_rbac_rls.py`, these tests commit
 their writes instead of rolling back — the lease/fencing guarantees only mean
 something across separate, persisted claims, which is exactly what two
 independent worker processes would do.

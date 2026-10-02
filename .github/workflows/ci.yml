@@ -27,7 +27,7 @@ jobs:
           pip install -e .
           cd /tmp && python -c "import src.ml.contracts; print('ok')"
       - name: Install Postgres server binaries
-        # The Phase 2 RLS suite spins up its own ephemeral cluster with
+        # The PostgreSQL RLS suite spins up its own ephemeral cluster with
         # initdb/pg_ctl. Without these on PATH the suite skips itself, which
         # would leave the authorization rules unverified everywhere.
         run: |

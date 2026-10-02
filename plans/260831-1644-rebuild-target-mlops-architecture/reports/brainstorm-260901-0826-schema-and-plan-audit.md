@@ -4,7 +4,7 @@ date: 2026-09-01
 type: brainstorm
 status: advisory
 supervisor: kongming
-scope: plans/260831-1644-rebuild-target-mlops-architecture + platform .chema
+scope: plans/260831-1644-rebuild-target-mlops-architecture + platform schema
 ---
 
 # Audit toàn diện — plan rebuild và data model Phase 1
@@ -64,7 +64,7 @@ Audit C19/C20 trong `debate-audit.md:25-26` để UNPROVEN — nay đã **PROVEN
 ### 2.2 Mâu thuẫn nội tại: G-2 vs N-5
 
 - `plan.md:71` G-2 — "Clean cutover — ... **one table format (Iceberg)**; zero shims"
-- `plan.md:87` N-5 — "No changes to platform .ronze/Silver/Gold Parquet semantics (**Iceberg runs parallel**)"
+- `plan.md:87` N-5 — "No changes to platform Bronze/Silver/Gold Parquet semantics (**Iceberg runs parallel**)"
 
 Một đường Parquet chạy song song **chính là** một shim. Hai điều khoản này không thể cùng đúng.
 `phase-07-web-analytics.md:50` chỉ gỡ *Gold* Parquet reader — Bronze/Silver Parquet tồn tại vĩnh

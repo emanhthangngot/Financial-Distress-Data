@@ -2,8 +2,8 @@
 platform quality gates runner.
 
 Runs the full pre-merge quality gate suite (ruff, black, pytest,
-``docker compose config``, stage 1 evidence audit) and surfaces the combined
-result. Mirrors the CI ``stage-1-ci`` workflow.
+``docker compose config``, lakehouse evidence audit) and surfaces the combined
+result. Mirrors the production CI workflow.
 """
 
 from __future__ import annotations

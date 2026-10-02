@@ -31,12 +31,12 @@ at empty placeholder files, so their evidence would cite a comment.
 ## Requirements
 
 - Functional: `--require-executed` is satisfiable in principle; `artifact_path`
-  and `rubric_id` collisions resolved; a platform .ependency manifest exists and
+  and `rubric_id` collisions resolved; a platform dependency manifest exists and
   CI installs it; sealed-secrets actually runs; the Terraform row's declared
   artifact is the real entrypoint; NetworkPolicy is enforced; every GitOps path
   phases 2-5 write to has an Argo Application watching it.
 - Non-functional: `.venv` (Phase 1) is not mutated — proven by re-running the
-  platform .ate; the cluster returns to zero nodes and the evidence VM stops when
+  platform gate; the cluster returns to zero nodes and the evidence VM stops when
   the session ends.
 
 ## Architecture
@@ -150,7 +150,7 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
    phase-04 rows to `executed`, regenerating the CSV and tests, and running
    `--strict --require-executed --track LLM --accept-design-only <the 53 not yet
    done>` — it must pass on the seven.
-3. Create the platform .ependency manifest with `fastapi`, `feast`, `hypothesis`,
+3. Create the platform dependency manifest with `fastapi`, `feast`, `hypothesis`,
    `mutmut`, `locust`, `mcp` and the rest; install into **`.venv-phase2` only**;
    wire it into `phase2-ci.yaml`. Then run
    `.venv/bin/python scripts/run_stage1_quality_gates.py` to prove `.venv` is
@@ -186,7 +186,7 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
 - [x] Maintainer -> stamps a test evidence file and commits -> the ancestor-SHA rule accepts it, and a tampered non-ancestor SHA is rejected. (`test_ancestor_sha_allows_only_evidence_sha_delta`, `test_nonancestor_sha_is_rejected` in `tests/platform/test_rubric_matrix.py`)
 - [x] Maintainer -> runs the audit against an evidence file containing a fake `ghp_` token -> the secret denylist fails it. (`test_secret_denylist_rejects_adversarial_forms`)
 - [x] Test runner -> regenerates the requirement tests -> each row's test asserts something behavioral, and a placeholder-comment artifact fails the non-placeholder check. (`test_generated_contract_rejects_placeholder_artifacts` + friends; 72 requirement tests pass)
-- [x] platform .aintainer -> runs the Stage 1 quality gate after the phase-2 install -> passes, proving `.venv` untouched. (`.venv/bin/python -m pytest tests -m "not slow"` → 658 passed; ruff/black clean)
+- [x] platform maintainer -> runs the platform quality gate after the phase-2 install -> passes, proving `.venv` untouched. (`.venv/bin/python -m pytest tests -m "not slow"` → 658 passed; ruff/black clean)
 - [x] Operator -> deploys a deny-all NetworkPolicy in a scratch namespace -> a pod inside it cannot reach the internet. (`platform/security/default-deny-networkpolicy.yaml`, GitOps-tracked via `platform-security` Argo app, live in `networkpolicy-negative-test` ns; probe pod log: `curl: (28) Resolving timed out` → `EGRESS_BLOCKED`)
 - [x] Operator -> reads the capacity budget -> knows the vCPU/GiB ceiling for phases 2-5 and whether a second node is available. (`docs/submission/cost.md`: 8+2=10/12 with VM up, 8+4=12/12 only after VM stop, secondary pool must return to 0 before VM restart)
 - [x] Platform operator -> runs `terraform plan` with the cluster up -> gets "No changes", captured with `terraform output`. (`terraform/envs/evidence` init + plan against live cluster: "No changes. Your infrastructure matches the configuration." — `docs/platform/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`, flipped to `executed`)

@@ -47,7 +47,7 @@ deployment surface — emit stays a documented no-op until that lands.
 
 ## Overview
 
-Extend the verified platform .utputs without changing them. Build the RAG corpus
+Extend the verified platform outputs without changing them. Build the RAG corpus
 and PGVector store, stand up Feast with an online store the MCP tools read and
 an offline store defined correctly for the deferred ML retrofit, ship the two
 stream-feature jobs the CI/CD rows require, and improve the data generator to
@@ -112,14 +112,14 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
    offline store, push to the online store — because the rubric scores them as
    two distinct CI/CD rows.
 6. Build thin Airflow wrappers under `dags/phase2/` with zero import-time side
-   effects. All business logic stays under `src/`. No platform .AG is renamed or
+   effects. All business logic stays under `src/`. No platform DAG is renamed or
    modified.
 7. Add retries, checkpoints, dead-letter/quarantine, source rate limits, content
    deduplication, and PII/licensing checks. These are the governance row.
 8. Add one GitHub Actions workflow per pipeline: lint, test, build, push an
    immutable digest, open the GitOps digest PR.
-9. Emit platform .ineage into the existing DataHub instance for every input,
-   step, feature view, vector set and output. platform .ineage evidence is
+9. Emit platform lineage into the existing DataHub instance for every input,
+   step, feature view, vector set and output. platform lineage evidence is
    retained untouched.
 
 ## Validation
@@ -129,7 +129,7 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
 - Re-run each DAG and job twice; prove stable counts and hashes, and no
   duplicate online keys or chunks.
 - Compare generated drift against the configured direction and threshold.
-- `scripts/run_stage1_quality_gates.py` still passes — platform .s unchanged.
+- `scripts/run_stage1_quality_gates.py` still passes — platform is unchanged.
 
 ## Success Criteria
 
@@ -139,7 +139,7 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
 - [x] Data generator -> runs with a drift scenario configuration -> produces the configured drift direction and a before/after report with a deterministic seed.
 - [x] Reviewer -> inspects any RAG chunk -> finds source URI, company, report date, document and content hashes, parser version, embedding model and version, created time, and access class.
 - [x] Feature consumer -> queries the online store by `ticker` -> receives values whose TTL rationale is documented in the registry definition.
-- [x] platform .aintainer -> runs the Stage 1 quality gates -> receives the same outputs and contracts as before platform .dapters were added.
+- [x] platform maintainer -> runs the platform quality gates -> receives the same outputs and contracts as before platform adapters were added.
 
 ## Risk Assessment
 
@@ -149,7 +149,7 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
   now and cost three days in the phase-05 retrofit. Not negotiable.
 - **RAG source availability.** Mitigated by caching fetched documents locally so
   evidence runs are reproducible without live network access.
-- Rollback: disable the platform .AGs and restore the previous Feast registry
+- Rollback: disable the platform DAGs and restore the previous Feast registry
   revision; platform datasets remain authoritative and intact.
 
 ## Scope Changes

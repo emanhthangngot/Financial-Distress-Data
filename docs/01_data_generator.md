@@ -37,8 +37,8 @@ Out of scope:
 | Micro-batch buffering | `src/streaming/kafka_to_bronze_consumer.py` |
 | Kafka producer wrapper | `src/streaming/kafka_producer.py` |
 | Runtime Kafka-to-Bronze job | `src/jobs/kafka_to_bronze_job.py` |
-| Local evidence payload | `src/jobs/stage1_evidence_job.py` |
-| Real local E2E DAG | `dags/stage1_real_e2e_pipeline.py` |
+| Local evidence payload | `src/jobs/lakehouse_evidence_job.py` |
+| Real local E2E DAG | `dags/lakehouse_real_e2e_pipeline.py` |
 
 ## Timestamp Conventions
 
@@ -283,7 +283,7 @@ VnstockFixtureAdapter
 
 ### Real Local E2E Mode
 
-Implemented by `dags/stage1_real_e2e_pipeline.py`.
+Implemented by `dags/lakehouse_real_e2e_pipeline.py`.
 
 ```text
 materialize_bronze_batch_objects
@@ -342,7 +342,7 @@ The fixture adapter is parameterised by an opt-in `GeneratorConfig` block at the
 
 ### Evidence artifact
 
-`stage1_evidence_job.build_generator_characteristics()` and `write_generator_characteristics_evidence(evidence_dir)` produce `docs/evidence/stage1_generator_characteristics.json`. The payload has six sections:
+`stage1_evidence_job.build_generator_characteristics()` and `write_generator_characteristics_evidence(evidence_dir)` produce `docs/evidence/lakehouse_generator_characteristics.json`. The payload has six sections:
 
 - `skew` — `top_ticker`, `top_share`, and per-ticker `ticker_counts`.
 - `cardinality` — distinct `tickers`, `industries`, `sectors`.

@@ -52,7 +52,7 @@ Jaeger trace).
 ## Verification
 
 - `.venv-platform/bin/python -m pytest tests/platform/requirements/ -k llm -q` — 31 passed.
-- `.venv-platform/bin/python scripts/audit_phase2_evidence.py --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 --gitops-root <gitops-repo> --lakehouse-base <sha>` — zero named cuts; 60/60 LLM rows and 100/100 points.
+- `.venv-platform/bin/python scripts/audit_platform_evidence.py --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 --gitops-root <gitops-repo> --lakehouse-base <sha>` — zero named cuts; 60/60 LLM rows and 100/100 points.
 - Live Prometheus target health, Grafana datasource-proxy query, Loki
   `query_range`, and Jaeger `api/traces/<id>` responses are reproduced verbatim
   in each linked evidence file.

@@ -1,4 +1,4 @@
-# platform .eport — release inputs and platform preflight
+# platform report — release inputs and platform preflight
 
 Status: in progress. Steps 4-9 done; steps 1-3 blocked on `gh auth login`
 (token was invalid at phase start — user is re-authenticating).

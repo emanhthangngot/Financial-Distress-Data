@@ -251,9 +251,8 @@ class EmbeddingVersion:
 class InMemoryEmbeddingRegistry(EmbeddingRegistryService):
     """Thread-safe registry adapter for local tests and evidence runs.
 
-    Production persistence is supplied by the phase-2 metadata service later;
-    this implementation makes the contract executable without smuggling a
-    database client into import-time code.
+    Production persistence is supplied by the metadata service. This contract
+    remains executable without smuggling a database client into import-time code.
     """
 
     _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")

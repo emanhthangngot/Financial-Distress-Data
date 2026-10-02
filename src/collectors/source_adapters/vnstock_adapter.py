@@ -9,19 +9,26 @@ Nothing in this module makes a network call at import time.
 
 from __future__ import annotations
 
+from src.collectors.fixture_config import load_fixture_config
 from src.collectors.source_adapters.vnstock_fixture_adapter import VnstockFixtureAdapter
 from src.collectors.source_adapters.vnstock_live_adapter import (
+    MetadataSink,
     VnstockLiveAdapter,
     VnstockUnavailableError,
 )
 
-__all__ = ["VnstockFixtureAdapter", "VnstockLiveAdapter", "VnstockUnavailableError"]
+__all__ = [
+    "VnstockFixtureAdapter",
+    "VnstockLiveAdapter",
+    "VnstockUnavailableError",
+    "build_source_adapter",
+]
 
 
 def build_source_adapter(
     *,
     source_mode: str | None = None,
-    metadata_sink: object | None = None,
+    metadata_sink: MetadataSink | None = None,
     run_id: str | None = None,
 ) -> VnstockFixtureAdapter | VnstockLiveAdapter:
     """Build the configured adapter without making a network call at import time.
@@ -43,9 +50,18 @@ def build_source_adapter(
             source_mode = raw_config.get("source_mode")
         except (FileNotFoundError, OSError, ValueError):
             source_mode = None
+
+    generator_config = load_fixture_config()
+    generator_adapter = VnstockFixtureAdapter(config=generator_config)
     mode = (source_mode or "fixture").lower()
     if mode in {"online", "live"}:
-        return VnstockLiveAdapter(metadata_sink=metadata_sink, run_id=run_id)
+        return VnstockLiveAdapter(
+            metadata_sink=metadata_sink,
+            run_id=run_id,
+            financial_statement_fallback=generator_adapter if generator_config.enabled else None,
+            # The repository generator's statement values are defined in whole đồng.
+            fallback_source_unit="VND" if generator_config.enabled else None,
+        )
     if mode == "fixture":
-        return VnstockFixtureAdapter()
+        return generator_adapter
     raise ValueError(f"Unsupported collector source mode: {mode!r}")

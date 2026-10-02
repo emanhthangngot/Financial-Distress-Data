@@ -1,7 +1,7 @@
 # Evidence — RAG Data Pipeline
 
 Proves `src/llm/rag_pipeline.py`'s `RagIngestionPipeline` (wrapped by
-`dags/platform/phase2_rag_ingest.py`'s `run_ingestion_task`): fetch -> chunk ->
+`dags/platform/rag_ingest.py`'s `run_ingestion_task`): fetch -> chunk ->
 dedupe -> govern -> embed -> write, run twice against a live PGVector store
 (`platform-postgres`, `docker compose --profile platform up platform-postgres`),
 proving reprocessing an unchanged document writes zero new rows.

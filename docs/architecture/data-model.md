@@ -3,11 +3,12 @@
 Unified data-model contract for the platform. This document is the single source of truth for bronze/silver/gold zones, the surrogate-key scheme, SCD2 semantics, and the feature/event_timestamp convention.
 
 
-> **Status (2026-09-10):** The target v2 contract in `AGENTS.md`, `plans/260831-1644-rebuild-target-mlops-architecture/phase-02-data-model.md`,
-> and the schema evidence DDL are authoritative for active work. The legacy “Full specification”
-> section below is retained as historical/as-built v1 reference and must not be copied into new
-> callers. Where the DDL still uses `TIMESTAMP`, the runtime migration to `TIMESTAMPTZ` remains
-> an open P2/P4 reconciliation item; the target type is `TIMESTAMPTZ`.
+> **Status (2026-09-10):** The target data-model contract in `AGENTS.md` and
+> the schema evidence DDL are authoritative for active work. The “Full
+> specification” section below is retained as historical/as-built reference
+> and must not be copied into new callers. Where the DDL still uses
+> `TIMESTAMP`, the runtime migration to `TIMESTAMPTZ` remains an open
+> reconciliation item; the target type is `TIMESTAMPTZ`.
 
 ## Naming Convention
 
@@ -93,7 +94,7 @@ retry tie-break and never the feature knowledge axis.
 ```bash
 python scripts/build_schema_evidence.py \
   --output warehouse.db \
-  --report docs/evidence/schema/phase8-schema-audit.json
+  --report docs/evidence/schema/schema-audit.json
 ```
 
 Open `warehouse.db` in DBeaver and inspect the `bronze`, `silver`, and `gold`
@@ -104,13 +105,16 @@ timestamp coverage, and SCD2 history.
 
 ## Full specification
 
-# 02 Schema Design - Stage 1 As-Built Contract
+# Schema Design — As-Built Contract
 
 ## Objective
 
 Stage 1 implements a local Medallion lakehouse using MinIO Parquet, PySpark local mode, PostgreSQL operational metadata, and DuckDB `httpfs` views. The schema is designed for coursework evidence first: every table, key, and quality rule must be inspectable locally through tests, Airflow, MinIO, PostgreSQL, DuckDB, or DBeaver.
 
-This document is constrained to Phase 1. It must not introduce AWS services, Kubernetes, ML training, drift monitoring, or online inference.
+This document covers the local Medallion lakehouse using MinIO Parquet, PySpark,
+PostgreSQL operational metadata, and DuckDB `httpfs` views. Production extensions
+must preserve the same inspectable contracts and may add cloud services without
+changing the data grain or temporal semantics.
 
 ## Storage And Runtime Layout
 
@@ -160,7 +164,7 @@ gold/feat_company_market_30d/
 gold/feat_company_news_30d/
 gold/feat_company_unified/
 
-evidence/stage1/run_id={run_id}/
+evidence/lakehouse/run_id={run_id}/
 ```
 
 Bronze is append-compatible and preserves source fields plus ingestion metadata. The current batch evidence writer uses deterministic `data.parquet` objects for small fixtures; the streaming path uses event date, event hour, and batch ID partitions.
@@ -197,7 +201,7 @@ Every `CREATE OR REPLACE VIEW` statement in
 
 ### MinIO Storage Paths
 
-Gold writes in `src/jobs/stage1_spark_lakehouse_job.py` go to one of
+Gold writes in `src/jobs/lakehouse_spark_lakehouse_job.py` go to one of
 the allowed layer folders under `gold/`:
 
 ```text
@@ -210,7 +214,7 @@ s3a://financial-distress-lake/gold/fact_distress_label/
 
 `distress_labels` is the only Gold folder that does not use the
 `dim_/fact_/obt_/feat_` family because it carries the label targets
-that the platform .L training reads; it is intentionally a single
+that the platform ML training reads; it is intentionally a single
 top-level folder so the labels are easy to discover and audit.
 
 ### Bronze And Silver Naming
@@ -590,7 +594,7 @@ Implemented checks:
 ```text
 src/quality/dq_checks.py
 src/quality/dq_runner.py
-src/jobs/stage1_dq_job.py
+src/jobs/lakehouse_dq_job.py
 configs/dq_rules.yaml
 ```
 
@@ -660,8 +664,8 @@ Implemented DAGs:
 
 | DAG | Purpose |
 |---|---|
-| `stage1_local_evidence_pipeline` | lightweight fixture-backed evidence materialization |
-| `stage1_real_e2e_pipeline` | local service E2E through Bronze, Kafka, Spark, DQ, PostgreSQL, DuckDB, and MinIO evidence |
+| `lakehouse_local_evidence_pipeline` | lightweight fixture-backed evidence materialization |
+| `lakehouse_real_e2e_pipeline` | local service E2E through Bronze, Kafka, Spark, DQ, PostgreSQL, DuckDB, and MinIO evidence |
 
 The real E2E DAG task chain is:
 
@@ -677,7 +681,7 @@ run_duckdb_validation_and_publish_evidence
 
 ## SLA And Backfill
 
-platform .argets:
+platform targets:
 
 - Bronze offline freshness: manual or daily
 - Bronze streaming freshness: <= 10 minutes
@@ -691,23 +695,23 @@ Backfill is manual for selected dates or quarters. Silver and Gold backfills mus
 
 Committed and generated evidence may include:
 
-- `docs/evidence/stage1_row_counts.json`
-- `docs/evidence/stage1_minio_objects.txt`
-- `docs/evidence/stage1_stream_batches.json`
-- `docs/evidence/stage1_real_postgres_summary.json`
-- `docs/evidence/stage1_real_duckdb_validation.json`
-- `docs/evidence/stage1_real_minio_objects.json`
-- `docs/evidence/stage1_real_kafka_offsets.json`
-- `docs/evidence/stage1_runtime_audit_summary.json`
-- MinIO evidence artifacts under `evidence/stage1/run_id=...`
+- `docs/evidence/lakehouse_row_counts.json`
+- `docs/evidence/lakehouse_minio_objects.txt`
+- `docs/evidence/lakehouse_stream_batches.json`
+- `docs/evidence/lakehouse_real_postgres_summary.json`
+- `docs/evidence/lakehouse_real_duckdb_validation.json`
+- `docs/evidence/lakehouse_real_minio_objects.json`
+- `docs/evidence/lakehouse_real_kafka_offsets.json`
+- `docs/evidence/lakehouse_runtime_audit_summary.json`
+- MinIO evidence artifacts under `evidence/lakehouse/run_id=...`
 - DBeaver screenshots or query exports from PostgreSQL and DuckDB when required for coursework submission
 
 Verification commands:
 
 ```text
 pytest
-python scripts/run_stage1_quality_gate.py
-python scripts/run_stage1_real_e2e.py
+python scripts/run_lakehouse_quality_gates.py
+python scripts/run_lakehouse_real_e2e.py
 ```
 
 Use the smallest command that verifies the changed behavior. Documentation-only changes can be verified by reviewing this file against the listed source artifacts.

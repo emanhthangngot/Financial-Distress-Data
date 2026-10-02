@@ -20,7 +20,7 @@ source `financial-distress-data@5a5a40a`.
 
 ### 1. Fetch → chunk → dedupe → govern → embed → write
 
-`RagIngestionPipeline` (wrapped by `dags/platform/phase2_rag_ingest.py`'s
+`RagIngestionPipeline` (wrapped by `dags/platform/rag_ingest.py`'s
 `run_ingestion_task`) is the single entrypoint for both a rerun-safety proof
 and a governance-enforcement proof.
 

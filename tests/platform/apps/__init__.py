@@ -1,1 +1,1 @@
-"""Tests for platform .astAPI and MCP applications."""
+"""Tests for platform FastAPI and MCP applications."""

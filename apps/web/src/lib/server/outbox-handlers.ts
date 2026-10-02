@@ -42,15 +42,14 @@ export function createOutboxHandlerRegistry(): OutboxHandlerRegistry {
 }
 
 /**
- * The state-advance-only placeholder. It contacts no infrastructure — the
- * GitOps dispatcher that actually drives EKS provisioning/destruction lands
- * in phase-03 of the unified plan (a separate control repo). Until then the
- * outbox event exists only to prove the lease/fencing/dispatch machinery
- * works end to end; the result string says so explicitly so an operator (and
- * the audit row it feeds) never mistakes this for a real provision.
+ * The state-advance-only placeholder. It contacts no infrastructure because
+ * the GitOps dispatcher that drives EKS provisioning/destruction lives in a
+ * separate control repository. The outbox event proves the lease, fencing, and
+ * dispatch machinery works end to end; the result string says so explicitly
+ * so operators and auditors never mistake this for a real provision.
  */
 export const noInfrastructureHandler: OutboxHandler = async (event) => {
-  return `state-advance-only: no infrastructure contacted (GitOps dispatch lands in parent phase-03); session already in ${event.target_state}`;
+  return `state-advance-only: no infrastructure contacted (GitOps dispatcher is external); session already in ${event.target_state}`;
 };
 
 /**

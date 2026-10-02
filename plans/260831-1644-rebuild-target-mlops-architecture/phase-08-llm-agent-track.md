@@ -105,8 +105,8 @@ agents-sandbox -> agentgateway-system -> (only) serving + api-serving
 
 ### Framework boundary — LangChain/LangGraph versus ours
 
-Grounded in official documentation read 2026-09-10 (URLs in §Sources). No version is asserted beyond
-floors the documentation itself states.
+Grounded in official documentation refreshed 2026-09-12 (URLs in §Sources). Package versions are
+resolved and locked during execution; framework defaults are never a production policy.
 
 | Concern | Owner | Grounding |
 |---|---|---|
@@ -120,7 +120,7 @@ floors the documentation itself states.
 | Graph topology, per-step state, resumability | LangGraph `StateGraph`; middleware hooks run inside the compiled graph and an agent can be a node in a larger graph | LangGraph *Overview*, *Middleware overview* |
 | Session state | LangGraph checkpointer — thread-scoped snapshots keyed by `thread_id` | *Persistence*, *Checkpointers* |
 | Cross-session memory | **Not enabled.** LangGraph Store is the cross-thread mechanism and is deliberately unused | *Persistence* (checkpointer vs store) |
-| Streaming projections | LangGraph/LangChain `updates` / `messages` / `custom` modes; event streaming is the newer typed API | *Streaming* |
+| Streaming projections | LangGraph/LangChain typed `stream_events(version="v3")` for new code; adapt messages/tool calls/custom updates into the existing external SSE contract without leaking provider-native chunks | *Streaming* |
 | MCP tools | **Ours.** `langchain.mcp.MCPAdapter` exists but is documented beta, needs `langchain[mcp]>=1.4.0`, warns once per process and may change. Our clients are typed and policy-bound (`src/agents/runtime.py:44-108`, `src/llm/contracts.py:141-199`), so they are wrapped as LangChain tools and keep their validation and tracing. `MCPAdapter` is adopted only if the pilot shows identical validation and trace emission | *MCP* |
 | Circuit breaking | **Ours.** The middleware catalogue documents retries, fallback and call limits — not a circuit breaker. `src/llm/providers.py` owns it; no framework claim is made | *Prebuilt middleware* (absence) |
 | Citation/abstention policy, governance, quarantine | **Ours** — `src/llm/citation_guard.py`, `data_governance.py`, `contracts.py` keep their role | in-repo |
@@ -187,16 +187,21 @@ The Groq column cites the ChatGroq model-feature table. An unfilled cell blocks 
 ### Session state, TTL and tenant isolation
 
 Checkpointers only; no LangGraph Store, so there is no automatic cross-session semantic memory.
+Use `AsyncPostgresSaver` from `langgraph-checkpoint-postgres` against the existing PostgreSQL
+service; `InMemorySaver` is local-only and never the multi-replica production configuration.
+Checkpoint schema setup is an explicit migration/init step, not request-time side effect.
 
 - P9 derives the principal server-side; `session_id` is not authorization. P8 scopes state by the
-  resolved principal/tenant, deriving `thread_id` from `(tenant, session)` within the documented
-  255-character bound.
-- LangGraph documentation states checkpoints accumulate and recommends pruning or a retention policy,
-  and that in-memory savers lose everything on restart. Multi-replica agents therefore use a
-  persistent checkpointer plus a **TTL sweep**; an expired session starts from empty state.
-- A valid `session_id` presented by another principal returns not-found, never another transcript.
-- Durability mode (`exit` / `async` / `sync`) is chosen and recorded with the checkpointer so a
-  mid-run replica restart has defined behaviour.
+  resolved principal/tenant, deriving an opaque `thread_id` from `(tenant, session)` within the
+  documented 255-character bound; raw identity never appears in public labels.
+- LangGraph checkpoints at super-step boundaries and requires `thread_id` for persistence. Select
+  `durability="sync"` for state transitions that must survive replica loss; benchmark the cost and
+  use a weaker mode only with a written loss boundary.
+- A TTL sweeper deletes expired checkpoint rows. An expired session starts from empty state; a valid
+  `session_id` presented by another principal returns not-found, never another transcript.
+- Restart one replica between graph nodes and prove the request resumes from the last durable
+  checkpoint or terminates with the documented incomplete response; it may not replay a completed
+  external side effect without its idempotency key.
 
 ### Authorization and knowledge-time cutoff precede retrieval
 
@@ -236,9 +241,11 @@ P9 owns the external API schema and streaming event semantics; P8 consumes and e
   the resolved `provider_id`, `model_id`, `prompt_revision`, `corpus_revision` that P8 records.
 - `company_id`/`company_key` are not reintroduced as a competing key; feature retrieval identity is
   P5's contract.
-- Responses keep the existing schema. P8 adds only citations with provenance, the provider that
-  answered, `degraded`/abstained markers, and the explicit unavailable and partial-stream forms.
-  Anything the current schema cannot carry is versioned deliberately with P9, not smuggled in.
+- Responses keep the existing schema. A single adapter maps typed LangGraph message/tool/custom
+  events to the current SSE event names, request ordering and terminal error envelope. P8 adds only
+  citations with provenance, the provider that answered, `degraded`/abstained markers, and explicit
+  unavailable/partial-stream forms. Anything the current schema cannot carry is versioned
+  deliberately with P9, not smuggled in.
 
 ### Evaluation baseline — P11 owns harness and corpus, P8 runs it
 
@@ -310,12 +317,13 @@ with P12.
 ### Dependency versions
 
 `pyproject.toml` currently has no LangChain, LangGraph or provider package (`pyproject.toml:28-29,
-46-50` hold `pgvector` and `psycopg` only). P8 owns these additions and resolves versions from a real
-resolution at execution time, recording the lock — no version is promised here. Documentation-stated
-floors to re-check against that lock: `langchain[mcp]>=1.4.0` for the beta `langchain.mcp` namespace,
-and the middleware notes `langchain>=1.3.14` (`ToolErrorMiddleware`), `>=1.3.16` (retry
-classification) and `>=1.3.2` (`PIIMiddleware` streamed-output redaction). Every added package must
-be free to use.
+46-50` hold `pgvector` and `psycopg` only). P8 owns additions for LangChain, LangGraph,
+`langgraph-checkpoint-postgres`, the selected provider integrations and any optional
+`langchain-postgres` adapter. Resolve them together against the existing Python/Postgres stack and
+record the exact lock; no version is promised from prose. Recheck documentation-stated floors,
+including the beta `langchain.mcp` namespace, but keep the current typed MCP wrappers unless the
+pilot proves the beta adapter preserves validation and traces. Every added package must be free to
+use, importable in the production image and covered by the rollback lock.
 
 ### Rollback and recovery
 
@@ -342,7 +350,8 @@ git-revert plus resync boundary.
 - Create: `src/llm/providers.py` — allowlist, pacing, circuit breaker, degraded marking, unavailable
   and partial-stream failure forms
 - Create: `src/agents/graph.py` (LangGraph coordinator graph), `src/agents/tools.py` (MCP clients as
-  LangChain tools, retaining validation and tracing)
+  LangChain tools), `src/agents/state.py` (principal-scoped `AsyncPostgresSaver` lifecycle/TTL), and
+  `src/agents/streaming.py` (typed graph-event to existing SSE adapter)
 - Modify: `src/agents/runtime.py` — keep the FastAPI surface; delete `OpenAICompatibleRenderer`
   (`:111-203`) and `decode_model_response` (`:206-239`) at cutover; remove the hardcoded bearer (`:132`)
 - Modify: `src/agents/coordinator.py` — hop/parallel policy replaced by graph edges and
@@ -362,21 +371,27 @@ git-revert plus resync boundary.
    upgrade is taken, capture the pre-upgrade export first.
 2. Build `src/llm/providers.py`: allowlist, ESO-sourced credentials, measured rate limits, bounded
    retries, circuit breaker, degraded marking; prove no paid route is reachable from configuration.
-3. Build the LangGraph parity pilot behind the unchanged API surface using P9's parity fixture;
-   score it against the current path on P11 development cases.
-4. Cut over remaining agents; delete the renderer and bespoke hop logic; remove every caller.
-5. Session state: scoped `thread_id`, persistent checkpointer, TTL sweep, cross-principal negative test.
-6. Retrieval: authorization and cutoff predicates at candidate-set construction; abstention path;
+3. Freeze the current external request/response/SSE and tool-call trace as P9's parity fixture; run
+   it through the existing path before introducing the graph.
+4. Build exactly one LangGraph coordinator path using wrapped typed MCP clients,
+   `AsyncPostgresSaver`, explicit call/tool limits and typed `stream_events(version="v3")`; score it
+   against the frozen fixture and P11 development cases.
+5. Exercise replica restart, session TTL, cross-principal denial, retry/circuit limits, pre-token
+   failure and mid-stream failure before changing production routing.
+6. Cut over the existing FastAPI entry point to the graph; migrate remaining agents and every
+   caller; delete the renderer, decoder and bespoke hop/parallel logic in the same change. No
+   feature flag, shim or alternate deployment survives.
+7. Retrieval: authorization and cutoff predicates at candidate-set construction; abstention path;
    citation resolution and provenance fields.
-7. Serving: ClusterIP gateway, 9:1 split under a 1000-request load test, mTLS and AuthorizationPolicy.
-8. Registry chain and global ModelConfig for all three agents; expose the registry UI Service (P9 routes it).
-9. Multi-replica autoscale plus warm/standby; capture cold and warm latency and the cost delta.
-10. Mesh injection and sandbox negative re-test.
-11. RAG pipeline with governance into pgvector, using P4-backed sources.
-12. Fix the benchmark (B-1/B-2/B-3) and run it on the deployed backend.
-13. Run the P11 harness against the integrated stack; publish the baseline artifact.
-14. Run the hybrid and reranker paired experiments on the development split; adopt or reject and record.
-15. Execute both notebooks and the end-to-end analyst path; dissolve `phase2-llm`.
+8. Serving: ClusterIP gateway, 9:1 split under a 1000-request load test, mTLS and AuthorizationPolicy.
+9. Registry chain and global ModelConfig for all three agents; expose the registry UI Service (P9 routes it).
+10. Multi-replica autoscale plus warm/standby; capture cold and warm latency and the cost delta.
+11. Mesh injection and sandbox negative re-test.
+12. RAG pipeline with governance into pgvector, using P4-backed sources.
+13. Fix the benchmark (B-1/B-2/B-3) and run it on the deployed backend.
+14. Run the P11 harness against the integrated stack; publish the baseline artifact.
+15. Run the hybrid and reranker paired experiments on the development split; adopt or reject and record.
+16. Execute both notebooks and the end-to-end analyst path; dissolve `phase2-llm`.
 
 Verification for code changes in this phase: run the specific regression first, then
 `.venv/bin/python scripts/run_lakehouse_quality_gates.py` before declaring the change done. Commands
@@ -428,10 +443,12 @@ Legacy identifiers `AC-P8-1` … `AC-P8-17` are preserved; §Legacy AC map recor
 - [ ] AC-P8-17 **(LLM 55)**: Operator -> runs one agent behind two allowlisted `ModelConfig` variants ->
       both receive traffic and are compared side by side on token cost, latency and answer quality,
       naming the winner and the metric
-- [ ] AC-P8-18 **(EXT-AGENT)**: Engineer -> runs the pilot and the current path over the P11 development
-      cases -> the pilot matches or beats citation validity and task success with unchanged request
-      contract, auth and telemetry; after cutover a grep for `OpenAICompatibleRenderer` and the bespoke
-      hop logic returns zero hits and no flag selects between two orchestrations
+- [ ] AC-P8-18 **(EXT-AGENT)**: Engineer -> runs the pilot and current path over the frozen P9
+      contract plus P11 development cases -> the pilot matches or beats citation validity and task
+      success, preserves auth/telemetry/request fields and external SSE event ordering, and adds no
+      request-time infrastructure beyond existing Postgres; after cutover a search for
+      `OpenAICompatibleRenderer`, the decoder and bespoke hop logic returns zero hits and no flag or
+      deployment selects between two orchestrations
 - [ ] AC-P8-19 **(EXT-COST)**: Engineer -> requests a `(provider_id, model_id)` outside the allowlist ->
       it is rejected before egress; configuration and code contain no paid provider route or paid-tier
       switch, and no literal bearer token remains in `src/agents/`
@@ -445,8 +462,10 @@ Legacy identifiers `AC-P8-1` … `AC-P8-17` are preserved; §Legacy AC map recor
       terminal error event with the same `request_id`, the transcript is marked incomplete, and no
       fallback continuation is appended; a failure before the first token yields the normal error
       envelope with no partial text
-- [ ] AC-P8-23: Engineer -> replays a `session_id` after its TTL -> state starts empty; the same
-      `session_id` presented by another principal returns not-found; no cross-thread store is configured
+- [ ] AC-P8-23: Engineer -> replays a `session_id` after its TTL and from another principal, then
+      restarts a graph replica mid-run -> expired state starts empty, cross-principal access returns
+      not-found, and the run resumes from the last durable checkpoint or emits the documented
+      incomplete terminal state; no cross-thread store is configured
 - [ ] AC-P8-24: Engineer -> issues a request whose `cutoff_ts` precedes a known document -> the document
       is absent from the candidate set, not filtered from results; an unauthorized `access_class` yields
       zero candidates; removing either predicate makes the test fail
@@ -472,6 +491,7 @@ Legacy identifiers `AC-P8-1` … `AC-P8-17` are preserved; §Legacy AC map recor
 - [ ] AC-P8-31 **(EXT-FT interface)**: P7 -> applies its fine-tuning eligibility gate -> it reads this
       phase's baseline artifact and the declared serve-compat conditions; no P8 AC depends on a trained
       adapter existing, and a STOP outcome leaves every P8 row unaffected
+- [ ] AC-P8-32: Migration operator -> initializes and rolls back the Postgres checkpointer schema -> production replicas use `AsyncPostgresSaver`, setup is repeatable outside request handling, TTL removes expired threads, and rollback never exposes or silently replays another principal's state.
 
 ### Legacy AC map
 
@@ -543,9 +563,7 @@ and re-run; a mislabelled metric is worse than a missing one.
 rows keep `validation_command` and `behavioral_assertion`; capture LLM rows first. Response: restore
 implementation from history — the code was never deleted, only the evidence.
 
-## Sources
-
-Official documentation read 2026-09-10; the older `python.langchain.com` and
+Official documentation refreshed 2026-09-12; the older `python.langchain.com` and
 `langchain-ai.github.io/langgraph` paths redirect to these canonical URLs.
 
 - LangChain overview (`create_agent`, built on LangGraph) — `https://docs.langchain.com/oss/python/langchain/overview`
@@ -557,12 +575,14 @@ Official documentation read 2026-09-10; the older `python.langchain.com` and
   `https://docs.langchain.com/oss/python/langchain/middleware/built-in`
 - LangChain *MCP* (`MCPAdapter`, beta namespace, `langchain[mcp]>=1.4.0`, transports) —
   `https://docs.langchain.com/oss/python/langchain/mcp`
-- LangChain *Streaming* (`updates`/`messages`/`custom`, event streaming) —
+- LangChain *Streaming* (`stream_events(version="v3")` recommended for new applications; typed
+  messages/tool calls/custom projections, plus legacy `updates`/`messages`/`custom` modes) —
   `https://docs.langchain.com/oss/python/langchain/streaming`
 - LangGraph *Persistence* (checkpointer vs store, in-memory savers lost on restart, unbounded
   checkpoint growth, `thread_id` bound) — `https://docs.langchain.com/oss/python/langgraph/persistence`
-- LangGraph *Checkpointers* (threads, super-step checkpoints, durability modes) —
-  `https://docs.langchain.com/oss/python/langgraph/checkpointers`
+- LangGraph *Checkpointers* (threads, super-step checkpoints, pending-write recovery and durability
+  modes) — `https://docs.langchain.com/oss/python/langgraph/checkpointers`
+  and `https://reference.langchain.com/python/langgraph.checkpoint.postgres`
 - ChatGroq integration (`langchain-groq`, `GROQ_API_KEY`, feature table: tool calling, structured
   output, token-level streaming, token usage yes; audio/video input no) —
   `https://docs.langchain.com/oss/python/integrations/chat/groq`

@@ -1,0 +1,79 @@
+{
+  "captured_at_utc": "2026-09-15T03:16:46.434622+00:00",
+  "failed_records": [
+    {
+      "dataset_name": "raw_financial_statements",
+      "failure_reason": "tier_period_cap",
+      "raw_payload": {
+        "available_periods": [
+          "2025Q3",
+          "2025Q4",
+          "2026Q1",
+          "2026Q2"
+        ],
+        "missing_periods": [
+          "2024Q1",
+          "2024Q2",
+          "2024Q3",
+          "2024Q4",
+          "2025Q1",
+          "2025Q2"
+        ],
+        "requested_periods": [
+          "2024Q1",
+          "2024Q2",
+          "2024Q3",
+          "2024Q4",
+          "2025Q1",
+          "2025Q2",
+          "2025Q3",
+          "2025Q4"
+        ],
+        "ticker": "VNM"
+      }
+    }
+  ],
+  "real_financial_periods": [
+    "2025Q3",
+    "2025Q4",
+    "2026Q1",
+    "2026Q2"
+  ],
+  "row_counts": {
+    "adapter_failed_records": 1,
+    "bronze_companies": 1,
+    "bronze_financial_statements": 10,
+    "bronze_market_prices": 499,
+    "dq_failed_records": 0,
+    "failed_records": 0,
+    "gold_dim_company": 1,
+    "gold_dim_date": 988,
+    "gold_distress_labels": 10,
+    "gold_fact_financial_statement": 10,
+    "gold_fact_market_alert": 1,
+    "gold_fact_market_price": 499,
+    "gold_fact_news_sentiment": 2,
+    "gold_feat_company_financial_4q": 10,
+    "gold_feat_company_market_30d": 499,
+    "gold_feat_company_news_30d": 1,
+    "gold_feat_company_unified": 10,
+    "gold_obt_company_quarter_risk": 10,
+    "silver_companies": 1,
+    "silver_financial_statements": 10,
+    "silver_market_prices": 499
+  },
+  "run_id": "real-local-20260915T000000Z",
+  "source_mode": "online",
+  "source_request_count": 3,
+  "synthetic_financial_periods": [
+    "2024Q1",
+    "2024Q2",
+    "2024Q3",
+    "2024Q4",
+    "2025Q1",
+    "2025Q2"
+  ],
+  "tickers": [
+    "VNM"
+  ]
+}

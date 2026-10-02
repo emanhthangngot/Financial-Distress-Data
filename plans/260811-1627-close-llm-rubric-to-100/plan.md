@@ -27,7 +27,7 @@ PATH="$PWD/.venv-phase2/bin:$PATH" .venv-phase2/bin/python scripts/audit_phase2_
   --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 \
   --gitops-root ~/Studying/FSDS/financial-distress-gitops \
   --accept-design-only "<the 13 rows below>"
-# → "platform .ubric matrix is complete and consistent."
+# → "platform rubric matrix is complete and consistent."
 ```
 
 That run requires a **clean worktree**: an uncommitted sibling plan or an
@@ -74,7 +74,7 @@ thành công` and `có thể coi trên các dashboard`, i.e. the routed, deploye
 | LLM points executed | **79 / 100**, 47 rows | `docs/platform/rubric-matrix.csv` |
 | Rows still `design_only` | 13 (Routing & Gateway 7 rows / 13 pts, Observability 6 rows / 8 pts) | same |
 | Full strict gate on the 79 | **passes**, 47 `validation_command` subprocesses included | audit run above |
-| platform .o-regression gate | `.venv/bin/python scripts/run_stage1_quality_gates.py` → exit 0, `status: pass` | run 2026-08-11 |
+| platform no-regression gate | `.venv/bin/python scripts/run_stage1_quality_gates.py` → exit 0, `status: pass` | run 2026-08-11 |
 | Source HEAD / GitOps HEAD | `d72f15f` / `921bdc1`, both worktrees clean; evidence `source_sha` `6dc70ba` is an ancestor with only SHA lines since | `git`, auditor ancestor rule |
 | `PHASE1_BASE_SHA` | **never recorded anywhere**; only `ddbcbe7bd41ae4883954b8a247efdc67c7329078` passes the protected-path diff | `grep`, empirical audit runs |
 | GitOps gateway assets | `platform/ingress/{f5-nginx-values,routes-ui,routes-viewers,duckdns-certificate,basic-auth-sealed-secret}.yaml` all present | gitops worktree |
@@ -138,7 +138,7 @@ Copy each ID from `docs/platform/rubric-matrix.csv`; they truncate silently.
 | 1 | 13 rows → `executed` with live-cluster proof, each at an `artifact_path` that can carry its own behavioral assertion | P0 |
 | 2 | Strict two-repo audit exits 0 with **no** `--accept-design-only` for the LLM track | P0 |
 | 3 | Freeze the submission: `PHASE1_BASE_SHA` recorded, SHAs stamped, docs truthful, mock grade written | P0 |
-| 4 | platform .ate stays green; `.venv` never mutated; no platform .AG or pipeline touched | P0 |
+| 4 | platform gate stays green; `.venv` never mutated; no platform DAG or pipeline touched | P0 |
 | 5 | One cluster window; end at the exact hibernation invariant; cost ledger finalized | P1 |
 
 ## Phases
@@ -217,7 +217,7 @@ on the same ingress being up.
 - [ ] Grader -> opens the scrubbed GitOps mirror at a referenced commit -> reaches the manifests, and finds no tfstate, tfvars, inventory or key material in it.
 - [ ] Reviewer -> cross-checks the six correlated evidence files -> they cite one identical Jaeger trace ID, and the gateway files cite the served certificate's serial and `notBefore`.
 - [ ] Maintainer -> reads `docs/platform/evidence-contract.md` -> finds the frozen 40-hex `PHASE1_BASE_SHA` recorded, not a placeholder.
-- [ ] platform .aintainer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> exit 0, `.venv` unmutated.
+- [ ] platform maintainer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> exit 0, `.venv` unmutated.
 - [ ] Reviewer -> opens the mock-grade report -> finds a row-by-row grade against the canonical CSV (not against this plan) totalling the claimed score.
 - [ ] Cost owner -> reads `docs/submission/cost.md` -> finds per-session credit deltas including the evidence VM, a final balance, and confirmation the trial billing account was never upgraded.
 - [ ] Cost owner -> runs `make gcp-status` -> primary pool 0 nodes, secondary pool 0 nodes, evidence VM stopped.
@@ -226,10 +226,10 @@ on the same ingress being up.
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Node capacity: the full transitive stack (observability + data plane + model plane + agents + MCP + web) does not fit the primary node | Observability and metric rows uncapturable | platform .erives the budget from `helm template` output, not hand sums, and names what to disable (Loki `chunksCache`/`resultsCache`) and what to scale to zero; the secondary pool is raised only after the evidence VM is stopped, using a target added in phase 2 |
-| Certificate never issues (HTTP-01 solver cannot own a host already owned by the mergeable master) | All 7 gateway rows die | platform .ommits an issuance strategy that avoids the conflict (acme minion, DNS-01, or pre-issued) and phase 4 verifies `Ready=True` before any capture; staging-vs-prod is irrelevant to this failure |
+| Node capacity: the full transitive stack (observability + data plane + model plane + agents + MCP + web) does not fit the primary node | Observability and metric rows uncapturable | platform derives the budget from `helm template` output, not hand sums, and names what to disable (Loki `chunksCache`/`resultsCache`) and what to scale to zero; the secondary pool is raised only after the evidence VM is stopped, using a target added in phase 2 |
+| Certificate never issues (HTTP-01 solver cannot own a host already owned by the mergeable master) | All 7 gateway rows die | platform commits an issuance strategy that avoids the conflict (acme minion, DNS-01, or pre-issued) and phase 4 verifies `Ready=True` before any capture; staging-vs-prod is irrelevant to this failure |
 | A ciphertext sealed for the wrong namespace or a missed placeholder | 503 instead of 401; Grafana never ready | Phase 4 gates on all six Secrets materializing before syncing routes |
-| Web image never built, or built but unpullable | Both UI rows die on `ImagePullBackOff` | platform .erges the caller to `dev` (the only branch that opens a digest PR), verifies the job ran, and proves the pull path |
+| Web image never built, or built but unpullable | Both UI rows die on `ImagePullBackOff` | platform merges the caller to `dev` (the only branch that opens a digest PR), verifies the job ran, and proves the pull path |
 | The auth plane is not finished before the window | UI rows uncapturable | Phase 3 runs with the cluster down and gates on a local container round-trip; if it slips, the cut ladder cuts the UI rows rather than capturing fixtures as live |
 | Late fix invalidates already-captured evidence | Silent staleness | Every evidence file records the SHAs/digests live at capture; any later system change forces atomic re-capture of that scenario |
 | Any commit after stamping | All 60 rows fail the frozen-revision rule | Phase 6 order: write and commit everything → stamp → gate → stop |
@@ -298,9 +298,9 @@ before adjudication.
 
 - Is another GCP window affordable, and what is the current credit balance? Phase 4 step 0 records it; if it is short, take the cut ladder deliberately at window open, not at hour six.
 - Where does the scrubbed mirror live (same account, new repo name?), and who publishes it? Phase 6 step 3 needs that decided.
-- Which channel delivers the gateway credential out of band to the grader? platform .ecides; the repo records only the fact of delivery.
+- Which channel delivers the gateway credential out of band to the grader? platform decides; the repo records only the fact of delivery.
 - Does the grader accept DuckDNS as "domain + HTTPS", or is a real domain expected? DuckDNS is what the manifests use; if unacceptable, that is a phase-2 decision, not a phase-4 discovery.
-- Which vCPU quota figure governs — the predecessor plan's `CPUS_ALL_REGIONS = 12` or the measured regional `CPUS = 32` in `terraform.tfvars`? platform .tep 5 resolves it against the project's actual quota.
+- Which vCPU quota figure governs — the predecessor plan's `CPUS_ALL_REGIONS = 12` or the measured regional `CPUS = 32` in `terraform.tfvars`? platform step 5 resolves it against the project's actual quota.
 - Which Supabase project hosts the auth plane, and are its migrations already applied there? Phase 3 step 1 verifies rather than assumes.
 
 <!-- slug: close-llm-rubric-to-100 -->

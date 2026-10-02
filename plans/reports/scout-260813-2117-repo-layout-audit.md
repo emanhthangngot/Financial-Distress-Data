@@ -204,7 +204,7 @@ lọt lưới từ trước, và đó là một phát hiện chứ không phải
 
 **H1. Phase 7 ghi "Create `src/lakehouse/`" — sai hai lần.** Thứ nhất nó đã tồn
 tại. Thứ hai, theo H0 nó là code platform . nên phase 7 **không được** thêm
-`catalog.py`/`snapshots.py` vào đó. Iceberg platform .hải nằm ở package riêng
+`catalog.py`/`snapshots.py` vào đó. Iceberg platform phải nằm ở package riêng
 (`src/iceberg/`), giữ đúng nguyên tắc additive của cả plan.
 
 **H2. Phase 3 và phase 8 giả định `infra/phase2/...` path** khi khai
@@ -278,7 +278,7 @@ Ba tầng + luận điểm "không gộp được `docs/platform/evidence/`" n�
 2. **`dags/phase2/`, `tests/platform/`, `docs/platform/` — KHÔNG**, dời sang Tier 3
    sau khi nộp.
 3. **Requirements — GỘP, không đổi tên.** Đã đo trước khi chốt: 10 package trùng
-   đều **cùng lower bound**, platform .hỉ thêm upper bound → không xung đột. Kết
+   đều **cùng lower bound**, platform chỉ thêm upper bound → không xung đột. Kết
    quả: một `requirements.txt`, 26 package, pin dạng có chặn trên. Chỉ 3 chỗ
    tham chiếu (`ci.yml:24`, `phase2-ci.yaml:65,88`).
 

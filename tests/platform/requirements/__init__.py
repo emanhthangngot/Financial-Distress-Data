@@ -1,1 +1,1 @@
-"""Generated platform .LM requirement contract tests."""
+"""Generated platform LLM requirement contract tests."""

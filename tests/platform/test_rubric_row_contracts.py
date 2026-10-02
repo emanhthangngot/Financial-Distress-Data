@@ -57,7 +57,7 @@ RUBRIC_IDS = list(ITEMS_BY_ID)
 
 
 def _run(*argv: str) -> subprocess.CompletedProcess[str]:
-    """Run pytest for the phase-2 suite and return the completed process."""
+    """Run pytest for the production suite and return the completed process."""
     return subprocess.run(
         [sys.executable, "-m", "pytest", *argv],
         cwd=str(REPO_ROOT),
@@ -115,9 +115,8 @@ def test_executed_rows_prove_a_real_artifact() -> None:
 
     A row can only claim `executed` evidence when the implementation it names
     actually exists in the working tree — otherwise the per-row validation is a
-    false positive (the Coordinator-Agent-style gap the reviewer flagged). The
-    real matrix is design_only at phase-01, so this guard bites at phase-08.
-    """
+    false positive (the Coordinator-Agent-style gap the reviewer flagged). This
+    guard rejects any design-only matrix row that claims executed evidence.
     missing = [
         item.rubric_id
         for item in ITEMS
@@ -135,7 +134,7 @@ def test_artifact_path_domain_consistency() -> None:
 
     Each rubric_id's artifact_path is derived from the row's owner + content
     domain. This test re-derives the expected root independently so a row
-    mis-mapped to the wrong platform .oot (e.g. an agent row parked under
+    mis-mapped to the wrong platform root (e.g. an agent row parked under
     src/ml/) fails loudly.
     """
     agent_domains = {

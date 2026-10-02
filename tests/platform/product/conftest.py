@@ -1,4 +1,4 @@
-"""Ephemeral Postgres cluster for platform .LS/RBAC tests.
+"""Ephemeral Postgres cluster for platform RLS/RBAC tests.
 
 Docker networking is unavailable in this sandbox (veth pair creation fails),
 so `supabase start` cannot be used here. This fixture drives the native
@@ -51,7 +51,8 @@ create schema if not exists auth;
 
 create table if not exists auth.users (
   id uuid primary key,
-  email text
+  email text,
+  raw_user_meta_data jsonb not null default '{}'::jsonb
 );
 
 create or replace function auth.jwt() returns jsonb
@@ -122,16 +123,16 @@ def pg_cluster(tmp_path_factory: pytest.TempPathFactory):
 
 
 @pytest.fixture(scope="session")
-def phase2_conn(pg_cluster: dict[str, str]):
+def production_conn(pg_cluster: dict[str, str]):
     admin_conn = psycopg.connect(
         dbname="postgres", user="postgres", host=pg_cluster["host"], autocommit=True
     )
-    admin_conn.execute("drop database if exists phase2_rls_test")
-    admin_conn.execute("create database phase2_rls_test")
+    admin_conn.execute("drop database if exists production_rls_test")
+    admin_conn.execute("create database production_rls_test")
     admin_conn.close()
 
     conn = psycopg.connect(
-        dbname="phase2_rls_test", user="postgres", host=pg_cluster["host"], autocommit=True
+        dbname="production_rls_test", user="postgres", host=pg_cluster["host"], autocommit=True
     )
     conn.execute(AUTH_STUB_SQL)
 
@@ -183,19 +184,19 @@ SEED_USERS: tuple[tuple[str, str], ...] = (
 
 
 @pytest.fixture()
-def seeded_db(phase2_conn: psycopg.Connection):
+def seeded_db(production_conn: psycopg.Connection):
     """Reset seed rows before each test so tests stay independent."""
-    phase2_conn.execute(
+    production_conn.execute(
         "truncate audit_log, saved_reports, outbox_events, ai_request_usage, "
         "evidence_session_transition, evidence_session, profiles cascade"
     )
-    phase2_conn.execute("delete from auth.users")
+    production_conn.execute("delete from auth.users")
     for user_id, role in SEED_USERS:
-        phase2_conn.execute(
+        production_conn.execute(
             "insert into auth.users (id, email) values (%s, %s)", (user_id, f"{role}@test")
         )
-        phase2_conn.execute("update profiles set role = %s where user_id = %s", (role, user_id))
-    yield phase2_conn
+        production_conn.execute("update profiles set role = %s where user_id = %s", (role, user_id))
+    yield production_conn
 
 
 def run_as(

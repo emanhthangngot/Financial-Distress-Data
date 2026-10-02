@@ -393,7 +393,7 @@ def generate(check: bool = False) -> int:
         return 2
 
     planned = {
-        "__init__.py": '"""Generated platform .LM requirement contract tests."""\n',
+        "__init__.py": '"""Generated platform LLM requirement contract tests."""\n',
         "conftest.py": _format(CONFTEST_CONTENT),
     }
     for filename, file_rows in sorted(grouped.items()):

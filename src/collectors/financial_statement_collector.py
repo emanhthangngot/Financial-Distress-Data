@@ -19,7 +19,7 @@ def collect_financial_statements(
     adapter: SourceAdapter | None = None,
     metadata: MetadataWriter | None = None,
 ) -> list[dict]:
-    adapter = adapter or build_source_adapter()
+    adapter = adapter or build_source_adapter(metadata_sink=metadata)
     rows: list[dict] = []
     for ticker in tickers:
         rows.extend(adapter.fetch_financial_statements(ticker, start_year, end_year))

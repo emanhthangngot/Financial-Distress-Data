@@ -67,7 +67,7 @@ single-replica CPU-served 0.5B model has nothing to schedule.
 Qwen2.5 0.5B. The row asks for a benchmarked custom model server, not
 GPU-class throughput, and phases 3-4 must still fit on the same node.
 
-**Model weights get a PVC.** platform .stablished that no PVC exists anywhere in
+**Model weights get a PVC.** platform established that no PVC exists anywhere in
 the GitOps tree and that the TEI embedding service caches to `emptyDir` with
 `min-scale: 0` — so every hibernation cycle re-downloads. Create a PVC-backed
 weights volume and a one-shot loader Job here, as a deliverable, not as a hope.

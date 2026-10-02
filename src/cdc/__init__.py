@@ -1,4 +1,4 @@
-"""platform .link CDC contracts.
+"""platform Flink CDC contracts.
 
 The package contains pure configuration, event-normalisation and reconciliation
 helpers.  Connector clients are intentionally optional so the fast test loop

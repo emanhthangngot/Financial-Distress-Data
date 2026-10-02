@@ -11,7 +11,7 @@ Validate live service readiness and browser behavior through Playwright plus Chr
 
 ## Requirements
 
-- [x] Live platform .unner confirms required workloads, model gateway, coordinator, Prometheus, and Jaeger.
+- [x] Live platform runner confirms required workloads, model gateway, coordinator, Prometheus, and Jaeger.
 - [x] Critical web routes render expected content; the observed `/sign-out` 404 is recorded as a P1 finding.
 - [x] Assistant happy path and timeout/policy/malformed-response states behave as documented.
 - [x] Desktop and mobile layouts have no material horizontal overflow.

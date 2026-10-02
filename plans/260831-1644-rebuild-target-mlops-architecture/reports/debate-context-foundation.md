@@ -18,7 +18,7 @@
 ## Locked decisions and authorities
 
 1. Preserve the repository data contracts listed above.
-2. `docs/mini_coursework.md` remains the platform .echnical authority unless the new plan explicitly identifies a lock conflict and a human lifts it.
+2. `docs/mini_coursework.md` remains the platform technical authority unless the new plan explicitly identifies a lock conflict and a human lifts it.
 3. Existing source/GitOps ownership remains two repositories. The target image explicitly retains `financial-distress-gitops`; `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:45` locks two repositories.
 4. The newer 2026-08-18 user-locked rebuild decisions in `plans/260818-0832-rebuild-unified-ml-and-llm-platform/plan.md:31-49` are the planning baseline: all three rubrics; unified regenerated evidence; GKE baseline; Jenkins + Vault; Kubeflow + Ray + MLflow + KServe/Triton; MinIO + Iceberg + Spark + Trino + Superset; Feast + Redis + Postgres + Debezium/Kafka/Flink; 10-50M rows; Istio full sidecar; two repos; CPU-only serving constraints; frozen holdout promotion gate.
 5. The same prior plan records the resource/cost constraint: the full stack cannot remain resident at 48 vCPU and must use scheduled residency (`plan.md:81-124`); its measured cost figures are dated 2026-08-18 and require revalidation before implementation.

@@ -47,7 +47,7 @@ GKE evidence plane (live now — capture first, it is the perishable one)
   Jaeger         discoverable services, one end-to-end trace
   Ingress/NGINX  routing, auth challenge, hidden-service proof
 
-Local platform .tack
+Local platform stack
   Airflow        DAG graph + task tree + a successful run per DAG
   Kafka          topic offsets
   MinIO          Bronze/Silver/Gold object paths
@@ -87,7 +87,7 @@ Product plane
    the checklist namespace by namespace. For each capture, make the proof
    self-evident in-frame: resource name, status column, version/digest, and the
    command that produced it.
-4. Capture the local platform .tack: bring up the Docker stack, run the DAGs, and
+4. Capture the local platform stack: bring up the Docker stack, run the DAGs, and
    capture Airflow/Kafka/MinIO/DuckDB/Flink/Spark. Follow `AGENTS.md` — Flink
    needs `--profile flink` and `ENABLE_FLINK=1`.
 5. Capture the product plane via `scripts/capture_ui_screenshots.py`, extended

@@ -31,10 +31,18 @@ Verified this session — do not re-derive from the 2026-09-01/02 audit prose:
   `scripts/verify_naming_cutover.py` and `scripts/lint_naming_convention.py` exist.
 - `docs/architecture/low-level-design.md` (310 lines) and `docs/architecture/data-model.md`
   (717 lines) exist.
+- The 2026-09-12 production-plan refresh found no `Jenkinsfile`, no Jenkins runtime/JCasC/plugin
+  catalog, and no LangChain/LangGraph package in `pyproject.toml`, `requirements.txt` or `uv.lock`.
+- Current `.github/workflows/phase2-ci.yaml` and callers contain stale dependency/test paths, while
+  historical evidence points to removed workflow names. A previously green screenshot is not a
+  current delivery contract.
+- `.venv/bin/python scripts/audit_platform_evidence.py --strict --check-artifacts
+  --require-executed` reports 129 findings: production evidence remains open despite the local
+  source gate passing.
 
-So the remaining work is reconciliation against the 2026-09-10 decisions, executed-evidence
-conversion and negative-case coverage — not authoring a matrix, an ADR stack or these scripts from
-scratch. New session decisions take fresh IDs from **ADR-022 onward**; never reuse 016-021.
+So the remaining work is reconciliation against the 2026-09-12 decisions, executed-evidence
+conversion and negative-case coverage — not authoring a matrix or verifier stack from scratch.
+ADR-022 already exists; new decisions take fresh IDs from **ADR-023 onward**.
 
 ## Requirements and architecture
 
@@ -57,15 +65,20 @@ P12 telemetry/final evidence. Shared evidence records the primary owner and supp
 - Reconcile existing ADRs by content/ID before creating files. ADR-005 Feast Postgres offline,
   ADR-006 MLflow promotion, ADR-013 Debezium/Kafka/Flink and ADR-014 distributed training must match
   the implementation selected for their graded capability.
-- ADR-022 supersedes ADR-016's O-1 with rubric-first, session-windowed deployment; no mandatory
-  Jenkins/llm-d/Kiali restore. The shipped ADR-016 still states O-1 as binding until P3 executes
-  this amendment (§Measured baseline, AC-P3-3) — do not cite ADR-016 alone as settling this. ADR-017
-  records P2 temporal keys/grains and selection precedence; ADR-018 metadata unification; ADR-019
-  residual naming/exceptions; ADR-020 measured source units, tier caps and explicit synthetic
-  provenance; ADR-021 enforced type/naming contracts.
-- Add uniquely numbered decisions for free-provider routing, LangChain/LangGraph boundary,
-  session memory, Kaggle artifact bridge and conditional fine-tuning after checking current ADR IDs.
-  They record accepted session choices; no second interview is needed for settled choices.
+- ADR-022 supersedes ADR-016's O-1 with rubric-first, session-windowed deployment and demotes the
+  83-component image to historical reference. It does **not** make Jenkins optional after the
+  2026-09-12 user decision. The shipped ADR-016 still states O-1 as binding until P3 amends its
+  Status section to point at ADR-022.
+- ADR-023 records Jenkins as the sole required CI/CD runner, the P6 controller/ephemeral-agent
+  substrate, P10 one-lane parity and clean cutover, Argo CD as sole deploy mutator, and the
+  replacement for ADR-011's GitHub-OIDC-specific signing path.
+- ADR-024 records the LangChain/LangGraph boundary: framework-owned model/tool middleware, graph
+  execution, typed event streaming and checkpointing; repository-owned MCP validation, auth,
+  circuit breaking, citation/abstention, pgvector schema and telemetry. One parity pilot is followed
+  by deletion of the old renderer/coordinator path.
+- Add later unique decisions for free-provider routing, session memory, Kaggle artifact bridge and
+  conditional fine-tuning after checking current ADR IDs. They record accepted session choices; no
+  second interview is needed for settled choices.
 - Reconcile `docs/07_data_contracts.md`, ERD/schema documentation, Feast definitions and actual DDL:
   full grain, required vs optional fields, nullability, date roles, unit normalization, label
   availability, vintage selection, historical OBT and event IDs. P2 owns the definition; P3 records
@@ -86,7 +99,8 @@ not these definitions concurrently. No evidence purge is needed to author an ADR
 2. Assert one owner per row, all owners valid, every row cited by an AC in its owning phase.
 3. Bind generic rubric citation text to the phase's concrete behavioral AC and runtime artifact;
    screenshot requirements remain in addition to machine-readable output.
-4. Accept/reconcile ADRs and data dictionary; resolve source/DDL/Spark/Feast differences explicitly.
+4. Accept/reconcile ADRs and data dictionary, including ADR-023 Jenkins delivery and ADR-024
+   LangChain/LangGraph ownership; resolve source/DDL/Spark/Feast differences explicitly.
 5. Update architecture and rubric verifiers. Seed a missing required resource/owner/evidence entry
    and prove each fails in its appropriate mode. A non-required logo must not fail architecture.
 6. Record all optional extensions separately, with proposed thresholds distinguished from rubric.
@@ -100,15 +114,13 @@ not these definitions concurrently. No evidence purge is needed to author an ADR
 - [ ] AC-P3-2: Coverage verifier -> validates ownership -> every row has exactly one valid primary phase and evidence/validation/assertion contract.
 - [ ] AC-P3-2b: Coverage verifier -> checks phase AC citations -> every canonical rubric ID appears in its owning phase.
 - [ ] AC-P3-2c: Auditor -> groups mini ownership -> all 44 rows/100 points assigned among P2/P4/P5/P11 with no missing row.
-- [ ] AC-P3-3: Architect -> writes ADR-022 (first ID after the 016-021 block, per §Measured
-      baseline) recording "Rubric before image fidelity — 2026-09-10" -> ADR-022 explicitly
+- [ ] AC-P3-3: Architect -> reviews existing ADR-022 and amends ADR-016's Status section -> ADR-022
+      remains the accepted "Rubric before image fidelity — 2026-09-10" decision and explicitly
       supersedes ADR-016's O-1 ("every component and annotated edge in
       `images/architecture/fdd-architecture-full-4k.png` must be live"), demoting it to a
-      historical reference inventory **without dropping any rubric capability**; ADR-016 itself is
-      amended to point at ADR-022 in its own Status section once P3 executes — this planning
-      update makes no edit to the shipped `docs/platform/adr/adr-016-full-platform-restore.md` file
+      historical reference inventory **without dropping any rubric capability**
 - [ ] AC-P3-4: Data architect -> reconciles ADR-017 and dictionary -> surrogate fact joins, vintage PKs, known_from_ts, Feast timestamps and explicit unavailable history agree with P2.
-- [ ] AC-P3-5: Architect -> reviews dependent ADRs -> accepted facts match selected runtime; no stale paid/free-tier or framework capability assertion remains load-bearing.
+- [ ] AC-P3-5: Architect -> accepts ADR-023 and ADR-024 then reviews dependent ADRs -> Jenkins/GitOps/signing and LangChain/LangGraph/state boundaries match the selected production runtime; no stale GitHub-OIDC-only, paid/free-tier or framework-default claim remains load-bearing.
 - [ ] AC-P3-6: Architecture verifier -> checks a missing required capability -> fails; unselected image-only component is not counted as a failure.
 - [ ] AC-P3-7: Naming verifier -> follows current matrix paths and commands -> no dangling active legacy reference remains; historical evidence keeps provenance.
 - [ ] AC-P3-8: Reviewer -> reads low-level design -> five real ML and five real LLM classes with signatures and sequence flows (rubric citations below).
@@ -116,6 +128,7 @@ not these definitions concurrently. No evidence purge is needed to author an ADR
 - [ ] AC-P3-10: Engineer -> exercises changed verifier negative cases and quality gate -> missing ownership/evidence/required resources are rejected.
 - [ ] AC-P3-11: Evidence owner -> proposes deleting obsolete evidence -> deletion blocked unless baseline tag resolves, replacement exists and consumers updated.
 - [ ] AC-P3-12: Naming/type verifier -> checks P2 contracts -> catches invalid units/names/types/grain without conflating Bronze append-only grain with enforced PKs.
+- [ ] AC-P3-13: Delivery auditor -> traces active workflow, Jenkins and evidence paths -> stale workflow references are removed, every current CI/CD row points to a Jenkins lane, and historical GitHub Actions evidence remains provenance rather than current proof.
 
 ## Risks
 

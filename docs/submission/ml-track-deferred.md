@@ -29,7 +29,7 @@ implementation.
 |---|---:|---:|---|---|---|
 | A/B Testing | 2 | 2 | design_only | Same `platform/llm/ab-testing.yaml` mechanism proven for LLM; an ML-model variant was not deployed this window | `ab_testing.md` |
 | Autoscale | 2 | 4 | design_only | HPA proven for LLM agent/tool web APIs; no separate ML-serving autoscale target deployed | `web_api_drift_detection.md` §HPA settle |
-| CI/CD | 10 | 16 | design_only | Reusable `platform-ci.yaml` template proven for 6 LLM deployables; no ML training/inference-engine deployable exists to run it against | `ci_cd.md` |
+| CI/CD | 10 | 16 | design_only | Reusable `production-ci.yaml` template proven for 6 LLM deployables; no ML training/inference-engine deployable exists to run it against | `ci_cd.md` |
 | Documentation (low-level ML design) | 1 | 1 | design_only | `docs/platform/low-level-design.md`'s "ML Classes" section documents the design; no ML training code was implemented to verify against | `low_level_design.md` |
 | Feature Store | 4 | 6 | design_only | Feast structured feature views and materialization jobs are `design_only` — this sandbox has no live Redis/MinIO reachable for a materialization run | `rag.md` §governance (shares the Feast/PGVector pattern) |
 | IaC | 2 | 4 | design_only | Same Terraform/Ansible entrypoints proven for the LLM evidence plane; no separate ML infra provisioned | `iac.md` |

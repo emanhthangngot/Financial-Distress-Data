@@ -11,7 +11,7 @@ protected=(
   "src/io/" "src/governance/" "sql/" "docs/evidence/"
   "docs/mini_coursework.md" "docs/01_data_generator.md" "docs/02_schema_design.md"
 )
-# Keep in sync with scripts/audit_platform_evidence.py:PHASE1_PROTECTED_EXCEPTIONS.
+# Keep in sync with scripts/audit_platform_evidence.py:PLATFORM_PROTECTED_EXCEPTIONS.
 exceptions=(
   "src/streaming/flink/jobs/" "sql/init_ml_metadata.sql"
   "src/io/paths.py" "src/governance/lineage.py"

@@ -9,11 +9,11 @@ import pytest
 
 pytest.importorskip(
     "fastapi",
-    reason="platform .pp tests require .venv-platform; the platform .venv stays dependency-clean",
+    reason="platform app tests require .venv-platform; the platform .venv stays dependency-clean",
 )
 pytest.importorskip(
     "httpx",
-    reason="platform .pp tests require .venv-platform; the platform .venv stays dependency-clean",
+    reason="platform app tests require .venv-platform; the platform .venv stays dependency-clean",
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -22,7 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 def load_app_module(app_name: str, module_name: str) -> ModuleType:
     package_path = REPO_ROOT / "apps" / app_name / "app"
     path = package_path / f"{module_name}.py"
-    package_name = f"phase2_{app_name.replace('-', '_')}_app"
+    package_name = f"production_{app_name.replace('-', '_')}_app"
     if package_name not in sys.modules:
         package = ModuleType(package_name)
         package.__path__ = [str(package_path)]

@@ -21,7 +21,7 @@ injection testing — out of scope for this submission.
 ### 1. Coverage gate: 96.17% lines, 93.48% branches
 
 ```text
-$ python scripts/run_phase5_web_gate.py
+$ python scripts/run_production_web_gate.py
 Lines: 352/366 = 96.17%
 Branches: 43/46 = 93.48%
 Gate (>=90% lines and branches): PASS

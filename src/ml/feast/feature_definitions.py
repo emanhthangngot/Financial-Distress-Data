@@ -25,6 +25,7 @@ ENTITY_NAME = "ticker"
 
 FEATURE_VIEW_TTL: dict[str, timedelta] = {
     "company_financial_features": timedelta(days=400),
+    "company_financial_4q_features": timedelta(days=400),
     "company_risk_features": timedelta(days=400),
     "market_price_features": timedelta(days=45),
     "stream_market_features": timedelta(hours=1),
@@ -34,6 +35,10 @@ FEATURE_VIEW_RATIONALE: dict[str, str] = {
     "company_financial_features": (
         "A quarterly filing stays authoritative across a four-quarter window "
         "plus publication lag; 400 days prevents expiry before replacement."
+    ),
+    "company_financial_4q_features": (
+        "A four-quarter financial aggregate remains valid through the next "
+        "quarterly publication window; 400 days also covers publication lag."
     ),
     "company_risk_features": (
         "Derived from the quarterly financial fact and label; it shares the "
@@ -49,25 +54,29 @@ FEATURE_VIEW_RATIONALE: dict[str, str] = {
     ),
 }
 
-# Real Gold column/dataset names, verified against src/transforms/gold/*.py
-# and src/generator/offline.py — not the generic names in
-# phase-04-implementation-notes.md section 3.2, which predates reading the
-# actual builders (they retain every Silver column via ``dict(row)`` /
-# ``**row`` plus surrogate keys, not a fixed renamed subset).
+# Gold column and dataset names mirror the current builders. The additive
+# four-quarter view is the v2 aggregate contract; the three existing views
+# remain registered until their callers complete the owned cutover.
 GOLD_DATASETS: dict[str, str] = {
     "company_financial_features": "fact_financial_statement",
+    "company_financial_4q_features": "feat_company_financial_4q",
     "company_risk_features": "obt_company_quarter_risk",
     "market_price_features": "fact_market_price",
 }
 
 
 def gold_source_path(dataset_name: str) -> str:
-    """s3:// URI for a Gold dataset's single ``data.parquet`` object,
-    resolved through the same ``src.io.paths`` module platform's writers use
-    — no new path convention invented for Feast."""
+    """Return the S3 prefix for every Parquet object in a Gold dataset.
+
+    ``dataset_object_key`` remains the authority for the physical dataset
+    name. Feast reads its parent prefix so the same definition covers the
+    single ``data.parquet`` object emitted by the local evidence path and the
+    partitioned Parquet objects emitted by the Spark path.
+    """
     from src.io.paths import DEFAULT_BUCKET, dataset_object_key
 
-    return f"s3://{dataset_object_key(DEFAULT_BUCKET, 'gold', dataset_name)}"
+    object_key = dataset_object_key(DEFAULT_BUCKET, "gold", dataset_name)
+    return f"s3://{object_key.removesuffix('data.parquet')}"
 
 
 def build_feature_objects() -> dict[str, Any]:
@@ -87,6 +96,8 @@ def build_feature_objects() -> dict[str, Any]:
         name="fact_financial_statement_source",
         path=gold_source_path(GOLD_DATASETS["company_financial_features"]),
         timestamp_field="known_from_ts",
+        created_timestamp_column="created_timestamp",
+        field_mapping={"created_ts": "created_timestamp"},
     )
     company_financial_features = FeatureView(
         name="company_financial_features",
@@ -105,10 +116,39 @@ def build_feature_objects() -> dict[str, Any]:
         description=FEATURE_VIEW_RATIONALE["company_financial_features"],
     )
 
+    financial_4q_source = FileSource(
+        name="feat_company_financial_4q_source",
+        path=gold_source_path(GOLD_DATASETS["company_financial_4q_features"]),
+        timestamp_field="known_from_ts",
+        created_timestamp_column="created_timestamp",
+    )
+    company_financial_4q_features = FeatureView(
+        name="company_financial_4q_features",
+        entities=[ticker],
+        ttl=FEATURE_VIEW_TTL["company_financial_4q_features"],
+        schema=[
+            Field(name="report_period", dtype=String),
+            Field(name="feature_family", dtype=String),
+            Field(name="window_period_count", dtype=Int64),
+            Field(name="feature_completeness", dtype=Float64),
+            Field(name="current_ratio", dtype=Float64),
+            Field(name="debt_to_asset", dtype=Float64),
+            Field(name="debt_to_equity", dtype=Float64),
+            Field(name="roa", dtype=Float64),
+            Field(name="roe", dtype=Float64),
+            Field(name="ebit_interest_coverage", dtype=Float64),
+            Field(name="z_score", dtype=Float64),
+        ],
+        source=financial_4q_source,
+        description=FEATURE_VIEW_RATIONALE["company_financial_4q_features"],
+    )
+
     risk_source = FileSource(
         name="obt_company_quarter_risk_source",
         path=gold_source_path(GOLD_DATASETS["company_risk_features"]),
         timestamp_field="known_from_ts",
+        created_timestamp_column="created_timestamp",
+        field_mapping={"created_ts": "created_timestamp"},
     )
     company_risk_features = FeatureView(
         name="company_risk_features",
@@ -131,6 +171,8 @@ def build_feature_objects() -> dict[str, Any]:
         name="fact_market_price_source",
         path=gold_source_path(GOLD_DATASETS["market_price_features"]),
         timestamp_field="known_from_ts",
+        created_timestamp_column="created_timestamp",
+        field_mapping={"created_ts": "created_timestamp"},
     )
     market_price_features = FeatureView(
         name="market_price_features",
@@ -169,10 +211,8 @@ def build_feature_objects() -> dict[str, Any]:
     return {
         "ticker": ticker,
         "company_financial_features": company_financial_features,
+        "company_financial_4q_features": company_financial_4q_features,
         "company_risk_features": company_risk_features,
         "market_price_features": market_price_features,
         "stream_market_features": stream_market_features,
     }
-
-
-# Touched to trigger stream-feature-offline/online after the gitops-pr base-branch fix.

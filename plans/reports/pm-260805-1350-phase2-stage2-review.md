@@ -1,4 +1,4 @@
-# platform .tage 2 — Completion Review
+# platform Stage 2 — Completion Review
 
 Target: `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
 Branch: `dev` @ `e638b95` + 42 uncommitted files (working tree ahead of last commit).

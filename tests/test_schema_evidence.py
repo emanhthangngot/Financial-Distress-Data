@@ -1,12 +1,11 @@
-"""Schema evidence contract (phase-02-data-model.md Step 8, partial).
+"""Schema evidence contract for the production data model.
 
-Full AC-P2-9/AC-P2-10 (real Gold Parquet, zero-orphan / NULL-rate-ceiling
-assertions against actual pipeline output) need a running Spark+MinIO stack
-and the physical-storage-layer rename this phase's follow-up still owns —
-see src/io/paths.py's module docstring note. These tests cover what the
-current DuckDB-fixture-based scripts/build_schema_evidence.py can prove
-without live infra: the target DDL (sql/schema_evidence.sql) is internally
-consistent, and the evidence audit is a live assertion, not vacuous.
+Full Gold Parquet, zero-orphan and NULL-rate-ceiling assertions against actual
+pipeline output need a running Spark+MinIO stack and the physical storage-layer
+rename tracked by src/io/paths.py. These tests cover what the current
+DuckDB-fixture-based scripts/build_schema_evidence.py can prove without live
+infra: the target DDL is internally consistent, and the evidence audit is a
+live assertion, not vacuous.
 """
 
 from __future__ import annotations

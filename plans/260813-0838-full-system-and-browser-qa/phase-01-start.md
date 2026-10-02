@@ -7,12 +7,12 @@ status: completed
 
 ## Overview
 
-Read the active Phase 1/platform .pecifications, final LLM rubric, existing test/config surfaces, and unfinished plans. Define the QA matrix without modifying product code.
+Read the active platform/platform specifications, final LLM rubric, existing test/config surfaces, and unfinished plans. Define the QA matrix without modifying product code.
 
 ## Requirements
 
-- [x] platform .cope is `docs/mini_coursework.md` plus repository quality gates.
-- [x] platform .cope is `docs/coursework.md`, `docs/platform/rubric-matrix.md`, final LLM rubric, and existing platform .ests.
+- [x] platform scope is `docs/mini_coursework.md` plus repository quality gates.
+- [x] platform scope is `docs/coursework.md`, `docs/phase2/rubric-matrix.md`, final LLM rubric, and existing platform tests.
 - [x] Browser scope covers all routes represented by `apps/web/e2e/` and critical navigation/assistant/error flows.
 
 ## Implementation Steps

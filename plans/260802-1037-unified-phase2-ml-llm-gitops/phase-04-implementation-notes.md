@@ -62,7 +62,7 @@ CI/CD rows. The user requires three pipeline workflows. Resolution:
   `phase2-stream-feature-online.yaml` — three thin callers with distinct
   `paths:` triggers. Each produces its own separately-named run, which is what
   "Capture màn hình từng CI/CD pipeline đã run thành công" needs.
-- `ci.yml` is untouched (platform .ate).
+- `ci.yml` is untouched (platform gate).
 
 ### D3 — `src/generator/` is read-only
 
@@ -74,7 +74,7 @@ edits, and rubric rows pin `src/drift/` + `src/ml/` anyway. Resolution: treat
 `GeneratorConfig` from **named** keys only — a new top-level YAML key is
 silently ignored, so it is safe. But we go further: drift config lives in a
 **separate** file `configs/drift-config.yaml`, loaded by
-`src/drift/generator_config.py`. Zero platform .ile touched. `src/drift/generator.py`
+`src/drift/generator_config.py`. Zero platform file touched. `src/drift/generator.py`
 consumes `generate_offline_data()` (`src/generator/offline.py:68`) and
 `generate_stream_events()` (`src/generator/streaming.py:21`) as pure inputs and
 applies drift as a post-transform.
@@ -93,7 +93,7 @@ applies drift as a post-transform.
 > mirroring the existing pattern at `src/io/minio_publish.py:11`
 > (`from minio.commonconfig import CopySource` inside the function).
 
-Module-level imports of `feast` will break the platform .ate. This is the single
+Module-level imports of `feast` will break the platform gate. This is the single
 highest-probability failure in the phase.
 
 ### D5 — Embedding backend is pluggable, with a real default
@@ -206,7 +206,7 @@ verified at `src/transforms/compute_distress_labels.py:279`)
 `ml.label_table` in the **new** phase-2 Postgres.
 
 **Flow B — Feast materialization**
-MinIO parquet (platform .old, read-only) → Feast `FileSource` (s3 endpoint override)
+MinIO parquet (platform Gold, read-only) → Feast `FileSource` (s3 endpoint override)
 → `feast apply` → registry on MinIO → `materialize_incremental` → Redis online store
 → registry revision recorded in `ml.feast_registry_revision`.
 
@@ -228,7 +228,7 @@ Every flow's run summary → `src/governance/phase2_lineage.py` →
 `src.governance.datahub_emitter.emit_governance` (verified
 `src/governance/datahub_emitter.py:139`) with a Phase-2-only `GovernanceModel`
 loaded from `configs/phase2-governance.yaml` (loader verified
-`src/governance/datahub_model.py:62`). platform .overnance config untouched.
+`src/governance/datahub_model.py:62`). platform governance config untouched.
 
 ---
 
@@ -248,7 +248,7 @@ offline_store: type: file
 entity_key_serialization_version: 3
 ```
 S3 endpoint override via `FEAST_S3_ENDPOINT_URL` / `AWS_*` env pointing at MinIO
-— the same env the platform .inIO clients already consume (`src/io/paths.py:10`,
+— the same env the platform MinIO clients already consume (`src/io/paths.py:10`,
 `DEFAULT_BUCKET = "financial-distress-lake"`). **No new S3 client is written.**
 
 ### 3.2 Entity and feature views (in `src/ml/feast/feature_definitions.py`)
@@ -438,7 +438,7 @@ Frozen dataclasses mirroring `src/generator/config.py`'s style (validate() on
 each, strict unknown-key rejection via a local `_typed`, `load_drift_config(path,
 scenario)`); **do not import from `src/generator/config.py`'s private helpers** —
 copying ~20 lines of `_typed`/`_validate_rate` is cheaper than coupling Phase 2
-to a platform .rivate API. (Judgment call against DRY; noted deliberately.)
+to a platform private API. (Judgment call against DRY; noted deliberately.)
 
 ```
 DriftScenario: name, seed, start_quarter, affected_fraction,
@@ -499,7 +499,7 @@ Five DAG files. Every one obeys these rules, each of which is a test in §9:
 | `phase2_label_drift_build.py` | `phase2_label_drift_build` | generate → apply_drift → drift_report → build_labels → publish |
 
 New dag_ids all carry the `phase2_` prefix; no existing dag_id or task_id in
-`dags/*.py` is renamed or removed (verified: 15 platform .AG files present, none
+`dags/*.py` is renamed or removed (verified: 15 platform DAG files present, none
 named `phase2_*`).
 
 `dags/phase2/phase2_drift_monitoring.py` is pinned by ML row 91 but belongs to
@@ -520,7 +520,7 @@ Three new services appended after `flink-taskmanager`, before the top-level
     healthcheck: redis-cli ping | grep PONG, 5s/5/10s
     profiles: ["phase2"]
 
-  phase2-postgres:                 # PGVector + ml; NOT the platform .ostgres
+  phase2-postgres:                 # PGVector + ml; NOT the platform postgres
     image: pgvector/pgvector:pg16
     environment: POSTGRES_DB=ml, POSTGRES_USER/PASSWORD from ${PHASE2_PG_*}
     ports: ["${PHASE2_PG_HOST_PORT:-5433}:5432"]
@@ -534,7 +534,7 @@ volumes:
   phase2-pgdata:                   # added under the existing volumes: key
 ```
 
-Port choices avoid the platform .postgres` host port (5432, docker-compose.yml:9)
+Port choices avoid the platform `postgres` host port (5432, docker-compose.yml:9)
 and any existing binding. `profiles: ["phase2"]` means plain `docker compose up`
 behaviour is byte-identical to today — same guard the Flink profile already uses
 (AGENTS.md). `docker compose config` must still pass (AGENTS.md verify command).
@@ -584,7 +584,7 @@ New directory `tests/platform/pipelines/` (distinct from
 | `test_rag_metadata_contract.py` | every emitted chunk carries all nine fields non-empty; `assert_metadata_complete` raises on each field individually (parametrized) | yes |
 | `test_data_governance.py` | license allowlist; PII regexes (positive + negative per type); rate limiter spacing; retry policy retries 5xx and not 4xx; quarantine record shape | yes |
 | `test_feast_definitions_ttl.py` | every FeatureView has non-null TTL; TTL values equal the documented table in §3.2; every source declares `event_timestamp_column`; each view has a rationale docstring | yes — **must not import feast** |
-| `test_phase2_dags_import.py` | each `dags/phase2/*.py` imports with no side effects (monkeypatched socket/`open` guard, mirroring `tests/test_dags_05_smoke.py`); dag_id prefix; no platform .ag_id collision | yes |
+| `test_phase2_dags_import.py` | each `dags/phase2/*.py` imports with no side effects (monkeypatched socket/`open` guard, mirroring `tests/test_dags_05_smoke.py`); dag_id prefix; no platform dag_id collision | yes |
 | `test_workflows_phase2.py` | the four workflow files exist, parse as YAML, `phase2-ci.yaml` is `workflow_call`, three callers reference it, `ci.yml` unchanged (content hash pinned) | yes |
 | `tests/platform/pipelines/test_pgvector_store.py` | real `psycopg` against the ephemeral cluster; upsert idempotency; unique constraint; quarantine write. Marked `postgres` + `slow`, reusing the `pytest_collection_modifyitems` marker pattern verified at `tests/platform/product/conftest.py:29` | no (postgres marker) |
 | `tests/platform/pipelines/test_feast_smoke.py` | `feast plan/apply/materialize` against a disposable local registry + fake redis. Marked `slow` and **skipped unless `feast` importable** — it cannot run in `.venv` | no |
@@ -669,7 +669,7 @@ present, currently `7631f720`).
 | `phase2-stream-feature-offline.yaml` | `src/ml/feast/offline_job.py`, `src/ml/feast/feature_definitions.py`, `dags/phase2/phase2_stream_feature_offline.py` | `stream-feature-offline` | `tests/platform/pipelines -k "feast or ttl"` |
 | `phase2-stream-feature-online.yaml` | `src/ml/feast/online_job.py`, `src/ml/feast/feature_definitions.py`, `dags/phase2/phase2_stream_feature_online.py` | `stream-feature-online` | same |
 
-`ci.yml` is not modified and its `paths` are not narrowed — platform .eeps
+`ci.yml` is not modified and its `paths` are not narrowed — platform keeps
 running on every push.
 
 ---
@@ -705,7 +705,7 @@ out late costs the whole slice.
 
 | Risk | L×I | Mitigation | Rollback |
 |---|---|---|---|
-| Module-level `feast`/`redis` import breaks the platform .ate (D4) | **High × High** | Lazy imports enforced by `test_feast_definitions_ttl.py` running in `.venv`; run `scripts/run_stage1_quality_gates.py` at the end of every slice | Move the import inside the function; one-line fix, caught in minutes |
+| Module-level `feast`/`redis` import breaks the platform gate (D4) | **High × High** | Lazy imports enforced by `test_feast_definitions_ttl.py` running in `.venv`; run `scripts/run_stage1_quality_gates.py` at the end of every slice | Move the import inside the function; one-line fix, caught in minutes |
 | Feast 0.65 rejects star-re-exported definitions (§3.4) | Med × Med | 30-min spike at the head of 4C before anything else in the slice | Physically relocate definitions into `feature_repo/`; pinned file imports from there |
 | Feast dependency conflicts (phase-04.md:107) | Med × Med | `.venv-phase2` isolation; jobs run from a container image, not the host env | Pin the resolved set; rebuild the image from the recorded digest |
 | RAG source unavailable / rate-limited (phase-04.md:111) | Med × High | Cache-first `fetch_documents`; committed fixture corpus so evidence runs need no network — mirrors the existing `vnstock_fixture_adapter` precedent | Run against fixtures only; note the substitution in the evidence `scenario:` line |

@@ -18,7 +18,7 @@ The positive/negative probe supplies one past and one future candidate. The join
 selects the past candidate. A deliberately leaked snapshot is then submitted to
 the DP3 gate and must raise `PipelineValidationError`.
 
-Runtime result: [`phase8-novel-ideas.json`](evidence/novel/phase8-novel-ideas.json).
+Runtime result: [`novel-ideas.json`](evidence/novel/novel-ideas.json).
 
 ## Limitations
 

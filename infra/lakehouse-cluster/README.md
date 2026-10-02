@@ -1,6 +1,6 @@
-# platform .luster runtime
+# platform cluster runtime
 
-`Dockerfile.pipeline` packages the existing platform .ource tree for a cluster
+`Dockerfile.pipeline` packages the existing platform source tree for a cluster
 runtime. It does not alter `src/`, `dags/`, SQL, or the local Compose path. The
 GitOps sibling repository owns the Kubernetes workload, immutable image digest,
 PVCs, secrets, and resource requests.

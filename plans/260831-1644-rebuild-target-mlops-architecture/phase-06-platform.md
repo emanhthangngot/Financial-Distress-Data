@@ -1,20 +1,21 @@
 ---
 phase: 6
-title: "Phase 6: GKE platform, Istio mesh, Vault secrets, Terraform + Ansible"
+title: "Phase 6: GKE platform, Istio, Vault, Jenkins runtime, Terraform + Ansible"
 status: pending
 priority: P1
 effort: "10-14 days"
 dependencies: ["phase-00-gates.md", "phase-03-contracts-rubric.md"]
-owns: ["platform/istio/", "platform/security/", "platform/vault/", "infra/ansible/", "terraform/", "all Argo destination.namespace fields"]
+owns: ["platform/istio/", "platform/security/", "platform/vault/", "infra/jenkins/", "infra/ansible/", "financial-distress-gitops/platform/jenkins/", "terraform/", "all Argo destination.namespace fields"]
 ---
 
-# Phase 6: Windowed platform, mesh, secrets, Terraform and Ansible
+# Phase 6: Windowed platform, security, Jenkins runtime, Terraform and Ansible
 
 ## Overview
 
-Provision only a P0-verified no-additional-spend window. Kubernetes, cloud Terraform and VM Ansible
-are real rubric deliverables; local manifests or Kaggle jobs cannot replace cloud deployment proof.
-No assumed 48-vCPU budget, fixed pool count, 24-hour soak or always-on service floor.
+Provision only a P0-verified no-additional-spend window. Kubernetes, cloud Terraform, VM Ansible
+and the Jenkins runtime are real production/rubric deliverables; local manifests or Kaggle jobs
+cannot replace runtime proof. No assumed 48-vCPU budget, fixed pool count, 24-hour soak or always-on
+service floor.
 
 ## Requirements and selected topology
 
@@ -34,11 +35,27 @@ Ansible must actually configure/deploy services to a VM using coherent roles (co
 service configuration, observability/capture where needed), then produce idempotent second-run
 output. `--check` alone does not prove deployment; five role directories alone prove nothing.
 
+Jenkins runs on the same approved VM P6 must configure with Ansible, not as another persistent GKE
+workload. `infra/jenkins/` pins the Jenkins LTS image, plugin catalog and JCasC; the Ansible
+`jenkins` role installs, starts, backs up and restores it. Built-in executors are zero, matching
+Jenkins controller-isolation guidance. The Kubernetes plugin creates one disposable agent pod per
+build in a dedicated `jenkins` namespace and deletes it afterward; because the controller is outside
+the cluster, agents connect over WebSocket. Controller credentials may create/delete only those
+pods. Agent ServiceAccounts have no production deployment permission, no mounted cluster token
+unless a lane proves it needs one, and no access to `JENKINS_HOME`.
+
+P6 owns controller availability, JCasC, plugin pins, agent connectivity, isolation and restore.
+P10 owns jobs, artifact mapping and release behavior. Jenkins never applies production manifests:
+trusted lanes build/sign/push and open digest-only GitOps pull requests; Argo CD remains the sole
+deployment mutator. Secrets are referenced from Vault/ESO or Jenkins credential IDs and never
+serialized into JCasC, pod templates, console output or build artifacts.
+
 ## Ownership
 
-Own mesh/security/Vault, cloud Terraform and Ansible. Namespace field edits are serialized with
-workload owners P5/P7/P8/P9. P0 supplies read-only gates. P9 owns NGINX exposure and P12 dashboards;
-P6 exposes early telemetry required by P10, without waiting for P12 final freeze.
+Own mesh/security/Vault, cloud Terraform, Ansible and the Jenkins runtime substrate. Namespace field
+edits are serialized with workload owners P5/P7/P8/P9/P10. P0 supplies read-only gates. P10 owns
+Jenkins pipelines and GitOps promotion; P9 owns NGINX exposure and P12 owns dashboards. P6 exposes
+early telemetry required by P10, without waiting for P12 final freeze.
 
 ## Implementation steps
 
@@ -46,18 +63,25 @@ P6 exposes early telemetry required by P10, without waiting for P12 final freeze
    Terraform plan and resource-specific teardown; do not apply absent P0 cost gate.
 2. Apply approved resources through Terraform; capture state/resource IDs, protected backend and
    no-drift plan. Configure/deploy services through Ansible roles on the actual VM, then rerun.
-3. Deploy mesh in PERMISSIVE only for a bounded compatibility window. Exercise every required
+3. Add the Ansible Jenkins role and `infra/jenkins/` configuration: pinned LTS/plugins, JCasC,
+   zero built-in executors, least-privilege auth, health check, state backup and disposable restore.
+4. Configure the Kubernetes cloud from JCasC. Launch one ephemeral WebSocket agent with explicit
+   CPU/memory/ephemeral-storage limits and rootless build tooling; prove cleanup after success,
+   cancellation and controller restart. The build pod cannot read production secrets by default.
+5. Deploy mesh in PERMISSIVE only for a bounded compatibility window. Exercise every required
    service edge, Job completion and failure/retry path; inspect analyzer and error telemetry.
-4. Apply authorization policy and STRICT on covered workloads; prove allowed/denied/plaintext calls.
-5. Verify sandbox egress deny after injection, restricted PSS, tokenless ServiceAccount, read-only
+6. Apply authorization policy and STRICT on covered workloads; prove allowed/denied/plaintext calls.
+7. Verify sandbox egress deny after injection, restricted PSS, tokenless ServiceAccount, read-only
    root and scoped gateway allow path. Framework tools must not bypass this network boundary.
-6. Configure Vault/ESO least-privilege policies; test rotation and consumer recovery with a
-   non-sensitive test secret first. Compare values without logging their bytes. Workload-issued
-   TLS/ServiceAccount/controller secrets are not all forcibly ESO-managed.
-7. If replacing existing secret delivery, cut over one consumer at a time with rollback retained
+8. Configure Vault/ESO least-privilege policies; exercise Jenkins trusted-branch credential
+   retrieval and workload rotation with non-sensitive test secrets first. Compare values without
+   logging their bytes. Controller/TLS/ServiceAccount-generated secrets need not originate in ESO.
+9. If replacing existing secret delivery, cut over one consumer at a time with rollback retained
    until verification. Remove old managed credentials only after replacement works.
-8. Export evidence/state backup; stop/destroy only authorized session resources; verify remaining
-   disks, IPs, LBs, snapshots and other billable resources against the no-spend ledger.
+10. Hand P10 a healthy controller, pinned JCasC/plugin revision, disposable-agent template,
+    credential IDs and restore runbook; do not create delivery jobs in this phase.
+11. Export evidence/state backup; stop/destroy only authorized session resources; verify remaining
+    disks, IPs, LBs, snapshots and other billable resources against the no-spend ledger.
 
 ## Success criteria
 
@@ -71,13 +95,22 @@ P6 exposes early telemetry required by P10, without waiting for P12 final freeze
 - [ ] AC-P6-8: Data/ML operator -> runs real injected jobs -> completion and output verified, or specific namespaces excluded and remaining security accurately described.
 - [ ] AC-P6-9: Terraform operator -> applies approved no-spend cloud plan -> real resources match protected state, labels and module boundaries; next plan has no drift. No free allocation means blocked, not passed.
 - [ ] AC-P6-COST: Operator -> ends resource window -> exported evidence persists and no unapproved residual charge source remains; no 24/7 availability claim.
+- [ ] AC-P6-JENKINS-1: Ansible operator -> configures the approved VM twice -> pinned Jenkins LTS/plugins and JCasC are healthy, built-in executors equal zero, and the second run reports changed=0.
+- [ ] AC-P6-JENKINS-2: Jenkins controller -> schedules then cancels a Kubernetes-agent build -> a bounded agent pod connects over the selected channel, cannot deploy workloads, and is deleted after both outcomes.
+- [ ] AC-P6-JENKINS-3: Recovery operator -> restores the backed-up controller into a disposable instance -> JCasC revision, job metadata and credential references return without exposing credential values.
 
 ## Risks and verification
 
 An alert is not a spending cap. If resource lifecycle cannot remain inside free allocation, stop
 before apply. Mesh changes can break Jobs/streaming; use bounded real requests, not a blind soak.
-Secret cutover can strand consumers; prove rotation/recovery before deleting old delivery.
-Terraform validation and Ansible syntax/check mode are preflight only, not runtime proof.
+Secret or Jenkins cutover can strand consumers; prove rotation, controller restore and agent cleanup
+before P10 receives delivery authority. A compromised build must not reach `JENKINS_HOME`, production
+Kubernetes credentials or trusted shared code. Terraform validation, JCasC syntax and Ansible check
+mode are preflight only, not runtime proof.
+
+Grounding: Jenkins Kubernetes plugin (`https://plugins.jenkins.io/kubernetes/`), Configuration as
+Code (`https://www.jenkins.io/doc/book/managing/casc/`) and controller isolation
+(`https://www.jenkins.io/doc/book/security/controller-isolation/`), read 2026-09-12.
 
 ## Rubric Citations (phase-03 R-12 closure, appended 2026-09-05)
 

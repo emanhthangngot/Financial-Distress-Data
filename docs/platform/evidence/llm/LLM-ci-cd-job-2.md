@@ -1,10 +1,10 @@
 # Evidence — CI/CD Job 2 (stream feature → ONLINE)
 
-Proves `.github/workflows/platform-stream-feature-online.yaml` calling the
-reusable `.github/workflows/platform-ci.yaml` template (lint → test → build →
+Proves `.github/workflows/production-stream-feature-online.yaml` calling the
+reusable `.github/workflows/production-ci.yaml` template (lint → test → build →
 push immutable GHCR digest → open a GitOps digest-bump PR) runs end to end on
 a real push to `dev`, deploying `src/ml/feast/online_job.py`
-(`dags/platform/phase2_stream_feature_online.py`).
+(`dags/platform/stream_feature_online.py`).
 
 - rubric_id: LLM-ci-cd-job-2
 - execution_timestamp: 2026-08-09T06:41:12+00:00
@@ -35,8 +35,8 @@ sha256:1fdb71c97b4952211ca759409bb93f314e7a69c834681950f9e1fb36811e9b7e
 ## Prerequisite fixes made to unblock this run
 
 Same three bugs as `LLM-ci-cd-job-1` (`docs/platform/evidence/llm/LLM-ci-cd-job-1.md`)
-in the shared `platform-ci.yaml` template — missing `packages: write`
+in the shared `production-ci.yaml` template — missing `packages: write`
 permission on the callers, an uppercase GHCR image tag, and `gitops-pr`
 targeting the wrong repo/branch (`--base main` when the gitops repo's default
-is `master`). Fixed once in `platform-ci.yaml` / the three caller workflows,
+is `master`). Fixed once in `production-ci.yaml` / the three caller workflows,
 benefiting all three phase-2 pipelines.

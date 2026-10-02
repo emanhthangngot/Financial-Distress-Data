@@ -1,6 +1,6 @@
 # Evidence — CI/CD for the feature ("kéo dữ liệu") agent
 
-Proves `.github/workflows/platform-agent-feature.yaml` runs the reusable CI
+Proves `.github/workflows/production-agent-feature.yaml` runs the reusable CI
 template end to end for the `feature-agent` deployable: build → cosign sign
 → push immutable GHCR digest → open a GitOps PR rewriting the real
 `feature-agent` `Deployment` in `platform/agents/agent-deployments.yaml`.
@@ -10,7 +10,7 @@ template end to end for the `feature-agent` deployable: build → cosign sign
 - source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db
 - gitops_sha: 1d0ebb619ed04651f7e639cb25d3eb968766b685
 - versions: sigstore/cosign-installer@v3.7.0, ghcr.io/emanhthangngot/financial-distress-data/feature-agent
-- command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `platform-agent-feature.yaml` on the `push` event (the merge diff touched `apps/feature-mcp/**`/`src/agents/**`, matching the workflow's path filter)
+- command: `git push origin main` (merge of PR #63, `dev`→`main`) triggering `production-agent-feature.yaml` on the `push` event (the merge diff touched `apps/feature-mcp/**`/`src/agents/**`, matching the workflow's path filter)
 - expected_result: `lint`, `test`, `build`, `phase5-verification`, `gitops-pr` all succeed; the pushed image is cosign-signed; `gitops-pr` rewrites the `feature-agent` `Deployment`'s `image:` field with a real digest and opens a PR against `master`
 - actual_result: run [31410263833](https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/31410263833) — all 5 jobs succeeded; opened [financial-distress-gitops#30](https://github.com/emanhthangngot/financial-distress-gitops/pull/30) rewriting the `feature-agent` Deployment's `image:` to `sha256:131f5c4a13b0a2c9744cc37872eed79e3016b4922c4c172bc805295294f8ab32`; merged into `master`
 - redaction_status: reviewed — source repository is public, GitOps repository is private; no secret values in this file

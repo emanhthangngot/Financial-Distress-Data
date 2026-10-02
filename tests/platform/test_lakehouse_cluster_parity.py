@@ -3,7 +3,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_cluster_image_packages_existing_phase1_tree_without_protected_edits() -> None:
+def test_cluster_image_packages_existing_lakehouse_tree_without_protected_edits() -> None:
     dockerfile = REPO_ROOT / "infra/lakehouse-cluster/Dockerfile.pipeline"
     text = dockerfile.read_text(encoding="utf-8")
     assert "COPY src ./src" in text

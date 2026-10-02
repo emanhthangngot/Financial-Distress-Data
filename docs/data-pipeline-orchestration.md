@@ -89,7 +89,7 @@ POSTGRES_HOST_PORT=55432 docker compose run --rm --no-deps \
 Export reviewer evidence from Airflow metadata:
 
 ```bash
-python scripts/export_phase6_airflow_evidence.py \
+python scripts/export_airflow_evidence.py \
   --dsn postgresql://airflow:airflow@localhost:55432/financial_distress \
-  --output docs/evidence/airflow/phase6-runtime.json
+  --output docs/evidence/airflow/runtime.json
 ```

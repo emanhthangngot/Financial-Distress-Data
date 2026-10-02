@@ -1,4 +1,4 @@
-"""platform .ubric items mapping — stable semantic source of truth for both tracks.
+"""platform rubric items mapping — stable semantic source of truth for both tracks.
 
 Parses the two final-coursework rubric CSVs:
   - docs/Coursework Tracking (Public) - rubic final-coursework (final - ml).csv
@@ -142,7 +142,7 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-novel-ideas-idea-1": "python_ast_contains:embedding",
     "LLM-novel-ideas-idea-2": "python_ast_contains:citation",
     "LLM-documentation-low-level-ml-design": "text_contains:design",
-    # platform .f plans/260811-1627-close-llm-rubric-to-100: 8 of these 13 rows
+    # platform of plans/260811-1627-close-llm-rubric-to-100: 8 of these 13 rows
     # were re-pointed off collided artifact_path values (all 7 gateway rows
     # shared f5-nginx-values.yaml; the traces row shared a Loki file with no
     # Jaeger content). Every token below is verified present in its target
@@ -455,25 +455,25 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "ML-ci-cd-ci-cd-cho-pipelines": (
         "data_engineer",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/production-ci.yaml",
     ),
-    "ML-ci-cd-training-pipeline": ("ml_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "ML-ci-cd-training-pipeline": ("ml_engineer", "source", ".github/workflows/production-ci.yaml"),
     "ML-ci-cd-dp-1": ("platform_operator", "source", ".github/workflows/ci.yml"),
     "ML-ci-cd-dp-2": ("platform_operator", "source", ".github/workflows/ci.yml"),
     "ML-ci-cd-dp-3": ("platform_operator", "source", ".github/workflows/ci.yml"),
-    "ML-ci-cd-web-api": ("platform_operator", "source", ".github/workflows/platform-ci.yaml"),
+    "ML-ci-cd-web-api": ("platform_operator", "source", ".github/workflows/production-ci.yaml"),
     "ML-ci-cd-inference-engine": (
         "platform_operator",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/production-ci.yaml",
     ),
     "ML-ci-cd-cho-real-time-drift-detection-": (
         "platform_operator",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/production-ci.yaml",
     ),
-    "ML-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
-    "ML-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "ML-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/production-ci.yaml"),
+    "ML-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/production-ci.yaml"),
     "ML-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
         "platform_operator",
         "gitops",
@@ -731,21 +731,21 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
         "data_engineer",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/production-ci.yaml",
     ),
-    "LLM-ci-cd-agent-k-o-d-li-u": ("llm_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "LLM-ci-cd-agent-k-o-d-li-u": ("llm_engineer", "source", ".github/workflows/production-ci.yaml"),
     "LLM-ci-cd-agent-drift-detection": (
         "llm_engineer",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/production-ci.yaml",
     ),
     "LLM-ci-cd-agent-l-m-coordinator": (
         "llm_engineer",
         "source",
-        ".github/workflows/platform-ci.yaml",
+        ".github/workflows/production-ci.yaml",
     ),
-    "LLM-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
-    "LLM-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/platform-ci.yaml"),
+    "LLM-ci-cd-job-1": ("data_engineer", "source", ".github/workflows/production-ci.yaml"),
+    "LLM-ci-cd-job-2": ("data_engineer", "source", ".github/workflows/production-ci.yaml"),
     "LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-": (
         "platform_operator",
         "gitops",
@@ -1235,7 +1235,7 @@ if set(EXPLICIT_IMPLEMENTATION) != _seen:
 
 
 @dataclass(frozen=True)
-class Phase2RubricItem:
+class ProductionRubricItem:
     rubric_id: str
     track: str
     section: str
@@ -1257,7 +1257,7 @@ class Phase2RubricItem:
     behavioral_assertion: str = ""
 
     @classmethod
-    def from_dict(cls, d: dict[str, object]) -> Phase2RubricItem:
+    def from_dict(cls, d: dict[str, object]) -> ProductionRubricItem:
         return cls(
             rubric_id=str(d.get("rubric_id", "")),
             track=str(d.get("track", "")),
@@ -1281,7 +1281,7 @@ class Phase2RubricItem:
         )
 
 
-ITEMS: tuple[Phase2RubricItem, ...] = tuple(Phase2RubricItem.from_dict(d) for d in _deduped)
+ITEMS: tuple[ProductionRubricItem, ...] = tuple(ProductionRubricItem.from_dict(d) for d in _deduped)
 
 
 # -- Public API --------------------------------------------------------------
@@ -1291,15 +1291,15 @@ def total_points(track: str) -> int:
     return sum(item.points for item in ITEMS if item.track == track)
 
 
-def by_track() -> dict[str, list[Phase2RubricItem]]:
-    out: dict[str, list[Phase2RubricItem]] = {"ML": [], "LLM": []}
+def by_track() -> dict[str, list[ProductionRubricItem]]:
+    out: dict[str, list[ProductionRubricItem]] = {"ML": [], "LLM": []}
     for item in ITEMS:
         out[item.track].append(item)
     return out
 
 
-def by_section(track: str) -> dict[str, list[Phase2RubricItem]]:
-    out: dict[str, list[Phase2RubricItem]] = {}
+def by_section(track: str) -> dict[str, list[ProductionRubricItem]]:
+    out: dict[str, list[ProductionRubricItem]] = {}
     for item in ITEMS:
         if item.track != track:
             continue

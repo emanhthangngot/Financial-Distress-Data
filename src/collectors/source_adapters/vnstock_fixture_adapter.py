@@ -3,7 +3,7 @@ Fixture-backed vnstock adapter for offline and CI runs.
 
 Replays deterministic fixtures (offline + streaming) instead of calling the live vnstock SDK, with
 knobs for skew, cardinality, late arrivals, and burst rates documented in
-``docs/01_data_generator.md``. The default adapter for platform .evelopment and CI.
+``docs/01_data_generator.md``. The default adapter for platform development and CI.
 """
 
 from __future__ import annotations
@@ -128,6 +128,9 @@ def _build_financial_rows(
                 "event_timestamp": date(year, quarter * 3, 28).isoformat(),
                 "created_ts": f"{year}-{quarter * 3:02d}-28T00:00:00+00:00",
                 "source_system": source_name,
+                "source_name": source_name,
+                "source_unit": "VND",
+                "is_synthetic": False,
             }
             if legacy_null_columns and report_period < legacy_partition_cutoff:
                 for col in legacy_null_columns:
@@ -276,6 +279,9 @@ def _legacy_financial_statements(
                     "event_timestamp": date(year, quarter * 3, 28).isoformat(),
                     "created_ts": f"{year}-{quarter * 3:02d}-28T00:00:00+00:00",
                     "source_system": source_name,
+                    "source_name": source_name,
+                    "source_unit": "VND",
+                    "is_synthetic": False,
                 }
             )
     return rows

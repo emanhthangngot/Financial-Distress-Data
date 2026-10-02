@@ -1,8 +1,7 @@
 # DistressLens web
 
-platform .roduct shell: Next.js 16 (App Router) + Supabase Auth/Postgres. See
-`docs/platform/product.md` and `../../plans/260802-1037-unified-platform-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
-for scope and acceptance criteria.
+platform product shell: Next.js 16 (App Router) + Supabase Auth/Postgres. See
+`docs/platform/product.md` for scope and acceptance criteria.
 
 ```bash
 pnpm install
@@ -18,7 +17,7 @@ GitOps checkout, run the source-repo runner after the node pool is available:
 ```bash
 make platform-e2e \
   SOURCE_REPO=/home/pearspringmind/Studying/FSDS/Financial-Distress-Data \
-  PHASE2_E2E_ARGS="--json"
+  PRODUCTION_E2E_ARGS="--json"
 ```
 
 The runner waits for the web, MCP, agent, gateway, data, and observability

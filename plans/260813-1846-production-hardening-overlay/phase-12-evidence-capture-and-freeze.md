@@ -131,7 +131,7 @@ Source repo:
 
 - [ ] `capture_phase2_evidence.py --all` -> single command -> regenerates the complete evidence set with zero manual capture
 - [ ] Every screenshot -> looked up in the checklist -> has a declared claim it supports; no orphans
-- [ ] Concurrent soak -> all five new subsystems plus ML stack plus platform .lane up simultaneously -> held for the window, resource usage captured
+- [ ] Concurrent soak -> all five new subsystems plus ML stack plus platform plane up simultaneously -> held for the window, resource usage captured
 - [ ] Strict auditor `--track LLM` -> PASS 100/100
 - [ ] Strict auditor `--track ML` -> PASS 100/100
 - [ ] `--check-artifacts` -> zero missing artifacts across both repos

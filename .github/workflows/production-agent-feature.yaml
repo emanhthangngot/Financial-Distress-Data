@@ -1,0 +1,34 @@
+name: Production — feature agent
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "src/agents/**"
+      - "apps/feature-mcp/**"
+      - "tests/platform/agents/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "src/agents/**"
+      - "apps/feature-mcp/**"
+      - "tests/platform/agents/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/production-ci.yaml
+    with:
+      deployables: >-
+        [{"name":"feature-agent","image_context":".","dockerfile":"apps/feature-mcp/Dockerfile",
+        "test_selector":"tests/platform/agents tests/platform/apps -k 'feature or agent'",
+        "lint_paths":"src/agents apps/feature-mcp/app tests/platform/agents",
+        "gitops_path":"platform/agents/agent-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"Deployment","gitops_target_selector":"feature-agent"}]
+    secrets:
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

@@ -1,6 +1,6 @@
 ---
 phase: 0
-title: "Phase 0: Zero-spend resource and compatibility gates"
+title: "Phase 0: Zero-spend resource, Jenkins and compatibility gates"
 status: blocked
 priority: P1
 effort: "2-3 days + 1-3 days GCP quota lag"
@@ -8,7 +8,7 @@ dependencies: []
 owns: ["reports/ (dated gate ledger only)"]
 ---
 
-# Phase 0: Zero-spend resource and compatibility gates
+# Phase 0: Zero-spend resource, Jenkins and compatibility gates
 
 ## Overview
 
@@ -33,12 +33,14 @@ The old 48-vCPU topology, USD120/180 credit thresholds and fixed KServe0.18 stac
 | G5-providers | Groq Free and one free fallback capability probe, tool schemas, streaming, account limits | Gemini candidate only until verified; no per-provider quota promise or paid fallback |
 | G6-Kaggle | MCP access, GPU quota/availability, private dataset and output/export policy | Bounded batch only; no hosting or cloud rubric substitution |
 | G7-domain | Controlled DNS and trusted HTTPS for the Web API during demo window | Missing delegation/trust keeps P9 domain AC open |
+| G8-Jenkins | No-spend controller host, durable `JENKINS_HOME` backup/restore, SCM webhook reachability, pinned LTS/plugin catalog, JCasC reload, Kubernetes-agent capacity and least-privilege credential path | Any unverified item blocks P10 promotion; source/data/ML/LLM local work continues |
 
 ## Related files and ownership
 
 P0 owns a new dated gate report under this plan's `reports/`; preserve the historical gate report.
-P6 owns Terraform/mesh mutations, P8 inference/provider changes, P7 Kaggle packaging, P9 DNS/ingress.
-P0 supplies their measured configuration contract, not a competing implementation.
+P6 owns Terraform/mesh/Jenkins runtime mutations, P10 owns Jenkins jobs and delivery pipelines,
+P8 owns inference/provider changes, P7 owns Kaggle packaging, and P9 owns DNS/ingress. P0 supplies
+their measured configuration contract, not a competing implementation.
 
 ## Implementation steps
 
@@ -54,7 +56,11 @@ P0 supplies their measured configuration contract, not a competing implementatio
    optimization evidence without requiring 7B CPU inference or speculative decoding.
 7. Test mesh/Jobs in the permitted runtime and record exclusions; cloud-specific proof waits for cloud.
 8. Verify Kaggle access without pushing an unreviewed notebook; P7 performs compilation and artifact checks.
-9. Publish the dated pass/blocked ledger with consumer phase and next action for every gate.
+9. Verify the Jenkins LTS/plugin matrix, controller host, persistent-state restore, webhook path,
+   controller-to-agent connectivity and credential exchange without provisioning unapproved spend.
+   The preferred topology is the P6 Ansible VM controller with zero built-in executors and
+   Kubernetes-plugin ephemeral agents; if that topology cannot be made no-spend, record it blocked.
+10. Publish the dated pass/blocked ledger with consumer phase and next action for every gate.
 
 ## Success criteria
 
@@ -67,11 +73,14 @@ P0 supplies their measured configuration contract, not a competing implementatio
 - [ ] AC-P0-PROVIDER: LLM engineer -> probes Groq Free and one verified free fallback -> capability/terms/limits recorded, no billing-tier activation.
 - [ ] AC-P0-KAGGLE: ML engineer -> inspects MCP/kernel prerequisites -> bounded private job and artifact route feasible, or experiment lane blocked without changing graded KFP work.
 - [ ] AC-P0-DNS: Operator -> verifies DNS control and HTTPS prerequisites -> trusted demo domain feasible or P9 domain gate explicitly blocked.
+- [ ] AC-P0-JENKINS: Platform engineer -> proves Jenkins controller restore, JCasC/plugin compatibility, SCM webhook and one disposable Kubernetes agent -> P6/P10 receive a feasible no-spend topology, or Jenkins promotion remains explicitly blocked.
 
 ## Risks and verification
 
-Stale free-tier terms, hidden residual charges and cloud teardown failure are fail-closed risks.
-Recheck immediately before each window. No arbitrary auto-destroy may remove shared data or unrelated
-user resources. Record exact resources authorized for creation/deletion and verify their end state.
+Stale free-tier terms, hidden residual charges, Jenkins controller-state loss and cloud teardown
+failure are fail-closed risks. Recheck immediately before each window. No arbitrary auto-destroy
+may remove shared data or unrelated user resources. Record exact resources authorized for
+creation/deletion and verify their end state. Jenkins backup is restored into a disposable
+controller before delivery authority moves; an untested backup is not recovery evidence.
 Planning is read-only; live gates require actual command output at execution, never historical counts.
 

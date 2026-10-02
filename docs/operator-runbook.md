@@ -43,7 +43,7 @@ Every view defined in `sql/duckdb_create_views.sql` matches
 
 ### MinIO Storage Paths
 
-Gold writes in `src/jobs/stage1_spark_lakehouse_job.py` go to one of
+Gold writes in `src/jobs/lakehouse_spark_lakehouse_job.py` go to one of
 the allowed layer folders under the `gold/` prefix:
 
 ```
@@ -77,15 +77,15 @@ addition.
 
 The checked-in Stage 1 evidence proves the local pipeline has run end to end.
 The latest committed evidence package reports `status: pass` in
-`docs/evidence/stage1_runtime_audit_summary.json`.
+`docs/evidence/lakehouse_runtime_audit_summary.json`.
 
 | Evidence area | Current proof |
 |---|---|
-| Airflow pipeline | `stage1_real_e2e_pipeline` finished successfully in `docs/evidence/stage1_real_airflow_dag_test.txt` |
+| Airflow pipeline | `lakehouse_real_e2e_pipeline` finished successfully in `docs/evidence/lakehouse_real_airflow_dag_test.txt` |
 | Kafka streaming | Offsets exist for `financial.price_events`, `financial.news_events`, and `financial.alert_events` |
 | MinIO lakehouse | 436 objects across Bronze, Silver, Gold, and `evidence/lakehouse/` prefixes |
-| PostgreSQL metadata | `pipeline_run_log`, `data_quality_result`, `dataset_freshness`, `backfill_request`, `source_request_log`, and `collector_checkpoint` exported in `docs/evidence/stage1_real_postgres_summary.json` |
-| DuckDB validation | Gold row counts, duplicate checks, distress-label distribution, and PIT leakage checks exported in `docs/evidence/stage1_real_duckdb_validation.json` |
+| PostgreSQL metadata | `pipeline_run_log`, `data_quality_result`, `dataset_freshness`, `backfill_request`, `source_request_log`, and `collector_checkpoint` exported in `docs/evidence/lakehouse_real_postgres_summary.json` |
+| DuckDB validation | Gold row counts, duplicate checks, distress-label distribution, and PIT leakage checks exported in `docs/evidence/lakehouse_real_duckdb_validation.json` |
 | DQ failure handling | Critical DQ failure probe confirms failure is persisted before halt |
 
 Key DuckDB metrics from the checked-in evidence:
@@ -149,7 +149,7 @@ Check service status.
 
 ```bash
 docker compose ps
-.venv/bin/python scripts/check_stage1_services.py
+.venv/bin/python scripts/check_lakehouse_services.py
 ```
 
 Opt in to Apache Flink (jobmanager + taskmanager, profile `flink`):
@@ -211,7 +211,7 @@ the platform environment and the checked-out GitOps repository:
 
 ```bash
 PATH="$PWD/.venv-platform/bin:$PATH" \
-.venv-platform/bin/python scripts/audit_phase2_evidence.py \
+.venv-platform/bin/python scripts/audit_platform_evidence.py \
   --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 \
   --lakehouse-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 \
   --gitops-root "${GITOPS_ROOT:-../financial-distress-gitops}"
@@ -262,14 +262,14 @@ band. No credential belongs in this repository.
 Run the fixture-backed Stage 1 evidence pipeline from the host.
 
 ```bash
-.venv/bin/python scripts/run_stage1_evidence.py
+.venv/bin/python scripts/run_lakehouse_evidence.py
 ```
 
 Run the connected local E2E path through Airflow, Kafka, Spark, MinIO,
 PostgreSQL, and DuckDB.
 
 ```bash
-.venv/bin/python scripts/run_stage1_real_e2e.py \
+.venv/bin/python scripts/run_lakehouse_real_e2e.py \
   --execution-date 2026-06-06T10:04:00+00:00 \
   --export-evidence /tmp/lakehouse-e2e
 ```
@@ -277,26 +277,26 @@ PostgreSQL, and DuckDB.
 Generate a machine-readable audit summary for the E2E artifacts.
 
 ```bash
-.venv/bin/python scripts/audit_stage1_evidence.py /tmp/lakehouse-e2e
+.venv/bin/python scripts/audit_lakehouse_evidence.py /tmp/lakehouse-e2e
 ```
 
 Validate the checked-in submission evidence without regenerating files.
 
 ```bash
-.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
+.venv/bin/python scripts/audit_lakehouse_evidence.py docs/evidence --check
 ```
 
 Build a reviewer-facing readiness report from the checked-in evidence.
 
 ```bash
-.venv/bin/python scripts/stage1_readiness_report.py
-.venv/bin/python scripts/stage1_readiness_report.py --json --output /tmp/stage1_readiness_report.json
+.venv/bin/python scripts/lakehouse_readiness_report.py
+.venv/bin/python scripts/lakehouse_readiness_report.py --json --output /tmp/stage1_readiness_report.json
 ```
 
 Prove critical DQ failures are persisted before the pipeline halts.
 
 ```bash
-.venv/bin/python scripts/run_stage1_dq_failure_probe.py \
+.venv/bin/python scripts/run_lakehouse_dq_failure_probe.py \
   --run-id lakehouse-dq-failure-probe \
   --export-evidence /tmp/lakehouse-dq-failure-probe
 ```
@@ -304,13 +304,13 @@ Prove critical DQ failures are persisted before the pipeline halts.
 For a no-service payload check:
 
 ```bash
-.venv/bin/python scripts/run_stage1_evidence.py --dry-run --evidence-dir /tmp/lakehouse-evidence
+.venv/bin/python scripts/run_lakehouse_evidence.py --dry-run --evidence-dir /tmp/lakehouse-evidence
 ```
 
 Run the primary Airflow evidence DAG once from the CLI.
 
 ```bash
-docker compose exec airflow-scheduler airflow dags test stage1_local_evidence_pipeline 2026-06-06T02:00:00+00:00
+docker compose exec airflow-scheduler airflow dags test lakehouse_local_evidence_pipeline 2026-06-06T02:00:00+00:00
 ```
 
 Runtime evidence artifacts are written to MinIO:
@@ -322,21 +322,21 @@ financial-distress-lake/evidence/lakehouse/run_id=.../
 Expected files:
 
 ```txt
-stage1_row_counts.json
-stage1_minio_objects.txt
-stage1_stream_batches.json
-stage1_duckdb_validation.json
+lakehouse_row_counts.json
+lakehouse_minio_objects.txt
+lakehouse_stream_batches.json
+lakehouse_duckdb_validation.json
 ```
 
 The real E2E runner also exports:
 
 ```txt
-stage1_real_airflow_dag_test.txt
-stage1_real_kafka_offsets.json
-stage1_real_minio_objects.json
-stage1_real_postgres_summary.json
-stage1_real_duckdb_validation.json
-stage1_runtime_audit_summary.json
+lakehouse_real_airflow_dag_test.txt
+lakehouse_real_kafka_offsets.json
+lakehouse_real_minio_objects.json
+lakehouse_real_postgres_summary.json
+lakehouse_real_duckdb_validation.json
+lakehouse_runtime_audit_summary.json
 ```
 
 ## Validation Commands
@@ -344,20 +344,20 @@ stage1_runtime_audit_summary.json
 Run local quality gates.
 
 ```bash
-.venv/bin/python scripts/run_stage1_quality_gates.py
+.venv/bin/python scripts/run_lakehouse_quality_gates.py
 ```
 
 Run quality gates plus Docker service readiness after the stack is up.
 
 ```bash
-.venv/bin/python scripts/run_stage1_quality_gates.py --include-services
+.venv/bin/python scripts/run_lakehouse_quality_gates.py --include-services
 ```
 
 Build a readiness report plus live service checks after the stack is up.
 
 ```bash
-.venv/bin/python scripts/stage1_readiness_report.py --include-services
-.venv/bin/python scripts/stage1_readiness_report.py --include-services --include-quality-gates
+.venv/bin/python scripts/lakehouse_readiness_report.py --include-services
+.venv/bin/python scripts/lakehouse_readiness_report.py --include-services --include-quality-gates
 ```
 
 The one-shot gate runs the same checks individually listed below.
@@ -367,7 +367,7 @@ The one-shot gate runs the same checks individually listed below.
 .venv/bin/ruff check src dags tests scripts
 .venv/bin/black --check src dags tests scripts
 docker compose config
-.venv/bin/python scripts/audit_stage1_evidence.py docs/evidence --check
+.venv/bin/python scripts/audit_lakehouse_evidence.py docs/evidence --check
 ```
 
 While iterating, `.venv/bin/python -m pytest tests -m "not slow"` runs the fast
@@ -419,7 +419,7 @@ docker compose exec postgres psql -U airflow -d financial_distress -c \
 DuckDB validation output is generated at:
 
 ```txt
-docs/evidence/stage1_duckdb_validation.json
+docs/evidence/lakehouse_duckdb_validation.json
 ```
 
 Airflow DAG test output writes the same validation artifact to MinIO under the Stage 1 evidence prefix.

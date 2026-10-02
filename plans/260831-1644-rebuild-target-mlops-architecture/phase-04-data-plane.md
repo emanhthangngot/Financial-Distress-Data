@@ -232,7 +232,9 @@ guard something real to catch. This is ML novel idea 1.
    assert the lineage graph carries the knowledge-time axis.
 9. **Freeze the holdout** (1 d) — after the first full run, create the Iceberg tag `holdout-v1`
    pinned to a named knowledge-time cutoff; verify two time-travel reads are byte-identical.
-10. **Regression** (1 d) — `scripts/run_quality_gates.py` and `pytest tests`.
+10. **Behavior and regression gate** (1 d) — run the focused temporal/Spark parity regression,
+    `.venv/bin/python scripts/run_lakehouse_quality_gates.py`, then one real Airflow
+    Bronze→Silver→Gold request over fresh source/generator rows. Tests do not replace the DAG run.
 
 ## Success Criteria
 
@@ -264,8 +266,8 @@ guard something real to catch. This is ML novel idea 1.
 - [ ] AC-P4-10: Data engineer → tags the holdout → `gold.distress_holdout` resolves at
       `holdout-v1`, is pinned to a named knowledge-time cutoff, and two time-travel reads are
       byte-identical
-- [ ] AC-P4-11: `scripts/run_quality_gates.py` → passes on the Iceberg path; no Parquet-only code
-      path remains for Bronze/Silver/Gold
+- [ ] AC-P4-11: `.venv/bin/python scripts/run_lakehouse_quality_gates.py` → passes on the Iceberg path;
+      no Parquet-only code path remains for Bronze/Silver/Gold
 
 ### Mini-track and previously uncited rows (added 2026-09-02)
 

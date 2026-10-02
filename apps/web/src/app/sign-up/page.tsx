@@ -4,7 +4,7 @@ import { SignUpForm } from "@/components/auth/sign-up-form";
 
 /**
  * Open sign-up. New accounts default to `analyst`
- * (`handle_new_user()` in `supabase/migrations/20260814200000_phase2_profile_identity.sql`).
+ * (the profile identity migration).
  *
  * Never prerendered, for the same reason as `/sign-in`.
  */

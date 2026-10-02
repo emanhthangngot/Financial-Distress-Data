@@ -51,7 +51,7 @@ track is deferred, not cancelled; ADR-006 (MLflow promotion) is deferred with
 it.
 
 Track selection is enforced by a new `--track` filter on
-`scripts/audit_phase2_evidence.py` that narrows **only** the executed-evidence
+`scripts/audit_platform_evidence.py` that narrows **only** the executed-evidence
 and behavior-validation gates. `_audit_matrix`, `_audit_canonical_coverage` and
 the per-track 100/100 totals continue to require all 117 rows. Deleting rows or
 zeroing expected totals is explicitly rejected: it hides the deferral and breaks
@@ -191,7 +191,7 @@ set.
   rework.
 - Three declared GitOps artifact paths are retargeted in both
   `docs/platform/rubric-matrix.csv` and
-  `scripts/_phase2_rubric_items.py::EXPLICIT_IMPLEMENTATION`; they must stay in
+  `scripts/_production_rubric_items.py::EXPLICIT_IMPLEMENTATION`; they must stay in
   parity or `--matrix-only --strict` fails.
 - Days 3-4 in `phase-06` absorb ~13h of restored KServe/Knative/llm-d/KEDA work
   without dropping any row (user-confirmed 2026-08-07); if either slips, warm-up

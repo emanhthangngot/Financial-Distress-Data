@@ -16,6 +16,7 @@ from typing import Any
 import pandas as pd
 import pytest
 
+from src.collectors.source_adapters.vnstock_adapter import build_source_adapter
 from src.collectors.source_adapters.vnstock_live_adapter import (
     VnstockLiveAdapter,
     VnstockUnavailableError,
@@ -92,12 +93,48 @@ def fake_vnstock(monkeypatch: pytest.MonkeyPatch):
         def balance_sheet(self) -> pd.DataFrame:
             return pd.DataFrame(
                 [
-                    {"item_id": "total_assets", "2026-Q2": 4.089226e13, "2026-Q1": 3.87e13},
-                    {"item_id": "current_assets", "2026-Q2": 4.0e13, "2026-Q1": 3.8e13},
-                    {"item_id": "current_liabilities", "2026-Q2": 1.0e13, "2026-Q1": 0.9e13},
-                    {"item_id": "liabilities", "2026-Q2": 1.5e13, "2026-Q1": 1.4e13},
-                    {"item_id": "owners_equity", "2026-Q2": 2.5e13, "2026-Q1": 2.4e13},
-                    {"item_id": "undistributed_earnings", "2026-Q2": 5.0e12, "2026-Q1": 4.5e12},
+                    {
+                        "item_id": "total_assets",
+                        "2026-Q2": 4.089226e13,
+                        "2026-Q1": 3.87e13,
+                        "2025-Q4": 3.75e13,
+                        "2025-Q3": 3.7e13,
+                    },
+                    {
+                        "item_id": "current_assets",
+                        "2026-Q2": 4.0e13,
+                        "2026-Q1": 3.8e13,
+                        "2025-Q4": 3.7e13,
+                        "2025-Q3": 3.6e13,
+                    },
+                    {
+                        "item_id": "current_liabilities",
+                        "2026-Q2": 1.0e13,
+                        "2026-Q1": 0.9e13,
+                        "2025-Q4": 0.85e13,
+                        "2025-Q3": 0.8e13,
+                    },
+                    {
+                        "item_id": "liabilities",
+                        "2026-Q2": 1.5e13,
+                        "2026-Q1": 1.4e13,
+                        "2025-Q4": 1.35e13,
+                        "2025-Q3": 1.3e13,
+                    },
+                    {
+                        "item_id": "owners_equity",
+                        "2026-Q2": 2.5e13,
+                        "2026-Q1": 2.4e13,
+                        "2025-Q4": 2.35e13,
+                        "2025-Q3": 2.3e13,
+                    },
+                    {
+                        "item_id": "undistributed_earnings",
+                        "2026-Q2": 5.0e12,
+                        "2026-Q1": 4.5e12,
+                        "2025-Q4": 4.2e12,
+                        "2025-Q3": 4.0e12,
+                    },
                 ]
             )
 
@@ -165,7 +202,7 @@ def test_fetch_financial_statements_maps_item_ids_and_stays_whole_dong(fake_vnst
     adapter = VnstockLiveAdapter(min_request_delay_seconds=0)
     rows = adapter.fetch_financial_statements("vnm", 2018, 2025)
 
-    assert len(rows) == 2
+    assert len(rows) == 4
     q2 = next(r for r in rows if r["report_period"] == "2026Q2")
     assert q2["total_assets"] == 4.089226e13
     assert q2["revenue"] == 1.0e13
@@ -174,6 +211,10 @@ def test_fetch_financial_statements_maps_item_ids_and_stays_whole_dong(fake_vnst
     assert q2["operating_cash_flow"] == 1.8e12
     assert q2["source_unit"] == "VND"
     assert "known_from_ts" in q2
+    assert q2["fiscal_year"] == 2026
+    assert q2["fiscal_quarter"] == 2
+    assert q2["statement_variant"] == "consolidated_unaudited"
+    assert len({row["known_from_ts"] for row in rows}) == 4
 
 
 def test_fetch_financial_statements_checkpoints_per_ticker(fake_vnstock) -> None:
@@ -181,9 +222,148 @@ def test_fetch_financial_statements_checkpoints_per_ticker(fake_vnstock) -> None
     adapter = VnstockLiveAdapter(min_request_delay_seconds=0, metadata_sink=sink, run_id="run-1")
     adapter.fetch_financial_statements("vnm", 2018, 2025)
 
-    assert len(sink.checkpoints) == 2  # one per period row, per current checkpoint call site
+    assert len(sink.checkpoints) == 4  # one per live period row
     assert all(c["checkpoint_value"] == "VNM" for c in sink.checkpoints)
     assert any(r["request_status"] == "success" for r in sink.source_requests)
+    cap_failure = next(r for r in sink.failed_records if r["failure_reason"] == "tier_period_cap")
+    assert cap_failure["raw_payload"]["ticker"] == "VNM"
+    assert cap_failure["raw_payload"]["available_periods"] == [
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2",
+    ]
+    assert "2018Q1" in cap_failure["raw_payload"]["requested_periods"]
+    assert "2025Q2" in cap_failure["raw_payload"]["missing_periods"]
+
+
+def test_tier_cap_uses_configured_generator_without_overwriting_live_rows(
+    fake_vnstock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "src.collectors.source_adapters.vnstock_live_adapter.time.sleep", lambda _seconds: None
+    )
+    sink = FakeMetadataSink()
+    adapter = build_source_adapter(source_mode="online", metadata_sink=sink, run_id="run-tier-cap")
+
+    rows = adapter.fetch_financial_statements("vnm", 2024, 2026)
+
+    real_rows = [row for row in rows if row["is_synthetic"] is False]
+    synthetic_rows = [row for row in rows if row["is_synthetic"] is True]
+    assert {row["report_period"] for row in real_rows} == {
+        "2025Q3",
+        "2025Q4",
+        "2026Q1",
+        "2026Q2",
+    }
+    assert {row["report_period"] for row in synthetic_rows} == {
+        "2024Q1",
+        "2024Q2",
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+    }
+    assert all(row["source_system"] == "vnstock" for row in real_rows)
+    latest_known_row = max(rows, key=lambda row: row["known_from_ts"])
+    assert latest_known_row["report_period"] == "2026Q2"
+    assert all(row["source_system"] == "generator" for row in synthetic_rows)
+    assert all(row["source_name"] != "vnstock_vci" for row in synthetic_rows)
+    assert all(row["source_unit"] == "VND" for row in rows)
+
+    cap_failures = [
+        record for record in sink.failed_records if record["failure_reason"] == "tier_period_cap"
+    ]
+    assert len(cap_failures) == 1
+    payload = cap_failures[0]["raw_payload"]
+    assert payload["ticker"] == "VNM"
+    assert payload["available_periods"] == ["2025Q3", "2025Q4", "2026Q1", "2026Q2"]
+    assert payload["missing_periods"] == [
+        "2024Q1",
+        "2024Q2",
+        "2024Q3",
+        "2024Q4",
+        "2025Q1",
+        "2025Q2",
+    ]
+
+
+def test_tier_cap_records_stable_generator_failure_reason(fake_vnstock) -> None:
+    class RaisingFallback:
+        source_name = "configured_generator"
+
+        def fetch_financial_statements(
+            self, ticker: str, start_year: int, end_year: int
+        ) -> list[dict[str, Any]]:
+            raise RuntimeError("generator unavailable")
+
+    sink = FakeMetadataSink()
+    adapter = VnstockLiveAdapter(
+        min_request_delay_seconds=0,
+        metadata_sink=sink,
+        run_id="run-tier-cap-failure",
+        financial_statement_fallback=RaisingFallback(),
+        fallback_source_unit="VND",
+    )
+
+    adapter.fetch_financial_statements("VNM", 2024, 2026)
+
+    failures = [
+        record
+        for record in sink.failed_records
+        if record["failure_reason"] == "generator_fallback_failed"
+    ]
+    assert len(failures) == 1
+    assert failures[0]["raw_payload"]["error"] == "generator unavailable"
+
+
+def test_build_source_adapter_fixture_mode_remains_offline(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(sys.modules, "vnstock", None)
+
+    rows = build_source_adapter(source_mode="fixture").fetch_financial_statements("AAA", 2024, 2024)
+
+    assert {row["report_period"] for row in rows} == {
+        "2024Q1",
+        "2024Q2",
+        "2024Q3",
+        "2024Q4",
+    }
+    assert all(row["source_system"] == "vnstock_fixture" for row in rows)
+
+
+def test_tier_cap_rejects_fallback_rows_without_vnd_source_unit(fake_vnstock) -> None:
+    class WrongUnitFallback:
+        source_name = "test_generator"
+
+        def fetch_financial_statements(
+            self, ticker: str, start_year: int, end_year: int
+        ) -> list[dict[str, Any]]:
+            return [
+                {
+                    "ticker": ticker,
+                    "report_period": f"{start_year}Q1",
+                    "total_assets": 1000,
+                    "source_unit": "VND_THOUSAND",
+                }
+            ]
+
+    sink = FakeMetadataSink()
+    adapter = VnstockLiveAdapter(
+        min_request_delay_seconds=0,
+        metadata_sink=sink,
+        financial_statement_fallback=WrongUnitFallback(),
+    )
+
+    rows = adapter.fetch_financial_statements("VNM", 2024, 2026)
+
+    assert all(row["source_system"] == "vnstock" for row in rows)
+    assert any(
+        record["failure_reason"] == "unknown_source_unit"
+        and record["raw_payload"]["source_unit"] == "VND_THOUSAND"
+        for record in sink.failed_records
+    )
 
 
 def test_fetch_companies_routes_failure_to_failed_records(monkeypatch: pytest.MonkeyPatch) -> None:

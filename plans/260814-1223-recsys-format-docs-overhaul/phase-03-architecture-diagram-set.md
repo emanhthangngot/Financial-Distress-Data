@@ -87,7 +87,7 @@ edge/client, service, store, model, result/observability.
 6. Verify each small diagram renders on GitHub (Mermaid dialect, no unsupported
    syntax) by previewing the containing doc.
 7. Resolve the competing hero images: either regenerate
-   `images/architecture/architecture-stage-1.png` as the platform .ubsystem view
+   `images/architecture/architecture-stage-1.png` as the platform subsystem view
    or retire it and point everything at the new set. Record the decision in
    `docs/system-architecture.md`.
 

@@ -8,8 +8,8 @@ const INITIAL_RESULT: ActionResult = { ok: true, message: "" };
 /**
  * One-field self-rename, inline in the account menu. `updateDisplayName`
  * only ever writes `profiles.display_name` -- the owner-only column grant
- * (`supabase/migrations/20260814200000_phase2_profile_identity.sql`) refuses
- * anything else at the database, so there is nothing here to restrict beyond
+ * (the profile identity migration) refuses anything else at the database, so
+ * there is nothing here to restrict beyond form validation.
  * form validation.
  */
 export function DisplayNameForm({ currentName }: { currentName: string }) {

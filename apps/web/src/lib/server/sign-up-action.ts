@@ -11,8 +11,7 @@ import { createRequestClient } from "./supabase";
  * Server-side sign-up.
  *
  * New accounts default to `analyst` via the `handle_new_user()` trigger
- * (`supabase/migrations/20260814200000_phase2_profile_identity.sql`) -- this
- * action never writes a role.
+ * (the profile identity migration) -- this action never writes a role.
  *
  * The remote project requires email confirmation
  * (`GET /auth/v1/settings` reports `mailer_autoconfirm: false`), unlike the

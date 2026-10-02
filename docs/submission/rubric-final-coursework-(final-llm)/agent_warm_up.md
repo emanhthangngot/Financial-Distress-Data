@@ -22,7 +22,7 @@ cost-delta model is a documented estimate, not a billing reconciliation.
 ### 1. Real cold-vs-warm measurement against the live deployment
 
 ```text
-$ python scripts/run_phase5_warmup_measurement.py --warm-replicas 2 \
+$ python scripts/run_production_warmup_measurement.py --warm-replicas 2 \
     --output docs/platform/evidence/llm/warmup.json
 {
   "cold_start_seconds": 7.732,
@@ -51,7 +51,7 @@ evidence:
 referenced `python -m src.llm.benchmark --mode cold,warm --agent
 feature-agent --replicas 2 --output /evidence/warmup.json` — that CLI never
 existed; `src/llm/benchmark.py` has no `__main__`/argparse entry point. The
-fix: `scripts/run_phase5_warmup_measurement.py` was written to perform the
+fix: `scripts/run_production_warmup_measurement.py` was written to perform the
 real measurement (scale-to-zero for a true cold start, scale-one-up-from-warm
 for a warm start, `/v1/run` TTFT via `kubectl port-forward`), and the
 policy's `measurement.command` was updated to point at it. Disclosed here

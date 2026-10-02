@@ -1,7 +1,7 @@
-"""RLS/RBAC tests for every role/action pair in phase-02's Authorization Model.
+"""RLS/RBAC tests for every role/action pair in the production Authorization Model.
 
 Runs against a real (ephemeral, native) Postgres server with the actual
-platform .igrations applied — no mocked database.
+platform migrations applied — no mocked database.
 """
 
 from __future__ import annotations
@@ -137,10 +137,10 @@ def test_platform_operator_cannot_manage_roles(seeded_db):
         "update profiles set role = 'platform_admin' where user_id = %s returning role",
         (ANALYST_ID,),
     )
-    assert result["rows"] == []
+    assert result["error"] is not None
 
 
-def test_platform_admin_with_aal2_can_manage_roles(seeded_db):
+def test_platform_admin_with_aal2_cannot_manage_roles_directly(seeded_db):
     result = run_as(
         seeded_db,
         PLATFORM_ADMIN_ID,
@@ -148,8 +148,7 @@ def test_platform_admin_with_aal2_can_manage_roles(seeded_db):
         "update profiles set role = 'platform_viewer' where user_id = %s returning role",
         (ANALYST_ID,),
     )
-    assert result["error"] is None
-    assert result["rows"][0][0] == "platform_viewer"
+    assert result["error"] is not None
 
 
 def test_platform_admin_without_aal2_cannot_manage_roles(seeded_db):
@@ -160,8 +159,7 @@ def test_platform_admin_without_aal2_cannot_manage_roles(seeded_db):
         "update profiles set role = 'platform_viewer' where user_id = %s returning role",
         (ANALYST_ID,),
     )
-    assert result["rows"] == []
-
+    assert result["error"] is not None
 
 def test_request_session_transition_rejects_analyst(seeded_db):
     seeded_db.execute(
@@ -542,7 +540,7 @@ def test_concurrent_requests_with_one_unit_remaining_allow_exactly_one(seeded_db
 
     def race() -> bool:
         conn = psycopg.connect(
-            dbname="phase2_rls_test",
+            dbname="production_rls_test",
             user="postgres",
             host=pg_cluster["host"],
             autocommit=True,

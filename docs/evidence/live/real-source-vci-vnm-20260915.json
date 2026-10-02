@@ -1,0 +1,51 @@
+{
+  "captured_at_utc": "2026-09-14T21:50:27Z",
+  "source": {
+    "package": "vnstock",
+    "version": "4.0.7",
+    "explorer": "vci",
+    "operation": "Finance.balance_sheet",
+    "ticker": "VNM",
+    "period": "quarter",
+    "environment": "isolated temporary virtualenv",
+    "network_call": true,
+    "credentials": "none"
+  },
+  "observed": {
+    "status": "ok",
+    "shape": [122, 7],
+    "period_columns": ["2026-Q2", "2026-Q1", "2025-Q4", "2025-Q3"],
+    "current_assets": {
+      "2026-Q2": 40892260000000.0,
+      "2026-Q1": 38757020000000.0,
+      "2025-Q4": 36261180000000.0,
+      "2025-Q3": 38746850000000.0
+    },
+    "market_probe": {
+      "explorer": "kbs",
+      "operation": "Quote.history",
+      "row_count": 171,
+      "first_trading_date": "2026-01-05",
+      "first_close_vnd": 58440.0,
+      "last_trading_date": "2026-09-14",
+      "last_close_vnd": 59300.0,
+      "source_name": "vnstock_kbs",
+      "source_unit": "VND",
+      "normalization": "adapter multiplied wire nghin-dong prices by 1000"
+    },
+    "adapter_output": {
+      "row_count": 4,
+      "report_periods": ["2026Q2", "2026Q1", "2025Q4", "2025Q3"],
+      "source_name": "vnstock_vci",
+      "source_unit": "VND",
+      "is_synthetic": false,
+      "total_assets_2026Q2": 57451803693875.0
+    }
+  },
+  "interpretation": {
+    "tier_cap": "The community response exposed exactly four quarter columns; a 2025-2026 request returned only those four live periods.",
+    "provenance": "The adapter preserved live statement rows as vnstock_vci/VND/is_synthetic=false and market rows as vnstock_kbs/VND.",
+    "safety": "vnai.setup() ran with agent setup and telemetry disabled, HOME isolated under /tmp, and the repository AGENTS.md was not used as a write target."
+  },
+  "command_contract": "PYTHONPATH=<repo> /tmp/fsds-live-probe/bin/python -c ... VnstockLiveAdapter(...).fetch_financial_statements('VNM', 2025, 2026); ...fetch_market_prices('VNM', 2026, 2026)"
+}

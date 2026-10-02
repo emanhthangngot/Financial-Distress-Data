@@ -1,4 +1,4 @@
-"""Async FastAPI facade over the pure platform .rift generator."""
+"""Async FastAPI facade over the pure platform drift generator."""
 
 from __future__ import annotations
 

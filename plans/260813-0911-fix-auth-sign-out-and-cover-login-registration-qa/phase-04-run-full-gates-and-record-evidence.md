@@ -14,7 +14,7 @@ report without modifying generated evidence artifacts.
 
 - [x] Web -> runs focused tests, typecheck, lint, build, and the relevant
   Playwright suites -> no unexplained failure remains.
-- [x] Repository -> runs the applicable Phase 1/platform .ontract gate -> the
+- [x] Repository -> runs the applicable platform/platform contract gate -> the
   auth route change causes no cross-module regression.
 - [x] Report -> records commands, counts, screenshots/logs if produced, and
   the intentional no-sign-up decision.

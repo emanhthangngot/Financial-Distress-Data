@@ -1,4 +1,4 @@
-"""Pins M4: the sql/ carve-out for the new platform .ile must not widen the
+"""Pins M4: the sql/ carve-out for the new platform file must not widen the
 platform protected-path gate for anything else under sql/."""
 
 from __future__ import annotations
@@ -15,19 +15,19 @@ _MODULE = importlib.util.module_from_spec(_SPEC)
 sys.modules.setdefault("audit_platform_evidence", _MODULE)
 _SPEC.loader.exec_module(_MODULE)  # type: ignore[union-attr]
 
-_phase1_mutation_from_changed = _MODULE._phase1_mutation_from_changed
+_protected_path_mutation_from_changed = _MODULE._protected_path_mutation_from_changed
 
 
 def test_new_ml_metadata_sql_is_not_flagged() -> None:
-    assert _phase1_mutation_from_changed(["sql/init_ml.sql"]) == []
+    assert _protected_path_mutation_from_changed(["sql/init_ml.sql"]) == []
 
 
-def test_phase1_project_metadata_sql_is_still_flagged() -> None:
-    errors = _phase1_mutation_from_changed(["sql/init_ops.sql"])
+def test_project_metadata_sql_is_still_flagged() -> None:
+    errors = _protected_path_mutation_from_changed(["sql/init_ops.sql"])
     assert errors and "sql/" in errors[0]
 
 
 def test_unrelated_new_sql_file_is_still_flagged() -> None:
     """A carve-out scoped to one filename, not the whole sql/ tree."""
-    errors = _phase1_mutation_from_changed(["sql/some_other_new_file.sql"])
+    errors = _protected_path_mutation_from_changed(["sql/some_other_new_file.sql"])
     assert errors and "sql/" in errors[0]

@@ -62,6 +62,7 @@ LoRA gate therefore cannot put a rubric point at risk — and cannot be used to 
 | Scheduling boundary (`plan.md:98-99`) — local notebooks and Kaggle preparation may run before P6 live evidence | steps 3, 6, 12 and 13 are local-capable; steps 1, 4, 5, 7-9 and 11 require an approved window |
 | Verification surface (`plan.md:152-155`) | code changes in this phase run `.venv/bin/python scripts/run_lakehouse_quality_gates.py`; every command this file introduces is authored here before it is ever reported as run |
 | P0 `G6-Kaggle` / `AC-P0-KAGGLE` (`phase-00-gates.md:34,68`) — MCP access, GPU quota, private dataset and export policy verified **without pushing an unreviewed notebook** (`phase-00-gates.md:56`) | this phase owns compilation and artifact checks; §Pre-push audit is the mechanism |
+| Jenkins delivery (`plan.md` Jenkins ledger row) | P7 hands P10 immutable training/inference artifacts, holdout/result schema, focused behavior command, GitOps target and rollback-compatible previous model; Jenkins never decides model quality itself |
 
 ## Overview
 
@@ -381,6 +382,8 @@ from this gate.
   `docs/evidence/ml/lora-gate-decision.md` (the gate outcome, including a `STOP`)
 - Modify: `src/ml/reproducibility_manifest.py` — add `compute_source`, `compute_seconds`,
   `accelerator`, `marginal_cost_usd`; fail closed when any is absent
+- Produce for P10: training/inference artifact definitions, P7/P11 gate result schema, image/model
+  digests, GitOps target, canary smoke and prior-compatible model rollback reference
 
 ## Implementation Steps
 
@@ -426,6 +429,9 @@ from this gate.
     A `PROCEED` authorizes exactly one bounded LoRA arm through step 12's lane, whose adapter is
     registered `serving=blocked` and promoted only if the measured holdout gain meets the gain
     predeclared before the push.
+14. **Jenkins handoff** — register training and inference lanes in P10's artifact catalog. Jenkins
+    consumes the frozen promotion result and immutable artifacts; it never recomputes or relaxes the
+    P7 model-quality decision.
 
 ## Success Criteria
 
@@ -517,6 +523,7 @@ from this gate.
       the free tier or already-granted resource it used, the phase enables **no new billable SKU**,
       and any step that would require payment is recorded `BLOCKED` with its escalation rather than
       silently replaced
+- [ ] AC-P7-JENKINS: P10 Jenkins promotion -> consumes P7's frozen holdout/result and immutable model contract -> a passing compatible model reaches its GitOps canary target, while stale, failing or snapshot-mismatched results leave the current model unchanged.
 
 ## Risk Assessment
 

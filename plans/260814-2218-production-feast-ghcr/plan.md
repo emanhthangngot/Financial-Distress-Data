@@ -13,7 +13,7 @@ created: 2026-08-14
 ## Scope
 
 - Deploy persistent MinIO for the existing `s3://financial-distress-lake` Feast contract.
-- Produce real platform .old Parquet and materialize `company_risk_features` into Redis.
+- Produce real platform Gold Parquet and materialize `company_risk_features` into Redis.
 - Provision a least-privilege GHCR pull credential without committing plaintext.
 - Verify cold pulls and the live analyst assistant end to end.
 
@@ -28,15 +28,15 @@ created: 2026-08-14
 
 ## Constraints
 
-- No fake/synthetic shortcut added solely for checks; use the existing platform .enerator and Gold transforms.
+- No fake/synthetic shortcut added solely for checks; use the existing platform generator and Gold transforms.
 - No plaintext credentials in Git, logs, reports, shell history, or conversation output.
 - Argo CD remains the only mutator for managed workload manifests.
-- platform .ontracts and platform .CP/RBAC/SSE contracts remain stable.
+- platform contracts and platform MCP/RBAC/SSE contracts remain stable.
 
 ## Phases
 
 1. Secure credential provisioning and GitOps secret contract — complete; dedicated read-only package credential provisioned and web pull-secret reconciliation verified.
-2. Persistent MinIO and platform .old production workload — complete; persisted object listing survived a MinIO pod restart.
+2. Persistent MinIO and platform Gold production workload — complete; persisted object listing survived a MinIO pod restart.
 3. Feast batch materialization and readiness verification — complete.
 4. GitOps rollout, cold-pull test, live analyst acceptance — mostly verified; batch and web cold-pull paths passed, while post-materialization cited analyst acceptance remains open.
 5. Full tests, review, documentation and plan sync — complete for recorded source checks and this evidence audit.

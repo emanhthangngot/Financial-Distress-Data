@@ -8,31 +8,31 @@ flowchart TB
     classDef model fill:#d69e2e,stroke:#744210,color:#fff
     classDef result fill:#dd6b20,stroke:#7b341e,color:#fff
 
-    subgraph L1["1. the platform lakehouse (local, verified)"]
+    subgraph L1["Platform lakehouse"]
         GOLD["Gold Parquet<br/>(features, labels, ratios)"]:::store
     end
 
-    subgraph L5["5. Product plane (persistent)"]
+    subgraph L5["Product plane (persistent)"]
         NEXTJS["Next.js + Supabase"]:::service
     end
 
-    subgraph L4["4. Agent plane"]
-        COORD["coordinator Agent"]:::service
+    subgraph L4["Agent plane"]
+        COORD["Coordinator<br/>legacy default · LangGraph opt-in"]:::service
     end
 
-    subgraph L3["3. RAG pipeline"]
+    subgraph L3["RAG pipeline"]
         RAGSTORE["PGVector + Feast"]:::store
     end
 
-    subgraph L2["2. LLM inference platform"]
+    subgraph L2["LLM inference platform"]
         GATEWAY["agentgateway -> KServe"]:::model
     end
 
-    subgraph L6["6. GitOps / CI-CD (only path to cluster state)"]
+    subgraph L6["GitOps (Argo sole mutator)"]
         ARGO["Argo CD reconcile"]:::service
     end
 
-    subgraph L7["7. Observability + drift (evidence plane, disposable)"]
+    subgraph L7["Observability + drift"]
         OBS["Prometheus / Jaeger / Grafana"]:::result
     end
 

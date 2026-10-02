@@ -184,7 +184,7 @@ Every rubric point must be proven by evidence under
 `docs/platform/evidence/{ml,llm}/` recording rubric_id, timestamps, source SHA,
 GitOps SHA, versions, reproduction steps, and redaction status
 (`docs/platform/evidence-contract.md`). The linter
-(`scripts/audit_phase2_evidence.py`) enforces canonical 57+60 source coverage
+(`scripts/audit_platform_evidence.py`) enforces canonical 57+60 source coverage
 at specification time and, with `--require-executed --run-validations
 --gitops-root ...`, gates both repositories at phase-08.
 

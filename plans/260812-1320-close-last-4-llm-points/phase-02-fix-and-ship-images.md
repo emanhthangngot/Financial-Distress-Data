@@ -31,7 +31,7 @@ from the Deployment.
     response, so a future live failure names itself instead of surfacing as
     `MALFORMED_RESPONSE`.
 - Non-functional: `DriftApiClient` stays a Protocol with the same `report`
-  signature — no public contract break. No platform .ile touched. No test's
+  signature — no public contract break. No platform file touched. No test's
   expected value edited to pass.
 
 ## Architecture
@@ -113,7 +113,7 @@ the diagnosis.
    coordinator or runtime"`. Then the full suite:
    `.venv/bin/python -m pytest tests`. Then
    `.venv/bin/python scripts/run_stage1_quality_gates.py` (ruff, black,
-   compose config, platform .o-regression) — exit 0 is the definition of done.
+   compose config, platform no-regression) — exit 0 is the definition of done.
 7. Commit with Conventional Commits, no AI attribution trailer, and open a PR to
    `dev`. The diff touches `src/agents/**`, so the coordinator, feature and
    drift agent workflows all fire in one round; `apps/drift-mcp/**` triggers the
@@ -136,7 +136,7 @@ the diagnosis.
       `drift-mcp`, `coordinator`, `feature-agent`, `drift-agent`.
 - [x] `AGENT_TIMEOUT_SECONDS` present on the coordinator Deployment; the web
       edge deadline is greater than it.
-- [x] No platform .ile and no existing test expectation modified.
+- [x] No platform file and no existing test expectation modified.
 
 ## Risk Assessment
 

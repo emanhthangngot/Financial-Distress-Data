@@ -85,7 +85,7 @@ of a live runtime — the same honesty rule the UI itself follows.
 6. Reconcile the parent phase-02 file: tick each requirement and success criterion
    that now has an artifact, and leave unticked anything that genuinely depends
    on phases 03-08, naming the dependency inline.
-7. Run every gate, including the platform .ate, to prove nothing regressed.
+7. Run every gate, including the platform gate, to prove nothing regressed.
 
 ## Success Criteria
 
@@ -146,4 +146,4 @@ of a live runtime — the same honesty rule the UI itself follows.
 
 ### T5.6 — Full gates including Phase 1
 
-- **Verify:** `pnpm test && pnpm typecheck && pnpm lint && pnpm --filter @distresslens/web e2e && pnpm --filter @distresslens/web e2e:roles && pnpm --filter @distresslens/web e2e:a11y` and `.venv/bin/python scripts/run_stage1_quality_gates.py` all pass, proving no platform .egression.
+- **Verify:** `pnpm test && pnpm typecheck && pnpm lint && pnpm --filter @distresslens/web e2e && pnpm --filter @distresslens/web e2e:roles && pnpm --filter @distresslens/web e2e:a11y` and `.venv/bin/python scripts/run_stage1_quality_gates.py` all pass, proving no platform regression.

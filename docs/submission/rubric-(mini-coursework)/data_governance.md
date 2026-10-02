@@ -34,11 +34,11 @@ docker stop financial-distress-data-kafka-1   # coursework Kafka also uses 9092
 uv run --python 3.12 --with acryl-datahub==1.6.0 python scripts/sync_datahub_governance.py \
   --emit --server http://localhost:8080 \
   --run-id coursework-20260730T120200-bf92b2cdf0 \
-  --output docs/evidence/datahub/phase7-runtime.json
+  --output docs/evidence/datahub/runtime.json
 ```
 
 Runtime URNs and counts are recorded in
-[`docs/evidence/datahub/phase7-runtime.json`](../../evidence/datahub/phase7-runtime.json).
+[`docs/evidence/datahub/runtime.json`](../../evidence/datahub/runtime.json).
 
 ## Part II — Failure semantics (governance is enforced, not decorative)
 

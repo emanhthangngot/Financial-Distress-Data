@@ -3,7 +3,7 @@
 ## Scope
 
 Reviewed `AGENTS.md`, the production-hardening overlay plan, and the debugger
-follow-up report. Audited the platform .vidence-capture documentation against the
+follow-up report. Audited the platform evidence-capture documentation against the
 verified fixes.
 
 ## Change

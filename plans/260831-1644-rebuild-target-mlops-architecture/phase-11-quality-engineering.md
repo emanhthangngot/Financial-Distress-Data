@@ -25,6 +25,16 @@ subgate result — not a reciprocal whole-phase dependency in either direction. 
 quality-engineering rows. **Resident cost: 0** (load testing runs inside an existing serving window;
 the human-reviewed RAG eval runs against whatever provider P0 `G5-providers` cleared, at zero spend).
 
+### Verification priority — production behavior, not test volume
+
+The user explicitly prioritizes a system that works through production deployment over more test
+code. This phase therefore implements the twelve graded quality rows, the already-identified P2
+regressions and the P8/P10 release eval—nothing else for coverage optics. A new permanent test must
+fail on a plausible behavior regression. Wiring, copied fields, source text, framework defaults,
+mock echoes and duplicate parameter rows use a throwaway smoke script or are deleted, not promoted
+to permanent tests. Producer phases prove runtime with real services; this phase cannot turn a
+source-only pass into deployment evidence.
+
 ### Functional eval and regression gates (session addition, 2026-09-10)
 
 - **Eval fixtures and metrics, defined early.** P11 authors `tests/eval/` — a fixed development
@@ -133,7 +143,7 @@ directly, so the code and the document cannot drift.
 | `total_assets` | positive; zero; negative; null | `0`, `1000`, `-1000`, `2^53`, `DECIMAL(18,0)` max |
 | `known_from_ts` vs label `decision_ts` | before; equal; after; null | equal-to-the-millisecond, ±1 µs |
 | `is_latest_vintage` | exactly one true per key; none true; more than one true | 1, 0, 2 |
-| `company_id` on `prediction-api` | known ticker; unknown ticker; empty; oversized | 1 char, 3 chars, 4 chars, 256 chars |
+| `ticker` on `prediction-api` | known ticker; unknown ticker; empty; oversized | 1 char, 3 chars, 4 chars, 256 chars |
 | KEDA load | below threshold; at threshold; above | threshold−1, threshold, threshold+1 |
 
 ### Property-based invariants
@@ -143,7 +153,7 @@ directly, so the code and the document cannot drift.
 - `date_key` round-trips through `calendar_date` for every date in range.
 - `pit_join_features` never returns a feature whose `known_from_ts` exceeds the reference timestamp —
   the direct property form of the leakage invariant.
-- `prediction-api` returns the same score for the same `(company_id, feature vintage)` pair.
+- `prediction-api` returns the same score for the same `(ticker, feature vintage)` pair.
 
 ## Related Code Files
 
@@ -159,9 +169,9 @@ directly, so the code and the document cannot drift.
 
 ## Implementation Steps
 
-1. **Coverage baseline and gap closure** (2 d) — measure current coverage per module; add
-   fixture-driven unit tests until ML-track modules exceed 90 %; set `fail_under = 90` in
-   `pyproject.toml` so the threshold is enforced, not merely reached once.
+1. **Coverage baseline and graded gap closure** (2 d) — measure current coverage per module; add
+   only fixture-driven behavior tests that kill an identified risk until the graded ML-track
+   threshold exceeds 90 %; set `fail_under = 90`. Do not add wiring tests to inflate the number.
 2. **EP/BVA derivation** (1-2 d) — write `docs/testing/partitions.md` first, then drive
    `@pytest.mark.parametrize` from it. The document is the deliverable; the tests are its consequence.
 3. **Property-based tests** (1-2 d) — Hypothesis strategies for the five invariants above. The PIT
@@ -189,7 +199,7 @@ directly, so the code and the document cannot drift.
       every survivor is either killed or justified in writing
 - [ ] AC-P11-4 **(ML 13; LLM 29)**: Hypothesis → runs the idempotency suite → `bronze_to_silver`
       applied twice equals once; Silver preserves every vintage with exactly one `is_latest_vintage`;
-      `prediction-api` is deterministic per `(company_id, vintage)`
+      `prediction-api` is deterministic per `(ticker, feature vintage)`
 - [ ] AC-P11-5: Hypothesis → runs `test_pit_invariants.py` → **no generated case** returns a feature
       whose `known_from_ts` exceeds the reference timestamp; removing the vintage filter makes the
       property fail
@@ -199,7 +209,7 @@ directly, so the code and the document cannot drift.
 - [ ] AC-P11-7 **(ML 55; LLM 58)**: Reviewer → audits the repository → no dead modules, one
       rubric-item module, no orphaned test artifacts, ruff and black clean, and
       `docs/architecture/low-level-design.md` matches the shipped classes
-- [ ] AC-P11-8: Engineer → runs `pytest tests` → full suite passes with zero skips
+- [ ] AC-P11-8: Engineer -> runs `pytest tests` in the capable release environment -> all required tests pass; environment-dependent skips are explained and no graded/runtime check is bypassed.
 - [ ] AC-P11-9 **(mini 2)**: Engineer → runs `docker compose up` from a clean checkout → the local
       lakehouse (MinIO, Postgres, Spark, Airflow) reaches healthy; `docker compose config` validates
       with no warnings
@@ -217,9 +227,9 @@ directly, so the code and the document cannot drift.
 - [ ] AC-P11-13 **(session addition — P2 regression wiring)**: Engineer → runs `pytest tests` →
       AC-P2-26…AC-P2-38's regression cases execute as part of this phase's suite; reintroducing any
       of M1–M11 fails the run here, not only in an isolated P2-only invocation
-- [ ] AC-P11-14 **(session addition — P10 subgate)**: P10 release job → reads P11's per-fixture and
-      per-regression-case pass/fail record → blocks the release artifact on any P11 fail; a P10
-      fail never blocks P11's own suite (one-way dependency, `plan.md:101`)
+- [ ] AC-P11-14 **(session addition — P10 subgate)**: Jenkins release job -> reads P11's
+      per-fixture and per-regression-case pass/fail record -> blocks only the affected artifact on
+      any required failure; P10 never blocks P11 from producing its result
 
 ## Risk Assessment
 

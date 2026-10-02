@@ -24,3 +24,6 @@ node_modules/
 .next/
 .turbo/
 *.tsbuildinfo
+feature_repo/structured/registry.db
+feature_repo/**/registry.db
+feature_repo/**/online_store.db

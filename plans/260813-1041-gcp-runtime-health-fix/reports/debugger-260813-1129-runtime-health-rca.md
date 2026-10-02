@@ -2,7 +2,7 @@
 
 ## Executive Summary
 - Issue: remaining Argo/runtime signals after the August 13 GitOps fixes.
-- Impact: likely limited to Argo status noise and one possible security app health issue; platform .ser path was previously verified live on 2026-08-12.
+- Impact: likely limited to Argo status noise and one possible security app health issue; platform user path was previously verified live on 2026-08-12.
 - Root cause: mixed. `platform-agents` and `nginx-ingress` have direct Git evidence for recent drift/CRD fixes; `platform-inference` has operator-owned webhook drift ignore rules; `platform-security` has no matching ignore/health override and is the most plausible real remaining failure. `kagent-grafana-mcp Forbidden` likely RBAC-denied tool behavior, not platform outage.
 - Status: blocked on live cluster/network access from this session. Local `kubectl` cannot reach the API server.
 - Smallest safe remediation: do not change manifests blind. First re-run live Argo/kubectl checks from a network-capable shell; only refresh/sync stale apps or add narrowly-scoped ignore/health handling once the exact offending resource is observed.

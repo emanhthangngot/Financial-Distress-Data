@@ -25,7 +25,7 @@ DuckDNS host (blocked, see below).
 | `pnpm e2e:a11y-guest` (11 tests, new guest-identity a11y config) | Green |
 | `pnpm e2e:live` — `live-smoke.spec.ts` (6 tests, live Supabase) | Green |
 | `pnpm e2e:live` — `auth-lifecycle.spec.ts` (6 tests, live Supabase) | 5/6 green; case 1 blocked by hosted SMTP rate limit at verification time (see below) |
-| `.venv/bin/python scripts/run_stage1_quality_gates.py` | Green, exit 0 (platform .ntouched) |
+| `.venv/bin/python scripts/run_stage1_quality_gates.py` | Green, exit 0 (platform untouched) |
 
 ## Code-review pass (before any commit)
 

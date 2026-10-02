@@ -112,7 +112,7 @@ of that is a rubric row.
    `/agents/registry` renders from the live registry path, and
    `POST /api/assistant/stream` completes a generation. Record the outputs.
 8. Re-run the repository gates (`pnpm --filter @distresslens/web typecheck`,
-   `vitest`, `build`, plus the platform .tage gate) so nothing regresses.
+   `vitest`, `build`, plus the platform stage gate) so nothing regresses.
 
 ## Success Criteria
 

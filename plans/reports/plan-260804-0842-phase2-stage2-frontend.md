@@ -1,4 +1,4 @@
-# platform .tage 2 — frontend implementation plan and design read
+# platform Stage 2 — frontend implementation plan and design read
 
 Source prompt: `plans/reports/prompt-260804-0835-phase2-stage2-frontend-implementation.md`
 Gap report: `plans/reports/review-260803-2249-phase2-status.md`
@@ -18,7 +18,7 @@ Design dials: `DESIGN_VARIANCE=3`, `MOTION_INTENSITY=2`, `VISUAL_DENSITY=6`.
 
 ### Seeded direction
 
-Seed = character count of `DistressLens platform .tage 2` = **28**.
+Seed = character count of `DistressLens platform Stage 2` = **28**.
 Direction menu (10 entries): 1 brutalist, 2 editorial, 3 neo-grotesque product,
 4 warm humanist, 5 terminal/monospace, 6 soft organic, 7 high-contrast Swiss,
 8 archival instrument panel, 9 playful maximalist, 10 glass/futurist.
@@ -110,7 +110,7 @@ ambient elevation reserved for overlays/popovers only. One radius scale
 ## Non-goals
 
 - No AWS/EKS/Argo/K8s code in this repository (GitOps repo owns desired state).
-- No platform .dits: `dags/*.py` outside `phase2/`, `src/collectors|generator|
+- No platform edits: `dags/*.py` outside `phase2/`, `src/collectors|generator|
   streaming|transforms|quality|catalog|metadata`, `warehouse.db`, `outputs/**`,
   `docs/evidence/**`.
 - No live cloud calls; no fabricated "executed" evidence.

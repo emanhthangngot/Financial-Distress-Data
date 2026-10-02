@@ -1,1 +1,1 @@
-"""Bounded platform .pecialist and coordinator agents."""
+"""Bounded platform specialist and coordinator agents."""

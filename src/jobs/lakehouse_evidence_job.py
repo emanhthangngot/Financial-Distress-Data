@@ -373,13 +373,15 @@ def write_generator_characteristics_evidence(
 def build_evidence_payload(
     bucket: str = DEFAULT_BUCKET,
     adapter: VnstockFixtureAdapter | None = None,
+    event_anchor_ts: str | None = None,
 ) -> EvidencePayload:
     """Build the canonical platform datasets.
 
-    ``adapter`` is optional to preserve the deterministic platform .vidence
+    ``adapter`` is optional to preserve the deterministic platform evidence
     contract. Cluster jobs pass a configured adapter so they can produce the
     requested Vietnamese ticker set through the same collector/transform path.
     """
+    adapter = adapter or VnstockFixtureAdapter()
     bronze_companies = _with_ingest_ts(collect_companies(adapter=adapter))
     tickers = list(dict.fromkeys(row["ticker"] for row in bronze_companies))
     bronze_financial_statements = _with_ingest_ts(
@@ -410,12 +412,24 @@ def build_evidence_payload(
         silver_financial_statements, gold_dim_company
     )
     gold_fact_market_price = build_fact_market_price(silver_market_prices, gold_dim_company)
+    if event_anchor_ts is not None:
+        event_anchor = max(
+            event_anchor_ts,
+            *(str(row["created_ts"]) for row in bronze_companies),
+        )
+    else:
+        event_anchor = "2026-01-01T09:00:06+00:00"
+    event_created = event_anchor
+    second_event = event_anchor
+    second_created = event_anchor
+    alert_event = event_anchor
+    alert_created = event_anchor
     gold_fact_news_sentiment = build_fact_news_sentiment(
         [
             StreamEvent.news_sentiment(
                 tickers[0],
-                "2026-01-01T09:00:06+00:00",
-                "2026-01-01T09:00:07+00:00",
+                event_anchor,
+                event_created,
                 -0.2,
                 True,
                 0.5,
@@ -423,8 +437,8 @@ def build_evidence_payload(
             ).as_record(),
             StreamEvent.news_sentiment(
                 tickers[-1],
-                "2026-01-01T09:00:08+00:00",
-                "2026-01-01T09:00:09+00:00",
+                second_event,
+                second_created,
                 -0.7,
                 True,
                 0.9,
@@ -437,8 +451,8 @@ def build_evidence_payload(
         [
             StreamEvent.alert(
                 tickers[-1],
-                "2026-01-01T09:00:10+00:00",
-                "2026-01-01T09:00:11+00:00",
+                alert_event,
+                alert_created,
                 "price_drop",
             ).as_record()
         ],

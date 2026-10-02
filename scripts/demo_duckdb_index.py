@@ -30,7 +30,8 @@ def _build_synthetic_dataset(conn: duckdb.DuckDBPyConnection, n_rows: int = 200_
     The shape mirrors the real Gold OBT (ticker, report_period, plus metrics)
     so the benchmark is representative of warehouse lookups.
     """
-    conn.execute(f"""
+    conn.execute(
+        f"""
         CREATE OR REPLACE TABLE {TABLE_NAME} AS
         SELECT
             'TKR' || lpad(((range % 500))::VARCHAR, 4, '0') AS ticker,
@@ -41,7 +42,8 @@ def _build_synthetic_dataset(conn: duckdb.DuckDBPyConnection, n_rows: int = 200_
             random() AS roa,
             range AS row_id
         FROM range({n_rows})
-        """)
+        """
+    )
 
 
 def _time_query(conn: duckdb.DuckDBPyConnection, sql: str) -> float:

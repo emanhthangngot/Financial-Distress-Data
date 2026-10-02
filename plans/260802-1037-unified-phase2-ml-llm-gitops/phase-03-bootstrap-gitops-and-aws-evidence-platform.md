@@ -56,7 +56,7 @@ The filename still reads `...-and-aws-evidence-platform.md`. It is kept for the
   `pnpm`. Missing: `terraform`, `ansible`, `mutmut`, `locust`. `k3d` is no
   longer required.
 - `.venv` contains only `pytest`, `ruff`, `black`, `duckdb`, `pyspark`. Every
-  platform .ython dependency is absent.
+  platform Python dependency is absent.
 - GCP free trial: USD 300 over 90 days, unused. Trial vCPU quota is **unverified**
   and is the day-0 kill-switch below.
 
@@ -147,7 +147,7 @@ unnecessary.
 - Create: `tests/platform/requirements/__init__.py`, `conftest.py`
 - Modify: `scripts/audit_phase2_evidence.py` (add `--track`)
 - Modify: `tests/platform/test_rubric_matrix.py` (cover the new `--track` behavior)
-- Create: `.venv-phase2/` (separate environment; `.venv` stays platform .nly)
+- Create: `.venv-phase2/` (separate environment; `.venv` stays platform only)
 - Create (GitOps repo): `terraform/gcp/`, `argocd/`, `charts/`, `platform/`, `ansible/roles/`
 - Create (GitOps repo): `Makefile` with `gcp-up` / `gcp-down` / `gcp-status`
 - Create: `docs/submission/` reviewer index (see step 16)
@@ -174,11 +174,11 @@ unnecessary.
    Record `CPUS` and pick the node pool from the Architecture table. Do **not**
    run `gcloud iam service-accounts keys create`.
 
-2. Install every platform .ython dependency into a **throwaway** virtualenv and
+2. Install every platform Python dependency into a **throwaway** virtualenv and
    record what conflicts. `feast`, `mlflow`, `opentelemetry` and `kfp` contend
    over `protobuf`/`pyarrow`/`pandas`. Discovering this in hour 1 is cheap;
    discovering it on day 5 is not. Never install into `.venv` — breaking it
-   breaks the platform .ate that phase-08 must re-run clean. Use `.venv-phase2`.
+   breaks the platform gate that phase-08 must re-run clean. Use `.venv-phase2`.
 
 3. Create `emanhthangngot/financial-distress-gitops` and commit the directory
    skeleton with the 14 declared artifact paths as placeholder files. Enumerate
@@ -352,7 +352,7 @@ Ansible role, Terraform, and the separate GitOps control repo.
 - [x] Reviewer -> opens the Web API kéo dữ liệu at its DuckDNS domain over HTTPS -> receives a cert-manager-issued Let's Encrypt certificate that a browser accepts without a warning. *(`https://distresslens.duckdns.org` — verified via curl: `SSL certificate verified via OpenSSL`, issuer `Let's Encrypt`, 2026-08-08. Real app route pending phase-06/07; proven against a throwaway test Service.)*
 - [ ] Platform operator -> runs `make gcp-down` then `make gcp-up` -> observes node pools at zero with PVCs intact, then a healthy cluster after resize, with the cost delta recorded. *(Makefile written, `gcp-status` verified working; full down/up round trip not yet executed to avoid downtime mid-build.)*
 - [x] Platform operator -> runs `kubectl get crd | grep -E 'knative|kserve'` -> finds the inference CRDs installed and ready for phase-06. *(21 CRDs present: Knative Serving v1.16.0, net-kourier, KServe v0.14.1 — verified 2026-08-08.)*
-- [x] platform .aintainer -> runs `scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by platform .ependencies.
+- [x] platform maintainer -> runs `scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by platform dependencies.
 
 ## Risk Assessment
 
@@ -365,7 +365,7 @@ Ansible role, Terraform, and the separate GitOps control repo.
   billing account — an exhausted trial stops, an upgraded account does not.
 - **Dependency conflict wrecks the week.** Mitigated by the day-0 throwaway
   install and by keeping heavy dependencies inside service images. `.venv` is
-  never touched: phase-08 requires a clean platform .on-regression run and a
+  never touched: phase-08 requires a clean platform non-regression run and a
   `_audit_phase1_git_diff` against a frozen SHA.
 - **Knative/KServe install eats day 1.** Mitigated by installing it *after* the
   cluster, ingress, HTTPS and Argo CD are green, so a failure here costs the

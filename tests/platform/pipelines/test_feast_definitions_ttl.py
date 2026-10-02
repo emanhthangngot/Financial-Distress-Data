@@ -1,7 +1,7 @@
 """Pins src/ml/feast/feature_definitions.py's TTL table without importing
 Feast — Feast lives only in .venv-platform (D4). Every FeatureView has a
 non-null TTL, TTL values equal the documented table, every declared source
-has an event_timestamp_column, and every view has a rationale string."""
+has a knowledge-time axis, and every view has a rationale string."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ def test_module_import_does_not_pull_in_feast() -> None:
 
 EXPECTED_TTL = {
     "company_financial_features": timedelta(days=400),
+    "company_financial_4q_features": timedelta(days=400),
     "company_risk_features": timedelta(days=400),
     "market_price_features": timedelta(days=45),
     "stream_market_features": timedelta(hours=1),
@@ -64,4 +65,4 @@ def test_gold_datasets_cover_every_file_backed_view() -> None:
 
 def test_gold_source_path_resolves_through_src_io_paths() -> None:
     path = gold_source_path("fact_financial_statement")
-    assert path == "s3://financial-distress-lake/gold/fact_financial_statement/data.parquet"
+    assert path == "s3://financial-distress-lake/gold/fact_financial_statement/"

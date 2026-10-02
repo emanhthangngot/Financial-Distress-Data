@@ -76,7 +76,7 @@ prefixes and restores the previous snapshot if promotion fails.
 `build_offline_features`, plus a successful task-tree run capture. They
 prove both DAG structures match their documented contract and that a real
 run completed successfully. They do not show the actual row counts written —
-those are recorded in `docs/evidence/airflow/phase6-runtime.json`.
+those are recorded in `docs/evidence/airflow/runtime.json`.
 
 ## Reproduction
 
@@ -88,9 +88,9 @@ POSTGRES_HOST_PORT=55432 docker compose run --rm --no-deps airflow-scheduler \
 POSTGRES_HOST_PORT=55432 docker compose run --rm --no-deps airflow-scheduler \
   airflow dags test build_offline_features 2026-07-30T12:02:00+00:00
 
-python scripts/export_phase6_airflow_evidence.py \
+python scripts/export_airflow_evidence.py \
   --dsn postgresql://airflow:airflow@localhost:55432/financial_distress \
-  --output docs/evidence/airflow/phase6-runtime.json
+  --output docs/evidence/airflow/runtime.json
 ```
 
 ## Limitations
