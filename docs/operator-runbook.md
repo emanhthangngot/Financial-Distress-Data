@@ -206,7 +206,7 @@ Glossary-only inference requires `DISTRESSLENS_INFERENCE_URL`, a server-side
 provider's model or deployment ID. The full web URL can carry a date-based
 `api-version` query; credentials belong in headers, not URLs. Do not configure
 an environment proxy for web loopback bearer traffic. Python bypasses proxies
-for plaintext bearer loopback; HTTPS retains environment TLS trust. Set
+for plaintext HTTP; HTTPS retains environment TLS trust. Set
 connection and command timeouts in external database and Feast profiles.
 
 Set `MCP_ALLOWED_HOSTS` for the hosts used to reach MCP services and

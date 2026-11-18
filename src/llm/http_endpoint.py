@@ -60,8 +60,8 @@ class HttpEndpoint:
 
     @property
     def trust_env(self) -> bool:
-        """Never proxy a plaintext bearer; preserve configured TLS trust for HTTPS."""
-        return not (self.token and self.origin[0] == "http")
+        """Connect to plaintext endpoints directly; preserve configured TLS trust for HTTPS."""
+        return self.origin[0] == "https"
 
     def at(self, path: str) -> HttpEndpoint:
         return HttpEndpoint(self.url.rstrip("/") + path, self.token)

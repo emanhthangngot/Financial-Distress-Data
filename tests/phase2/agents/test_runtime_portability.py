@@ -263,7 +263,10 @@ async def test_roles_fail_closed_before_transport_when_configuration_is_incomple
 
 
 @pytest.mark.asyncio
-async def test_bearer_transports_do_not_follow_or_expose_redirects(monkeypatch) -> None:
+@pytest.mark.parametrize("token", [None, "test-fixture"])
+async def test_plaintext_transports_are_direct_and_do_not_expose_redirects(
+    monkeypatch, token: str | None
+) -> None:
     base = "http://127.0.0.1:8300"
     destination = f"{base}/unexpected?signature=not-for-diagnostics"
     calls: list[str] = []
@@ -271,7 +274,7 @@ async def test_bearer_transports_do_not_follow_or_expose_redirects(monkeypatch) 
 
     def redirect(request: httpx.Request) -> httpx.Response:
         calls.append(str(request.url))
-        assert request.headers["Authorization"] == "Bearer test-fixture"
+        assert request.headers.get("Authorization") == (f"Bearer {token}" if token else None)
         return httpx.Response(307, headers={"Location": destination})
 
     def outbound(**kwargs: Any) -> httpx.AsyncClient:
@@ -279,11 +282,11 @@ async def test_bearer_transports_do_not_follow_or_expose_redirects(monkeypatch) 
         return client_type(transport=httpx.MockTransport(redirect), **kwargs)
 
     monkeypatch.setattr(httpx, "AsyncClient", outbound)
-    specialist = HttpSpecialistClient(HttpEndpoint(base, "test-fixture"))
+    specialist = HttpSpecialistClient(HttpEndpoint(base, token))
     with pytest.raises(OSError, match="specialist_unavailable") as blocked:
         await specialist.run(_RUN)
     assert "not-for-diagnostics" not in str(blocked.value.__cause__)
-    mcp = McpFeatureToolClient(HttpEndpoint(base + "/mcp/", "test-fixture"))
+    mcp = McpFeatureToolClient(HttpEndpoint(base + "/mcp/", token))
     with pytest.raises(ExceptionGroup) as refused:
         await mcp.lookup(_RUN)
     assert "not-for-diagnostics" not in repr(refused.value)
