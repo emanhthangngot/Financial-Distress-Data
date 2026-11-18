@@ -163,11 +163,12 @@ Fixture identities are for local development and tests. Local production-mode
 tests must explicitly opt in through their Playwright configuration; the
 published release image rejects fixture identities.
 
-For coordinator and specialist roles, override the shared MCP image command
-with `uvicorn src.agents.runtime:app --host 0.0.0.0 --port 8000` and set
-`AGENT_ROLE` (`coordinator`, `feature`, or `drift`). The MCP applications keep
-their [feature MCP](../apps/feature-mcp/Dockerfile) or [drift MCP](../apps/drift-mcp/Dockerfile)
-image defaults.
+Use the [feature MCP image](../apps/feature-mcp/Dockerfile) for the coordinator
+and feature agent, and the [drift MCP image](../apps/drift-mcp/Dockerfile) for
+the drift agent. For an agent, override the image command with
+`uvicorn src.agents.runtime:app --host 0.0.0.0 --port 8000` and set `AGENT_ROLE`
+to `coordinator`, `feature`, or `drift`, respectively. For MCP, keep the image
+default command.
 
 ### Optional Live Supabase Browser Check
 
