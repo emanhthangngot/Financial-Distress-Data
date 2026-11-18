@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock
 
 import httpx
 import pytest
+from psycopg.conninfo import conninfo_to_dict
 
 from tests.platform.apps.conftest import load_app_module
 
@@ -57,17 +58,6 @@ class RichMetrics(MinimalMetrics):
         yield SimpleNamespace(set_attribute=lambda _name, _value: None)
 
 
-class FakeWriter:
-    def __init__(self) -> None:
-        self.closed = False
-
-    def close(self) -> None:
-        self.closed = True
-
-    async def wait_closed(self) -> None:
-        return None
-
-
 class FakeCursor:
     def __init__(self, row):
         self.row = row
@@ -106,14 +96,39 @@ async def test_feature_adapters_and_production_configuration(monkeypatch) -> Non
     monkeypatch.delenv("FEAST_REPO_PATH", raising=False)
     monkeypatch.delenv("RAG_DATABASE_URL", raising=False)
     monkeypatch.delenv("PLATFORM_PG_PASSWORD", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_HOST", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_PORT", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_DATABASE", raising=False)
+    monkeypatch.delenv("PLATFORM_PG_USER", raising=False)
     features, rag = module.production_clients_from_env()
     assert isinstance(features, module.UnconfiguredFeatureClient)
     assert isinstance(rag, module.UnconfiguredRagClient)
 
-    monkeypatch.setenv("PLATFORM_PG_PASSWORD", "secret")
+    password = "test password with ' and \\ characters"
+    monkeypatch.setenv("PLATFORM_PG_PASSWORD", password)
+    _, password_only_rag = module.production_clients_from_env()
+    assert isinstance(password_only_rag, module.UnconfiguredRagClient)
+
+    monkeypatch.setenv("PLATFORM_PG_HOST", "postgres.example.test")
     _, password_rag = module.production_clients_from_env()
     assert isinstance(password_rag, module.PostgresRagLookupClient)
-    assert "password=secret" in password_rag._dsn
+    assert conninfo_to_dict(password_rag._dsn) == {
+        "host": "postgres.example.test",
+        "port": "5432",
+        "dbname": "ml",
+        "user": "platform",
+        "password": password,
+        "connect_timeout": "3",
+    }
+
+    alternate_dsn = "postgresql://rag-reader@regional.example.test/catalog?sslmode=verify-full"
+    monkeypatch.setenv("RAG_DATABASE_URL", alternate_dsn)
+    _, dsn_rag = module.production_clients_from_env()
+    assert isinstance(dsn_rag, module.PostgresRagLookupClient)
+    assert dsn_rag._dsn == alternate_dsn
+    monkeypatch.setenv("RAG_DATABASE_URL", "https://not-postgres.example.test")
+    _, invalid_rag = module.production_clients_from_env()
+    assert isinstance(invalid_rag, module.UnconfiguredRagClient)
 
     class Result:
         def to_dict(self):
@@ -122,8 +137,10 @@ async def test_feature_adapters_and_production_configuration(monkeypatch) -> Non
     class Store:
         def __init__(self, **kwargs):
             self.kwargs = kwargs
+            self.requests = []
 
-        def get_online_features(self, **_kwargs):
+        def get_online_features(self, **kwargs):
+            self.requests.append(kwargs)
             return Result()
 
     fake_feast = ModuleType("feast")
@@ -150,13 +167,14 @@ async def test_feature_adapters_and_production_configuration(monkeypatch) -> Non
     with pytest.raises(module.ServiceUnavailable, match="online feature lookup"):
         await unavailable_store.get_by_id("AAA", ("risk_score",))
 
-    writer = FakeWriter()
-    monkeypatch.setattr(
-        module.asyncio, "open_connection", AsyncMock(return_value=(object(), writer))
-    )
-    yaml_adapter._store = Store()
-    assert await yaml_adapter.ready() is True
-    assert writer.closed is True
+    assert await module.asyncio.gather(yaml_adapter.ready(), yaml_adapter.ready()) == [True, True]
+    assert yaml_adapter._feature_store().requests == [
+        {
+            "features": ["company_risk_features:current_ratio"],
+            "entity_rows": [{"ticker": "PORTABILITY_READINESS_PROBE"}],
+        }
+    ]
+    assert not await unavailable_store.ready()
 
 
 @pytest.mark.asyncio
@@ -180,6 +198,9 @@ async def test_postgres_rag_adapter_and_feature_endpoints(monkeypatch) -> None:
             strict=True,
         )
     )
+    query, parameters = connection.cursor_instance.statements[-1]
+    assert "FROM ml.rag_chunk" in query
+    assert parameters == ("chunk-1",)
     assert await adapter.get_by_id("same-row") == dict(
         zip(
             ("chunk_id", "chunk_text", "source_uri", "company", "report_date", "access_class"),

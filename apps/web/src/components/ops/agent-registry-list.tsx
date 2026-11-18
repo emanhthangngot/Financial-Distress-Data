@@ -14,9 +14,7 @@ import { RoleActionButton } from "./role-action-button";
  * which hosts an agent may reach and whether it can touch a filesystem are the
  * facts a reviewer needs, and a reassuring adjective is not one of them.
  *
- * `ready: 0` with a null heartbeat means the plane is off and the count is
- * unknown, not that the agent scaled to zero. The two are rendered differently
- * because confusing them would make a healthy registry look like an outage.
+ * A reported zero is distinct from a missing count or heartbeat.
  */
 
 const LIFECYCLE_LABEL: Record<AgentLifecycle, string> = {
@@ -107,16 +105,16 @@ export function AgentRegistryList({
             <Field
               label="Bản sao"
               value={
-                replicaCountsKnown
+                replicaCountsKnown && entry.replicas.ready !== null && entry.replicas.desired !== null
                   ? `${entry.replicas.ready}/${entry.replicas.desired} sẵn sàng`
-                  : `Không đọc được (mong muốn ${entry.replicas.desired})`
+                  : "Chưa có số liệu bản sao"
               }
             />
             <Field
               label="Nhịp tim gần nhất"
               value={
                 entry.replicas.lastHeartbeatAt === null
-                  ? "Không có — mặt phẳng ngoại tuyến"
+                  ? "Chưa có dữ liệu nhịp tim"
                   : formatTimestamp(entry.replicas.lastHeartbeatAt)
               }
             />

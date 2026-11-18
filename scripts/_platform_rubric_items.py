@@ -106,7 +106,9 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori": "text_contains:agentregistry",
     "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": "python_ast_contains:coordinator",
     "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": "text_contains:agentregistry",
-    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": "text_contains:phase2-ci.yaml",
+    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
+        "historical_yaml_path:41940f6c1ed1fa16a80ef886b95302e6c53d8239:jobs.gitops-pr"
+    ),
     "LLM-ci-cd-agent-k-o-d-li-u": "text_contains:phase2-ci.yaml",
     "LLM-ci-cd-agent-drift-detection": "text_contains:phase2-ci.yaml",
     "LLM-ci-cd-agent-l-m-coordinator": "text_contains:phase2-ci.yaml",
@@ -731,7 +733,7 @@ EXPLICIT_IMPLEMENTATION: dict[str, tuple[str, str, str]] = {
     "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
         "data_engineer",
         "source",
-        ".github/workflows/phase2-rag-pipeline.yaml",
+        ".github/workflows/phase2-ci.yaml",
     ),
     "LLM-ci-cd-agent-k-o-d-li-u": (
         "llm_engineer",

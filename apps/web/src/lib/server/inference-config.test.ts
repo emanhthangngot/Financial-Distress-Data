@@ -9,6 +9,7 @@ import {
 const KEYS = [
   "DISTRESSLENS_INFERENCE_URL",
   "DISTRESSLENS_INFERENCE_TOKEN",
+  "DISTRESSLENS_INFERENCE_MODEL",
   "ASSISTANT_TIMEOUT_MS",
 ] as const;
 
@@ -55,16 +56,34 @@ describe("readInferenceConfig", () => {
     });
   });
 
-  it("is configured only when both url and token are present", () => {
+  it("treats invalid endpoints and bearer values as unconfigured", () => {
+    withEnv({
+      DISTRESSLENS_INFERENCE_URL: "https://model.example.test:invalid/v1",
+      DISTRESSLENS_INFERENCE_TOKEN: "test-token",
+    }, () => {
+      expect(readInferenceConfig()).toMatchObject({ url: null, isConfigured: false });
+    });
+    withEnv({
+      DISTRESSLENS_INFERENCE_URL: "https://model.example.test/v1",
+      DISTRESSLENS_INFERENCE_TOKEN: "invalid token",
+    }, () => {
+      expect(readInferenceConfig()).toMatchObject({ token: null, isConfigured: false });
+    });
+  });
+
+  it("requires an explicit model ID as well as URL and token", () => {
     withEnv(
       {
-        DISTRESSLENS_INFERENCE_URL: "https://infer.example.com/v1",
+        DISTRESSLENS_INFERENCE_URL: "https://infer.example.com/v1?api-version=2024-10-21",
         DISTRESSLENS_INFERENCE_TOKEN: "sk-secret",
+        DISTRESSLENS_INFERENCE_MODEL: " regional-model ",
       },
       () => {
         const config = readInferenceConfig();
         expect(config.isConfigured).toBe(true);
         expect(config.token).toBe("sk-secret");
+        expect(config.model).toBe("regional-model");
+        expect(config.url).toBe("https://infer.example.com/v1?api-version=2024-10-21");
       },
     );
   });

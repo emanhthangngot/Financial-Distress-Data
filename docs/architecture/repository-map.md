@@ -18,28 +18,25 @@ to catch.
 | `AGENTS.md` | data_engineer | shared tooling | No | Process rules — HOW-TO-BEHAVE for AI and human contributors |
 | `.claude/` | platform_operator | shared tooling | No | Claude Code project settings (`settings.json`) |
 | `CLAUDE.md` | data_engineer | shared tooling | No | Claude Code skill-routing pointer to `AGENTS.md` |
-| `README.md` | data_engineer | documentation | No | Complete project overview, architecture, setup, product/evidence boundaries, and project tree |
-| `apps/` | product_engineer | the platform product | No | the platform web app(s) (pnpm workspace member) |
-| `packages/` | product_engineer | the platform product | No | Shared TypeScript packages (pnpm workspace member) |
-| `configs/` | data_engineer | the platform local lakehouse | No | Collector, Spark, source, and DQ config YAMLs |
-| `dags/` | data_engineer | the platform local lakehouse | No | Airflow DAGs; `dags/platform/` holds additive the platform wrappers |
+| `README.md` | data_engineer | documentation | No | Reviewer entry point for project scope, setup, and coursework |
+| `apps/` | product_engineer | platform product | No | Web workspace and API/MCP service entrypoints |
+| `packages/` | product_engineer | platform product | No | Shared TypeScript packages (pnpm workspace member) |
+| `configs/` | data_engineer | lakehouse and platform | No | Runtime contracts, including the deployables catalog |
+| `dags/` | data_engineer | lakehouse and platform | No | Airflow DAGs and additive platform wrappers |
 | `docker-compose.yml` | platform_operator | shared tooling | No | Local platform service definitions (Postgres, Kafka, MinIO, Airflow, Flink) |
 | `docs/` | data_engineer | documentation | Partial — `docs/evidence/**` is generated | Specs, ADRs, runbooks, and captured runtime evidence |
 | `feature_repo/` | ml_engineer | the platform feature/RAG | No | Feast structured/RAG feature definitions and materialization configuration |
 | `.env.example` | platform_operator | shared tooling | No | Local environment variable template |
-| `flink/` | data_engineer | the platform local lakehouse | No | PyFlink job source for the opt-in Flink profile |
 | `.github/` | platform_operator | shared tooling | No | CI workflow definitions |
 | `.gitignore` | platform_operator | shared tooling | No | Git ignore patterns |
 | `images/` | data_engineer | documentation | No | Architecture diagrams referenced from docs |
 | `infra/` | platform_operator | shared tooling | No | Container build/bootstrap assets: `airflow/` (image build context), `flink/` (image build context), `kafka/` (topic init script) |
-| `mutants/` | data_engineer | generated test output | Generated | Mutation-testing workspace/output; regenerate with the the platform mutation gate |
 | `notebooks/` | llm_engineer | the platform evidence | No | Agent/MCP demonstration notebooks used by the LLM evidence track |
 | `package.json` | product_engineer | the platform product | No | pnpm workspace root manifest |
 | `plans/` | data_engineer | documentation | No | Implementation plans, phase files, and reports |
 | `pnpm-lock.yaml` | product_engineer | the platform product | Generated (lockfile) | pnpm dependency lock |
 | `pnpm-workspace.yaml` | product_engineer | the platform product | No | pnpm workspace member list |
 | `pyproject.toml` | data_engineer | shared tooling | No | Python package and tooling config (pytest, ruff, black) |
-| `requirements-platform.txt` | platform_operator | the platform shared tooling | No | the platform runtime/test dependency pins |
 | `requirements.txt` | data_engineer | shared tooling | No | Python dependency pins |
 | `scripts/` | data_engineer | shared tooling | No | Local E2E, DQ-failure-probe, and evidence-audit runners |
 | `sql/` | data_engineer | the platform local lakehouse | No | PostgreSQL metadata DDL and DuckDB SQL views |
@@ -65,14 +62,17 @@ has one owner:
 
 ## Separate deployment repository
 
-`financial-distress-gitops` is intentionally not a top-level entry in this
-source repository. It owns Terraform/GKE bootstrap, Helm-rendered platform
-manifests, Argo CD applications, image digests, ingress, security policies,
-model serving, agents, and observability desired state. This repository owns
-the application code, contracts, tests, product migrations, runbooks, and
-canonical evidence. The two repositories are joined by the source SHA +
-GitOps SHA recorded in the platform evidence; the final submission freeze requires
-those stamps to be regenerated after the latest commits.
+The source monorepo owns application code, contracts, tests, migrations,
+the [deployables catalog](../../configs/platform-deployables.yaml), and
+[signed image handoff](../../.github/workflows/phase2-ci.yaml). The external
+deployment owner owns provider resources, desired state, secret delivery,
+promotion approval, readiness and rollback. A source build is not a
+deployment; see the [operator runbook](../operator-runbook.md#external-deployment-handoff).
+
+The separate GitOps checkout was the deployment owner for the GKE coursework.
+Its revision pairing and historical promotion workflow are described under
+[historical Phase 2 evidence](../operator-runbook.md#historical-phase-2-evidence),
+not in the current runtime setup.
 
 ## Python package boundary
 

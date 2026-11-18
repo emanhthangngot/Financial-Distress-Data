@@ -37,14 +37,12 @@ RUBRIC_IDS = [
 def test_requirement_evidence_contract(rubric_id: str) -> None:
     """Evidence file, contract fields, and implementation artifact all exist.
 
-    Skips (never fails) while the row is still design_only — this file is
-    generated on day 1, long before the row is executed. A missing evidence
-    file at phase-08 promotion time is instead caught by
-    scripts/audit_platform_evidence.py --require-executed, which does not skip.
+    Skips an unexecuted row with no receipt; an executed row must have one.
     """
     row = MATRIX[rubric_id]
     evidence_path = REPO_ROOT / row["evidence_path"]
     if not evidence_path.exists():
+        assert row["evidence_type"] != "executed", f"{rubric_id}: missing receipt: {evidence_path}"
         pytest.skip(f"evidence not yet executed: {row['evidence_path']}")
 
     text = evidence_path.read_text(encoding="utf-8", errors="replace")
@@ -67,4 +65,4 @@ def test_requirement_evidence_contract(rubric_id: str) -> None:
         root = REPO_ROOT
     artifact = root / row["artifact_path"]
     assert artifact.is_file(), f"{rubric_id}: implementation artifact not found: {artifact}"
-    assert_behavioral_contract(artifact, row["behavioral_assertion"])
+    assert_behavioral_contract(artifact, row["behavioral_assertion"], receipt=fields)

@@ -1,25 +1,37 @@
-"""Pins the platform .eusable workflow and its list-driven callers."""
+"""Verify the reusable platform workflow and its callers."""
 
 from __future__ import annotations
 
 import hashlib
 import json
+import shlex
 from pathlib import Path
 
 import pytest
 import yaml
 
+from scripts.generate_platform_requirement_tests import generate
+from tests.platform.requirements.conftest import MATRIX
+from tests.platform.requirements.test_llm_ac_12_cicd import (
+    test_requirement_evidence_contract as _validate_cicd_requirement,
+)
+
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
 REUSABLE = WORKFLOWS_DIR / "phase2-ci.yaml"
+RAG_CALLER = WORKFLOWS_DIR / "phase2-rag-pipeline.yaml"
+RAG_CICD_RUBRIC_ID = "LLM-ci-cd-ci-cd-cho-rag-data-pipeline"
 CALLERS = (
-    WORKFLOWS_DIR / "phase2-rag-pipeline.yaml",
+    RAG_CALLER,
     WORKFLOWS_DIR / "phase2-stream-feature-offline.yaml",
     WORKFLOWS_DIR / "phase2-stream-feature-online.yaml",
     WORKFLOWS_DIR / "phase2-agent-feature.yaml",
     WORKFLOWS_DIR / "phase2-agent-drift.yaml",
     WORKFLOWS_DIR / "phase2-agent-coordinator.yaml",
+    WORKFLOWS_DIR / "phase2-drift-mcp.yaml",
+    WORKFLOWS_DIR / "phase2-phase1-pipeline.yaml",
+    WORKFLOWS_DIR / "phase2-web.yaml",
 )
 # platform-feature-api.yaml / platform-drift-api.yaml deleted 2026-08-14 — ML-track
 # deployables removed from the catalog; their standalone per-app CI workflows
@@ -52,15 +64,14 @@ def test_reusable_workflow_is_workflow_call() -> None:
 REQUIRED_INPUTS = ("deployables",)
 
 
-def test_reusable_workflow_requires_pipeline_name_and_secrets() -> None:
+def test_reusable_workflow_only_requires_registry_credentials() -> None:
     parsed = yaml.safe_load(REUSABLE.read_text(encoding="utf-8"))
     on_block = parsed.get("on", parsed.get(True))
     inputs = on_block["workflow_call"]["inputs"]
     secrets = on_block["workflow_call"]["secrets"]
     for required_input in REQUIRED_INPUTS:
         assert inputs[required_input]["required"] is True
-    for required_secret in ("GHCR_TOKEN", "GITOPS_PAT"):
-        assert secrets[required_secret]["required"] is True
+    assert secrets == {"GHCR_TOKEN": {"required": True}}
 
 
 @pytest.mark.parametrize("path", CALLERS, ids=lambda p: p.name)
@@ -78,16 +89,14 @@ def test_each_caller_supplies_every_required_input(path: Path) -> None:
             "dockerfile",
             "test_selector",
             "lint_paths",
-            "gitops_path",
-            "gitops_target_type",
-            "gitops_target_kind",
-            "gitops_target_selector",
-        } <= set(deployable)
+        } == set(deployable)
+    assert set(parsed["jobs"]["ci"]["secrets"]) == {"GHCR_TOKEN"}
 
 
 @pytest.mark.parametrize("path", CALLERS, ids=lambda p: p.name)
 def test_each_caller_references_the_reusable_workflow(path: Path) -> None:
     parsed = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert parsed["jobs"].keys() == {"ci"}
     ci_job = parsed["jobs"]["ci"]
     assert ci_job["uses"] == "./.github/workflows/phase2-ci.yaml"
 
@@ -104,11 +113,99 @@ def test_each_caller_declares_a_distinct_paths_trigger() -> None:
     for caller in CALLERS:
         parsed = yaml.safe_load(caller.read_text(encoding="utf-8"))
         on_block = parsed.get("on", parsed.get(True))
-        path_sets.append(frozenset(on_block["push"]["paths"]))
-    # Distinct callers must not all trigger on the exact same file set —
-    # otherwise every push runs all three "separately named" pipelines
-    # regardless of what actually changed.
+        push_paths = frozenset(on_block["push"]["paths"])
+        assert push_paths == frozenset(on_block["pull_request"]["paths"]), caller
+        own_path = caller.relative_to(REPO_ROOT).as_posix()
+        assert own_path in push_paths, f"{caller.name} must run when its workflow file changes"
+        path_sets.append(push_paths - {own_path})
+    # Ignore self-triggers when checking that each caller targets distinct source paths.
     assert len(set(path_sets)) == len(path_sets)
+
+
+def test_rag_caller_runs_workflow_checks_with_history() -> None:
+    parsed = yaml.safe_load(RAG_CALLER.read_text(encoding="utf-8"))
+    on_block = parsed.get("on", parsed.get(True))
+    assert ".github/workflows/phase2-*.yaml" in on_block["push"]["paths"]
+    deployable = json.loads(parsed["jobs"]["ci"]["with"]["deployables"])[0]
+    selector = shlex.split(deployable["test_selector"])
+    assert "tests/platform/pipelines" in selector
+    assert "tests/platform/requirements/test_llm_ac_12_cicd.py" in selector
+    parity_check = (
+        "tests/platform/test_rubric_matrix.py::TestRubricMatrix::"
+        "test_matrix_csv_matches_generator_exactly"
+    )
+    assert parity_check in selector
+    assert {
+        "test_workflows_platform",
+        "test_llm_ac_12_cicd",
+        "test_matrix_csv_matches_generator_exactly",
+    } <= set(selector[selector.index("-k") + 1].split(" or "))
+    steps = yaml.safe_load(REUSABLE.read_text(encoding="utf-8"))["jobs"]["test"]["steps"]
+    checkout = next(step for step in steps if step.get("uses", "").startswith("actions/checkout@"))
+    assert checkout["with"]["fetch-depth"] == 0
+
+
+def test_historical_rag_workflow_revision_matches_executed_run() -> None:
+    row = MATRIX[RAG_CICD_RUBRIC_ID]
+    assert row["evidence_type"] == "executed"
+    assert row["artifact_path"] == REUSABLE.relative_to(REPO_ROOT).as_posix()
+    expected = "historical_yaml_path:41940f6c1ed1fa16a80ef886b95302e6c53d8239:jobs.gitops-pr"
+    assert row["behavioral_assertion"] == expected
+    _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
+
+
+def test_canonical_rag_requirement_rejects_receipt_stamp_as_workflow_revision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setitem(
+        MATRIX[RAG_CICD_RUBRIC_ID],
+        "behavioral_assertion",
+        "historical_yaml_path:9ec6f065276d316bad1e308c88028c5662edc4db:jobs.gitops-pr",
+    )
+    with pytest.raises(AssertionError, match="does not match Actions run 31405317841 workflow SHA"):
+        _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
+
+
+@pytest.mark.parametrize(
+    ("original", "replacement", "error"),
+    [
+        (
+            "source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db",
+            "source_sha: 41940f6c1ed1fa16a80ef886b95302e6c53d8239",
+            "receipt source_sha does not match",
+        ),
+        (
+            "actions/runs/31405317841)",
+            "actions/runs/31405317842)",
+            "receipt actual_result does not link to Actions run 31405317841",
+        ),
+    ],
+    ids=["restamped-receipt", "different-run-url"],
+)
+def test_canonical_rag_requirement_rejects_changed_receipt_association(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, original: str, replacement: str, error: str
+) -> None:
+    row = MATRIX[RAG_CICD_RUBRIC_ID]
+    receipt = REPO_ROOT / row["evidence_path"]
+    text = receipt.read_text(encoding="utf-8")
+    assert original in text
+    edited_receipt = tmp_path / receipt.name
+    edited_receipt.write_text(text.replace(original, replacement, 1), encoding="utf-8")
+    monkeypatch.setitem(row, "evidence_path", str(edited_receipt))
+    with pytest.raises(AssertionError, match=error):
+        _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
+
+
+def test_canonical_rag_requirement_rejects_missing_receipt(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setitem(MATRIX[RAG_CICD_RUBRIC_ID], "evidence_path", str(tmp_path / "missing.md"))
+    with pytest.raises(AssertionError, match="missing receipt"):
+        _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
+
+
+def test_generated_requirement_tests_match_generator() -> None:
+    assert generate(check=True) == 0
 
 
 def test_each_caller_has_a_unique_pipeline_name() -> None:
@@ -120,14 +217,12 @@ def test_each_caller_has_a_unique_pipeline_name() -> None:
     assert len(names) == len(set(names))
 
 
-def test_reusable_workflow_signs_and_consumes_digest_handoffs() -> None:
+def test_reusable_workflow_signs_images_without_deploying_to_a_cluster() -> None:
     text = REUSABLE.read_text(encoding="utf-8")
     assert "fromJSON(inputs.deployables)" in text
     assert "id-token: write" in text
     assert "cosign sign --yes" in text
-    assert "actions/download-artifact@v4" in text
-    assert "gitops_values_path" not in text
-    assert "pipelines/${" not in text
+    assert yaml.safe_load(text)["jobs"].keys() == {"lint", "test", "phase5-verification", "build"}
 
 
 def test_phase5_verification_blocks_image_builds() -> None:

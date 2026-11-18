@@ -2,14 +2,13 @@
 title: "Financial Distress Data — Project File Map"
 date: 2026-08-10
 status: active-study-guide
-scope: "the platform local lakehouse + the platform additive ML/LLM/product plane"
+scope: "Local lakehouse and additive ML/LLM/product platform"
 ---
 
 # Project File Map — bản đồ để trả lời và mở file ngay
 
-Tài liệu này là “bản đồ tra cứu khi bị hỏi”, không phải danh sách file để học
-thuộc lòng. Repo hiện có khoảng 946 file tracked. Cách nhớ hiệu quả là nhớ
-luồng dữ liệu, sau đó mở đúng entrypoint, test và documentation liên quan.
+Tài liệu này là bản đồ tra cứu khi bị hỏi. Nhớ luồng dữ liệu, rồi mở đúng
+entrypoint, test và tài liệu liên quan.
 
 ## 0. Cách dùng trong 30 giây
 
@@ -49,7 +48,7 @@ Source/API/disclosure
         -> DuckDB / Analyst / ML / RAG / Product
 ```
 
-Mnemonic của the platform: **C-S-T-Q-M-C**
+Mnemonic của lakehouse: **C-S-T-Q-M-C**
 
 | Ký tự | Nhớ là | Mở thư mục chính |
 |---|---|---|
@@ -60,19 +59,22 @@ Mnemonic của the platform: **C-S-T-Q-M-C**
 | M | Metadata | `src/metadata/` + `src/governance/` |
 | C | Catalog/Consumer | `src/catalog/`, `apps/`, `feature_repo/` |
 
-the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
+Platform: **G-M-L-P** — Generator → ML/Drift → LLM/RAG → Product.
 
 ## 2. Trạng thái phải nói chính xác
 
+Các mục GKE/GitOps ghi nhận lần chạy coursework, không chọn môi trường hiện
+tại. Xem [runbook](operator-runbook.md#phase-2-runtime-setup) để cấu hình.
+
 | Nhãn | Ý nghĩa khi thuyết trình |
 |---|---|
-| ✅ the platform verified | Local-first pipeline, fixture collectors, Bronze/Silver/Gold, Kafka, DQ, metadata, DuckDB và runtime evidence đã có code/test/evidence. |
-| 🟡 the platform additive | ML, drift, RAG, Feast, product web app và contracts được thêm vào; không được nói là thay đổi the platform. |
+| ✅ Lakehouse local-first | Khi trình bày, dẫn code, test và bằng chứng local tương ứng. |
+| 🟡 Platform additive | ML, drift, RAG, Feast và product không thay đổi hợp đồng lakehouse. |
 | 🧪 Fixture-backed | `vnstock_adapter.py` hiện re-export fixture adapter; không nói là live production API nếu chưa có runtime proof. |
 | 📦 Generated | `docs/evidence/**`, `outputs/**`, `warehouse.db` và report artifacts được tạo lại bằng script; không sửa tay. |
-| ✅ the platform live-verified | Product plane và LLM evidence plane đã được chạy kiểm tra; snapshot runtime hiện tại là 13/13 Argo apps healthy, 28/28 live E2E checks passed. |
-| ⏳ Submission freeze pending | 60/60 LLM rows và 100/100 logical points đã có; source/GitOps SHA cần restamp và strict two-repo audit cần pass trước khi gọi là final. |
-| ⚠️ Separate repo | GKE/Terraform/Helm/Argo GitOps platform của the platform nằm ở control repo riêng; repo này giữ code, contracts, product, tests và canonical evidence. |
+| ✅ Bằng chứng GKE | [Ảnh chụp kiểm chứng](platform/architecture.md#6-verification-and-residuals) ghi nhận lần chạy coursework, không xác nhận trạng thái hiện tại. |
+| ⏳ Kiểm toán bài nộp | [Quy trình kiểm toán LLM hai repo](operator-runbook.md#historical-phase-2-evidence) chỉ áp dụng cho bộ bằng chứng coursework tương ứng. |
+| ⚠️ Triển khai bên ngoài | [Chủ triển khai](architecture/repository-map.md#separate-deployment-repository) quyết định môi trường; GitOps/GKE là mô hình của lần chạy lịch sử. |
 
 ## 3. Tra cứu nhanh theo câu hỏi
 
@@ -91,8 +93,8 @@ the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Produ
 | OBT company-quarter risk ở đâu? | `src/transforms/gold/obt_company_quarter_risk.py` | `tests/test_obt_company_quarter_risk.py` |
 | PIT leakage guard ở đâu? | `src/transforms/features/point_in_time.py` | `src/transforms/features/pit.py`, `tests/test_real_e2e_contracts.py` |
 | DQ check nào đang chạy? | `src/quality/dq_checks.py` | `src/quality/dq_runner.py`, `tests/test_dq_checks.py` |
-| Critical fail có halt không? | `src/quality/dq_runner.py` | `scripts/run_stage1_dq_failure_probe.py`, `tests/test_stage1_jobs.py` |
-| Metadata lưu gì? | `src/metadata/metadata_writer.py` | `sql/init_project_metadata.sql`, `tests/test_stage1_jobs.py` |
+| Critical fail có halt không? | `src/quality/dq_runner.py` | `scripts/run_lakehouse_dq_failure_probe.py`, `tests/test_lakehouse_jobs.py` |
+| Metadata lưu gì? | `src/metadata/metadata_writer.py` | `sql/init_ops.sql`, `tests/test_lakehouse_jobs.py` |
 | DuckDB inspect Gold thế nào? | `src/catalog/duckdb_catalog.py` | `src/catalog/duckdb_runner.py`, `sql/duckdb_validation_queries.sql` |
 | Kafka event contract ở đâu? | `src/streaming/events.py` | `src/streaming/kafka_producer.py`, `tests/test_streaming.py` |
 | Kafka vào Bronze thế nào? | `src/streaming/kafka_to_bronze_consumer.py` | `src/jobs/kafka_to_bronze_job.py`, `dags/dag_04_stream_market_events_to_kafka.py` |
@@ -100,13 +102,13 @@ the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Produ
 | DAG DP1/DP2/DP3 là gì? | `docs/data-pipeline-orchestration.md` | `dags/ingest_source_to_bronze.py`, `dags/build_silver_gold.py`, `dags/build_offline_features.py` |
 | DataHub lineage ở đâu? | `src/governance/datahub_model.py` | `src/governance/datahub_emitter.py`, `configs/datahub/governance.yaml` |
 | the platform ML contract ở đâu? | `src/ml/contracts.py` | `src/ml/label_pipeline.py`, `src/ml/feast/`, `tests/platform/pipelines/` |
-| Drift được tạo/check thế nào? | `src/drift/generator.py` | `configs/drift-config.yaml`, `scripts/run_phase2_drift_report.py` |
+| Drift được tạo/check thế nào? | `src/drift/generator.py` | `configs/drift-config.yaml`, `scripts/run_platform_drift_report.py` |
 | RAG ingest ở đâu? | `src/llm/rag_pipeline.py` | `src/llm/rag/`, `configs/rag-sources.yaml`, `tests/platform/pipelines/test_rag_*` |
 | Product page ở đâu? | `apps/web/src/app/` | `apps/web/src/components/`, `apps/web/e2e/` |
 | RBAC/RLS ở đâu? | `supabase/migrations/20260803214600_phase2_rls.sql` | `packages/contracts/src/authorization.ts`, `tests/platform/product/test_rbac_rls.py` |
 | Outbox worker ở đâu? | `apps/web/src/lib/server/outbox-worker.ts` | `apps/web/scripts/platform/outbox-worker.ts`, `supabase/migrations/20260804150000_phase2_outbox_worker.sql` |
-| Chạy quality gate nào? | `scripts/run_stage1_quality_gates.py` | `AGENTS.md`, `.github/workflows/ci.yml` |
-| Runtime evidence ở đâu? | `scripts/run_stage1_real_e2e.py` | `scripts/audit_stage1_evidence.py`, `docs/evidence/stage1_runtime_audit_summary.json` |
+| Chạy quality gate nào? | `scripts/run_lakehouse_quality_gates.py` | `AGENTS.md`, `.github/workflows/ci.yml` |
+| Runtime evidence ở đâu? | `scripts/run_lakehouse_real_e2e.py` | `scripts/audit_lakehouse_evidence.py`, `docs/evidence/lakehouse_runtime_audit_summary.json` |
 
 ## 4. Top-level map
 
@@ -118,7 +120,7 @@ the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Produ
 | `environment template` | Mẫu biến môi trường local. | Không chứa secret thật |
 | `.github/workflows/` | CI the platform và the platform. | Automation |
 | `configs/` | YAML contracts cho collector, DQ, Spark, Flink, generator, RAG, governance. | Config |
-| `dags/` | Airflow workflows the platform; `dags/platform/` là wrapper additive. | Orchestration |
+| `dags/` | Airflow workflows cho lakehouse và platform. | Orchestration |
 | `src/` | Python business logic và runtime helpers. | Core source |
 | `tests/` | Unit, contract, integration, product và rubric tests. | Verification |
 | `scripts/` | Runner, auditor, evidence exporter, demo và quality gates. | Operational tooling |
@@ -227,10 +229,10 @@ the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Produ
 | `io/atomic_publish.py` | Atomic promotion/rollback helper. |
 | `io/optional_input.py` | Optional input/config behavior. |
 | `jobs/kafka_to_bronze_job.py` | Evidence/runtime wrapper cho stream-to-Bronze. |
-| `jobs/stage1_dq_job.py` | Read objects, run Stage 1 DQ và persist result. |
-| `jobs/stage1_publish.py` | Persist failed rows và evidence publish. |
-| `jobs/stage1_evidence_job.py` | Build machine-readable evidence payload. |
-| `jobs/stage1_spark_lakehouse_job.py` | Spark local lakehouse runtime wrapper. |
+| `jobs/lakehouse_dq_job.py` | Lakehouse DQ runtime và lưu kết quả. |
+| `jobs/lakehouse_publish.py` | Persist failed rows và evidence publish. |
+| `jobs/lakehouse_evidence_job.py` | Build machine-readable evidence payload. |
+| `jobs/lakehouse_spark_lakehouse_job.py` | Spark local lakehouse runtime wrapper. |
 | `jobs/spark_baseline_job.py` | Baseline Spark alignment cho benchmark. |
 | `jobs/spark_optimized_job.py` | Optimized Spark alignment cho benchmark. |
 | `jobs/spark_benchmark_common.py` | Shared benchmark variant config/metrics. |
@@ -245,7 +247,7 @@ the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Produ
 | `governance/datahub_model.py` | Validated datasets, pipelines, contracts và lineage model. |
 | `governance/datahub_emitter.py` | Emit governance model sang DataHub. |
 | `governance/datahub_graphql.py` | DataHub GraphQL client/query helper. |
-| `governance/phase2_lineage.py` | the platform lineage bridge/evidence. |
+| `governance/lineage.py` | Platform lineage bridge/evidence. |
 | `evidence/run_manifest.py` | Machine-readable run manifest. |
 | `evidence/rubric_audit.py` | Audit rubric/evidence mapping. |
 | `lakehouse/compaction.py` | Compact small Parquet files. |
@@ -291,18 +293,17 @@ the platform nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Produ
 | `build_silver_gold.py` | DP2 reusable Silver/Gold pipeline. |
 | `build_offline_features.py` | DP3 offline feature build + PIT validation. |
 | `dp1_bronze_ingest.py` | DP1 evidence-oriented wrapper. |
-| `stage1_local_evidence_pipeline.py` | Lightweight local evidence DAG. |
-| `stage1_real_e2e_pipeline.py` | Connected real local E2E evidence DAG. |
-| `_stage1_dag_utils.py` | Shared Stage 1 DAG helper. |
-| `utils/stage1_dag_utils.py` | DAG utility package boundary/helper. |
-| `platform/phase2_feature_materialize.py` | the platform feature materialization wrapper. |
-| `platform/phase2_label_drift_build.py` | Drift report + label build wrapper. |
-| `platform/phase2_rag_ingest.py` | RAG ingestion wrapper. |
-| `platform/phase2_stream_feature_offline.py` | Offline stream feature wrapper. |
-| `platform/phase2_stream_feature_online.py` | Online stream feature wrapper. |
+| `lakehouse_local_evidence_pipeline.py` | Lightweight local evidence DAG. |
+| `lakehouse_real_e2e_pipeline.py` | Connected local E2E evidence DAG. |
+| `utils/dag_utils.py` | Shared DAG helper. |
+| `feature_materialize.py` | Platform feature materialization wrapper. |
+| `label_drift_build.py` | Drift report + label build wrapper. |
+| `rag_ingest.py` | RAG ingestion wrapper. |
+| `stream_feature_offline.py` | Offline stream feature wrapper. |
+| `stream_feature_online.py` | Online stream feature wrapper. |
 
-DAG rule cần nhớ: the platform wrappers không được có import-time side effect và
-không được đổi DAG ID/task của the platform.
+Wrapper platform không được có import-time side effect hoặc đổi DAG ID/task
+của lakehouse.
 
 ## 8. Script map — chạy, kiểm tra, xuất evidence
 
@@ -310,18 +311,18 @@ không được đổi DAG ID/task của the platform.
 
 | File | Tác dụng |
 |---|---|
-| `run_stage1_quality_gates.py` | One-shot pytest + ruff + black + compose config gate. |
-| `run_stage1_real_e2e.py` | Chạy local Airflow/Kafka/MinIO/Postgres E2E. |
-| `run_stage1_evidence.py` | Stage 1 evidence runner. |
-| `run_stage1_dq_failure_probe.py` | Prove critical DQ failure persists then halts. |
-| `stage1_readiness_report.py` | Reviewer-facing readiness report. |
-| `audit_stage1_evidence.py` | Audit Stage 1 evidence completeness/truth. |
+| `run_lakehouse_quality_gates.py` | One-shot gate; xem script để biết các check và tùy chọn. |
+| `run_lakehouse_real_e2e.py` | Chạy local Airflow/Kafka/MinIO/Postgres E2E. |
+| `run_lakehouse_evidence.py` | Lakehouse evidence runner. |
+| `run_lakehouse_dq_failure_probe.py` | Prove critical DQ failure persists then halts. |
+| `lakehouse_readiness_report.py` | Reviewer-facing readiness report. |
+| `audit_lakehouse_evidence.py` | Audit lakehouse evidence. |
 | `audit_mini_coursework_rubric.py` | Audit mini-coursework rubric. |
 | `audit_rubric_coverage.py` | Check rubric-to-file/evidence coverage. |
-| `audit_phase2_evidence.py` | Audit the platform evidence/matrix. |
+| `audit_platform_evidence.py` | Audit platform evidence/matrix. |
 | `audit_flink_evidence.py` | Audit Flink runtime/contract evidence. |
 | `audit_spark_benchmark.py` | Audit Spark benchmark outputs. |
-| `check_stage1_services.py` | Check local service readiness. |
+| `check_lakehouse_services.py` | Check local service readiness. |
 | `check_documentation.py` | Documentation/link/contract checks. |
 
 ### Generator, benchmark, storage, schema
@@ -342,9 +343,9 @@ không được đổi DAG ID/task của the platform.
 
 | File | Tác dụng |
 |---|---|
-| `generate_phase2_matrix.py` | Generate the platform rubric matrix. |
-| `generate_phase2_requirement_tests.py` | Generate requirement test skeletons/contracts. |
-| `run_phase2_drift_report.py` | Run drift scenario and report. |
+| `generate_platform_matrix.py` | Generate the platform rubric matrix. |
+| `generate_platform_requirement_tests.py` | Generate requirement test skeletons/contracts. |
+| `run_platform_drift_report.py` | Run drift scenario and report. |
 | `smoke_embedding_endpoint.py` | Smoke test embedding endpoint/math. |
 | `sync_datahub_governance.py` | Sync governance YAML/model to DataHub. |
 | `capture_ui_screenshots.py` | Capture product evidence screenshots. |
@@ -352,7 +353,7 @@ không được đổi DAG ID/task của the platform.
 | `run_mini_coursework_submission.py` | Assemble mini-coursework submission evidence. |
 | `verify-clean-room-setup.sh` | Verify clean-room/reproducible setup. |
 | `_rubric_items.py` | Shared the platform rubric definitions. |
-| `_phase2_rubric_items.py` | Shared the platform rubric definitions. |
+| `_platform_rubric_items.py` | Shared platform rubric definitions. |
 
 ## 9. Config và SQL map
 
@@ -382,8 +383,8 @@ không được đổi DAG ID/task của the platform.
 
 | File | Tác dụng |
 |---|---|
-| `init_project_metadata.sql` | PostgreSQL `ops` DDL. |
-| `init_ml_metadata.sql` | the platform `ml` DDL; không cross-write với the platform. |
+| `init_ops.sql` | PostgreSQL `ops` DDL. |
+| `init_ml.sql` | PostgreSQL `ml` DDL. |
 | `duckdb_create_views.sql` | DuckDB views cho curated lakehouse. |
 | `duckdb_validation_queries.sql` | Counts, duplicate, label, PIT validation queries. |
 | `schema_evidence.sql` | Schema/ERD evidence query. |
@@ -441,9 +442,9 @@ không được đổi DAG ID/task của the platform.
 | `test_keys.py`, `test_sector_exclusion.py` | Key and policy contracts. |
 | `test_dq_checks.py`, `test_contract_checker.py`, `test_sql_contract_runner.py` | DQ/schema/SQL contracts. |
 | `test_streaming.py`, `test_streaming_problem_factory.py`, `test_flink_integration.py` | Kafka/event/Flink contracts. |
-| `test_dp1_pipeline.py`, `test_dags_05_smoke.py`, `test_stage1_jobs.py` | DAG/task/runtime wrappers. |
+| `test_dp1_pipeline.py`, `test_dags_05_smoke.py`, `test_lakehouse_jobs.py` | DAG/task/runtime wrappers. |
 | `test_real_e2e_contracts.py`, `test_runtime_evidence.py` | E2E/evidence contracts without live stack. |
-| `test_stage1_quality_gates.py`, `test_stage1_readiness_report.py`, `test_stage1_service_checks.py` | Operational checks. |
+| `test_lakehouse_quality_gates.py`, `test_lakehouse_readiness_report.py`, `test_lakehouse_service_checks.py` | Operational checks. |
 | `test_compaction.py`, `test_duckdb_index_demo.py`, `test_storage_optimization_doc.py` | Storage/benchmark evidence. |
 | `test_generator_config.py`, `test_generator_characteristics_evidence.py`, `test_fixture_adapter_knobs.py` | Generator/fixture determinism. |
 | `test_manifest_adapter.py`, `test_rows_with_schema.py`, `test_schema_contracts.py` | Input/manifest/schema shape. |
@@ -457,7 +458,7 @@ không được đổi DAG ID/task của the platform.
 
 | Folder | File family | Chức năng |
 |---|---|---|
-| `tests/platform/pipelines/` | `test_data_governance`, `test_phase2_lineage` | Governance/lineage. |
+| `tests/platform/pipelines/` | `test_data_governance`, `test_lineage` | Governance/lineage. |
 |  | `test_drift_config`, `test_drift_generator` | Drift configuration/scenario. |
 |  | `test_label_pipeline` | Label build/persistence. |
 |  | `test_feast_definitions_ttl`, `test_feast_smoke` | Feast definitions/runtime. |
@@ -465,7 +466,7 @@ không được đổi DAG ID/task của the platform.
 |  | `test_rag_chunking`, `test_rag_dedup`, `test_rag_metadata_contract` | RAG chunk/hash/governance metadata. |
 |  | `test_pgvector_store` | Vector storage/versioning. |
 |  | `test_stream_feature_jobs` | Offline/online stream features. |
-|  | `test_phase2_dags_import`, `test_workflows_phase2` | Additive DAG import/workflow contracts. |
+|  | `test_platform_dags_import`, `test_workflows_platform` | Additive DAG import/workflow contracts. |
 | `tests/platform/product/` | `test_rbac_rls`, `test_outbox_worker` | Supabase security/outbox. |
 | `tests/platform/requirements/` | `test_llm_ac_01`…`test_llm_ac_20` | One executable acceptance family per LLM rubric item. |
 | `tests/platform/test_rubric_matrix.py` | Matrix schema/content. |
@@ -519,7 +520,7 @@ refresh:
 
 | Path pattern | Nội dung | Producer |
 |---|---|---|
-| `docs/evidence/stage1_*` | Runtime counts, offsets, MinIO/Postgres/DuckDB summaries. | `scripts/run_stage1_real_e2e.py`, audit scripts |
+| `docs/evidence/lakehouse_*` | Dữ liệu của lần kiểm chứng local. | `scripts/run_lakehouse_real_e2e.py`, audit scripts |
 | `docs/evidence/final/coursework-final-*` | Snapshot submission packages. | submission/evidence scripts |
 | `docs/evidence/airflow/`, `flink/`, `spark/` | Runtime benchmark/evidence by platform. | matching runner/audit scripts |
 | `docs/evidence/governance/`, `schema/`, `generator/` | Governance/schema/generator artifacts. | matching build/audit scripts |
@@ -539,10 +540,10 @@ git ls-files 'docs/platform/evidence/**' | sort
 |---|---|
 | `plans/260721-1033-achieve-mini-coursework-rubric/` | Các phase hoàn thiện rubric the platform. |
 | `plans/260802-0113-refresh-mini-coursework-evidence-package/` | Refresh/đóng gói evidence the platform. |
-| `plans/260802-1037-unified-platform-ml-llm-gitops/` | Ground truth lớn của the platform: product, ML, LLM, GitOps. |
-| `plans/260805-0800-platform-stage2-completion/` | Quota, assistant path, outbox, coverage, accessibility. |
+| `plans/260802-1037-unified-phase2-ml-llm-gitops/` | Phạm vi coursework: product, ML, LLM và GitOps. |
+| `plans/260805-0800-phase2-stage2-completion/` | Quota, assistant path, outbox, coverage, accessibility. |
 | `plans/260806-2234-architecture-hygiene-before-phase-3/` | Dọn architecture/package/container/test markers. |
-| `plans/260809-2039-complete-platform-llm-submission/` | Hoàn thiện submission LLM. |
+| `plans/260809-2039-complete-phase2-llm-submission/` | Hoàn thiện submission LLM. |
 | `plans/260813-1519-project-wide-readme-docs/` | Đồng bộ README, architecture, maps và submission index với hệ thống hoàn chỉnh. |
 | `plans/reports/` | Báo cáo/research độc lập, không phải current source of truth. |
 
@@ -573,7 +574,7 @@ task nói rõ the platform.
 
 ```bash
 # Full definition of done
-.venv/bin/python scripts/run_stage1_quality_gates.py
+.venv/bin/python scripts/run_lakehouse_quality_gates.py
 
 # Narrow the platform test
 .venv/bin/python -m pytest tests/test_distress_labels.py -q

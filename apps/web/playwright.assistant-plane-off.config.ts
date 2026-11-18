@@ -33,6 +33,7 @@ export default defineConfig({
     timeout: 240_000,
     env: {
       DISTRESSLENS_DATA_SOURCE: "fixture",
+      DISTRESSLENS_ALLOW_LOCAL_FIXTURES: "1",
       DISTRESSLENS_FIXTURE_ROLE: "analyst",
       DISTRESSLENS_FIXTURE_AAL: "aal2",
       DISTRESSLENS_FIXTURE_PLANE: "off",

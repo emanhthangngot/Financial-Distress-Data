@@ -8,7 +8,6 @@ import {
   validateAssistantDriftRows,
   type AssistantContext,
 } from "@/lib/assistant/assistant-context";
-import type { AssistantTurn } from "@/lib/assistant/assistant-transport";
 import {
   consumeAiBudget,
   recordAuditEvent,
@@ -16,7 +15,9 @@ import {
   type AiBudgetDecision,
   type AuditEventInput,
 } from "@/lib/server/ai-budget";
+import { fixtureModeEnabled } from "@/lib/server/fixture-mode";
 import { guardRequest, type GuardContext } from "@/lib/server/guards";
+import { absoluteHttpUrl } from "@/lib/server/http-endpoint";
 import { readInferenceConfig, type InferenceConfig } from "@/lib/server/inference-config";
 import { translateInferenceChunks } from "@/lib/server/inference-stream";
 import { resolveSession, type ResolvedSession } from "@/lib/server/session";
@@ -37,7 +38,6 @@ const UPSTREAM_UNAVAILABLE_COPY = "Mô hình phân tích tạm không khả dụ
 
 interface AssistantRequestBody {
   question: string;
-  history: readonly AssistantTurn[];
   context: AssistantContext | null;
 }
 
@@ -136,8 +136,17 @@ export async function handleAssistantStream(
   // 4. Plane gate: an absent plane is product state, not a client error, so it
   // is a 200 stream of exactly the eks_off state and done frames.
   const config = deps.readConfig();
-  const coordinatorUrl = process["env"]["DISTRESSLENS_" + "COORDINATOR_URL"] ?? null;
-  if (!context.planeReady || (!config.isConfigured && coordinatorUrl === null)) {
+  const configuredCoordinatorUrl = process["env"]["DISTRESSLENS_" + "COORDINATOR_URL"];
+  const coordinatorToken = process["env"]["DISTRESSLENS_" + "COORDINATOR_TOKEN"] || null;
+  const coordinatorUrl = absoluteHttpUrl(configuredCoordinatorUrl, coordinatorToken);
+  const inferenceUrl = config.isConfigured && config.model !== null ? config.url : null;
+  const canExplain = !requiresEvidence(request.context) &&
+    GENERAL_EXPLANATION.test(request.question.replace(/\s+/gu, " "));
+  const coordinatorRequested = configuredCoordinatorUrl !== undefined || coordinatorToken !== null;
+  if (
+    !context.planeReady ||
+    (!coordinatorRequested && (!canExplain || inferenceUrl === null))
+  ) {
     await deps.recordAudit(client, {
       action: "ai.request",
       outcome: "PLANE_OFF",
@@ -161,18 +170,21 @@ export async function handleAssistantStream(
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       let outcome: AIAuditOutcome = "ALLOWED";
+      const deadline = performance.now() + config.timeoutMs;
       const send = (frame: AssistantFrame) =>
         controller.enqueue(encoder.encode(encodeSseFrame(frame)));
 
       try {
         send({ type: "state", state: "streaming", reason: null });
-        if (coordinatorUrl !== null) {
+        if (coordinatorRequested) {
+          if (coordinatorUrl === null) throw new Error("coordinator configuration is invalid");
           await streamCoordinatorResponse(
             deps.fetchImpl,
             coordinatorUrl,
+            coordinatorToken,
             request,
             upstreamController.signal,
-            config.timeoutMs,
+            deadline,
             propagationHeaders,
             send,
           ).then((succeeded) => {
@@ -180,18 +192,22 @@ export async function handleAssistantStream(
           });
           return;
         }
+        if (inferenceUrl === null || config.model === null) {
+          throw new Error("inference configuration is unavailable");
+        }
         const upstreamOrTimeout = await withDeadline(
-          deps.fetchImpl(config.url as string, {
+          deps.fetchImpl(inferenceUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               ...propagationHeaders,
               ...(config.token === null ? {} : { Authorization: `Bearer ${config.token}` }),
             },
-            body: JSON.stringify(upstreamBody(request)),
+            body: JSON.stringify(explanationBody(request.question, config.model)),
+            redirect: "error",
             signal: upstreamController.signal,
           }),
-          config.timeoutMs,
+          Math.max(0, deadline - performance.now()),
         );
         if (upstreamOrTimeout === "timeout") {
           outcome = "FAILED";
@@ -207,13 +223,25 @@ export async function handleAssistantStream(
         }
 
         const frames = translateInferenceChunks(ssePayloads(upstream.body), {
-          timeoutMs: config.timeoutMs,
+          timeoutMs: Math.max(0, deadline - performance.now()),
           signal: upstreamController.signal,
         });
+        let completed = false;
         for await (const frame of frames) {
           send(frame);
+          if (frame.type === "done") completed = true;
+          if (frame.type === "state" && frame.state === "policy_blocked") {
+            outcome = "FAILED";
+            break;
+          }
           if (frame.type === "error" || (frame.type === "state" && frame.state === "timeout")) {
             outcome = "FAILED";
+          }
+        }
+        if (!completed && outcome !== "FAILED") {
+          outcome = "FAILED";
+          if (!upstreamController.signal.aborted) {
+            send({ type: "error", code: "UPSTREAM_UNAVAILABLE", reason: UPSTREAM_UNAVAILABLE_COPY });
           }
         }
       } catch {
@@ -223,7 +251,7 @@ export async function handleAssistantStream(
         }
       } finally {
         req.signal.removeEventListener("abort", onClientAbort);
-        if (outcome === "FAILED") upstreamController.abort();
+        upstreamController.abort();
         try {
           await deps.recordAudit(client, { action: "ai.request", outcome, contextId });
         } catch {
@@ -244,11 +272,8 @@ export async function handleAssistantStream(
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
-  // Fixture mode (evidence/Playwright runs, gated exactly like the session
-  // fixture) resolves the budget and audit from the environment instead of
-  // Postgres. It is never active in a production deployment because
-  // resolveSession fails closed there when fixture mode is requested.
-  const fixture = process.env.DISTRESSLENS_DATA_SOURCE === "fixture";
+  // Fixture identity, quota and audit all use the same deployment gate.
+  const fixture = fixtureModeEnabled();
   return handleAssistantStream(req, {
     resolveSession,
     clientFor: fixture ? () => FIXTURE_STUB_CLIENT : createRequestClient,
@@ -323,21 +348,44 @@ async function parseBody(req: NextRequest): Promise<AssistantRequestBody> {
   }
   return {
     question,
-    history: Array.isArray(body.history) ? body.history : [],
     context: body.context && typeof body.context === "object" ? (body.context as AssistantContext) : null,
   };
 }
 
-/** The OpenAI-compatible request; only turn text travels upstream. */
-function upstreamBody(request: AssistantRequestBody): Record<string, unknown> {
-  const messages: readonly { role: "user" | "assistant"; content: string }[] = [
-    ...request.history.map((turn) => ({
-      role: turn.role === "user" ? ("user" as const) : ("assistant" as const),
-      content: turn.body,
-    })),
-    { role: "user" as const, content: request.question },
-  ];
-  return { stream: true, messages };
+function requiresEvidence(context: AssistantContext | null): boolean {
+  return context !== null && (
+    (typeof context.ticker === "string" && context.ticker.trim() !== "") ||
+    (Array.isArray(context.selectedTickers) && context.selectedTickers.length > 0) ||
+    ["company", "comparison", "report"].includes(context.scope) ||
+    validateAssistantDriftRows(context.driftRows) !== undefined
+  );
+}
+
+// The bare model has no facts about a company or the portfolio. Only complete
+// glossary-style requests can bypass evidence lookup, without prior turns.
+const CONCEPTS = [
+  "altman(?:['’]s)? z[- ]score", "z[- ]score", "current ratio", "quick ratio",
+  "debt[- ]to[- ]asset(?: ratio)?", "financial distress", "data drift",
+  "điểm z(?: altman)?", "hệ số thanh toán hiện hành", "hệ số thanh toán nhanh",
+  "tỷ lệ nợ trên tài sản", "kiệt quệ tài chính", "trôi dạt dữ liệu",
+].join("|");
+const GENERAL_EXPLANATION = new RegExp(
+  `^(?:(?:what is(?: the| an?)?|explain|define|giải thích|định nghĩa) (?:${CONCEPTS})|(?:${CONCEPTS}) là gì)[?.!]?$`,
+  "iu",
+);
+
+function explanationBody(question: string, model: string) {
+  return {
+    model,
+    stream: true,
+    messages: [
+      {
+        role: "system",
+        content: "Define the general concept. Do not provide figures or claims about any real company, portfolio, or current data.",
+      },
+      { role: "user", content: question },
+    ],
+  };
 }
 
 /**
@@ -392,31 +440,39 @@ function coordinatorScenario(raw: string | undefined): Record<string, unknown> {
 async function streamCoordinatorResponse(
   fetchImpl: typeof fetch,
   url: string,
+  token: string | null,
   request: AssistantRequestBody,
   signal: AbortSignal,
-  timeoutMs: number,
+  deadline: number,
   propagationHeaders: Record<string, string>,
   send: (frame: AssistantFrame) => void,
 ): Promise<boolean> {
-  const responseOrTimeout = await withDeadline(
+  const result = await withDeadline(
     fetchImpl(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...propagationHeaders },
+      headers: {
+        "Content-Type": "application/json",
+        ...propagationHeaders,
+        ...(token === null ? {} : { Authorization: `Bearer ${token}` }),
+      },
       body: JSON.stringify(coordinatorBody(request)),
+      redirect: "error",
       signal,
-    }),
-    timeoutMs,
+    }).then(async (response) => response.ok
+      ? { ok: true as const, payload: await response.json() }
+      : { ok: false as const }),
+    Math.max(0, deadline - performance.now()),
   );
-  if (responseOrTimeout === "timeout") {
+  if (result === "timeout") {
     send({ type: "state", state: "timeout", reason: null });
     return false;
   }
-  if (!responseOrTimeout.ok) {
+  if (!result.ok) {
     send({ type: "error", code: "UPSTREAM_UNAVAILABLE", reason: UPSTREAM_UNAVAILABLE_COPY });
     return false;
   }
 
-  const payload = (await responseOrTimeout.json()) as {
+  const payload = result.payload as {
     answer?: unknown;
     specialists?: unknown;
     citations?: unknown;
@@ -505,7 +561,7 @@ function newTraceparent(): string {
 
 /**
  * Split an upstream SSE byte stream into its `data:` payloads. Tolerates `data:
- * [DONE]` sentinels and non-data lines; a read error or abort ends the stream
+ * [DONE]` sentinels and non-data lines. A read error or abort ends the stream
  * rather than throwing into the translator.
  */
 async function* ssePayloads(stream: ReadableStream<Uint8Array>): AsyncGenerator<string> {
@@ -529,7 +585,7 @@ async function* ssePayloads(stream: ReadableStream<Uint8Array>): AsyncGenerator<
         const trimmed = line.trim();
         if (trimmed.startsWith("data:")) {
           const payload = trimmed.slice("data:".length).trim();
-          if (payload !== "" && payload !== "[DONE]") {
+          if (payload !== "") {
             yield payload;
           }
         }

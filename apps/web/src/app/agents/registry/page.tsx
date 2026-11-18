@@ -1,4 +1,4 @@
-import type { AgentRegistryView } from "@distresslens/contracts";
+import type { AgentRegistryView, PlaneHealth } from "@distresslens/contracts";
 import { AgentRegistryList } from "@/components/ops/agent-registry-list";
 import { AdminShell } from "@/components/shell/admin-shell";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
@@ -25,27 +25,19 @@ export default async function AgentRegistryPage() {
   const result = await getDataPort(accessToken).getAgentRegistry(context);
   const data: AgentRegistryView | null = viewData(result);
   const copy = viewCopy(result, LOADING_COPY.registry);
-  const provenance = data?.provenance ?? {
-    freshness: "CACHED_RESULT" as const,
-    planeAvailability: "LIVE_UNAVAILABLE" as const,
-    origin: "EVIDENCE_PLANE" as const,
-    cachedAt: null,
-    sourceSha: "0000000",
-    gitopsSha: null,
-    dataVersion: "unavailable",
-    modelVersion: null,
-    agentVersion: null,
-    runId: null,
-  };
+  const provenance = data?.provenance ?? null;
+  let health: PlaneHealth = "UNKNOWN";
+  if (result.state === "success") health = "ONLINE";
+  else if (result.state === "degraded" || result.state === "error") health = "DEGRADED";
 
   return (
     <AdminShell
       user={user}
       provenance={provenance}
-      syncedAtLabel={data === null ? "Unavailable" : "Live registry"}
+      syncedAtLabel={data === null ? "Unavailable" : result.state === "success" ? "Live registry" : "Last known registry"}
       environmentLabel="Evidence plane"
-      planeHealth={context.planeReady ? "ONLINE" : "OFFLINE"}
-      desiredCommit={provenance.gitopsSha ?? "—"}
+      planeHealth={health}
+      desiredCommit={provenance?.gitopsSha ?? "—"}
     >
       <div className="flex flex-col gap-5">
         <div className="min-w-0">
@@ -59,7 +51,7 @@ export default async function AgentRegistryPage() {
           <StatePanel
             copy={copy ?? LOADING_COPY.registry}
             tone={isFailureState(result) ? "critical" : "neutral"}
-            action={<DenialAction state={result.state} context={context} reloadHref="/ops/evidence" />}
+            action={<DenialAction state={result.state} context={context} reloadHref="/agents/registry" />}
           />
         ) : (
           <>
@@ -77,7 +69,7 @@ export default async function AgentRegistryPage() {
                   entries={data.entries}
                   role={context.role}
                   aal={context.aal}
-                  replicaCountsKnown={context.planeReady}
+                  replicaCountsKnown={result.state === "success"}
                 />
               </CardBody>
             </Card>

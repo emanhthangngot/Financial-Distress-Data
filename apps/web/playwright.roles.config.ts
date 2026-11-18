@@ -40,6 +40,7 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       DISTRESSLENS_DATA_SOURCE: "fixture",
+      DISTRESSLENS_ALLOW_LOCAL_FIXTURES: "1",
       DISTRESSLENS_FIXTURE_ROLE: "platform_operator",
       DISTRESSLENS_FIXTURE_NAME: "Trần Quốc Vinh",
       DISTRESSLENS_FIXTURE_AAL: "aal2",

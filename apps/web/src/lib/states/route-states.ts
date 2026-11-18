@@ -141,14 +141,14 @@ export const ROUTE_STATE_COPY: RouteStateCatalog = {
       nextAction: "Yêu cầu cấp vai trò nền tảng, hoặc quay lại khu vực phân tích.",
     },
     degraded: {
-      unavailable: "Không đọc được số bản sao đang chạy (EKS ngoại tuyến).",
-      lastKnown: "Đang hiển thị phiên bản và chính sách sandbox đã đăng ký.",
-      nextAction: "Tạo phiên evidence để đọc lại tình trạng bản sao.",
+      unavailable: "Không đọc được sổ đăng ký agent trực tiếp.",
+      lastKnown: null,
+      nextAction: "Kiểm tra cấu hình sổ đăng ký và thử tải lại trang.",
     },
     error: {
       unavailable: "Không tải được sổ đăng ký agent.",
       lastKnown: null,
-      nextAction: "Tải lại trang, hoặc kiểm tra trạng thái Supabase ở trang Vận hành.",
+      nextAction: "Tải lại trang, hoặc kiểm tra kết nối đến sổ đăng ký agent.",
     },
   },
   "/ops/evidence": {

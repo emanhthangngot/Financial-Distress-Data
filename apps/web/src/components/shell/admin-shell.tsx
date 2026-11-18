@@ -55,7 +55,7 @@ const ADMIN_NAV_FOOTER: readonly NavItem[] = [
 
 export interface AdminShellProps {
   user: { displayName: string; role: Role | null };
-  provenance: Provenance;
+  provenance: Provenance | null;
   environmentLabel: string;
   planeHealth: PlaneHealth;
   /** Sync time shown in the header status, e.g. "23/05/2025 08:46". */
@@ -137,7 +137,9 @@ export function AdminShell({
                 Desired commit:
                 <code className="font-mono text-text-body">{desiredCommit}</code>
               </span>
-              <SystemStatus provenance={provenance} syncedAtLabel={syncedAtLabel} />
+              {provenance !== null && (
+                <SystemStatus provenance={provenance} syncedAtLabel={syncedAtLabel} />
+              )}
               <UserMenu
                 displayName={user.displayName}
                 role={user.role}

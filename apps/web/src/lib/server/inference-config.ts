@@ -1,4 +1,5 @@
 import "server-only";
+import { absoluteHttpUrl } from "./http-endpoint";
 
 /**
  * Inference endpoint resolution for the assistant stream route.
@@ -21,20 +22,23 @@ export const MAX_ASSISTANT_TIMEOUT_MS = 59_000;
 export interface InferenceConfig {
   url: string | null;
   token: string | null;
+  model: string | null;
   timeoutMs: number;
   isConfigured: boolean;
 }
 
 export function readInferenceConfig(): InferenceConfig {
-  const url = process.env.DISTRESSLENS_INFERENCE_URL ?? null;
-  const token = process.env.DISTRESSLENS_INFERENCE_TOKEN ?? null;
+  const rawToken = process.env.DISTRESSLENS_INFERENCE_TOKEN || null;
+  const url = absoluteHttpUrl(process.env.DISTRESSLENS_INFERENCE_URL, rawToken);
+  const token = url === null ? null : rawToken;
+  const model = process.env.DISTRESSLENS_INFERENCE_MODEL?.trim() || null;
 
   const rawTimeout = Number.parseInt(process.env.ASSISTANT_TIMEOUT_MS ?? "", 10);
   const timeoutMs = Number.isFinite(rawTimeout)
     ? Math.min(Math.max(rawTimeout, 1_000), MAX_ASSISTANT_TIMEOUT_MS)
     : DEFAULT_ASSISTANT_TIMEOUT_MS;
 
-  return { url, token, timeoutMs, isConfigured: url !== null && token !== null };
+  return { url, token, model, timeoutMs, isConfigured: url !== null && token !== null && model !== null };
 }
 
 /**
