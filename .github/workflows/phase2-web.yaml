@@ -40,5 +40,3 @@ jobs:
         [{"name":"web","image_context":".","dockerfile":"apps/web/Dockerfile",
         "test_selector":"tests/platform/verification -k 'web_api_adapters'",
         "lint_paths":"tests/platform/verification/test_web_api_adapters.py"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}

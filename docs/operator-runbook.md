@@ -194,6 +194,12 @@ the source gates. Source CI must not authenticate to a deployment provider,
 provision infrastructure, promote a workload, or change an external
 deployment repository.
 
+The publishing job uses the run-scoped `GITHUB_TOKEN` with `packages: write`,
+not a personal access token. For existing GHCR images, confirm that this
+repository has Write or Admin under each package's **Manage Actions access**.
+Validate publishing and keyless signing on a push to `dev`; pull requests
+intentionally do not exercise registry login.
+
 The external deployment owner chooses a runtime only after checking:
 
 - **Capabilities:** the target can pull and verify the signed image digest,

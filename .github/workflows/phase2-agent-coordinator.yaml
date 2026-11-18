@@ -34,5 +34,3 @@ jobs:
         [{"name":"coordinator","image_context":".","dockerfile":"apps/feature-mcp/Dockerfile",
         "test_selector":"tests/platform/agents -k 'coordinator or test_runtime_portability'",
         "lint_paths":"src/agents src/llm/http_endpoint.py tests/platform/agents"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}

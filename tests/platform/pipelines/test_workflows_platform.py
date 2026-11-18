@@ -64,14 +64,26 @@ def test_reusable_workflow_is_workflow_call() -> None:
 REQUIRED_INPUTS = ("deployables",)
 
 
-def test_reusable_workflow_only_requires_registry_credentials() -> None:
+def test_release_uses_the_workflow_token_without_publishing_on_pull_requests() -> None:
     parsed = yaml.safe_load(REUSABLE.read_text(encoding="utf-8"))
     on_block = parsed.get("on", parsed.get(True))
     inputs = on_block["workflow_call"]["inputs"]
-    secrets = on_block["workflow_call"]["secrets"]
     for required_input in REQUIRED_INPUTS:
         assert inputs[required_input]["required"] is True
-    assert secrets == {"GHCR_TOKEN": {"required": True}}
+    assert "secrets" not in on_block["workflow_call"]
+
+    build = parsed["jobs"]["build"]
+    assert build["permissions"]["packages"] == "write"
+    steps = build["steps"]
+    login = next(step for step in steps if step.get("uses", "").startswith("docker/login-action@"))
+    publish = next(
+        step for step in steps if step.get("uses", "").startswith("docker/build-push-action@")
+    )
+    sign = next(step for step in steps if step.get("name") == "Sign immutable image digest")
+    non_pr = "github.event_name != 'pull_request'"
+    assert login["with"]["password"] == "${{ secrets.GITHUB_TOKEN }}"
+    assert login["if"] == sign["if"] == non_pr
+    assert publish["with"]["push"] == "${{ " + non_pr + " }}"
 
 
 @pytest.mark.parametrize("path", CALLERS, ids=lambda p: p.name)
@@ -90,7 +102,7 @@ def test_each_caller_supplies_every_required_input(path: Path) -> None:
             "test_selector",
             "lint_paths",
         } == set(deployable)
-    assert set(parsed["jobs"]["ci"]["secrets"]) == {"GHCR_TOKEN"}
+    assert "secrets" not in parsed["jobs"]["ci"]
 
 
 @pytest.mark.parametrize("path", CALLERS, ids=lambda p: p.name)
@@ -105,6 +117,7 @@ def test_each_caller_references_the_reusable_workflow(path: Path) -> None:
 def test_each_caller_allows_keyless_signing(path: Path) -> None:
     parsed = yaml.safe_load(path.read_text(encoding="utf-8"))
 
+    assert parsed["permissions"]["packages"] == "write"
     assert parsed["permissions"]["id-token"] == "write"
 
 
