@@ -7,6 +7,7 @@ on:
       - "src/ml/feast/offline_job.py"
       - "src/ml/feast/feature_definitions.py"
       - "dags/phase2/phase2_stream_feature_offline.py"
+      - "infra/stream-feature-offline/Dockerfile"
       - ".github/workflows/phase2-stream-feature-offline.yaml"
   pull_request:
     branches: [main, dev]
@@ -14,6 +15,7 @@ on:
       - "src/ml/feast/offline_job.py"
       - "src/ml/feast/feature_definitions.py"
       - "dags/phase2/phase2_stream_feature_offline.py"
+      - "infra/stream-feature-offline/Dockerfile"
       - ".github/workflows/phase2-stream-feature-offline.yaml"
 
 permissions:

@@ -10,7 +10,12 @@ from pathlib import Path
 import pytest
 import yaml
 
+from scripts.generate_phase2_requirement_tests import generate
+
 from ..requirements.conftest import MATRIX, parse_evidence_fields
+from ..requirements.test_llm_ac_12_cicd import (
+    test_requirement_evidence_contract as _validate_cicd_requirement,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
@@ -147,6 +152,30 @@ def test_historical_rag_workflow_revision_matches_executed_receipt() -> None:
     assert receipt.is_file(), f"Missing executed RAG workflow receipt: {receipt}"
     source_sha = parse_evidence_fields(receipt.read_text(encoding="utf-8"))["source_sha"]
     assert row["behavioral_assertion"] == f"historical_yaml_path:{source_sha}:jobs.gitops-pr"
+
+
+def test_canonical_rag_requirement_rejects_mismatched_receipt_revision(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    rubric_id = "LLM-ci-cd-ci-cd-cho-rag-data-pipeline"
+    monkeypatch.setitem(
+        MATRIX[rubric_id], "behavioral_assertion", f"historical_yaml_path:{'0' * 40}:jobs.gitops-pr"
+    )
+    with pytest.raises(AssertionError, match="does not match receipt source_sha"):
+        _validate_cicd_requirement(rubric_id)
+
+
+def test_canonical_rag_requirement_rejects_missing_receipt(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    rubric_id = "LLM-ci-cd-ci-cd-cho-rag-data-pipeline"
+    monkeypatch.setitem(MATRIX[rubric_id], "evidence_path", str(tmp_path / "missing.md"))
+    with pytest.raises(AssertionError, match="missing receipt"):
+        _validate_cicd_requirement(rubric_id)
+
+
+def test_generated_requirement_tests_match_generator() -> None:
+    assert generate(check=True) == 0
 
 
 def test_each_caller_has_a_unique_pipeline_name() -> None:

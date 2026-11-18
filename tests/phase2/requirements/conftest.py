@@ -141,13 +141,18 @@ def _placeholder_only_yaml(value: object) -> bool:
     return False
 
 
-def assert_behavioral_contract(path: Path, assertion: str) -> None:
+def assert_behavioral_contract(
+    path: Path, assertion: str, *, source_sha: str | None = None
+) -> None:
     """Interpret the generator-owned, non-executable assertion DSL."""
     kind, separator, token = assertion.partition(":")
     assert separator and token, f"invalid behavioral_assertion: {assertion!r}"
     if kind == "historical_yaml_path":
         revision, delimiter, token = token.partition(":")
         assert delimiter and token and re.fullmatch(r"[0-9a-f]{40}", revision), assertion
+        assert (
+            revision == source_sha
+        ), f"{path}: historical revision {revision} does not match receipt source_sha {source_sha}"
         relative = path.relative_to(REPO_ROOT).as_posix()
         try:
             text = subprocess.run(

@@ -6,6 +6,7 @@ on:
     paths:
       - "src/agents/**"
       - "src/llm/http_endpoint.py"
+      - "apps/feature-mcp/Dockerfile"
       - "tests/phase2/agents/**"
       - ".github/workflows/phase2-agent-coordinator.yaml"
   pull_request:
@@ -13,6 +14,7 @@ on:
     paths:
       - "src/agents/**"
       - "src/llm/http_endpoint.py"
+      - "apps/feature-mcp/Dockerfile"
       - "tests/phase2/agents/**"
       - ".github/workflows/phase2-agent-coordinator.yaml"
   workflow_dispatch: {}
