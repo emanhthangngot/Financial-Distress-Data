@@ -21,10 +21,13 @@ export function absoluteHttpUrl(value: string | undefined, token?: string | null
         !/^\d{4}-\d{2}-\d{2}(?:-preview)?$/u.test(entries[0][1])
       ) return null;
     }
-    if (token && (
-      !isBearerToken(token) ||
-      (url.protocol !== "https:" && !["localhost", "127.0.0.1", "[::1]"].includes(url.hostname))
-    )) return null;
+    if (token && !isBearerToken(token)) return null;
+    if (token && url.protocol !== "https:") {
+      if (!["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)) return null;
+      const env = process["env"];
+      if (["HTTP_PROXY", "http_proxy", "HTTPS_PROXY", "https_proxy", "ALL_PROXY", "all_proxy"]
+        .some((key) => Boolean(env[key]))) return null;
+    }
     return url.hostname && url.port !== "0" ? value : null;
   } catch {
     return null;

@@ -57,7 +57,7 @@ class McpFeatureToolClient:
             with span_context:
                 async with httpx.AsyncClient(
                     headers=self.endpoint.headers(),
-                    trust_env=False,
+                    trust_env=self.endpoint.trust_env,
                     event_hooks={"response": [reject_redirect]},
                 ) as http_client:
                     async with streamable_http_client(
@@ -94,7 +94,7 @@ class McpDriftToolClient:
             with span_context:
                 async with httpx.AsyncClient(
                     headers=self.endpoint.headers(),
-                    trust_env=False,
+                    trust_env=self.endpoint.trust_env,
                     event_hooks={"response": [reject_redirect]},
                 ) as http_client:
                     async with streamable_http_client(
@@ -157,7 +157,8 @@ class OpenAICompatibleRenderer:
             with span_context:
                 async with httpx.AsyncClient(
                     timeout=self.timeout_seconds,
-                    trust_env=False,
+                    trust_env=self.endpoint.trust_env,
+                    event_hooks={"response": [reject_redirect]},
                     headers=request_headers,
                 ) as client:
                     try:
@@ -263,7 +264,8 @@ class HttpSpecialistClient:
             )
             with span_context:
                 async with httpx.AsyncClient(
-                    trust_env=False,
+                    trust_env=self.endpoint.trust_env,
+                    event_hooks={"response": [reject_redirect]},
                     timeout=45.0,
                     headers=self.endpoint.headers(),
                 ) as client:
@@ -293,8 +295,12 @@ def mcp_health_endpoint(url_key: str, endpoint: HttpEndpoint) -> HttpEndpoint | 
 async def dependencies_ready(probes: tuple[HttpEndpoint, ...]) -> list[str]:
     """Probe only the configured dependencies needed by this role."""
     failures: list[str] = []
-    async with httpx.AsyncClient(timeout=2.0, trust_env=False) as client:
-        for endpoint in probes:
+    for endpoint in probes:
+        async with httpx.AsyncClient(
+            timeout=2.0,
+            trust_env=endpoint.trust_env,
+            event_hooks={"response": [reject_redirect]},
+        ) as client:
             try:
                 response = await client.get(endpoint.url, headers=endpoint.headers())
                 response.raise_for_status()
@@ -406,7 +412,7 @@ def create_app() -> FastAPI:
     async def run(payload: dict[str, Any]) -> dict[str, Any]:
         RunRequest.model_validate(payload)
         result: SpecialistResponse | CoordinatorResponse | AgentFailure
-        if isinstance(agent, (FeatureAgent, DriftAgent)):
+        if isinstance(agent, FeatureAgent | DriftAgent):
             result = await agent.run(payload)
         elif isinstance(agent, Coordinator):
             result = await agent.coordinate(payload)

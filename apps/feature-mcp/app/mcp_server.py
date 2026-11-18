@@ -12,7 +12,7 @@ from typing import Any, Protocol
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.llm.http_endpoint import HttpEndpoint, endpoint_ready, mcp_allowed_hosts
+from src.llm.http_endpoint import HttpEndpoint, endpoint_ready, mcp_allowed_hosts, reject_redirect
 from src.observability.telemetry import Telemetry, redact_fields
 
 _DEFAULT_TELEMETRY = Telemetry("feature-mcp")
@@ -60,7 +60,8 @@ class HttpxFeatureApiClient:
             self._client = httpx.AsyncClient(
                 base_url=self._endpoint.url,
                 timeout=self._timeout,
-                trust_env=False,
+                trust_env=self._endpoint.trust_env,
+                event_hooks={"response": [reject_redirect]},
             )
         return self
 

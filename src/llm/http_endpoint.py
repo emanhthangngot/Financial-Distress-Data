@@ -58,6 +58,11 @@ class HttpEndpoint:
         default_port = 443 if parsed.scheme == "https" else 80
         return parsed.scheme, parsed.hostname, parsed.port or default_port
 
+    @property
+    def trust_env(self) -> bool:
+        """Never proxy a plaintext bearer; preserve configured TLS trust for HTTPS."""
+        return not (self.token and self.origin[0] == "http")
+
     def at(self, path: str) -> HttpEndpoint:
         return HttpEndpoint(self.url.rstrip("/") + path, self.token)
 

@@ -95,7 +95,7 @@ def _is_placeholder_python(node: ast.AST) -> bool:
             and isinstance(exc.func, ast.Name)
             and exc.func.id == "NotImplementedError"
         )
-    if isinstance(node, (ast.Assign, ast.AnnAssign)):
+    if isinstance(node, ast.Assign | ast.AnnAssign):
         value = node.value
         return isinstance(value, ast.Constant) and (
             value.value is None
@@ -115,7 +115,7 @@ def _assert_nested_definitions_implemented(path: Path, definition: ast.AST) -> N
     if not isinstance(definition, ast.ClassDef):
         return
     for node in ast.walk(definition):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         assert _meaningful_python_body(
             node.body
@@ -183,7 +183,7 @@ def assert_behavioral_contract(
         definitions = {
             node.name: node
             for node in tree.body
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
         }
         assert token in definitions, f"{path}: behavioral symbol {token!r} not defined"
         body = definitions[token].body
@@ -216,10 +216,10 @@ def assert_behavioral_contract(
         behavior = [
             node
             for node in tree.body
-            if not isinstance(node, (ast.Import, ast.ImportFrom))
+            if not isinstance(node, ast.Import | ast.ImportFrom)
             and not _is_placeholder_python(node)
             and not (
-                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
                 and not _meaningful_python_body(node.body)
             )
         ]

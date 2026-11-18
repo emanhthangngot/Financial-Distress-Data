@@ -41,7 +41,7 @@ function translateChunk(
 ): { frames: AssistantFrame[]; finished: boolean } {
   if (raw === "[DONE]") {
     return {
-      frames: [{ type: "done", agentVersion: null, modelVersion: null }],
+      frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }],
       finished: true,
     };
   }
@@ -52,6 +52,12 @@ function translateChunk(
     return { frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }], finished: true };
   }
 
+  if (parsed === null || typeof parsed !== "object" || "error" in parsed) {
+    return {
+      frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }],
+      finished: true,
+    };
+  }
   const chunk = parsed as OpenAIChunkLike;
   const frames: AssistantFrame[] = [];
   const choices = chunk.choices ?? [];
@@ -64,13 +70,13 @@ function translateChunk(
     if (choice.finish_reason === "content_filter") {
       return { frames: [{ type: "state", state: "policy_blocked", reason: null }], finished: true };
     }
-    if (choice.finish_reason === "length") {
+    if (choice.finish_reason === "stop") finished = true;
+    else if (typeof choice.finish_reason === "string" && choice.finish_reason !== "") {
       return {
         frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }],
         finished: true,
       };
     }
-    if (typeof choice.finish_reason === "string" && choice.finish_reason !== "") finished = true;
 
     const delta = choice.delta;
     if (delta === null || delta === undefined) continue;
