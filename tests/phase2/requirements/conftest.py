@@ -14,6 +14,7 @@ import csv
 import json
 import os
 import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -144,7 +145,26 @@ def assert_behavioral_contract(path: Path, assertion: str) -> None:
     """Interpret the generator-owned, non-executable assertion DSL."""
     kind, separator, token = assertion.partition(":")
     assert separator and token, f"invalid behavioral_assertion: {assertion!r}"
-    text = path.read_text(encoding="utf-8", errors="replace")
+    if kind == "historical_yaml_path":
+        revision, delimiter, token = token.partition(":")
+        assert delimiter and token and re.fullmatch(r"[0-9a-f]{40}", revision), assertion
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        try:
+            text = subprocess.run(
+                ["git", "show", f"{revision}:{relative}"],
+                cwd=REPO_ROOT,
+                check=True,
+                capture_output=True,
+                encoding="utf-8",
+            ).stdout
+        except subprocess.CalledProcessError as exc:
+            raise AssertionError(
+                f"Cannot read {relative} at historical commit {revision}; "
+                f"ensure the checkout includes that commit. Git: {exc.stderr.strip()}"
+            ) from exc
+        kind = "yaml_path"
+    else:
+        text = path.read_text(encoding="utf-8", errors="replace")
     substantive = _substantive_text(path, text)
     assert substantive, f"implementation artifact is only comments/whitespace: {path}"
     non_placeholder_lines = [

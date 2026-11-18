@@ -5,14 +5,20 @@ on:
     branches: [main, dev]
     paths:
       - "src/agents/**"
+      - "src/llm/http_endpoint.py"
       - "apps/feature-mcp/**"
       - "tests/phase2/agents/**"
+      - "tests/phase2/apps/test_portable_mcp_endpoints.py"
+      - ".github/workflows/phase2-agent-feature.yaml"
   pull_request:
     branches: [main, dev]
     paths:
       - "src/agents/**"
+      - "src/llm/http_endpoint.py"
       - "apps/feature-mcp/**"
       - "tests/phase2/agents/**"
+      - "tests/phase2/apps/test_portable_mcp_endpoints.py"
+      - ".github/workflows/phase2-agent-feature.yaml"
   workflow_dispatch: {}
 
 permissions:
@@ -26,9 +32,9 @@ jobs:
     with:
       deployables: >-
         [{"name":"feature-agent","image_context":".","dockerfile":"apps/feature-mcp/Dockerfile",
-        "test_selector":"tests/phase2/agents tests/phase2/apps -k 'feature or agent'",
-        "lint_paths":"src/agents apps/feature-mcp/app tests/phase2/agents",
-        "gitops_path":"platform/agents/agent-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"Deployment","gitops_target_selector":"feature-agent"}]
+        "test_selector":"tests/phase2/agents tests/phase2/apps
+        -k 'feature or agent or test_runtime_portability or test_portable_mcp_endpoints'",
+        "lint_paths":"src/agents src/llm/http_endpoint.py apps/feature-mcp/app
+        tests/phase2/agents tests/phase2/apps/test_portable_mcp_endpoints.py"}]
     secrets:
       GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}

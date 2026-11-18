@@ -106,7 +106,9 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori": "text_contains:agentregistry",
     "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": "python_ast_contains:coordinator",
     "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": "text_contains:agentregistry",
-    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": "yaml_path:jobs.gitops-pr",
+    "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
+        "historical_yaml_path:9ec6f065276d316bad1e308c88028c5662edc4db:jobs.gitops-pr"
+    ),
     "LLM-ci-cd-agent-k-o-d-li-u": "yaml_path:jobs.build",
     "LLM-ci-cd-agent-drift-detection": "yaml_path:jobs.test",
     "LLM-ci-cd-agent-l-m-coordinator": "yaml_path:jobs.lint",
