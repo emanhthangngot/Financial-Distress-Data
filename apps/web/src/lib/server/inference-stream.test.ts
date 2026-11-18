@@ -110,6 +110,38 @@ describe("translateInferenceChunks", () => {
     expect(frames.at(-1)).toEqual({ type: "done", agentVersion: null, modelVersion: null });
   });
 
+  it.each([
+    ["length", { type: "error", code: "MALFORMED_RESPONSE" }],
+    ["content_filter", { type: "state", state: "policy_blocked" }],
+  ])("does not certify partial output with finish_reason %s", async (reason, terminal) => {
+    const frames = await collect(
+      (async function* () {
+        yield tokenChunk("partial");
+        yield JSON.stringify({ choices: [{ delta: {}, finish_reason: reason }] });
+        yield "[DONE]";
+      })(),
+      { timeoutMs: 5_000, signal: controller().signal },
+    );
+    expect(frames.at(-1)).toMatchObject(terminal);
+    expect(frames.some((frame) => frame.type === "done")).toBe(false);
+  });
+
+  it("rejects upstream errors and a bare closing sentinel without leaking details", async () => {
+    for (const failure of [JSON.stringify({ error: { message: "private upstream error" } }), "[DONE]"]) {
+      const frames = await collect(
+        (async function* () {
+          yield tokenChunk("partial");
+          yield failure;
+          yield "[DONE]";
+        })(),
+        { timeoutMs: 5_000, signal: controller().signal },
+      );
+      expect(frames.at(-1)).toMatchObject({ type: "error", code: "MALFORMED_RESPONSE" });
+      expect(frames.some((frame) => frame.type === "done")).toBe(false);
+      expect(JSON.stringify(frames)).not.toContain("private upstream error");
+    }
+  });
+
   it("yields a MALFORMED_RESPONSE error without leaking the raw chunk", async () => {
     const c = controller();
     const raw = `{"choices":[{"delta":{"content":"boom`; // deliberately broken JSON

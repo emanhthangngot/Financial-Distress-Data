@@ -2,6 +2,7 @@ import "server-only";
 import { FixtureDataPort } from "./fixture-adapter";
 import type { DistressLensDataPort } from "./port";
 import { SupabaseDataPort } from "./supabase-adapter";
+import { fixtureModeEnabled } from "../server/fixture-mode";
 import { createRequestClient, isSupabaseConfigured } from "../server/supabase";
 
 export type { DistressLensDataPort, RequestContext, CompanySearchParams } from "./port";
@@ -21,7 +22,7 @@ export type { DistressLensDataPort, RequestContext, CompanySearchParams } from "
  *   than silently served synthetic data.
  */
 export function getDataPort(accessToken: string | null = null): DistressLensDataPort {
-  if (process.env.DISTRESSLENS_DATA_SOURCE === "fixture") {
+  if (fixtureModeEnabled()) {
     return new FixtureDataPort();
   }
 

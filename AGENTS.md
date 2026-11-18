@@ -22,6 +22,23 @@ does not own.** Phase file ownership is listed in `plan.md` §File ownership.
 
 ## Current Contract (v1 — what the code actually does today)
 
+- Keep the lakehouse local-first; do not replace its MinIO/DuckDB stack with
+  provider-managed services or make Kubernetes a prerequisite.
+- Keep provider selection, credentials, provisioning, and rollout outside
+  this source checkout. Source CI may publish signed images, but must not
+  authenticate to a deployment provider, deploy workloads, or change an
+  external deployment repository. Follow the [operator runbook](docs/operator-runbook.md#external-deployment-handoff)
+  for handoff and approval boundaries.
+- Require explicit runtime endpoints and credentials for platform integrations.
+  Keep provider hostnames and IDs out of defaults and generic setup guides.
+  Check a second compatible endpoint and missing-configuration behavior before
+  claiming portability. Historical receipts cannot certify a new target.
+- Do not change test expectations to obtain a pass. Recheck the code and test
+  against the [lakehouse spec](docs/mini_coursework.md) or [platform coursework](docs/coursework.md).
+- Do not hand-edit `warehouse.db`, `outputs/**`, or `docs/evidence/**`. Use the
+  producing script for new captures; do not restamp historical receipts.
+- Do not start Flink by default; use the `flink` Compose profile and `ENABLE_FLINK=1`
+  only when the task needs it.
 - Bronze: append-only. Silver/Gold: idempotent writes, `overwrite` on affected partitions only,
   never full-table overwrite.
 - Dedupe by business key + latest `created_ts`. **This destroys restatement history** — it is a
@@ -189,7 +206,7 @@ These are facts, not preferences. Do not re-derive them from memory.
 .venv/bin/ruff check src dags tests scripts
 .venv/bin/black --check src dags tests scripts
 docker compose config                        # validates compose file without starting anything
-.venv/bin/python scripts/run_lakehouse_quality_gates.py   # one-shot: runs all four above
+.venv/bin/python scripts/run_lakehouse_quality_gates.py   # complete local gate; includes naming, rubric, architecture, and evidence checks
 ```
 
 Definition of done for any code change: the one-shot gate above passes. CI
@@ -210,7 +227,7 @@ before declaring done.
   unless the task is Flink streaming evidence. `tests/test_flink_integration.py` pins the Flink
   client and DAG opt-in behaviour with `urllib` fakes and `monkeypatch`, by design.
 - `-m "postgres"` selects `tests/platform/product/*`, which spins an ephemeral Postgres cluster per
-  session via local `initdb`/`pg_ctl` (skips without them, unless `PHASE2_REQUIRE_PG=1`, which CI
+  session via local `initdb`/`pg_ctl` (skips without them, unless `PLATFORM_REQUIRE_PG=1`, which CI
   sets). Markers select; they never skip.
 - `--strict-markers` catches an unregistered marker used via `@pytest.mark.foo`, **not** a typo in an
   `-m` selection expression — `-m "not sloow"` silently matches zero tests rather than erroring.

@@ -31,6 +31,7 @@ export default defineConfig({
     timeout: 180_000,
     env: {
       DISTRESSLENS_DATA_SOURCE: "fixture",
+      DISTRESSLENS_ALLOW_LOCAL_FIXTURES: "1",
       DISTRESSLENS_FIXTURE_ROLE: "signed_out",
       DISTRESSLENS_FIXTURE_PLANE: "off",
       TZ: "Asia/Ho_Chi_Minh",

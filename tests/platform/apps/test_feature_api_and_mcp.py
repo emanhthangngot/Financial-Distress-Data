@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
@@ -66,10 +67,18 @@ async def test_feature_api_is_async_validated_and_ready() -> None:
 
 
 @pytest.mark.asyncio
-async def test_production_feature_app_fails_closed_without_config(monkeypatch) -> None:
-    monkeypatch.delenv("FEAST_REPO_PATH", raising=False)
-    monkeypatch.delenv("RAG_DATABASE_URL", raising=False)
+@pytest.mark.parametrize("partial", [False, True], ids=["absent", "partial"])
+async def test_production_feature_app_fails_closed_without_config(
+    monkeypatch, partial: bool
+) -> None:
+    for key in ("FEAST_REPO_PATH", "RAG_DATABASE_URL", "PLATFORM_PG_HOST", "PLATFORM_PG_PASSWORD"):
+        monkeypatch.delenv(key, raising=False)
+    if partial:
+        monkeypatch.setenv("FEAST_REPO_PATH", "/nonexistent/feast")
+        monkeypatch.setenv("PLATFORM_PG_PASSWORD", "test-password")
     module = load_app_module("feature-mcp", "main")
+    redis_probe = AsyncMock()
+    monkeypatch.setattr(module.asyncio, "open_connection", redis_probe)
     app = module.create_app(mount_mcp=False)
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://test"
@@ -79,9 +88,13 @@ async def test_production_feature_app_fails_closed_without_config(monkeypatch) -
             "/v1/features/by-id",
             json={"user_id": "AAA", "feature_names": ["view:risk_score"]},
         )
+        rag_lookup = await client.post("/v1/rag/by-id", json={"chunk_id": "chunk-1"})
     assert ready.status_code == 503
     assert lookup.status_code == 503
     assert lookup.json()["error"]["code"] == "dependency_unavailable"
+    assert rag_lookup.status_code == 503
+    assert rag_lookup.json()["error"]["code"] == "dependency_unavailable"
+    redis_probe.assert_not_called()
 
 
 @pytest.mark.asyncio

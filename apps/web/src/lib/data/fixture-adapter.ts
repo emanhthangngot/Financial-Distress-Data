@@ -429,7 +429,15 @@ export class FixtureDataPort implements DistressLensDataPort {
 
     return context.planeReady
       ? { state: "success", data }
-      : { state: "degraded", copy: copyFor(route, "degraded"), data };
+      : {
+          state: "degraded",
+          copy: {
+            unavailable: "Không đọc được số bản sao đang chạy.",
+            lastKnown: "Đang hiển thị phiên bản và chính sách sandbox tham chiếu.",
+            nextAction: "Tạo phiên evidence để đọc lại tình trạng bản sao.",
+          },
+          data,
+        };
   }
 
   async getOpsDashboard(context: RequestContext): Promise<ViewState<OpsDashboard>> {

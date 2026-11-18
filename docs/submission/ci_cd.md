@@ -1,10 +1,12 @@
 # CI/CD
 
-Row: `LLM-AC-12-CICD`. Source CI builds/tests/scans/signs and pushes an
-immutable image + digest; a bot opens a GitOps PR changing the digest;
-Argo CD reconciles the merged revision. Pushing a tag alone never deploys.
+Historical evidence for `LLM-AC-12-CICD`: the captured workflow tested, signed,
+and pushed an image, then opened a GitOps PR for Argo CD to reconcile. See the
+[pinned workflow](https://github.com/emanhthangngot/Financial-Distress-Data/blob/9ec6f065276d316bad1e308c88028c5662edc4db/.github/workflows/phase2-ci.yaml)
+for that deployment path and [current source CI](../../.github/workflows/phase2-ci.yaml)
+for today's signed-image handoff without deployment.
 
-## Implementation present (static)
+## Historical implementation (static)
 
 - The reusable workflow `.github/workflows/platform-ci.yaml` accepts a caller
   supplied JSON `deployables` matrix. Each entry declares its build, test,

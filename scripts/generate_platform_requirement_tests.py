@@ -69,14 +69,14 @@ RUBRIC_IDS = {rubric_ids!r}
 def test_requirement_evidence_contract(rubric_id: str) -> None:
     """Evidence file, contract fields, and implementation artifact all exist.
 
-    Skips (never fails) while the row is still design_only — this file is
-    generated on day 1, long before the row is executed. A missing evidence
-    file at phase-08 promotion time is instead caught by
-    scripts/audit_platform_evidence.py --require-executed, which does not skip.
+    Skips an unexecuted row with no receipt; an executed row must have one.
     """
     row = MATRIX[rubric_id]
     evidence_path = REPO_ROOT / row["evidence_path"]
     if not evidence_path.exists():
+        assert row["evidence_type"] != "executed", (
+            f"{{rubric_id}}: missing receipt: {{evidence_path}}"
+        )
         pytest.skip(f"evidence not yet executed: {{row['evidence_path']}}")
 
     text = evidence_path.read_text(encoding="utf-8", errors="replace")
@@ -99,7 +99,9 @@ def test_requirement_evidence_contract(rubric_id: str) -> None:
         root = REPO_ROOT
     artifact = root / row["artifact_path"]
     assert artifact.is_file(), f"{{rubric_id}}: implementation artifact not found: {{artifact}}"
-    assert_behavioral_contract(artifact, row["behavioral_assertion"])
+    assert_behavioral_contract(
+        artifact, row["behavioral_assertion"], source_sha=fields["source_sha"]
+    )
 '''
 
 CONFTEST_CONTENT = '''"""Shared parsing helpers and matrix lookup for the requirement tests.
@@ -118,6 +120,7 @@ import csv
 import json
 import os
 import re
+import subprocess
 from pathlib import Path
 
 import yaml
@@ -198,7 +201,7 @@ def _is_placeholder_python(node: ast.AST) -> bool:
             and isinstance(exc.func, ast.Name)
             and exc.func.id == "NotImplementedError"
         )
-    if isinstance(node, (ast.Assign, ast.AnnAssign)):
+    if isinstance(node, ast.Assign | ast.AnnAssign):
         value = node.value
         return isinstance(value, ast.Constant) and (
             value.value is None
@@ -218,7 +221,7 @@ def _assert_nested_definitions_implemented(path: Path, definition: ast.AST) -> N
     if not isinstance(definition, ast.ClassDef):
         return
     for node in ast.walk(definition):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         assert _meaningful_python_body(node.body), (
             f"{path}: method {definition.name}.{node.name} is a placeholder"
@@ -244,11 +247,35 @@ def _placeholder_only_yaml(value: object) -> bool:
     return False
 
 
-def assert_behavioral_contract(path: Path, assertion: str) -> None:
+def assert_behavioral_contract(
+    path: Path, assertion: str, *, source_sha: str | None = None
+) -> None:
     """Interpret the generator-owned, non-executable assertion DSL."""
     kind, separator, token = assertion.partition(":")
     assert separator and token, f"invalid behavioral_assertion: {assertion!r}"
-    text = path.read_text(encoding="utf-8", errors="replace")
+    if kind == "historical_yaml_path":
+        revision, delimiter, token = token.partition(":")
+        assert delimiter and token and re.fullmatch(r"[0-9a-f]{40}", revision), assertion
+        assert revision == source_sha, (
+            f"{path}: historical revision {revision} does not match receipt source_sha {source_sha}"
+        )
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        try:
+            text = subprocess.run(
+                ["git", "show", f"{revision}:{relative}"],
+                cwd=REPO_ROOT,
+                check=True,
+                capture_output=True,
+                encoding="utf-8",
+            ).stdout
+        except subprocess.CalledProcessError as exc:
+            raise AssertionError(
+                f"Cannot read {relative} at historical commit {revision}; "
+                f"ensure the checkout includes that commit. Git: {exc.stderr.strip()}"
+            ) from exc
+        kind = "yaml_path"
+    else:
+        text = path.read_text(encoding="utf-8", errors="replace")
     substantive = _substantive_text(path, text)
     assert substantive, f"implementation artifact is only comments/whitespace: {path}"
     non_placeholder_lines = [
@@ -262,7 +289,7 @@ def assert_behavioral_contract(path: Path, assertion: str) -> None:
         definitions = {
             node.name: node
             for node in tree.body
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
         }
         assert token in definitions, f"{path}: behavioral symbol {token!r} not defined"
         body = definitions[token].body
@@ -296,10 +323,10 @@ def assert_behavioral_contract(path: Path, assertion: str) -> None:
         behavior = [
             node
             for node in tree.body
-            if not isinstance(node, (ast.Import, ast.ImportFrom))
+            if not isinstance(node, ast.Import | ast.ImportFrom)
             and not _is_placeholder_python(node)
             and not (
-                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
                 and not _meaningful_python_body(node.body)
             )
         ]

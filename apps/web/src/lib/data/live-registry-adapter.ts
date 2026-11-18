@@ -1,3 +1,4 @@
+import "server-only";
 import type {
   AgentLifecycle,
   AgentRegistryEntry,
@@ -5,10 +6,10 @@ import type {
   Provenance,
   ViewState,
 } from "@distresslens/contracts";
-import { copyFor } from "./fixture-adapter";
+import { absoluteHttpUrl } from "../server/http-endpoint";
+import { copyFor, denied, guard } from "./fixture-adapter";
 import type { RequestContext } from "./port";
 
-const DEFAULT_REGISTRY_URL = "http://agentregistry.kagent.svc.cluster.local/v1/agents";
 const REQUEST_TIMEOUT_MS = 3_000;
 
 interface LiveRegistryPayload {
@@ -26,27 +27,38 @@ interface LiveRegistryAgent {
   maxHops?: unknown;
 }
 
-/** Read the GitOps-owned registry without falling back to product fixtures. */
+function registryUnavailable(state: "degraded" | "error"): ViewState<AgentRegistryView> {
+  return { state, copy: copyFor("/agents/registry", state), data: null };
+}
+
+/** Read the configured live registry without falling back to product fixtures. */
 export async function getLiveAgentRegistry(
   context: RequestContext,
+  liveEnabled = true,
 ): Promise<ViewState<AgentRegistryView>> {
-  if (!context.planeReady) {
-    return {
-      state: "degraded",
-      copy: copyFor("/agents/registry", "degraded"),
-      data: null,
-    };
-  }
+  if (context.userId === null) return denied("/agents/registry", null);
+  const rejection = guard<AgentRegistryView>(context, "session.read", "/agents/registry");
+  if (rejection !== null) return rejection;
+  if (!liveEnabled || !context.planeReady) return registryUnavailable("degraded");
 
   const env = process["env"];
-  const url = env["DISTRESSLENS_AGENT_REGISTRY_URL"] ?? DEFAULT_REGISTRY_URL;
+  const rawUrl = env["DISTRESSLENS_AGENT_REGISTRY_URL"];
+  const token = env["DISTRESSLENS_AGENT_REGISTRY_TOKEN"];
+  if (rawUrl === undefined) return registryUnavailable("degraded");
+  const url = absoluteHttpUrl(rawUrl, token);
+  const provenance = liveProvenance(env);
+  if (url === null || provenance === null) {
+    return registryUnavailable("error");
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(url, {
-      headers: { accept: "application/json" },
+      headers: { accept: "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       cache: "no-store",
+      redirect: "error",
       signal: controller.signal,
     });
     if (!response.ok) throw new Error(`registry returned ${response.status}`);
@@ -54,16 +66,12 @@ export async function getLiveAgentRegistry(
     if (!Array.isArray(payload.agents)) throw new Error("registry agents must be an array");
 
     const entries = payload.agents.map((raw) => normalizeEntry(raw));
-    const data: AgentRegistryView = { entries, provenance: liveProvenance(env) };
+    const data: AgentRegistryView = { entries, provenance };
     // The registry route has no empty-state copy contract; an empty live
     // registry is still a successful, truthful response with zero entries.
     return { state: "success", data };
   } catch {
-    return {
-      state: "error",
-      copy: copyFor("/agents/registry", "error"),
-      data: null,
-    };
+    return registryUnavailable("error");
   } finally {
     clearTimeout(timer);
   }
@@ -79,8 +87,8 @@ function normalizeEntry(raw: unknown): AgentRegistryEntry {
   const replicas = item.replicas && typeof item.replicas === "object"
     ? (item.replicas as { min?: unknown; ready?: unknown; lastHeartbeatAt?: unknown })
     : {};
-  const desired = positiveInteger(replicas.min, 1);
-  const ready = nonNegativeInteger(replicas.ready, 0);
+  const desired = replicaCount(replicas.min);
+  const ready = replicaCount(replicas.ready);
   const allowedEgress = [item.tool, ...(Array.isArray(item.specialists) ? item.specialists : [])]
     .filter((value): value is string => typeof value === "string" && value.trim() !== "")
     .map((value) => value.trim());
@@ -108,6 +116,10 @@ function normalizeEntry(raw: unknown): AgentRegistryEntry {
   };
 }
 
+function replicaCount(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : null;
+}
+
 function lifecycleFor(status: string): AgentLifecycle {
   if (status === "retired") return "RETIRED";
   if (status === "candidate") return "CANDIDATE";
@@ -124,25 +136,19 @@ function positiveInteger(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : fallback;
 }
 
-function nonNegativeInteger(value: unknown, fallback: number): number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : fallback;
-}
-
-function liveProvenance(env: NodeJS.ProcessEnv): Provenance {
+function liveProvenance(env: NodeJS.ProcessEnv): Provenance | null {
   const sourceSha = env["DISTRESSLENS_SOURCE_SHA"];
   const gitopsSha = env["DISTRESSLENS_GITOPS_SHA"];
   const validSha = (value: string | undefined): value is string =>
     value !== undefined && /^[0-9a-f]{7,40}$/i.test(value);
-  if (!validSha(sourceSha) || !validSha(gitopsSha)) {
-    throw new Error("live registry provenance requires valid source and GitOps SHAs");
-  }
+  if (!validSha(sourceSha) || (gitopsSha !== undefined && !validSha(gitopsSha))) return null;
   return {
     freshness: "LIVE",
     planeAvailability: "LIVE_AVAILABLE",
     origin: "EVIDENCE_PLANE",
     cachedAt: null,
     sourceSha,
-    gitopsSha,
+    gitopsSha: gitopsSha ?? null,
     dataVersion: env["DISTRESSLENS_DATA_VERSION"] ?? "platform-live",
     modelVersion: env["DISTRESSLENS_MODEL_VERSION"] ?? null,
     agentVersion: env["DISTRESSLENS_AGENT_VERSION"] ?? null,

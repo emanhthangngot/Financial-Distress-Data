@@ -73,9 +73,9 @@ export interface SandboxPolicy {
 }
 
 export interface ReplicaHealth {
-  desired: number;
-  ready: number;
-  /** Null when the evidence plane is off and replica counts are unknowable. */
+  desired: number | null;
+  ready: number | null;
+  /** Null when the registry does not report a heartbeat. */
   lastHeartbeatAt: string | null;
 }
 

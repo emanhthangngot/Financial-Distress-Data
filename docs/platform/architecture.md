@@ -1,13 +1,17 @@
 # the platform Architecture — Product and Evidence Planes
 
-## 1. Current decision and status
+This page records the Phase 2 coursework topology and its verification scope.
+For current runtime and deployment guidance, use the [source architecture](../system-architecture.md)
+and [operator runbook](../operator-runbook.md#phase-2-runtime-setup).
+
+## 1. Coursework decision and status
 
 the platform is an additive AI/product layer over the verified the platform local-first
 lakehouse. The accepted coursework submission is the LLM track: 60 rubric rows
 and 100 points. The ML track remains a documented, post-deadline retrofit and
 is not claimed as delivered.
 
-| Area | Current state |
+| Area | Coursework state |
 |---|---|
 | Product plane | Implemented: Next.js, Supabase Auth/Postgres/RLS, analyst/report/registry/chat/evidence-session surfaces |
 | Evidence plane | Live-verified on Terraform-provisioned GKE Standard in `asia-southeast1-b` |
@@ -17,7 +21,7 @@ is not claimed as delivered.
 | Submission freeze | Pending source/GitOps SHA restamp and final strict two-repository audit |
 | ML runtime | Deferred; rows remain `design_only` |
 
-ADR-010 is the current platform decision. It supersedes earlier AWS/EKS,
+ADR-010 records the platform decision for this submission. It superseded earlier AWS/EKS,
 Istio, Envoy Gateway/AI Gateway, ECK/Kibana, Vault, and Kustomize proposals
 for this submission. It does not remove KServe/Knative from the submitted LLM
 serving path: the CPU model server is still reached through agentgateway.
@@ -55,14 +59,16 @@ Product checks are run from the source repository:
 pnpm --dir apps/web test
 pnpm --dir apps/web typecheck
 pnpm --dir apps/web lint
-pnpm --dir apps/web e2e:live
 pnpm --dir apps/web e2e:assistant
 ```
+
+The [optional Supabase browser check](../operator-runbook.md#optional-live-supabase-browser-check)
+has separate disposable-project and isolation prerequisites.
 
 ## 4. Evidence plane
 
 The evidence plane is disposable, cost-bounded, and reconciled from the
-separate GitOps repository. The current live topology is:
+separate GitOps repository. The captured live topology was:
 
 | Layer | Deployables | Contract |
 |---|---|---|
@@ -175,12 +181,11 @@ The live verification snapshot on **2026-08-13** recorded:
 - model warm-up and coordinator HTTP 200 with feature and drift citations;
 - healthy Prometheus targets and discoverable Jaeger services.
 
-The repository evidence package represents 60/60 LLM rows and 100/100 logical
-points. The final submission freeze is still pending because the latest source
-and GitOps commits must be restamped into the evidence rows and the strict
-two-repository audit must pass without acceptance cuts. A private GHCR image is
-also a known operational residual for cold-node startup; the package-read
-credential must be supplied through sealed out-of-band deployment state.
+The [coursework audit route](../operator-runbook.md#historical-phase-2-evidence)
+describes the separate submission freeze gate. The
+[later hardening record](../../plans/260814-2218-production-feast-ghcr/plan.md#residual-verification-gaps)
+closed the web image pull-secret check on that deployment; a cited analyst
+answer after the new materialization remained unverified.
 
 ## 7. the platform non-mutation rule
 

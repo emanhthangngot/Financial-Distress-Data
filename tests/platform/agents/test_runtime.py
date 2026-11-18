@@ -7,54 +7,52 @@ from src.agents import runtime
 from src.agents.models import AgentFailure
 
 
-def test_runtime_reads_coordinator_timeout_from_environment(monkeypatch) -> None:
-    monkeypatch.setenv("AGENT_ROLE", "coordinator")
-    monkeypatch.setenv("AGENT_TIMEOUT_SECONDS", "47")
-    captured: dict[str, float] = {}
-
-    class RecordingCoordinator:
-        def __init__(self, *args, **kwargs) -> None:
-            del args
-            captured["timeout_seconds"] = kwargs["timeout_seconds"]
-
-    monkeypatch.setattr(runtime, "Coordinator", RecordingCoordinator)
-
-    runtime.create_app()
-
-    assert captured == {"timeout_seconds": 47.0}
+@pytest.fixture(autouse=True)
+def configure_specialists(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FEATURE_AGENT_URL", "http://feature.test")
+    monkeypatch.setenv("DRIFT_AGENT_URL", "http://drift.test")
 
 
 @pytest.mark.asyncio
-async def test_runtime_defaults_coordinator_timeout_above_specialist_budget(monkeypatch) -> None:
+@pytest.mark.parametrize(("configured", "expected"), [("47", 47.0), (None, 50.0)])
+async def test_runtime_uses_coordinator_timeout(monkeypatch, configured, expected) -> None:
     monkeypatch.setenv("AGENT_ROLE", "coordinator")
-    monkeypatch.delenv("AGENT_TIMEOUT_SECONDS", raising=False)
-    captured: dict[str, float] = {}
+    if configured is None:
+        monkeypatch.delenv("AGENT_TIMEOUT_SECONDS", raising=False)
+    else:
+        monkeypatch.setenv("AGENT_TIMEOUT_SECONDS", configured)
+    recorded: list[float] = []
+    graph = object()
 
-    class RecordingCoordinator:
-        def __init__(self, *args, **kwargs) -> None:
-            del args
-            captured["timeout_seconds"] = kwargs["timeout_seconds"]
+    async def record_timeout(compiled, _payload, *, timeout_seconds):
+        assert compiled is graph
+        recorded.append(timeout_seconds)
+        return AgentFailure(error="fixture")
 
-    monkeypatch.setattr(runtime, "Coordinator", RecordingCoordinator)
+    monkeypatch.setattr(runtime, "build_langgraph_coordinator", lambda *_args, **_kwargs: graph)
+    monkeypatch.setattr(runtime, "coordinate_langgraph", record_timeout)
 
-    runtime.create_app()
+    application = runtime.create_app()
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=application), base_url="http://test"
+    ) as client:
+        await client.post("/v1/run", json={"question": "q"})
 
-    assert captured["timeout_seconds"] > 45.0
+    assert recorded == [expected]
+    if configured is None:
+        assert recorded[0] > 45.0
 
 
 @pytest.mark.asyncio
 async def test_runtime_logs_coordinator_failure_at_warning(monkeypatch, caplog) -> None:
     monkeypatch.setenv("AGENT_ROLE", "coordinator")
 
-    class FailureCoordinator:
-        def __init__(self, *args, **kwargs) -> None:
-            del args, kwargs
+    async def fail(_graph, _payload, *, timeout_seconds):
+        assert timeout_seconds > 0
+        return AgentFailure(error="drift tool timeout")
 
-        async def coordinate(self, payload):
-            del payload
-            return AgentFailure(error="drift tool timeout")
-
-    monkeypatch.setattr(runtime, "Coordinator", FailureCoordinator)
+    monkeypatch.setattr(runtime, "build_langgraph_coordinator", lambda *_args, **_kwargs: object())
+    monkeypatch.setattr(runtime, "coordinate_langgraph", fail)
     application = runtime.create_app()
 
     with caplog.at_level("WARNING", logger=runtime.__name__):
