@@ -7,6 +7,12 @@ from src.agents import runtime
 from src.agents.models import AgentFailure
 
 
+@pytest.fixture(autouse=True)
+def configure_specialists(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FEATURE_AGENT_URL", "http://feature.test")
+    monkeypatch.setenv("DRIFT_AGENT_URL", "http://drift.test")
+
+
 def test_runtime_reads_coordinator_timeout_from_environment(monkeypatch) -> None:
     monkeypatch.setenv("AGENT_ROLE", "coordinator")
     monkeypatch.setenv("AGENT_TIMEOUT_SECONDS", "47")

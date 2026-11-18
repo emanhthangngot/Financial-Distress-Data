@@ -184,10 +184,7 @@ export class SupabaseDataPort implements DistressLensDataPort {
   }
 
   getAgentRegistry(context: RequestContext): Promise<ViewState<AgentRegistryView>> {
-    if (process["env"]["DISTRESSLENS_LIVE_PLANE"] === "1") {
-      return getLiveAgentRegistry(context);
-    }
-    return this.fixture.getAgentRegistry(context);
+    return getLiveAgentRegistry(context, process["env"]["DISTRESSLENS_LIVE_PLANE"] === "1");
   }
 
   getOpsDashboard(context: RequestContext): Promise<ViewState<OpsDashboard>> {

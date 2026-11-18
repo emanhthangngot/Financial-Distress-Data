@@ -26,7 +26,7 @@ import type {
  * broken route cannot hang the panel past the analyst's patience.
  */
 
-/** Independent of the server's `ASSISTANT_TIMEOUT_MS`; the UI gives up first. */
+/** Independent fallback if the server's `ASSISTANT_TIMEOUT_MS` cannot answer. */
 export const ASSISTANT_CLIENT_TIMEOUT_MS = 90_000;
 
 const EKS_OFF_BODY =
@@ -113,6 +113,7 @@ export class StreamingAssistantTransport implements AssistantTransport {
           this.reduceFrame(frame, {
             state: (next) => {
               state = next;
+              if (next === "error" || next === "policy_blocked") body = "";
             },
             body: (text) => {
               body += text;
@@ -140,7 +141,9 @@ export class StreamingAssistantTransport implements AssistantTransport {
       reader.releaseLock();
     }
 
-    if (state === "streaming") state = "complete";
+    if (state === "streaming") {
+      return this.turn("error", ERROR_BODY, [], [], null, null, ERROR_NEXT_ACTION);
+    }
     return this.turn(state, body, citations, toolTrace, agentVersion, modelVersion, nextAction);
   }
 

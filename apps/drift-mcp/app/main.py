@@ -236,6 +236,12 @@ def create_app(metrics: MetricsHook | None = None, mount_mcp: bool = True) -> Fa
     async def readyz() -> HealthResponse:
         return HealthResponse(status="ready")
 
+    @application.get("/mcp-readyz", response_model=HealthResponse)
+    async def mcp_readyz() -> HealthResponse | JSONResponse:
+        if mcp_runtime is not None and await mcp_runtime.api.ready():
+            return HealthResponse(status="ready")
+        return _error(503, "not_ready", "MCP upstream is unavailable")
+
     @application.post("/v1/drift/report", response_model=DriftResponse)
     async def drift_report(payload: DriftRequest) -> DriftResponse:
         return await asyncio.to_thread(_calculate_drift, payload)

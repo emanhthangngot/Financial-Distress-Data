@@ -6,18 +6,18 @@
  * handling deterministically — without any real model, and without the test
  * suite ever importing this file into `src/`.
  *
- * Behaviour is selected by the last user message, so one server covers every
- * branch:
- *   - "từ chối" -> a refusal chunk, the route translates it to policy_blocked
- *   - "chậm"    -> a delay past the app's ASSISTANT_TIMEOUT_MS, then a token
- *   - "lỗi"     -> broken JSON, the route emits a MALFORMED_RESPONSE error
- *   - anything else -> a canned token stream then finish
+ * Behaviour is selected by the glossary concept in the last user message:
+ *   - quick ratio -> a refusal chunk, translated to policy_blocked
+ *   - data drift -> a delay past ASSISTANT_TIMEOUT_MS, then a token
+ *   - financial distress -> broken JSON, translated to MALFORMED_RESPONSE
+ *   - otherwise -> a canned definition stream then finish
  */
 "use strict";
 
 import http from "node:http";
 
 const port = Number(process.env.FAKE_UPSTREAM_PORT ?? 3322);
+const received = new Set();
 
 function sendEvent(res, chunk) {
   res.write(`data: ${JSON.stringify(chunk)}\n\n`);
@@ -30,15 +30,30 @@ function finish(res) {
 
 http
   .createServer((req, res) => {
+    const url = new URL(req.url ?? "/", "http://127.0.0.1");
     if (req.method === "GET" && req.url === "/health") {
       res.writeHead(200, { "content-type": "text/plain" });
       res.end("ok");
+      return;
+    }
+    if (req.method === "GET" && url.pathname === "/received") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ seen: received.has(url.searchParams.get("id")) }));
       return;
     }
 
     if (req.method !== "POST") {
       res.writeHead(405, { "content-type": "text/plain" });
       res.end("method not allowed");
+      return;
+    }
+    if (req.headers["x-correlation-id"]) received.add(req.headers["x-correlation-id"]);
+    if (url.pathname !== "/v1/chat/completions" || url.search !== "") {
+      res.writeHead(404).end();
+      return;
+    }
+    if (req.headers.authorization !== "Bearer fake-e2e-token") {
+      res.writeHead(401).end();
       return;
     }
 
@@ -50,10 +65,15 @@ http
       let question = "";
       try {
         const parsed = JSON.parse(body);
+        if (parsed.model !== "fixture-glossary") {
+          res.writeHead(400).end();
+          return;
+        }
         const messages = parsed.messages;
         question = messages?.length > 0 ? String(messages[messages.length - 1].content ?? "") : "";
       } catch {
-        // A malformed body is the route's problem, not ours.
+        res.writeHead(400).end();
+        return;
       }
 
       res.writeHead(200, {
@@ -62,21 +82,21 @@ http
       });
       res.flushHeaders();
 
-      if (question.includes("từ chối")) {
+      if (question.includes("quick ratio")) {
         sendEvent(res, { choices: [{ delta: { refusal: "Từ chối trả lời." } }] });
         finish(res);
-      } else if (question.includes("chậm")) {
+      } else if (question.includes("data drift")) {
         setTimeout(() => {
           sendEvent(res, { choices: [{ delta: { content: "muộn" } }] });
           finish(res);
         }, 10_000);
-      } else if (question.includes("lỗi")) {
+      } else if (question.includes("financial distress")) {
         res.write("data: {not json\n\n");
         res.end();
       } else {
-        sendEvent(res, { choices: [{ delta: { content: "NVL " } }] });
-        sendEvent(res, { choices: [{ delta: { content: "rủi ro " } }] });
-        setTimeout(() => sendEvent(res, { choices: [{ delta: { content: "thanh khoản" } }] }), 20);
+        sendEvent(res, { choices: [{ delta: { content: "The current ratio " } }] });
+        sendEvent(res, { choices: [{ delta: { content: "measures " } }] });
+        setTimeout(() => sendEvent(res, { choices: [{ delta: { content: "liquidity" } }] }), 20);
         setTimeout(() => finish(res), 40);
       }
     });

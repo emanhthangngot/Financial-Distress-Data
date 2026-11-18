@@ -8,12 +8,12 @@ import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Protocol
-from urllib.parse import urlsplit
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.observability.telemetry import Telemetry, inject_trace_headers, redact_fields
+from src.llm.http_endpoint import HttpEndpoint, endpoint_ready, mcp_allowed_hosts
+from src.observability.telemetry import Telemetry, redact_fields
 
 _DEFAULT_TELEMETRY = Telemetry("drift-mcp")
 
@@ -44,16 +44,18 @@ class LoggingTraceSink:
 
 
 class HttpxDriftApiClient:
-    def __init__(self, base_url: str, timeout_seconds: float = 5.0) -> None:
-        self._base_url = base_url
+    def __init__(self, endpoint: HttpEndpoint | None, timeout_seconds: float = 5.0) -> None:
+        self._endpoint = endpoint
         self._timeout = timeout_seconds
         self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> HttpxDriftApiClient:
-        self._client = httpx.AsyncClient(
-            base_url=self._base_url,
-            timeout=self._timeout,
-        )
+        if self._endpoint is not None:
+            self._client = httpx.AsyncClient(
+                base_url=self._endpoint.url,
+                timeout=self._timeout,
+                trust_env=False,
+            )
         return self
 
     async def __aexit__(self, *_exc: Any) -> None:
@@ -61,11 +63,18 @@ class HttpxDriftApiClient:
             await self._client.aclose()
             self._client = None
 
+    async def ready(self) -> bool:
+        return (
+            self._client is not None
+            and self._endpoint is not None
+            and await endpoint_ready(self._client, self._endpoint.at("/readyz"))
+        )
+
     async def report(self, payload: dict[str, Any]) -> dict[str, Any]:
-        if self._client is None:
-            raise RuntimeError("drift API client is not running")
+        if self._client is None or self._endpoint is None:
+            raise httpx.HTTPError("drift API client is unavailable")
         response = await self._client.post(
-            "/v1/drift/report", json=payload, headers=inject_trace_headers()
+            "/v1/drift/report", json=payload, headers=self._endpoint.headers()
         )
         response.raise_for_status()
         return dict(response.json())
@@ -79,6 +88,9 @@ class InProcessDriftApiClient:
 
     async def __aexit__(self, *_exc: Any) -> None:
         return None
+
+    async def ready(self) -> bool:
+        return True
 
     async def report(self, payload: dict[str, Any]) -> dict[str, Any]:
         # Keep this import lazy: main.py mounts the MCP application while it is
@@ -168,14 +180,7 @@ def create_mcp_server(service: DriftMcpService):
         stateless_http=True,
         json_response=True,
         transport_security=TransportSecuritySettings(
-            allowed_hosts=[
-                "drift-mcp",
-                "drift-mcp:*",
-                "drift-mcp.phase2-data.svc.cluster.local",
-                "drift-mcp.phase2-data.svc.cluster.local:*",
-                "127.0.0.1:*",
-                "localhost:*",
-            ],
+            allowed_hosts=mcp_allowed_hosts(),
             allowed_origins=[],
         ),
     )
@@ -211,20 +216,13 @@ class McpRuntime:
     api: HttpxDriftApiClient | InProcessDriftApiClient
 
 
-def _is_loopback_url(base_url: str | None) -> bool:
-    if not base_url:
-        return True
-    try:
-        host = urlsplit(base_url).hostname
-    except ValueError:
-        return False
-    return host in {"127.0.0.1", "localhost", "::1"}
-
-
 def create_mcp_runtime(telemetry: Telemetry | None = None) -> McpRuntime:
     """Assemble transport dependencies without opening sockets or sessions."""
-    base_url = os.getenv("DRIFT_API_BASE_URL")
-    api = InProcessDriftApiClient() if _is_loopback_url(base_url) else HttpxDriftApiClient(base_url)
+    api = (
+        InProcessDriftApiClient()
+        if os.getenv("DRIFT_API_BASE_URL") is None and not os.getenv("DRIFT_API_TOKEN")
+        else HttpxDriftApiClient(HttpEndpoint.from_env("DRIFT_API_BASE_URL", "DRIFT_API_TOKEN"))
+    )
     service = DriftMcpService(
         api=api,
         grants=_grants_from_env(),
