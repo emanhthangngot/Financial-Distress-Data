@@ -38,5 +38,3 @@ jobs:
         -k 'feature or agent or test_runtime_portability or test_portable_mcp_endpoints'",
         "lint_paths":"src/agents src/llm/http_endpoint.py apps/feature-mcp/app
         tests/platform/agents tests/platform/apps/test_portable_mcp_endpoints.py"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}

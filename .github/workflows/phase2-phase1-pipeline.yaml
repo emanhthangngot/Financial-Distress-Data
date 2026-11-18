@@ -42,5 +42,3 @@ jobs:
         [{"name":"phase1-pipeline","image_context":".","dockerfile":"infra/lakehouse-cluster/Dockerfile.pipeline",
         "test_selector":"tests -k 'cluster_pipeline or lakehouse_jobs or feast'",
         "lint_paths":"src/jobs/lakehouse_evidence_job.py src/collectors/fixture_config.py src/collectors/source_adapters/vnstock_fixture_adapter.py scripts/run_cluster_pipeline.py tests/test_cluster_pipeline.py"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}

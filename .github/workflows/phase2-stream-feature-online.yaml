@@ -31,5 +31,3 @@ jobs:
         [{"name":"stream-feature-online","image_context":".","dockerfile":"infra/stream-feature-online/Dockerfile",
         "test_selector":"tests/platform/pipelines -k 'feast or ttl or stream'",
         "lint_paths":"src/ml/feast/online_job.py src/ml/feast/feature_definitions.py tests/platform/pipelines/test_stream_feature_jobs.py"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}

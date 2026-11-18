@@ -34,5 +34,3 @@ jobs:
         [{"name":"drift-mcp","image_context":".","dockerfile":"apps/drift-mcp/Dockerfile",
         "test_selector":"tests/platform/apps -k 'drift_mcp or test_portable_mcp_endpoints'",
         "lint_paths":"src/drift src/llm/http_endpoint.py apps/drift-mcp/app tests/platform/apps"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}

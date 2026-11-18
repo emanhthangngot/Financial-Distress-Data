@@ -10,9 +10,6 @@ on:
         description: "JSON list of deployables with name, build, test and lint paths"
         required: true
         type: string
-    secrets:
-      GHCR_TOKEN:
-        required: true
 
 concurrency:
   group: phase2-ci-${{ github.workflow }}-${{ github.ref }}
@@ -107,7 +104,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Compute lowercase image repository
         # GHCR/Docker tags must be all-lowercase; github.repository preserves
         # the repo's mixed-case name, so it cannot be used directly in a tag.

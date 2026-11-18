@@ -68,5 +68,3 @@ jobs:
         "lint_paths":"src/llm tests/platform/pipelines/test_rag_chunking.py tests/platform/pipelines/test_rag_dedup.py
         tests/platform/pipelines/test_rag_metadata_contract.py tests/platform/pipelines/test_data_governance.py
         tests/platform/pipelines/test_workflows_platform.py tests/platform/requirements/conftest.py"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
