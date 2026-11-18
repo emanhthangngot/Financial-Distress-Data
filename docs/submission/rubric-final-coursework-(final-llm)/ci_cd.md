@@ -13,8 +13,8 @@ and the two Feast stream-feature jobs. The capture used GitHub Actions identity
 for registry authentication and Sigstore signing. The recorded deployments
 were rolling digest bumps, not blue/green or canary releases.
 
-The [pinned reusable workflow at capture](https://github.com/emanhthangngot/Financial-Distress-Data/blob/9ec6f065276d316bad1e308c88028c5662edc4db/.github/workflows/phase2-ci.yaml)
-illustrates the historical GitOps handoff. The [current source workflow](../../../.github/workflows/phase2-ci.yaml)
+The [reusable workflow executed by the RAG run](https://github.com/emanhthangngot/Financial-Distress-Data/blob/41940f6c1ed1fa16a80ef886b95302e6c53d8239/.github/workflows/phase2-ci.yaml)
+shows the historical GitOps handoff. The [current source workflow](../../../.github/workflows/phase2-ci.yaml)
 publishes signed images without opening deployment PRs.
 
 ## Part I — Six real CI runs
@@ -43,6 +43,19 @@ Full evidence, one file per deployable:
 [`LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md`](../../platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md) (RAG pipeline),
 [`LLM-ci-cd-job-1.md`](../../platform/evidence/llm/LLM-ci-cd-job-1.md) (stream-feature-offline),
 [`LLM-ci-cd-job-2.md`](../../platform/evidence/llm/LLM-ci-cd-job-2.md) (stream-feature-online).
+
+### RAG run attribution
+
+The [GitHub Actions REST record for run 31405317841](https://api.github.com/repos/emanhthangngot/Financial-Distress-Data/actions/runs/31405317841)
+reports `41940f6c1ed1fa16a80ef886b95302e6c53d8239` for both the
+[RAG caller](https://github.com/emanhthangngot/Financial-Distress-Data/blob/41940f6c1ed1fa16a80ef886b95302e6c53d8239/.github/workflows/phase2-rag-pipeline.yaml)
+(`head_sha`) and the reusable workflow (`referenced_workflows[].sha`).
+The [original receipt](../../platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md)
+points to that successful run but records `source_sha`
+`9ec6f065276d316bad1e308c88028c5662edc4db`. The receipt is preserved
+unchanged; its stamp is not the executed workflow revision. The requirement
+check uses local Git history to inspect the executed workflow and verifies the
+receipt's original stamp and run URL without calling GitHub.
 
 ## Part II — Real bugs found and fixed while building the reusable template
 

@@ -107,7 +107,7 @@ EXECUTED_BEHAVIORAL_ASSERTIONS = {
     "LLM-1-coordinator-agent-i-u-ph-i-2-agent-tr-n": "python_ast_contains:coordinator",
     "LLM-1-coordinator-agent-publish-agent-n-y-l-n-registry": "text_contains:agentregistry",
     "LLM-ci-cd-ci-cd-cho-rag-data-pipeline": (
-        "historical_yaml_path:9ec6f065276d316bad1e308c88028c5662edc4db:jobs.gitops-pr"
+        "historical_yaml_path:41940f6c1ed1fa16a80ef886b95302e6c53d8239:jobs.gitops-pr"
     ),
     "LLM-ci-cd-agent-k-o-d-li-u": "text_contains:phase2-ci.yaml",
     "LLM-ci-cd-agent-drift-detection": "text_contains:phase2-ci.yaml",

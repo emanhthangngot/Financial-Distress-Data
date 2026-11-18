@@ -62,6 +62,4 @@ def test_requirement_evidence_contract(rubric_id: str) -> None:
         root = REPO_ROOT
     artifact = root / row["artifact_path"]
     assert artifact.is_file(), f"{rubric_id}: implementation artifact not found: {artifact}"
-    assert_behavioral_contract(
-        artifact, row["behavioral_assertion"], source_sha=fields["source_sha"]
-    )
+    assert_behavioral_contract(artifact, row["behavioral_assertion"], receipt=fields)

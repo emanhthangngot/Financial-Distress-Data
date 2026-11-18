@@ -11,7 +11,7 @@ import pytest
 import yaml
 
 from scripts.generate_platform_requirement_tests import generate
-from tests.platform.requirements.conftest import MATRIX, parse_evidence_fields
+from tests.platform.requirements.conftest import MATRIX
 from tests.platform.requirements.test_llm_ac_12_cicd import (
     test_requirement_evidence_contract as _validate_cicd_requirement,
 )
@@ -21,6 +21,7 @@ WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
 REUSABLE = WORKFLOWS_DIR / "phase2-ci.yaml"
 RAG_CALLER = WORKFLOWS_DIR / "phase2-rag-pipeline.yaml"
+RAG_CICD_RUBRIC_ID = "LLM-ci-cd-ci-cd-cho-rag-data-pipeline"
 CALLERS = (
     RAG_CALLER,
     WORKFLOWS_DIR / "phase2-stream-feature-offline.yaml",
@@ -144,33 +145,63 @@ def test_rag_caller_runs_workflow_checks_with_history() -> None:
     assert checkout["with"]["fetch-depth"] == 0
 
 
-def test_historical_rag_workflow_revision_matches_executed_receipt() -> None:
-    row = MATRIX["LLM-ci-cd-ci-cd-cho-rag-data-pipeline"]
+def test_historical_rag_workflow_revision_matches_executed_run() -> None:
+    row = MATRIX[RAG_CICD_RUBRIC_ID]
     assert row["evidence_type"] == "executed"
-    receipt = REPO_ROOT / row["evidence_path"]
-    assert receipt.is_file(), f"Missing executed RAG workflow receipt: {receipt}"
-    source_sha = parse_evidence_fields(receipt.read_text(encoding="utf-8"))["source_sha"]
-    assert row["behavioral_assertion"] == f"historical_yaml_path:{source_sha}:jobs.gitops-pr"
+    assert row["artifact_path"] == REUSABLE.relative_to(REPO_ROOT).as_posix()
+    expected = "historical_yaml_path:41940f6c1ed1fa16a80ef886b95302e6c53d8239:jobs.gitops-pr"
+    assert row["behavioral_assertion"] == expected
+    _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
 
 
-def test_canonical_rag_requirement_rejects_mismatched_receipt_revision(
+def test_canonical_rag_requirement_rejects_receipt_stamp_as_workflow_revision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    rubric_id = "LLM-ci-cd-ci-cd-cho-rag-data-pipeline"
     monkeypatch.setitem(
-        MATRIX[rubric_id], "behavioral_assertion", f"historical_yaml_path:{'0' * 40}:jobs.gitops-pr"
+        MATRIX[RAG_CICD_RUBRIC_ID],
+        "behavioral_assertion",
+        "historical_yaml_path:9ec6f065276d316bad1e308c88028c5662edc4db:jobs.gitops-pr",
     )
-    with pytest.raises(AssertionError, match="does not match receipt source_sha"):
-        _validate_cicd_requirement(rubric_id)
+    with pytest.raises(AssertionError, match="does not match Actions run 31405317841 workflow SHA"):
+        _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
+
+
+@pytest.mark.parametrize(
+    ("original", "replacement", "error"),
+    [
+        (
+            "source_sha: 9ec6f065276d316bad1e308c88028c5662edc4db",
+            "source_sha: 41940f6c1ed1fa16a80ef886b95302e6c53d8239",
+            "receipt source_sha does not match",
+        ),
+        (
+            "actions/runs/31405317841)",
+            "actions/runs/31405317842)",
+            "receipt actual_result does not link to Actions run 31405317841",
+        ),
+    ],
+    ids=["restamped-receipt", "different-run-url"],
+)
+def test_canonical_rag_requirement_rejects_changed_receipt_association(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, original: str, replacement: str, error: str
+) -> None:
+    row = MATRIX[RAG_CICD_RUBRIC_ID]
+    receipt = REPO_ROOT / row["evidence_path"]
+    text = receipt.read_text(encoding="utf-8")
+    assert original in text
+    edited_receipt = tmp_path / receipt.name
+    edited_receipt.write_text(text.replace(original, replacement, 1), encoding="utf-8")
+    monkeypatch.setitem(row, "evidence_path", str(edited_receipt))
+    with pytest.raises(AssertionError, match=error):
+        _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
 
 
 def test_canonical_rag_requirement_rejects_missing_receipt(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    rubric_id = "LLM-ci-cd-ci-cd-cho-rag-data-pipeline"
-    monkeypatch.setitem(MATRIX[rubric_id], "evidence_path", str(tmp_path / "missing.md"))
+    monkeypatch.setitem(MATRIX[RAG_CICD_RUBRIC_ID], "evidence_path", str(tmp_path / "missing.md"))
     with pytest.raises(AssertionError, match="missing receipt"):
-        _validate_cicd_requirement(rubric_id)
+        _validate_cicd_requirement(RAG_CICD_RUBRIC_ID)
 
 
 def test_generated_requirement_tests_match_generator() -> None:

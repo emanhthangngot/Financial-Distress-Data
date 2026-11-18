@@ -99,9 +99,7 @@ def test_requirement_evidence_contract(rubric_id: str) -> None:
         root = REPO_ROOT
     artifact = root / row["artifact_path"]
     assert artifact.is_file(), f"{{rubric_id}}: implementation artifact not found: {{artifact}}"
-    assert_behavioral_contract(
-        artifact, row["behavioral_assertion"], source_sha=fields["source_sha"]
-    )
+    assert_behavioral_contract(artifact, row["behavioral_assertion"], receipt=fields)
 '''
 
 CONFTEST_CONTENT = '''"""Shared parsing helpers and matrix lookup for the requirement tests.
@@ -247,8 +245,19 @@ def _placeholder_only_yaml(value: object) -> bool:
     return False
 
 
+# The GitHub Actions run's referenced workflow revision and the original
+# receipt stamp are independent claims. Keep the run association offline.
+HISTORICAL_WORKFLOW_RUNS = {
+    ".github/workflows/phase2-ci.yaml": (
+        "41940f6c1ed1fa16a80ef886b95302e6c53d8239",
+        "9ec6f065276d316bad1e308c88028c5662edc4db",
+        "31405317841",
+    ),
+}
+
+
 def assert_behavioral_contract(
-    path: Path, assertion: str, *, source_sha: str | None = None
+    path: Path, assertion: str, *, receipt: dict[str, str] | None = None
 ) -> None:
     """Interpret the generator-owned, non-executable assertion DSL."""
     kind, separator, token = assertion.partition(":")
@@ -256,10 +265,22 @@ def assert_behavioral_contract(
     if kind == "historical_yaml_path":
         revision, delimiter, token = token.partition(":")
         assert delimiter and token and re.fullmatch(r"[0-9a-f]{40}", revision), assertion
-        assert revision == source_sha, (
-            f"{path}: historical revision {revision} does not match receipt source_sha {source_sha}"
-        )
         relative = path.relative_to(REPO_ROOT).as_posix()
+        attribution = HISTORICAL_WORKFLOW_RUNS.get(relative)
+        assert attribution is not None, f"{path}: no recorded Actions run association"
+        workflow_sha, receipt_sha, run_id = attribution
+        assert revision == workflow_sha, (
+            f"{path}: historical revision {revision} does not match Actions run {run_id} "
+            f"workflow SHA {workflow_sha}"
+        )
+        assert receipt is not None, f"{path}: historical workflow requires a receipt"
+        assert receipt["source_sha"] == receipt_sha, (
+            f"{path}: receipt source_sha does not match the original stamp {receipt_sha}"
+        )
+        run_url = f"https://github.com/emanhthangngot/Financial-Distress-Data/actions/runs/{run_id}"
+        assert receipt["actual_result"].startswith(f"run [{run_id}]({run_url}) "), (
+            f"{path}: receipt actual_result does not link to Actions run {run_id}"
+        )
         try:
             text = subprocess.run(
                 ["git", "show", f"{revision}:{relative}"],

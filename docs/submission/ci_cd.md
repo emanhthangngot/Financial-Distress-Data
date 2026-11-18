@@ -2,14 +2,15 @@
 
 Historical evidence for `LLM-AC-12-CICD`: the captured workflow tested, signed,
 and pushed an image, then opened a GitOps PR for Argo CD to reconcile. See the
-[pinned workflow](https://github.com/emanhthangngot/Financial-Distress-Data/blob/9ec6f065276d316bad1e308c88028c5662edc4db/.github/workflows/phase2-ci.yaml)
-for that deployment path and [current source CI](../../.github/workflows/phase2-ci.yaml)
-for today's signed-image handoff without deployment.
+[reusable workflow executed by RAG run 31405317841](https://github.com/emanhthangngot/Financial-Distress-Data/blob/41940f6c1ed1fa16a80ef886b95302e6c53d8239/.github/workflows/phase2-ci.yaml)
+and the [run attribution note](./rubric-final-coursework-(final-llm)/ci_cd.md#rag-run-attribution)
+for that historical deployment path. [Current source CI](../../.github/workflows/phase2-ci.yaml)
+publishes signed images without deploying them.
 
 ## Historical implementation (static)
 
-- The reusable workflow `.github/workflows/platform-ci.yaml` accepts a caller
-  supplied JSON `deployables` matrix. Each entry declares its build, test,
+- The reusable workflow `.github/workflows/phase2-ci.yaml` accepts a
+  caller-supplied JSON `deployables` matrix. Each entry declares its build, test,
   lint, and kind-and-name-qualified GitOps target; adding a service changes
   that caller input rather than the reusable workflow body.
 - Six callers grant `id-token: write`. For a push, the workflow pushes the
@@ -26,5 +27,5 @@ The CI/CD rows are executed. The Phase 05 evidence package records signed
 digest releases, GitOps digest updates, and the validation gates for the RAG
 pipeline and three agents. Routing and observability are separate rubric
 sections with their own linked runtime captures; they do not change the CI/CD
-status. Final submission freeze still requires SHA restamping and the strict
-two-repository audit.
+status. Final submission freeze still requires the strict two-repository audit;
+the historical RAG receipt must retain its original metadata.
