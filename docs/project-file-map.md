@@ -64,15 +64,18 @@ Phase 2 nhớ là **G-M-L-P**: Generator → ML/Drift → LLM/RAG → Product.
 
 ## 2. Trạng thái phải nói chính xác
 
+Các mục GKE/GitOps ghi nhận lần chạy coursework, không chọn môi trường hiện
+tại. Xem [runbook](operator-runbook.md#phase-2-runtime-setup) để cấu hình.
+
 | Nhãn | Ý nghĩa khi thuyết trình |
 |---|---|
 | ✅ Phase 1 verified | Local-first pipeline, fixture collectors, Bronze/Silver/Gold, Kafka, DQ, metadata, DuckDB và runtime evidence đã có code/test/evidence. |
 | 🟡 Phase 2 additive | ML, drift, RAG, Feast, product web app và contracts được thêm vào; không được nói là thay đổi Phase 1. |
 | 🧪 Fixture-backed | `vnstock_adapter.py` hiện re-export fixture adapter; không nói là live production API nếu chưa có runtime proof. |
 | 📦 Generated | `docs/evidence/**`, `outputs/**`, `warehouse.db` và report artifacts được tạo lại bằng script; không sửa tay. |
-| ✅ Phase 2 live-verified | Product plane và LLM evidence plane đã được chạy kiểm tra; snapshot runtime hiện tại là 13/13 Argo apps healthy, 28/28 live E2E checks passed. |
-| ⏳ Submission freeze pending | 60/60 LLM rows và 100/100 logical points đã có; source/GitOps SHA cần restamp và strict two-repo audit cần pass trước khi gọi là final. |
-| ⚠️ Separate repo | GKE/Terraform/Helm/Argo GitOps platform của Phase 2 nằm ở control repo riêng; repo này giữ code, contracts, product, tests và canonical evidence. |
+| ✅ Phase 2 — bằng chứng GKE | [Ảnh chụp kiểm chứng ngày 2026-08-13](phase2/architecture.md#6-verification-and-residuals) ghi nhận lần chạy coursework, không xác nhận trạng thái hiện tại. |
+| ⏳ Kiểm toán bài nộp | [Quy trình kiểm toán LLM hai repo](operator-runbook.md#historical-phase-2-evidence) chỉ áp dụng cho bộ bằng chứng coursework tương ứng. |
+| ⚠️ Triển khai bên ngoài | [Chủ triển khai](architecture/repository-map.md#separate-deployment-repository) quyết định môi trường; repo GitOps của GKE là nguồn đối chiếu lịch sử. |
 
 ## 3. Tra cứu nhanh theo câu hỏi
 

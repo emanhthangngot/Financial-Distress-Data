@@ -18,7 +18,7 @@ to catch.
 | `AGENTS.md` | data_engineer | shared tooling | No | Process rules — HOW-TO-BEHAVE for AI and human contributors |
 | `.claude/` | platform_operator | shared tooling | No | Claude Code project settings (`settings.json`) |
 | `CLAUDE.md` | data_engineer | shared tooling | No | Claude Code skill-routing pointer to `AGENTS.md` |
-| `README.md` | data_engineer | documentation | No | Complete project overview, architecture, setup, product/evidence boundaries, and project tree |
+| `README.md` | data_engineer | documentation | No | Reviewer entry point for project scope, setup, and coursework |
 | `apps/` | product_engineer | Phase 2 product | No | Phase 2 web app(s) (pnpm workspace member) |
 | `packages/` | product_engineer | Phase 2 product | No | Shared TypeScript packages (pnpm workspace member) |
 | `configs/` | data_engineer | Phase 1 local lakehouse | No | Collector, Spark, source, and DQ config YAMLs |
@@ -65,14 +65,18 @@ has one owner:
 
 ## Separate deployment repository
 
-`financial-distress-gitops` is intentionally not a top-level entry in this
-source repository. It owns Terraform/GKE bootstrap, Helm-rendered platform
-manifests, Argo CD applications, image digests, ingress, security policies,
-model serving, agents, and observability desired state. This repository owns
-the application code, contracts, tests, product migrations, runbooks, and
-canonical evidence. The two repositories are joined by the source SHA +
-GitOps SHA recorded in Phase 2 evidence; the final submission freeze requires
-those stamps to be regenerated after the latest commits.
+The source monorepo owns application code, contracts, tests, migrations,
+[image builds](../../configs/phase2-deployables.yaml), and [signed artifact
+handoff](../../.github/workflows/phase2-ci.yaml). An external deployment owner
+owns provider resources, desired state, secret delivery, promotion approval,
+readiness and rollback. The [operator runbook](../operator-runbook.md#external-deployment-handoff)
+is the starting point for that ownership boundary; a source build is not a
+deployment.
+
+The separate `financial-distress-gitops` repository was the deployment owner
+for the GKE coursework. Its revision pairing and the workflow that opened
+GitOps PRs are documented under [historical Phase 2 evidence](../operator-runbook.md#historical-phase-2-evidence).
+They are not prerequisites for source setup or a source of live runtime trust.
 
 ## Python package boundary
 

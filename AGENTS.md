@@ -6,7 +6,7 @@ Process memory only. WHY/architecture live in `docs/`; this file is HOW-TO-BEHAV
 
 1. `AGENTS.md` (this file) — non-negotiable.
 2. `docs/mini_coursework.md` — Phase 1 spec (active scope, see below).
-3. `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` — Phase 2 ground truth, read only when a task explicitly targets Phase 2. It links onward to `docs/coursework.md`, `docs/phase2/*` (rubric matrix, ADRs, low-level design), and phase files `phase-01..08`.
+3. `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` — Phase 2 coursework scope, read only for explicit Phase 2 tasks. Use it for coursework requirements, not current provider selection or rollout instructions.
 
 Conflict between docs: Phase 1 local-first decisions in this file and `docs/mini_coursework.md` win.
 
@@ -20,7 +20,8 @@ Conflict between docs: Phase 1 local-first decisions in this file and `docs/mini
 ## Don't Touch
 
 - Phase 1 (this repo, `src/collectors`/`generator`/`streaming`/`transforms`/`quality`/`catalog`/`metadata`, `dags/*.py` outside `phase2/`): no AWS RDS/S3/Glue/Athena/EMR/MSK/Redshift/SageMaker, no Kubernetes, no `boto3` for Athena/Glue — local-first stack only (MinIO + DuckDB `httpfs`, not cloud equivalents).
-- Phase 2's AWS/EKS/GitOps platform (EKS, S3, ECR, RDS, ElastiCache, Argo CD, etc. — see `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-03-bootstrap-gitops-and-aws-evidence-platform.md`) lives in a **separate** `financial-distress-gitops` control repo, not in this repo. If a Phase 2 task needs that infra and the gitops repo isn't checked out locally, say so instead of adding AWS/K8s code here.
+- Keep provider selection, credentials, infrastructure provisioning, and rollout outside this source checkout. Source CI may publish signed images, but must not log in to a deployment provider, deploy workloads, or change an external deployment repository. Use the [operator runbook](docs/operator-runbook.md#external-deployment-handoff) for the handoff and approval boundaries; historical coursework references do not select a provider or authorize deployment.
+- New Phase 2 integrations must take service URLs and credentials from explicit runtime configuration. Keep provider hostnames and IDs out of defaults and generic setup guides; use provider-specific examples only when clearly labeled. Test a second compatible endpoint and missing-configuration behavior before claiming portability. Never treat historical GKE receipts as proof for a new target.
 - Don't change an existing test's expected value to make it pass. If a test fails, re-check the test and code against the spec (`docs/mini_coursework.md` for Phase 1, `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` for Phase 2); if the spec is right, fix the code.
 - Don't hand-edit `warehouse.db`, `outputs/**`, or anything under `docs/evidence/` — these are generated artifacts, regenerate via the producing script instead.
 - Don't run Flink locally by default — it's opt-in via the `flink` Docker Compose profile and `ENABLE_FLINK=1`; not started by plain `docker compose up`.

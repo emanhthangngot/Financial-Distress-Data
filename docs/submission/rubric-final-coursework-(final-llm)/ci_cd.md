@@ -15,10 +15,9 @@ embedded in code — GHCR auth and cosign signing use GitHub Actions' own
 token/OIDC identity. It does not prove blue/green or canary deployment
 strategy — every merge here is a rolling digest bump.
 
-**Active deployment facts:** `.github/workflows/phase2-ci.yaml` (reusable
-template) called by 6 caller workflows; `sigstore/cosign-installer@v3.7.0`;
-GitOps target repo `financial-distress-gitops` (private, default branch
-`master`).
+**Deployment facts at capture:** the [pinned RAG revision of the reusable workflow](https://github.com/emanhthangngot/Financial-Distress-Data/blob/9ec6f065276d316bad1e308c88028c5662edc4db/.github/workflows/phase2-ci.yaml)
+illustrates the recorded GitOps handoff. The [current workflow](../../../.github/workflows/phase2-ci.yaml)
+publishes signed images without opening deployment PRs.
 
 ## Part I — Six real CI runs
 

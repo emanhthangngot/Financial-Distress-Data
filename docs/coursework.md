@@ -7,6 +7,10 @@ Distress Data + AI Engineering coursework. It supersedes the earlier vision
 draft that described Kubernetes, AWS, and LLM as "optional future
 extensions." Phase 2 is explicit, planned, and rubric-scored.
 
+For current setup, use the [operator runbook](operator-runbook.md).
+The GKE and GitOps references below are scoped to the coursework submission,
+not a default deployment target for this source checkout.
+
 Phase 1 remains the verified local lakehouse foundation; its contracts are
 linked, not duplicated, here. Phase 2 builds an AI system on top of it with a
 disposable GKE evidence plane and a persistent product plane.

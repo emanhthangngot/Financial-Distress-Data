@@ -1,10 +1,8 @@
 # Operator Runbook
 
-Local setup, Docker Compose, product/Phase 2 checks, service URLs, Stage 1
-evidence regeneration, validation commands, inspection queries, naming
-convention, and stop/teardown — moved out of `README.md` so the README stays
-reviewer-facing. Every command below was verified to reference a real,
-existing script or file as of this move (2026-08-14).
+Use this guide for local Phase 1 setup, Phase 2 configuration and its external
+deployment handoff. Coursework captures are evidence for their recorded runs,
+not instructions to recreate a live deployment.
 
 ## Table of Contents
 
@@ -14,13 +12,14 @@ existing script or file as of this move (2026-08-14).
 4. [API Surface](#api-surface)
 5. [Local Setup](#local-setup)
 6. [Running in Docker](#running-in-docker)
-7. [Product and Phase 2 Checks](#product-and-phase-2-checks)
-8. [Runtime Evidence Snapshot — Phase 2](#runtime-evidence-snapshot--phase-2)
-9. [Service URLs](#service-urls)
-10. [Run Stage 1 Evidence](#run-stage-1-evidence)
-11. [Validation Commands](#validation-commands)
-12. [Useful Inspection Queries](#useful-inspection-queries)
-13. [Stop Services](#stop-services)
+7. [Phase 2 Runtime Setup](#phase-2-runtime-setup)
+8. [External Deployment Handoff](#external-deployment-handoff)
+9. [Historical Phase 2 Evidence](#historical-phase-2-evidence)
+10. [Service URLs](#service-urls)
+11. [Run Stage 1 Evidence](#run-stage-1-evidence)
+12. [Validation Commands](#validation-commands)
+13. [Useful Inspection Queries](#useful-inspection-queries)
+14. [Stop Services](#stop-services)
 
 ## Naming Convention
 
@@ -114,19 +113,19 @@ for the narrative naming/SCD2/feature-contract proof.
 
 ## API Surface
 
-There is no REST/FastAPI service in Phase 1. The Phase 2 LLM track adds
-FastAPI-backed MCP services and agents under `apps/`, `src/agents/`, and
-`src/llm/`. The Next.js product exposes authenticated analyst, agent registry,
-chat, report, and evidence-session surfaces; the GKE evidence plane exposes
-only the routed ingress/MCP/model endpoints needed by the product and live
-evidence checks. These are additive and do not change the Phase 1 pipeline
-contracts.
+Phase 1 is a local data pipeline, not a REST service. For Phase 2, start at
+the [web workspace](../apps/web/README.md), [feature MCP](../apps/feature-mcp/),
+and [drift MCP](../apps/drift-mcp/) source boundaries.
 
 ## Local Setup
 
-Create or activate a Python environment, then install development and runtime dependencies.
+Create and activate the repository-local Python environment, then use
+[requirements.txt](../requirements.txt) and the [package extras](../pyproject.toml)
+for dependencies.
 
 ```bash
+python -m venv .venv
+. .venv/bin/activate
 python -m pip install -r requirements.txt
 python -m pip install -e ".[dev,runtime]"
 ```
@@ -137,9 +136,12 @@ Create local environment config.
 cp .env.example .env
 ```
 
+Continue with [Docker Compose](#running-in-docker).
+
 ## Running in Docker
 
-Start the complete local data platform (Flink stays disabled).
+Start the local data platform from [Docker Compose](../docker-compose.yml).
+No provider account is needed for Phase 1; Flink stays disabled by default.
 
 ```bash
 docker compose up -d
@@ -166,84 +168,148 @@ Create Kafka topics manually if needed.
 docker compose exec kafka bash /opt/financial-distress-init/kafka_init_topics.sh
 ```
 
-## Product and Phase 2 Checks
+## Phase 2 Runtime Setup
 
-The local Docker commands above validate the Phase 1 lakehouse. The product
-and evidence-plane checks are separate because the product is a pnpm/Next.js
-workspace and the live LLM runtime is owned by the private GitOps repository.
+Use the [web workspace](../apps/web/README.md) for local product setup. For
+cloud-independent source checks, use the [Phase 2 quality gate](../scripts/run_phase2_quality_gates.py)
+without an external checkout.
+The preflight is not the full Phase 2 suite. Run `python -m pytest tests/phase2`
+in the Phase 2 environment. Run web typecheck, lint and fixture browser
+checks as listed in the [web workspace](../apps/web/README.md).
 
-Run the product checks from the repository root:
+Configure only the interfaces each service uses. For HTTP connections, supply
+explicit, absolute `http://` or `https://` URLs that the caller can reach.
+Loopback is only appropriate when the endpoint is in the caller's network
+namespace. Do not infer live addresses from the coursework cluster.
+Use HTTPS for live bearer-authenticated endpoints. The application accepts
+cleartext bearer transmission only on loopback for local testing. Do not send
+sensitive data over unencrypted connections between live services.
 
-```bash
-pnpm --dir apps/web test
-pnpm --dir apps/web typecheck
-pnpm --dir apps/web lint
-pnpm --dir apps/web e2e:live
-pnpm --dir apps/web e2e:assistant
-```
+| Runtime boundary | Setup and executable owner |
+|---|---|
+| Product data and assistant | See [Supabase client setup](../apps/web/src/lib/server/supabase.ts), [server-only inference configuration](../apps/web/src/lib/server/inference-config.ts) and the [assistant route](../apps/web/src/app/api/assistant/stream/route.ts) for the coordinator endpoint and token. Use fixture mode only for local development or tests, not live verification. |
+| Live agent registry | Enable [live registry reads](../apps/web/src/lib/data/supabase-adapter.ts) with `DISTRESSLENS_LIVE_PLANE=1`. Set `DISTRESSLENS_AGENT_REGISTRY_URL` to the full deployed `/v1/agents` URL, including any routing prefix. For the [bundled server](../src/agents/registry.py), provide the JSON registry at `AGENT_REGISTRY_PATH` (default `/registry/registry.json`). Supply `DISTRESSLENS_SOURCE_SHA` for the deployed source. Supply `DISTRESSLENS_GITOPS_SHA` only if a GitOps configuration commit applies; otherwise leave it unset. Never invent revisions or copy them from coursework receipts. |
+| Specialist agents and coordinator | Set `MODEL_BASE_URL` to the OpenAI-compatible base, `FEATURE_MCP_URL` and `DRIFT_MCP_URL` to full MCP endpoints, and `FEATURE_AGENT_URL` and `DRIFT_AGENT_URL` to specialist service bases where each is needed. The [agent runtime](../src/agents/runtime.py) owns the per-role endpoint, token and readiness settings. |
+| Feature MCP and stores | Set `FEATURE_API_BASE_URL` for the [MCP client](../apps/feature-mcp/app/mcp_server.py). The deployment owner supplies a pre-applied Feast repository via `FEAST_REPO_PATH`; its selected profile configures the actual online store and is used for readiness and reads. Set `RAG_DATABASE_URL` or explicit Postgres settings as applicable; see the [feature API](../apps/feature-mcp/app/main.py). |
+| Drift MCP | Set `DRIFT_API_BASE_URL` to use an HTTP API, including on loopback. Leave it unset only when the local in-process implementation is intended. See the [drift MCP entrypoint](../apps/drift-mcp/app/mcp_server.py) for transport and allowed-host configuration. |
 
-The browser checks require the configured product URL and test session
-environment. They exercise authentication, analyst/report surfaces, agent
-registry, chat, and evidence-session state; they do not replace the canonical
-rubric evidence audit.
+For coordinator chat, configure the full `/v1/run` URL as
+`DISTRESSLENS_COORDINATOR_URL` and provide `DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO`
+in the format consumed by the [assistant route](../apps/web/src/app/api/assistant/stream/route.ts)
+and [drift schema](../apps/drift-mcp/app/main.py). For a path-prefixed MCP route,
+configure `FEATURE_MCP_HEALTH_URL` or `DRIFT_MCP_HEALTH_URL` if the default
+origin-root `/mcp-readyz` is not the right route. MCP readiness verifies its
+configured business API; REST `/readyz` for Feature API checks its stores.
 
-Run the live GKE coordinator and telemetry smoke test when the evidence plane
-is up:
+Glossary-only inference requires `DISTRESSLENS_INFERENCE_URL`, a server-side
+`DISTRESSLENS_INFERENCE_TOKEN`, and `DISTRESSLENS_INFERENCE_MODEL` set to the
+provider's model or deployment ID. The full web URL can carry a date-based
+`api-version` query; credentials belong in headers, not URLs. Python service
+clients connect directly rather than taking a proxy from the process environment.
+Set connection and command timeouts in external database and Feast profiles.
 
-```bash
-.venv/bin/python scripts/run_phase2_e2e.py --json --timeout 120
-```
+Set `MCP_ALLOWED_HOSTS` for the hosts used to reach MCP services and
+`MCP_AUTH_GRANTS` to allow only the scopes each authenticated tool identity
+needs. See the grant readers in [feature MCP](../apps/feature-mcp/app/mcp_server.py)
+and [drift MCP](../apps/drift-mcp/app/mcp_server.py) for the configuration.
+The receiving service or its edge must authenticate the caller and bind it
+to the tool request's `agent_identity`; a client-supplied identity is not
+proof of authentication. Deliver outbound bearer tokens via the deployment
+secret mechanism; configuring them does not enable inbound authentication.
 
-The current live contract covers 28 checks: Argo/workload and service
-readiness, model warm-up, coordinator round-trip with feature/drift citations,
-Prometheus targets, and Jaeger service discovery. The equivalent operator
-entrypoint is `make phase2-e2e` in the separate
-`financial-distress-gitops` repository.
+If a required service is unavailable or unconfigured, do not substitute
+fixtures, historical receipts, or assumed health for a live result.
+Fixture identities are for local development and tests. Local production-mode
+tests must explicitly opt in through their Playwright configuration; the
+published release image rejects fixture identities.
 
-Run Phase 2 source and contract tests locally:
+For coordinator and specialist images, override the MCP image's default
+command with `uvicorn src.agents.runtime:app --host 0.0.0.0 --port 8000`
+and set `AGENT_ROLE` to `coordinator`, `feature`, or `drift`. The MCP
+applications themselves retain their image's default command.
 
-```bash
-.venv/bin/python -m pytest tests/phase2 -q
-```
+For the capability checks before selecting a target, see the
+[external deployment handoff](#external-deployment-handoff).
 
-The final submission gate is a two-repository audit. Use the project-local
-Phase 2 environment and the checked-out GitOps repository:
+### Optional Live Supabase Browser Check
+
+Run the web manifest's `e2e:live` only against an explicitly approved,
+disposable Supabase test project. The [Playwright configuration](../apps/web/playwright.live.config.ts)
+uses a local web build against the configured Supabase project, not a
+deployed URL. The [smoke setup](../apps/web/e2e/live-smoke.spec.ts) and
+[auth lifecycle suite](../apps/web/e2e/auth-lifecycle.spec.ts) use service-role
+access to create or update users and roles and delete test accounts. Do not
+run it unattended or against production; it is not a deployment readiness
+check.
+
+Use an unused `DISTRESSLENS_LIVE_E2E_PORT`, confirm the local build and test
+client resolve the same disposable project, and verify the
+[migrations and test-account setup](../apps/web/README.md) before running.
+Do not reuse a pre-existing server on that port.
+
+## External Deployment Handoff
+
+Source CI verifies pull requests without publishing images. Its [Phase 2
+workflow](../.github/workflows/phase2-ci.yaml) owns the signed immutable
+image handoff; the [source verification workflow](../.github/workflows/ci.yml)
+owns the existing source gates. Source CI must not log in to a deployment
+provider, provision infrastructure, or promote a workload.
+
+The external deployment owner chooses a runtime only after checking:
+
+- **Capabilities:** the target can pull and verify the signed image digest,
+  provide the [configured service interfaces](#phase-2-runtime-setup), isolate
+  workloads, and supply secrets and telemetry without exposing private services.
+- **Data residency and access:** the chosen locations and access policies
+  cover application data, replicas, backups, logs and any cross-boundary
+  traffic. Deploying code is not approval to copy or move data.
+- **Cost:** the approved ceiling covers compute, storage and egress, including
+  idle resources and teardown.
+- **Readiness:** verify the target identity and deployed image digest, then
+  check the `/readyz` handlers for the configured [agents](../src/agents/runtime.py),
+  [registry](../src/agents/registry.py), and [feature API](../apps/feature-mcp/app/main.py)
+  as applicable. A `/healthz` response proves liveness, not dependency
+  readiness, and the [web plane flag](../apps/web/src/lib/server/session.ts)
+  is an operator setting, not a probe. Before accepting the release, confirm
+  a successful authenticated end-to-end response with the expected value and
+  provenance, an authorized request that degrades when a dependency is
+  unavailable, and a separately denied request. Check SSE response states,
+  not only HTTP status. Source checks and old receipts do not certify a new target.
+- **Rollback:** before promotion, record the previous known-good digest and
+  compatible configuration, data recovery limits, and an owner-approved
+  rollback procedure and trigger.
+
+Use the external owner's approved release procedure and restricted secret
+store. This repository does not select a target, grant access, or authorize
+a rollout or data move.
+
+## Historical Phase 2 Evidence
+
+The [coursework architecture](phase2/architecture.md#6-verification-and-residuals)
+records the GKE verification and its limitations. The [pinned RAG caller](https://github.com/emanhthangngot/Financial-Distress-Data/blob/9ec6f065276d316bad1e308c88028c5662edc4db/.github/workflows/phase2-rag-pipeline.yaml)
+and [pinned reusable workflow](https://github.com/emanhthangngot/Financial-Distress-Data/blob/9ec6f065276d316bad1e308c88028c5662edc4db/.github/workflows/phase2-ci.yaml)
+are the historical source for the GitOps PR described in the
+[coursework CI/CD narrative](<submission/rubric-final-coursework-(final-llm)/ci_cd.md>).
+Use the [current source CI workflow](../.github/workflows/phase2-ci.yaml)
+for today's build handoff. The [Kubernetes smoke runner](../scripts/run_phase2_e2e.py)
+targets the coursework topology; it is not a generic readiness check.
+
+To audit the LLM submission, use matching clean source and GitOps checkouts
+for the evidence being audited; `GITOPS_CHECKOUT` must point to the matching
+local GitOps checkout. Run from the matching source checkout with the
+Phase 2 environment installed. The [two-repository evidence contract](phase2/evidence-contract.md)
+owns the revision and verification rules:
 
 ```bash
 PATH="$PWD/.venv-phase2/bin:$PATH" \
 .venv-phase2/bin/python scripts/audit_phase2_evidence.py \
   --strict --require-executed --run-validations --track LLM --ml 100 --llm 100 \
   --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 \
-  --gitops-root "${GITOPS_ROOT:-../financial-distress-gitops}"
+  --gitops-root "${GITOPS_CHECKOUT:?Set GITOPS_CHECKOUT to the matching local checkout}"
 ```
 
-Set `GITOPS_ROOT` to the local checkout path when the control repository is
-not beside this source repository.
-
-As of this documentation refresh, the 60 LLM rows are logically covered but
-the final freeze is still pending: evidence source/GitOps SHA stamps must be
-restamped after the latest repository commits and this strict command must
-pass before the submission is called frozen.
-
-## Runtime Evidence Snapshot — Phase 2
-
-The following is a live verification snapshot from **2026-08-13**, not a claim
-that the final evidence freeze has passed:
-
-| Check | Result |
-|---|---|
-| Argo CD applications | 13/13 Synced and Healthy |
-| kagent control plane | CRDs Established; 10 Agents Ready |
-| MCP registration | Grafana MCP accepted/reconciled; controller registered tools |
-| Model path | Agentgateway -> KServe/Knative CPU OpenAI-compatible model server |
-| Coordinator E2E | HTTP 200 with feature and drift citations |
-| Telemetry | Prometheus targets healthy; Jaeger services discoverable |
-| Submission freeze | Pending SHA restamp and strict two-repository audit |
-
-The live plane is disposable and cost-bounded. The current operational
-residual is GHCR cold-node image pull: cached nodes run the private web image,
-while a cold node needs the sealed package-read credential supplied out of
-band. No credential belongs in this repository.
+This is a coursework audit, not a source-only gate or a live trust check.
+Do not restamp historical receipts to make a current checkout pass it.
 
 ## Service URLs
 

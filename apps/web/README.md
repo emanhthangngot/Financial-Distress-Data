@@ -1,30 +1,19 @@
 # DistressLens web
 
-Phase 2 product shell: Next.js 16 (App Router) + Supabase Auth/Postgres. See
-`docs/phase2/product.md` and `../../plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
-for scope and acceptance criteria.
+Phase 2 product shell: Next.js (App Router) and Supabase Auth/Postgres. See the
+[product contract](../../docs/phase2/product.md) for scope.
+
+For local development with fixtures, run from the repository root:
 
 ```bash
 pnpm install
-pnpm --filter @distresslens/web dev
+DISTRESSLENS_DATA_SOURCE=fixture pnpm --filter @distresslens/web dev
 pnpm --filter @distresslens/web test
 ```
 
-## Live Phase 2 E2E
+## Live runtime
 
-The complete service graph runs in the GitOps/GKE evidence cluster. From the
-GitOps checkout, run the source-repo runner after the node pool is available:
-
-```bash
-make phase2-e2e \
-  SOURCE_REPO=/home/pearspringmind/Studying/FSDS/Financial-Distress-Data \
-  PHASE2_E2E_ARGS="--json"
-```
-
-The runner waits for the web, MCP, agent, gateway, data, and observability
-workloads; warms the active model revision through agentgateway; then sends a
-live coordinator request with a numeric drift observation. It exits non-zero
-and prints the failed check when a service or evidence contract is not ready.
-`--web-url` can be added to probe a reachable ingress URL. The authenticated
-browser smoke remains `pnpm --filter @distresslens/web e2e:live` because it
-provisions a real Supabase session.
+Use the [Phase 2 runtime setup](../../docs/operator-runbook.md#phase-2-runtime-setup)
+for configured services. Read the [live Supabase browser check precautions](../../docs/operator-runbook.md#optional-live-supabase-browser-check)
+before using `e2e:live`. The [historical coursework route](../../docs/operator-runbook.md#historical-phase-2-evidence)
+is separate from current setup and does not select a deployment target.

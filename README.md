@@ -1,6 +1,6 @@
 # Financial Distress Data + AI Engineering Platform
 
-A local-first financial-distress data lakehouse for Vietnamese listed companies, extended with an additive Phase 2 LLM/agent product and a disposable GKE evidence plane — verified end to end, not just designed.
+A local-first financial-distress data lakehouse for Vietnamese listed companies, extended with an additive Phase 2 analyst and agent product whose live services are configured independently of any cloud provider.
 
 ## 📚 Table of Contents
 
@@ -26,15 +26,13 @@ Why it matters: a missed early warning on a stressed issuer costs downstream cap
 
 ## 📝 System Overview
 
-- **Lakehouse (Phase 1, verified):** a local-first medallion pipeline — `src/collectors`/`src/generator` produce deterministic batch and streaming data, Airflow (`dags/`) orchestrates three DAGs (DP1 source→Bronze, DP2 Bronze→Silver/Gold, DP3 offline features), Kafka (KRaft) carries streaming events, PySpark local mode performs the Bronze→Silver→Gold transform with a measured 1.56x optimization, Flink is an opt-in event-time streaming path, MinIO is the durable S3A lakehouse boundary, PostgreSQL holds operational metadata and DQ results, and DuckDB/DBeaver is the reviewer inspection surface — nothing here talks to AWS.
-- **LLM + RAG (Phase 2, live-verified):** a real OpenAI-compatible model server (llama.cpp on KServe/Knative, Qwen2.5-0.5B, quantization-benchmarked) reached only through `agentgateway`, backing a RAG pipeline (`src/llm/rag_pipeline.py`) that fetches, chunks, governs (licensing/PII/quarantine), embeds, and writes to PGVector with proven idempotency and a real quarantine round-trip.
-- **Agents + MCP (Phase 2, live-verified):** a coordinator agent fans out in parallel to a feature specialist and a drift specialist under a hard hop bound, each calling its own governed MCP tool (`feature-mcp`, `drift-mcp`) inside a sandboxed, tokenless, read-only `agents-sandbox` namespace with default-deny NetworkPolicies — proven live with a 5-span, 170ms Jaeger trace across all three services.
-- **Product plane (persistent):** Next.js renders authenticated analyst, report, agent-registry, and chat surfaces; Supabase owns Auth/Postgres/RLS and the evidence-session outbox that bridges the persistent product plane to the disposable evidence plane — the UI never claims a successful live answer before the evidence plane actually returns one.
-- **Platform + observability (GitOps-delivered):** GitHub Actions builds/tests/signs an immutable image digest, opens a GitOps PR, and Argo CD reconciles only the merged desired state (13/13 applications Synced/Healthy); NGINX is the sole external entry point behind basic-auth; OpenTelemetry ships traces/metrics/logs to Jaeger/Prometheus/Grafana/Loki, correlated by `trace_id` across all three systems for a single request.
+- **Local lakehouse (Phase 1):** [coursework scope](docs/mini_coursework.md) and [Docker Compose](docker-compose.yml) own the local data pipeline and its runtime. Cloud setup is not a prerequisite.
+- **Product and agents (Phase 2):** [web workspace](apps/web/README.md), [Supabase migrations](supabase/migrations/), and [agent entrypoints](src/agents/) own the additive product contracts. Live answers require configured, available services; coursework captures do not establish runtime trust.
+- **Build and deploy:** the [source CI workflow](.github/workflows/phase2-ci.yaml) is the signed-image handoff. The [external deployment owner](docs/architecture/repository-map.md#separate-deployment-repository) chooses where and how to run it.
 
 ## 🏗️ Architecture
 
-Composed system diagram — seven subsystems and their cross-boundary contracts (source: [`docs/architecture/system-overview.mmd`](docs/architecture/system-overview.mmd), regeneration command in [`docs/system-architecture.md`](docs/system-architecture.md)):
+Coursework system diagram — a reference topology, not a current deployment map (source: [`docs/architecture/system-overview.mmd`](docs/architecture/system-overview.mmd), regeneration command in [`docs/system-architecture.md`](docs/system-architecture.md)):
 
 ![System architecture overview](docs/pngs/system_architecture_overview.png)
 
@@ -81,7 +79,7 @@ Every diagram node is a **deployable unit** — Airflow, Kafka, Flink (opt-in), 
 └── README.md              - This file
 ```
 
-Phase 2 code under `src/ml/`, `src/drift/`, `src/llm/`, and `src/agents/` is additive and never mutates Phase 1 pipeline behavior. The GKE deployment manifests are intentionally **not** in this repository — the separate private control repository [`financial-distress-gitops`](docs/architecture/repository-map.md#separate-deployment-repository) owns Terraform, Helm values, Argo CD applications, image digests, policies, ingress, model serving, agents, and observability desired state. Full ownership map: [`docs/architecture/repository-map.md`](docs/architecture/repository-map.md); Python package boundary details: same doc.
+See the [repository ownership map](docs/architecture/repository-map.md) for the boundary between local setup, source delivery, external deployment, and coursework evidence.
 
 ## 🗂️ Coursework Documentation
 
@@ -131,25 +129,9 @@ Three reviewer index tables, each row linking to a full narrative doc with real 
 
 ## 🚀 Quickstart
 
-```bash
-python -m pip install -r requirements.txt
-python -m pip install -e ".[dev,runtime]"
-cp .env.example .env
-docker compose up -d
-.venv/bin/python scripts/check_stage1_services.py
-```
-
-Full local setup, Docker Compose profiles (incl. opt-in Flink), product/Phase 2 checks, service URLs, Stage 1 evidence regeneration, validation commands, inspection queries, and the naming convention live in [`docs/operator-runbook.md`](docs/operator-runbook.md) — moved out of this README so it stays reviewer-facing.
+Start with the [Phase 1 local setup](docs/operator-runbook.md#local-setup) and the [Gold naming convention](docs/operator-runbook.md#naming-convention). For Phase 2, use the [product workspace](apps/web/README.md) and the [external deployment handoff](docs/operator-runbook.md#external-deployment-handoff).
 
 ## 📌 Project Status
 
-| Area | State | Meaning |
-|---|---|---|
-| Phase 1 lakehouse | Verified | Collectors, Kafka, Bronze/Silver/Gold, DQ, metadata, DuckDB, MinIO and local evidence are implemented and gated. |
-| Phase 2 LLM track | Logical coverage captured; freeze pending | 60/60 LLM rows and 100/100 logical rubric points are represented by canonical evidence files; SHA restamping and the strict freeze audit remain. ML rows remain deferred. |
-| Product plane | Implemented and tested | Next.js web app, Supabase auth/RLS, analyst surfaces, agent registry/chat and evidence-plane state handling are covered by product tests and browser checks. |
-| GKE evidence plane | Live-verified | Argo applications, agents, MCP services, model gateway, KServe, telemetry and coordinator round-trip were live-tested; Argo CD's own UI was unreachable via port-forward this session (node-level fault, not fixed by retry) — CLI-verified 13/13 Synced/Healthy stands in for the UI capture. |
-| Submission freeze | Pending | Evidence SHAs must be restamped after the final docs/runtime commits; strict gate must pass before submission. |
-| Known operational residual | GHCR cold-node pull | The current web image is private; cached nodes run it, but a cold node needs an out-of-band sealed `read:packages` credential. |
-
-This status table is the honesty anchor for the whole documentation set — nothing above claims more than the linked evidence proves.
+- **Current source contract:** Phase 1 remains local-first; Phase 2 runtime endpoints and any deployment target are chosen explicitly. See [architecture boundaries](docs/system-architecture.md#architecture-boundaries) and the [source verification workflow](.github/workflows/ci.yml).
+- **Historical coursework evidence:** the [submission reviewer index](docs/submission/README.md) and [GKE evidence route](docs/operator-runbook.md#historical-phase-2-evidence) document what was captured and how the two-repository audit evaluates that submission. Neither is a live health or freeze claim for this checkout.
