@@ -3,7 +3,7 @@ Fixture-backed vnstock adapter for offline and CI runs.
 
 Replays deterministic fixtures (offline + streaming) instead of calling the live vnstock SDK, with
 knobs for skew, cardinality, late arrivals, and burst rates documented in
-``docs/01_data_generator.md``. The default adapter for Phase 1 development and CI.
+``docs/01_data_generator.md``. The default adapter for platform .evelopment and CI.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ def _legacy_companies(source_name: str) -> list[dict]:
             "sector": "Industrials",
             "listing_date": "2015-01-01",
             "delisted_flag": False,
-            "created_ts": "2026-01-01T00:00:00+00:00",
+            "created_ts": "2015-01-01T00:00:00+00:00",
             "source_system": source_name,
         },
         {
@@ -37,7 +37,7 @@ def _legacy_companies(source_name: str) -> list[dict]:
             "sector": "Financials",
             "listing_date": "2018-06-01",
             "delisted_flag": False,
-            "created_ts": "2026-01-01T00:00:00+00:00",
+            "created_ts": "2018-06-01T00:00:00+00:00",
             "source_system": source_name,
         },
     ]
@@ -83,7 +83,7 @@ def _build_company_rows(
                 "sector": sector,
                 "listing_date": "2015-01-01",
                 "delisted_flag": False,
-                "created_ts": "2026-01-01T00:00:00+00:00",
+                "created_ts": "2015-01-01T00:00:00+00:00",
                 "source_system": source_name,
             }
         )
@@ -110,6 +110,7 @@ def _build_financial_rows(
             row = {
                 "ticker": ticker,
                 "report_period": report_period,
+                "statement_variant": "consolidated_unaudited",
                 "fiscal_year": year,
                 "fiscal_quarter": quarter,
                 "total_assets": 1000,
@@ -257,6 +258,7 @@ def _legacy_financial_statements(
                 {
                     "ticker": ticker,
                     "report_period": report_period,
+                    "statement_variant": "consolidated_unaudited",
                     "fiscal_year": year,
                     "fiscal_quarter": quarter,
                     "total_assets": 1000,

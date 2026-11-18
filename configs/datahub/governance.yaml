@@ -30,13 +30,13 @@ datasets:
     fields: [[ticker, string], [trading_date, date], [event_timestamp, time]]
   gold.dim_company:
     platform: s3
-    fields: [[company_key, string], [ticker, string], [is_current, boolean]]
+    fields: [[company_version_key, string], [ticker, string], [is_current, boolean]]
   gold.fact_financial_statement:
     platform: s3
-    fields: [[company_key, string], [report_period, string], [event_timestamp, time]]
+    fields: [[company_version_key, string], [report_period, string], [known_from_ts, time]]
   gold.fact_market_price:
     platform: s3
-    fields: [[company_key, string], [trading_date, date], [event_timestamp, time]]
+    fields: [[company_version_key, string], [trading_date, date], [known_from_ts, time]]
   gold.feat_company_financial_4q:
     platform: s3
     fields: [[ticker, string], [event_timestamp, time], [created_ts, time]]

@@ -22,7 +22,7 @@ the rubric's own framing ("không nhất thiết tự sáng tạo ra cái gì").
 ### 1. Dual-read validation before promoting a candidate version
 
 ```text
-$ pytest tests/phase2/verification/test_llm_novel_ideas.py -k embedding_registry -q
+$ pytest tests/platform/verification/test_llm_novel_ideas.py -k embedding_registry -q
 -> registry tests passed: injected reader called for both previous and
    candidate versions, one match recorded from each, candidate became
    active only after validation; incompatible dimensions and wrong vector
@@ -34,7 +34,7 @@ candidate embedding namespaces, `compatibility_check` rejects mismatched
 dimensions, and `hot_swap` changes the active alias only after validation
 passes — this is the mechanism `rag.md`'s embed step relies on for a
 production embedding-model upgrade without downtime. Full evidence:
-[`LLM-novel-ideas-idea-1.md`](../../phase2/evidence/llm/LLM-novel-ideas-idea-1.md).
+[`LLM-novel-ideas-idea-1.md`](../../platform/evidence/llm/LLM-novel-ideas-idea-1.md).
 
 ## Part II — Idea 2: citation and PII guard, fail-closed
 
@@ -61,7 +61,7 @@ class CitationGuard:
 ```
 
 ```text
-$ pytest tests/phase2/verification/test_llm_novel_ideas.py -k citation_guard -q
+$ pytest tests/platform/verification/test_llm_novel_ideas.py -k citation_guard -q
 -> guard tests passed: email output rewritten with category-only findings,
    unsupported/default citations blocked, resolver exceptions blocked,
    fail-closed PII mode blocked sensitive output while preserving
@@ -73,7 +73,7 @@ non-existent — a caller must explicitly inject a real resolver backed by the
 evidence manifest, or nothing is ever allowed through. This is the same
 guard `coordinator_agent.md`'s `citations_are_valid` check relies on before
 a coordinator response is returned. Full evidence:
-[`LLM-novel-ideas-idea-2.md`](../../phase2/evidence/llm/LLM-novel-ideas-idea-2.md).
+[`LLM-novel-ideas-idea-2.md`](../../platform/evidence/llm/LLM-novel-ideas-idea-2.md).
 
 ## Limitations
 

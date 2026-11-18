@@ -3,7 +3,7 @@ Kafka-to-Bronze consumer job.
 
 Subscribes to the configured topic, validates each event against the shared schema, and writes valid
 records to the Bronze zone partitioned by event_type and event_date. Invalid records are routed to
-``project_metadata.failed_records`` with a rejection reason.
+``ops.failed_records`` with a rejection reason.
 """
 
 from __future__ import annotations
@@ -103,7 +103,7 @@ def create_kafka_consumer(
     except ImportError as exc:
         raise RuntimeError(
             "Kafka broker integration requires kafka-python. "
-            "Install runtime dependencies before running Stage 1 streaming evidence jobs."
+            "Install runtime dependencies before running platform streaming evidence jobs."
         ) from exc
 
     return KafkaConsumer(

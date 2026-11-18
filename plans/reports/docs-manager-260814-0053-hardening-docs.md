@@ -3,12 +3,12 @@
 ## Scope
 
 Reviewed `AGENTS.md`, the production-hardening overlay plan, and the debugger
-follow-up report. Audited the Phase 2 evidence-capture documentation against the
+follow-up report. Audited the platform .vidence-capture documentation against the
 verified fixes.
 
 ## Change
 
-Updated `docs/phase2/evidence/README.md` to document three observable capture
+Updated `docs/platform/evidence/README.md` to document three observable capture
 contracts:
 
 - failed commands make the run fail;
@@ -21,7 +21,7 @@ No other documentation required correction for the reported fixes.
 
 ## Verification
 
-- `.venv/bin/python -m pytest tests/phase2/test_evidence_capture.py -q` — 4 passed
+- `.venv/bin/python -m pytest tests/platform/test_evidence_capture.py -q` — 4 passed
 - `git diff --check` — clean
 
 Status: DONE

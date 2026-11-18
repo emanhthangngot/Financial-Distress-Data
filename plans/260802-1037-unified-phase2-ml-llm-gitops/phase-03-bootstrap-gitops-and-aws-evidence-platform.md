@@ -35,14 +35,14 @@ The filename still reads `...-and-aws-evidence-platform.md`. It is kept for the
   `_audit_canonical_coverage` (line 189) both require all 117 rows to remain in
   the matrix. Passing `--ml 0` or deleting ML rows makes the gate fail
   differently, not pass.
-- `docs/phase2/rubric-matrix.csv` already carries a `track` column (field 2), so
+- `docs/platform/rubric-matrix.csv` already carries a `track` column (field 2), so
   filtering needs no new parsing helper.
 - `_audit_matrix` (line 290) enforces
-  `evidence_path.startswith("docs/phase2/evidence/")`. Evidence files cannot be
+  `evidence_path.startswith("docs/platform/evidence/")`. Evidence files cannot be
   relocated without rewriting 60 CSV rows.
-- `tests/phase2/requirements/` **does not exist**. All 60 LLM rows pin an exact
+- `tests/platform/requirements/` **does not exist**. All 60 LLM rows pin an exact
   `validation_command` of the form
-  `pytest tests/phase2/requirements/test_llm_ac_NN_<name>.py -k '<rubric_id>'`,
+  `pytest tests/platform/requirements/test_llm_ac_NN_<name>.py -k '<rubric_id>'`,
   matched against the regex at line 728, and `_audit_behavior_validations`
   executes it. pytest exits 5 on a zero-match, which the auditor reads as
   failure.
@@ -56,7 +56,7 @@ The filename still reads `...-and-aws-evidence-platform.md`. It is kept for the
   `pnpm`. Missing: `terraform`, `ansible`, `mutmut`, `locust`. `k3d` is no
   longer required.
 - `.venv` contains only `pytest`, `ruff`, `black`, `duckdb`, `pyspark`. Every
-  Phase 2 Python dependency is absent.
+  platform .ython dependency is absent.
 - GCP free trial: USD 300 over 90 days, unused. Trial vCPU quota is **unverified**
   and is the day-0 kill-switch below.
 
@@ -70,7 +70,7 @@ The filename still reads `...-and-aws-evidence-platform.md`. It is kept for the
   executable requirement tests present and selecting.
 - Non-functional: **zero out-of-pocket spend** — GCP free-trial credit only,
   target under USD 100 of the 300; no service-account key JSON ever created;
-  Phase 1 `.venv` left untouched so `scripts/run_stage1_quality_gates.py` keeps
+  platform ..venv` left untouched so `scripts/run_stage1_quality_gates.py` keeps
   passing.
 
 ## Architecture
@@ -143,15 +143,15 @@ unnecessary.
 ## Related Code Files
 
 - Create: `scripts/generate_phase2_requirement_tests.py` (generates the 20 test files from the CSV)
-- Create: `tests/phase2/requirements/test_llm_ac_01_inference.py` … `test_llm_ac_20_novel.py`
-- Create: `tests/phase2/requirements/__init__.py`, `conftest.py`
+- Create: `tests/platform/requirements/test_llm_ac_01_inference.py` … `test_llm_ac_20_novel.py`
+- Create: `tests/platform/requirements/__init__.py`, `conftest.py`
 - Modify: `scripts/audit_phase2_evidence.py` (add `--track`)
-- Modify: `tests/phase2/test_rubric_matrix.py` (cover the new `--track` behavior)
-- Create: `.venv-phase2/` (separate environment; `.venv` stays Phase 1 only)
+- Modify: `tests/platform/test_rubric_matrix.py` (cover the new `--track` behavior)
+- Create: `.venv-phase2/` (separate environment; `.venv` stays platform .nly)
 - Create (GitOps repo): `terraform/gcp/`, `argocd/`, `charts/`, `platform/`, `ansible/roles/`
 - Create (GitOps repo): `Makefile` with `gcp-up` / `gcp-down` / `gcp-status`
 - Create: `docs/submission/` reviewer index (see step 16)
-- Modify: `docs/phase2/acceptance-criteria.md` (remove Istio/mesh claims)
+- Modify: `docs/platform/acceptance-criteria.md` (remove Istio/mesh claims)
 - Modify: `docs/coursework.md` (declare the LLM-only submission scope)
 
 ## Implementation Steps
@@ -174,11 +174,11 @@ unnecessary.
    Record `CPUS` and pick the node pool from the Architecture table. Do **not**
    run `gcloud iam service-accounts keys create`.
 
-2. Install every Phase 2 Python dependency into a **throwaway** virtualenv and
+2. Install every platform .ython dependency into a **throwaway** virtualenv and
    record what conflicts. `feast`, `mlflow`, `opentelemetry` and `kfp` contend
    over `protobuf`/`pyarrow`/`pandas`. Discovering this in hour 1 is cheap;
    discovering it on day 5 is not. Never install into `.venv` — breaking it
-   breaks the Phase 1 gate that phase-08 must re-run clean. Use `.venv-phase2`.
+   breaks the platform .ate that phase-08 must re-run clean. Use `.venv-phase2`.
 
 3. Create `emanhthangngot/financial-distress-gitops` and commit the directory
    skeleton with the 14 declared artifact paths as placeholder files. Enumerate
@@ -222,7 +222,7 @@ unnecessary.
    that `--require-executed --track LLM` reports zero `ML-` errors and that
    omitting `--track` still demands all 117.
 
-6. Generate `tests/phase2/requirements/test_llm_ac_01..20.py` from the CSV: 20
+6. Generate `tests/platform/requirements/test_llm_ac_01..20.py` from the CSV: 20
    files, 60 test functions whose node names contain the exact `rubric_id`
    slugs. Keep them **import-light contract tests** — parse the evidence
    markdown, assert the metadata fields and that `artifact_path` exists. Do not
@@ -230,12 +230,12 @@ unnecessary.
    subprocesses and a slow import multiplies across all of them.
 
 7. Amend the two documentation claims the dropped mesh would falsify:
-   `docs/phase2/acceptance-criteria.md` `LLM-AC-13-ROUTING` (asserted "Istio
+   `docs/platform/acceptance-criteria.md` `LLM-AC-13-ROUTING` (asserted "Istio
    mTLS") and `LLM-AC-17-SECURITY` (asserted "mesh"). Restate them against NGINX
    Ingress, ClusterIP-only backends, NetworkPolicy, and the sandbox namespace.
    Leave the ML AC lines alone. *(Applied 2026-08-07 — verify, do not redo.)*
 
-8. Retarget three artifact paths in **both** `docs/phase2/rubric-matrix.csv` and
+8. Retarget three artifact paths in **both** `docs/platform/rubric-matrix.csv` and
    `scripts/_phase2_rubric_items.py::EXPLICIT_IMPLEMENTATION` — they must stay
    in parity or `--matrix-only --strict` fails:
    - `platform/inference/llminferenceservice.yaml` → `platform/inference/model-server.yaml`
@@ -298,8 +298,8 @@ unnecessary.
 16. Create the `docs/submission/` reviewer index — `iac.md`, `security.md`,
     `observability.md`, `ci_cd.md`, `cost.md`, `routing_gateway.md`,
     `validation_verification.md` and siblings. These are **human-facing indexes
-    that link into `docs/phase2/evidence/`**, not a relocation: `_audit_matrix`
-    line 290 pins `evidence_path` to the `docs/phase2/evidence/` prefix, so
+    that link into `docs/platform/evidence/`**, not a relocation: `_audit_matrix`
+    line 290 pins `evidence_path` to the `docs/platform/evidence/` prefix, so
     moving files would mean rewriting 60 CSV rows. The canonical CSV's line-92
     note asks for exactly this (`nên có 1 file doc trong mỗi phần to trong folder
     docs/, ví dụ IaC.md`). `cost.md` doubles as the row-67 cost deliverable.
@@ -352,7 +352,7 @@ Ansible role, Terraform, and the separate GitOps control repo.
 - [x] Reviewer -> opens the Web API kéo dữ liệu at its DuckDNS domain over HTTPS -> receives a cert-manager-issued Let's Encrypt certificate that a browser accepts without a warning. *(`https://distresslens.duckdns.org` — verified via curl: `SSL certificate verified via OpenSSL`, issuer `Let's Encrypt`, 2026-08-08. Real app route pending phase-06/07; proven against a throwaway test Service.)*
 - [ ] Platform operator -> runs `make gcp-down` then `make gcp-up` -> observes node pools at zero with PVCs intact, then a healthy cluster after resize, with the cost delta recorded. *(Makefile written, `gcp-status` verified working; full down/up round trip not yet executed to avoid downtime mid-build.)*
 - [x] Platform operator -> runs `kubectl get crd | grep -E 'knative|kserve'` -> finds the inference CRDs installed and ready for phase-06. *(21 CRDs present: Knative Serving v1.16.0, net-kourier, KServe v0.14.1 — verified 2026-08-08.)*
-- [x] Phase 1 maintainer -> runs `scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by Phase 2 dependencies.
+- [x] platform .aintainer -> runs `scripts/run_stage1_quality_gates.py` -> passes, proving `.venv` was never mutated by platform .ependencies.
 
 ## Risk Assessment
 
@@ -365,7 +365,7 @@ Ansible role, Terraform, and the separate GitOps control repo.
   billing account — an exhausted trial stops, an upgraded account does not.
 - **Dependency conflict wrecks the week.** Mitigated by the day-0 throwaway
   install and by keeping heavy dependencies inside service images. `.venv` is
-  never touched: phase-08 requires a clean Phase 1 non-regression run and a
+  never touched: phase-08 requires a clean platform .on-regression run and a
   `_audit_phase1_git_diff` against a frozen SHA.
 - **Knative/KServe install eats day 1.** Mitigated by installing it *after* the
   cluster, ingress, HTTPS and Argo CD are green, so a failure here costs the

@@ -1,18 +1,55 @@
 name: Phase 2 — RAG pipeline
 
+# This caller also checks the reusable workflow and its callers, including
+# the historical RAG rubric proof, without logging into a cloud provider.
+
 on:
   push:
     branches: [main, dev]
     paths:
       - "src/llm/**"
       - "configs/rag-sources.yaml"
-      - "dags/phase2/phase2_rag_ingest.py"
+      - "dags/rag_ingest.py"
+      - "infra/rag-pipeline/**"
+      - "tests/platform/fixtures/rag_corpus/**"
+      - "tests/platform/pipelines/test_rag_*.py"
+      - "tests/platform/pipelines/test_data_governance.py"
+      - "tests/platform/pipelines/test_workflows_platform.py"
+      - "tests/platform/requirements/*.py"
+      - "tests/platform/test_rubric_matrix.py"
+      - "docs/platform/rubric-matrix.csv"
+      - "docs/Coursework Tracking (Public) - rubic final-coursework (final - llm).csv"
+      - "docs/Coursework Tracking (Public) - rubic final-coursework (final - ml).csv"
+      - "docs/platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md"
+      - "scripts/_platform_rubric_items.py"
+      - "scripts/generate_platform_requirement_tests.py"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - ".github/workflows/phase2-*.yaml"
+      - ".github/workflows/phase2-rag-pipeline.yaml"
   pull_request:
     branches: [main, dev]
     paths:
       - "src/llm/**"
       - "configs/rag-sources.yaml"
-      - "dags/phase2/phase2_rag_ingest.py"
+      - "dags/rag_ingest.py"
+      - "infra/rag-pipeline/**"
+      - "tests/platform/fixtures/rag_corpus/**"
+      - "tests/platform/pipelines/test_rag_*.py"
+      - "tests/platform/pipelines/test_data_governance.py"
+      - "tests/platform/pipelines/test_workflows_platform.py"
+      - "tests/platform/requirements/*.py"
+      - "tests/platform/test_rubric_matrix.py"
+      - "docs/platform/rubric-matrix.csv"
+      - "docs/Coursework Tracking (Public) - rubic final-coursework (final - llm).csv"
+      - "docs/Coursework Tracking (Public) - rubic final-coursework (final - ml).csv"
+      - "docs/platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md"
+      - "scripts/_platform_rubric_items.py"
+      - "scripts/generate_platform_requirement_tests.py"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - ".github/workflows/phase2-*.yaml"
+      - ".github/workflows/phase2-rag-pipeline.yaml"
 
 permissions:
   contents: read
@@ -25,9 +62,9 @@ jobs:
     with:
       deployables: >-
         [{"name":"rag-pipeline","image_context":".","dockerfile":"infra/rag-pipeline/Dockerfile",
-        "test_selector":"tests/phase2/pipelines -k 'rag or governance'",
-        "lint_paths":"src/llm tests/phase2/pipelines/test_rag_chunking.py tests/phase2/pipelines/test_rag_dedup.py tests/phase2/pipelines/test_rag_metadata_contract.py tests/phase2/pipelines/test_data_governance.py",
-        "gitops_path":"platform/data/pipeline-deployments.yaml","gitops_target_type":"manifest","gitops_target_kind":"CronJob","gitops_target_selector":"rag-pipeline"}]
-    secrets:
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-      GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
+        "test_selector":"tests/platform/pipelines tests/platform/requirements/test_llm_ac_12_cicd.py
+        tests/platform/test_rubric_matrix.py::TestRubricMatrix::test_matrix_csv_matches_generator_exactly
+        -k 'rag or governance or test_workflows_platform or test_llm_ac_12_cicd or test_matrix_csv_matches_generator_exactly'",
+        "lint_paths":"src/llm tests/platform/pipelines/test_rag_chunking.py tests/platform/pipelines/test_rag_dedup.py
+        tests/platform/pipelines/test_rag_metadata_contract.py tests/platform/pipelines/test_data_governance.py
+        tests/platform/pipelines/test_workflows_platform.py tests/platform/requirements/conftest.py"}]

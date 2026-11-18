@@ -39,6 +39,12 @@ function translateChunk(
   seenToolCalls: Set<string>,
   startedAtBase: number,
 ): { frames: AssistantFrame[]; finished: boolean } {
+  if (raw === "[DONE]") {
+    return {
+      frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }],
+      finished: true,
+    };
+  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw) as unknown;
@@ -46,6 +52,12 @@ function translateChunk(
     return { frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }], finished: true };
   }
 
+  if (parsed === null || typeof parsed !== "object" || "error" in parsed) {
+    return {
+      frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }],
+      finished: true,
+    };
+  }
   const chunk = parsed as OpenAIChunkLike;
   const frames: AssistantFrame[] = [];
   const choices = chunk.choices ?? [];
@@ -55,9 +67,15 @@ function translateChunk(
     const choice = choices[ci];
     if (choice === null || choice === undefined) continue;
 
-    if (choice.finish_reason !== null && choice.finish_reason !== undefined) {
-      frames.push({ type: "done", agentVersion: null, modelVersion: null });
-      finished = true;
+    if (choice.finish_reason === "content_filter") {
+      return { frames: [{ type: "state", state: "policy_blocked", reason: null }], finished: true };
+    }
+    if (choice.finish_reason === "stop") finished = true;
+    else if (typeof choice.finish_reason === "string" && choice.finish_reason !== "") {
+      return {
+        frames: [{ type: "error", code: "MALFORMED_RESPONSE", reason: MALFORMED_COPY }],
+        finished: true,
+      };
     }
 
     const delta = choice.delta;
@@ -95,6 +113,7 @@ function translateChunk(
     }
   }
 
+  if (finished) frames.push({ type: "done", agentVersion: null, modelVersion: null });
   return { frames, finished };
 }
 
@@ -111,27 +130,28 @@ export async function* translateInferenceChunks(
   const seenToolCalls = new Set<string>();
   const iterator = chunks[Symbol.asyncIterator]();
 
-  while (true) {
-    if (opts.signal.aborted) return;
+  try {
+    while (!opts.signal.aborted) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        yield { type: "state", state: "timeout", reason: null };
+        return;
+      }
 
-    const remaining = deadline - Date.now();
-    if (remaining <= 0) {
-      yield { type: "state", state: "timeout", reason: null };
-      return;
-    }
+      const next = await raceNext(iterator, remaining);
+      if (next === "timeout") {
+        yield { type: "state", state: "timeout", reason: null };
+        return;
+      }
+      if (next.done) return;
 
-    const next = await raceNext(iterator, remaining);
-    if (next === "timeout") {
-      yield { type: "state", state: "timeout", reason: null };
-      return;
+      const { frames, finished } = translateChunk(next.value as string, seenToolCalls, Date.now());
+      yield* frames;
+      if (finished) return;
     }
-    if (next.done) return;
-
-    const { frames, finished } = translateChunk(next.value as string, seenToolCalls, Date.now());
-    for (const frame of frames) {
-      yield frame;
-    }
-    if (finished) return;
+  } finally {
+    // Do not wait for an upstream read that lost the deadline race.
+    void iterator.return?.().catch(() => undefined);
   }
 }
 

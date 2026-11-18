@@ -62,7 +62,7 @@ include = ["src*"]
 conventionally a layout directory, not an importable name, and a proper fix
 renames it to `financial_distress` with a repo-wide import rewrite. That rewrite
 touches every file in `src/`, `dags/`, `tests/`, and `scripts/`, and would churn
-the Phase 1 spec's file tables in `docs/mini_coursework.md`. Rejected for now
+the platform .pec's file tables in `docs/mini_coursework.md`. Rejected for now
 (YAGNI): declaring `src` as the package name buys full installability at ~5 lines
 of config. Record the wart in `docs/architecture/repository-map.md` (phase 4) so
 the decision is visible rather than accidental.

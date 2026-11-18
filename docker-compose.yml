@@ -8,7 +8,7 @@ services:
     ports:
       - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
-      - ./sql/init_project_metadata.sql:/docker-entrypoint-initdb.d/01_init_project_metadata.sql:ro
+      - ./sql/init_ops.sql:/docker-entrypoint-initdb.d/01_init_ops.sql:ro
 
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
@@ -29,6 +29,24 @@ services:
       until mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin}; do sleep 2; done;
       mc mb --ignore-existing local/${FINANCIAL_DISTRESS_BUCKET:-financial-distress-lake};
       "
+
+  cdc-postgres:
+    image: postgres:16
+    command: ["postgres", "-c", "wal_level=logical", "-c", "max_replication_slots=4", "-c", "max_wal_senders=4"]
+    environment:
+      POSTGRES_DB: financial_distress_cdc
+      POSTGRES_USER: cdc_admin
+      POSTGRES_PASSWORD: cdc_admin
+    ports:
+      - "${CDC_POSTGRES_HOST_PORT:-5434}:5432"
+    volumes:
+      - ./infra/cdc/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cdc_admin -d financial_distress_cdc"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    profiles: ["streaming"]
 
   kafka:
     image: apache/kafka:3.9.0
@@ -59,11 +77,35 @@ services:
       - ./infra/kafka:/opt/financial-distress-init:ro
     command: bash /opt/financial-distress-init/kafka_init_topics.sh
 
+  kafka-connect:
+    image: debezium/connect:2.7.3.Final
+    depends_on:
+      kafka:
+        condition: service_started
+      cdc-postgres:
+        condition: service_healthy
+    ports:
+      - "${KAFKA_CONNECT_HOST_PORT:-8083}:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+    profiles: ["streaming"]
+
   airflow-webserver:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     command: webserver
     depends_on:
       airflow-init:
@@ -85,7 +127,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      LAKEHOUSE_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -96,13 +138,13 @@ services:
       - ./sql:/opt/airflow/sql
       - ./docs:/opt/airflow/docs
     ports:
-      - "8080:8080"
+      - "${AIRFLOW_HOST_PORT:-8085}:8080"
 
   airflow-init:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     depends_on:
       - postgres
     command: >
@@ -123,7 +165,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      LAKEHOUSE_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -138,7 +180,7 @@ services:
     build:
       context: .
       dockerfile: infra/airflow/Dockerfile
-    image: financial-distress-airflow:stage1
+    image: financial-distress-airflow:lakehouse
     command: scheduler
     depends_on:
       - airflow-webserver
@@ -155,7 +197,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
       JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
       SPARK_LOCAL_IP: 127.0.0.1
-      STAGE1_EVIDENCE_DIR: /tmp/stage1-evidence
+      LAKEHOUSE_EVIDENCE_DIR: /tmp/lakehouse-evidence
       ENABLE_FLINK: ${ENABLE_FLINK:-0}
       FLINK_JOBMANAGER_URL: ${FLINK_JOBMANAGER_URL:-http://flink-jobmanager:8081}
       FLINK_PARALLELISM: ${FLINK_PARALLELISM:-1}
@@ -170,7 +212,7 @@ services:
     build:
       context: .
       dockerfile: infra/flink/Dockerfile
-    image: financial-distress-flink:stage1
+    image: financial-distress-flink:lakehouse
     profiles: ["flink"]
     hostname: flink-jobmanager
     ports:
@@ -197,7 +239,7 @@ services:
     build:
       context: .
       dockerfile: infra/flink/Dockerfile
-    image: financial-distress-flink:stage1
+    image: financial-distress-flink:lakehouse
     profiles: ["flink"]
     depends_on:
       flink-jobmanager:
@@ -211,39 +253,39 @@ services:
     volumes:
       - flink-checkpoints:/tmp/flink-checkpoints
 
-  # --- Phase 2 (profile "phase2") — never started by plain `docker compose up` ---
+  # --- Platform services (profile "platform") — never started by plain `docker compose up` ---
 
-  phase2-redis:                      # Feast online store, mirrors in-cluster Redis
+  platform-redis:                    # Feast online store, mirrors in-cluster Redis
     image: redis:7-alpine
     command: redis-server --save "" --appendonly no
     ports:
-      - "${PHASE2_REDIS_HOST_PORT:-6380}:6379"
+      - "${PLATFORM_REDIS_HOST_PORT:-6380}:6379"
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
       interval: 5s
       timeout: 5s
       retries: 10
       start_period: 5s
-    profiles: ["phase2"]
+    profiles: ["platform"]
 
-  phase2-postgres:                   # PGVector + ml_metadata; NOT the Phase 1 postgres
+  platform-postgres:                 # PGVector + ml datastore
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: ml_metadata
-      POSTGRES_USER: ${PHASE2_PG_USER:-phase2}
-      POSTGRES_PASSWORD: ${PHASE2_PG_PASSWORD:-phase2}
+      POSTGRES_DB: ml
+      POSTGRES_USER: ${PLATFORM_PG_USER:-platform}
+      POSTGRES_PASSWORD: ${PLATFORM_PG_PASSWORD:-platform}
     ports:
-      - "${PHASE2_PG_HOST_PORT:-5433}:5432"
+      - "${PLATFORM_PG_HOST_PORT:-5433}:5432"
     volumes:
-      - ./sql/init_ml_metadata.sql:/docker-entrypoint-initdb.d/01_init_ml_metadata.sql:ro
-      - phase2-pgdata:/var/lib/postgresql/data
+      - ./sql/init_ml.sql:/docker-entrypoint-initdb.d/01_init_ml.sql:ro
+      - platform-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PHASE2_PG_USER:-phase2} -d ml_metadata"]
+      test: ["CMD-SHELL", "pg_isready -U ${PLATFORM_PG_USER:-platform} -d ml"]
       interval: 5s
       timeout: 10s
       retries: 10
-    profiles: ["phase2"]
+    profiles: ["platform"]
 
 volumes:
   flink-checkpoints:
-  phase2-pgdata:
+  platform-pgdata:

@@ -1,6 +1,6 @@
 # 08 — Docker Image Optimization
 
-> Phase 1, rubric row "Docker & Dockerfile optimization" (1–2 points).
+> the platform, rubric row "Docker & Dockerfile optimization" (1–2 points).
 > Sprint: **W23** — multistage Dockerfile + size evidence.
 
 ## TL;DR

@@ -1,4 +1,4 @@
-"""Rubric items mapping for Stage 1 audit (W25).
+"""Rubric items mapping for platform audit (W25).
 
 Single source of truth shared between:
   - tests/test_rubric_coverage.py  (pytest harness asserting evidence exists)
@@ -100,14 +100,14 @@ ITEMS: tuple[RubricItem, ...] = (
         category="Implement Data Generator",
         claim="Simulate offline data problems: skew",
         points=2,
-        evidence_check=lambda: _exists("docs/evidence/stage1_generator_characteristics.json"),
+        evidence_check=lambda: _exists("docs/evidence/lakehouse_generator_characteristics.json"),
     ),
     RubricItem(
         idx=4,
         category="Implement Data Generator",
         claim="Simulate offline data problems: high cardinality",
         points=2,
-        evidence_check=lambda: _exists("docs/evidence/stage1_generator_characteristics.json"),
+        evidence_check=lambda: _exists("docs/evidence/lakehouse_generator_characteristics.json"),
     ),
     RubricItem(
         idx=5,
@@ -393,21 +393,21 @@ ITEMS: tuple[RubricItem, ...] = (
         category="Documentation",
         claim="Dim table with SCD2 (valid_from_ts, valid_to_ts, is_current)",
         points=2,
-        evidence_check=lambda: _exists("docs/02_schema_design.md"),
+        evidence_check=lambda: _exists("docs/architecture/data-model.md"),
     ),
     RubricItem(
         idx=39,
         category="Documentation",
         claim="Feature tables (feat_*) with event_timestamp and created columns",
         points=2,
-        evidence_check=lambda: _exists("docs/02_schema_design.md"),
+        evidence_check=lambda: _exists("docs/architecture/data-model.md"),
     ),
     RubricItem(
         idx=40,
         category="Documentation",
         claim="Relationship between dim & fact tables (DBeaver or similar export)",
         points=2,
-        evidence_check=lambda: _exists("docs/02_schema_design.md"),
+        evidence_check=lambda: _exists("docs/architecture/data-model.md"),
     ),
     RubricItem(
         idx=41,

@@ -1,0 +1,2 @@
+rubric_id,track,section,points,requirement,proof,deliverables,owner,test,evidence_path,evidence_type,acceptance_criterion,artifact_path
+ML-evidence-empty-values,ML,Feature Store,1,"Row claims executed proof with every key present but values blank",proof,deliverable,ml_engineer,pytest tests/platform,tests/platform/fixtures/ML-evidence-empty-values.md,executed,,src/ml/ML-evidence-empty-values

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.quality.contract_checker import load_contracts, write_dp_evidence
 
 DAG, PythonOperator = airflow_imports()

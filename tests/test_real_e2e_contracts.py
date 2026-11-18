@@ -6,17 +6,20 @@ from pathlib import Path
 import pytest
 
 from src.catalog.duckdb_runner import run_duckdb_validation
-from src.jobs.kafka_to_bronze_job import build_stage1_stream_events
-from src.jobs.stage1_spark_lakehouse_job import run_stage1_spark_lakehouse, spark_runtime_config
+from src.jobs.kafka_to_bronze_job import build_lakehouse_stream_events
+from src.jobs.lakehouse_spark_lakehouse_job import (
+    run_lakehouse_spark_lakehouse,
+    spark_runtime_config,
+)
 from src.streaming.kafka_producer import serialize_event
 
 
-def _write_complete_stage1_audit_artifacts(evidence_dir: Path) -> None:
-    (evidence_dir / "stage1_real_airflow_dag_test.txt").write_text(
+def _write_complete_lakehouse_audit_artifacts(evidence_dir: Path) -> None:
+    (evidence_dir / "lakehouse_real_airflow_dag_test.txt").write_text(
         "DagRun Finished: state=success",
         encoding="utf-8",
     )
-    (evidence_dir / "stage1_real_kafka_offsets.json").write_text(
+    (evidence_dir / "lakehouse_real_kafka_offsets.json").write_text(
         json.dumps(
             {
                 "financial.price_events": ["financial.price_events:0:1"],
@@ -26,19 +29,19 @@ def _write_complete_stage1_audit_artifacts(evidence_dir: Path) -> None:
         ),
         encoding="utf-8",
     )
-    (evidence_dir / "stage1_real_postgres_summary.json").write_text(
+    (evidence_dir / "lakehouse_real_postgres_summary.json").write_text(
         json.dumps(
             {
                 "data_quality_result": "gold_fact_market_alert pass",
                 "dataset_freshness": "silver_market_prices pass",
                 "backfill_request": "completed",
                 "source_request_log": "vnstock_fixture success",
-                "collector_checkpoint": "stage1_fixture_collectors last_successful_run_id",
+                "collector_checkpoint": "lakehouse_fixture_collectors last_successful_run_id",
             }
         ),
         encoding="utf-8",
     )
-    (evidence_dir / "stage1_dq_failure_probe.json").write_text(
+    (evidence_dir / "lakehouse_dq_failure_probe.json").write_text(
         json.dumps(
             {
                 "error_message": "critical DQ checks failed: ticker_not_null",
@@ -48,7 +51,7 @@ def _write_complete_stage1_audit_artifacts(evidence_dir: Path) -> None:
         ),
         encoding="utf-8",
     )
-    (evidence_dir / "stage1_real_duckdb_validation.json").write_text(
+    (evidence_dir / "lakehouse_real_duckdb_validation.json").write_text(
         json.dumps(
             [
                 {"columns": ["total_financial_statement_rows"], "rows": [[16]]},
@@ -65,18 +68,18 @@ def _write_complete_stage1_audit_artifacts(evidence_dir: Path) -> None:
         ),
         encoding="utf-8",
     )
-    (evidence_dir / "stage1_real_minio_objects.json").write_text(
+    (evidence_dir / "lakehouse_real_minio_objects.json").write_text(
         json.dumps(
             [
-                {"object_name": "bronze/companies/data.parquet"},
-                {"object_name": "bronze/financial_statements/data.parquet"},
-                {"object_name": "bronze/market_prices_daily/data.parquet"},
+                {"object_name": "bronze/raw_companies/data.parquet"},
+                {"object_name": "bronze/raw_financial_statements/data.parquet"},
+                {"object_name": "bronze/raw_market_prices_daily/data.parquet"},
                 {"object_name": "bronze/kafka/financial.price_events/part.parquet"},
                 {"object_name": "bronze/kafka/financial.news_events/part.parquet"},
                 {"object_name": "bronze/kafka/financial.alert_events/part.parquet"},
-                {"object_name": "silver/companies/part.parquet"},
-                {"object_name": "silver/financial_statements/part.parquet"},
-                {"object_name": "silver/market_prices_daily/part.parquet"},
+                {"object_name": "silver/stg_companies/part.parquet"},
+                {"object_name": "silver/stg_financial_statements/part.parquet"},
+                {"object_name": "silver/stg_market_prices_daily/part.parquet"},
                 {"object_name": "gold/fact_financial_statement/part.parquet"},
                 {"object_name": "gold/fact_market_price/part.parquet"},
                 {"object_name": "gold/dim_company/part.parquet"},
@@ -84,7 +87,7 @@ def _write_complete_stage1_audit_artifacts(evidence_dir: Path) -> None:
                 {"object_name": "gold/fact_market_alert/part.parquet"},
                 {"object_name": "gold/obt_company_quarter_risk/part.parquet"},
                 {"object_name": "gold/feat_company_unified/part.parquet"},
-                {"object_name": "evidence/stage1/run_id=run/stage1_row_counts.json"},
+                {"object_name": "evidence/lakehouse/run_id=run/lakehouse_row_counts.json"},
             ]
         ),
         encoding="utf-8",
@@ -101,11 +104,11 @@ def test_duckdb_validation_creates_missing_evidence_directory(tmp_path: Path):
     outputs = run_duckdb_validation(evidence_dir, views_sql, validation_sql)
 
     assert outputs[0]["rows"] == [(1,)]
-    assert (evidence_dir / "stage1_duckdb_validation.json").exists()
+    assert (evidence_dir / "lakehouse_duckdb_validation.json").exists()
 
 
-def test_stage1_stream_events_include_run_id_for_broker_filtering():
-    events = build_stage1_stream_events("run-123")
+def test_lakehouse_stream_events_include_run_id_for_broker_filtering():
+    events = build_lakehouse_stream_events("run-123")
 
     assert len(events) >= 6
     assert {event["evidence_run_id"] for event in events} == {"run-123"}
@@ -136,7 +139,7 @@ def test_spark_runtime_config_includes_s3a_packages_and_local_minio_endpoint(mon
 
 
 def test_real_e2e_dag_exposes_full_runtime_task_chain():
-    module = importlib.import_module("dags.stage1_real_e2e_pipeline")
+    module = importlib.import_module("dags.lakehouse_real_e2e_pipeline")
 
     task_names = module.task_chain()
 
@@ -145,14 +148,14 @@ def test_real_e2e_dag_exposes_full_runtime_task_chain():
         "produce_fixture_stream_events_to_kafka",
         "consume_kafka_events_to_bronze",
         "run_spark_bronze_to_silver_gold",
-        "run_silver_gold_dq_gate",
         "write_project_metadata_rows",
+        "run_silver_gold_dq_gate",
         "run_duckdb_validation_and_publish_evidence",
     ]
 
 
 def test_real_e2e_dq_task_uses_actual_lakehouse_outputs():
-    module = importlib.import_module("dags.stage1_real_e2e_pipeline")
+    module = importlib.import_module("dags.lakehouse_real_e2e_pipeline")
 
     source_names = module.run_silver_gold_dq_gate.__code__.co_names
 
@@ -161,20 +164,20 @@ def test_real_e2e_dq_task_uses_actual_lakehouse_outputs():
 
 
 def test_real_e2e_spark_task_passes_current_run_id_to_filter_streaming_bronze():
-    module = importlib.import_module("dags.stage1_real_e2e_pipeline")
+    module = importlib.import_module("dags.lakehouse_real_e2e_pipeline")
 
     source_names = module.run_spark_bronze_to_silver_gold.__code__.co_names
 
     assert "current_evidence_run_id" in source_names
-    assert "run_stage1_spark_lakehouse" in source_names
+    assert "run_lakehouse_spark_lakehouse" in source_names
 
 
 def test_spark_lakehouse_job_accepts_evidence_run_id_filter():
-    assert "evidence_run_id" in run_stage1_spark_lakehouse.__code__.co_varnames
+    assert "evidence_run_id" in run_lakehouse_spark_lakehouse.__code__.co_varnames
 
 
-def test_stage1_dq_failure_probe_script_uses_intentional_failure_checks():
-    module = importlib.import_module("scripts.run_stage1_dq_failure_probe")
+def test_lakehouse_dq_failure_probe_script_uses_intentional_failure_checks():
+    module = importlib.import_module("scripts.run_lakehouse_dq_failure_probe")
 
     source_names = module.main.__code__.co_names
 
@@ -184,19 +187,19 @@ def test_stage1_dq_failure_probe_script_uses_intentional_failure_checks():
 
 
 def test_real_e2e_postgres_summary_exports_operational_metadata_tables():
-    module = importlib.import_module("scripts.run_stage1_real_e2e")
+    module = importlib.import_module("scripts.run_lakehouse_real_e2e")
 
     source = module.postgres_summary.__code__.co_consts
     joined = "\n".join(str(item) for item in source)
 
-    assert "project_metadata.dataset_freshness" in joined
-    assert "project_metadata.failed_records" in joined
-    assert "project_metadata.backfill_request" in joined
+    assert "ops.dataset_freshness" in joined
+    assert "ops.failed_records" in joined
+    assert "ops.backfill_request" in joined
 
 
-def test_stage1_evidence_audit_summary_passes_for_complete_artifacts(tmp_path: Path):
-    module = importlib.import_module("scripts.audit_stage1_evidence")
-    _write_complete_stage1_audit_artifacts(tmp_path)
+def test_lakehouse_evidence_audit_summary_passes_for_complete_artifacts(tmp_path: Path):
+    module = importlib.import_module("scripts.audit_lakehouse_evidence")
+    _write_complete_lakehouse_audit_artifacts(tmp_path)
 
     summary = module.audit_evidence(tmp_path)
 
@@ -206,38 +209,38 @@ def test_stage1_evidence_audit_summary_passes_for_complete_artifacts(tmp_path: P
     assert summary["duckdb_metrics"]["total_dim_company_rows"] == 2
 
 
-def test_stage1_evidence_audit_check_mode_fails_when_summary_is_missing(
+def test_lakehouse_evidence_audit_check_mode_fails_when_summary_is_missing(
     tmp_path: Path,
     monkeypatch,
 ):
-    module = importlib.import_module("scripts.audit_stage1_evidence")
-    _write_complete_stage1_audit_artifacts(tmp_path)
-    monkeypatch.setattr(sys, "argv", ["audit_stage1_evidence.py", str(tmp_path), "--check"])
+    module = importlib.import_module("scripts.audit_lakehouse_evidence")
+    _write_complete_lakehouse_audit_artifacts(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["audit_lakehouse_evidence.py", str(tmp_path), "--check"])
 
     with pytest.raises(SystemExit):
         module.main()
 
 
-def test_stage1_evidence_audit_check_mode_fails_when_summary_is_stale(
+def test_lakehouse_evidence_audit_check_mode_fails_when_summary_is_stale(
     tmp_path: Path,
     monkeypatch,
 ):
-    module = importlib.import_module("scripts.audit_stage1_evidence")
-    _write_complete_stage1_audit_artifacts(tmp_path)
-    (tmp_path / "stage1_runtime_audit_summary.json").write_text(
+    module = importlib.import_module("scripts.audit_lakehouse_evidence")
+    _write_complete_lakehouse_audit_artifacts(tmp_path)
+    (tmp_path / "lakehouse_runtime_audit_summary.json").write_text(
         json.dumps({"status": "pass"}),
         encoding="utf-8",
     )
-    monkeypatch.setattr(sys, "argv", ["audit_stage1_evidence.py", str(tmp_path), "--check"])
+    monkeypatch.setattr(sys, "argv", ["audit_lakehouse_evidence.py", str(tmp_path), "--check"])
 
     with pytest.raises(SystemExit):
         module.main()
 
 
-def test_stage1_evidence_audit_reports_failed_check_names(tmp_path: Path):
-    module = importlib.import_module("scripts.audit_stage1_evidence")
-    _write_complete_stage1_audit_artifacts(tmp_path)
-    minio_objects_path = tmp_path / "stage1_real_minio_objects.json"
+def test_lakehouse_evidence_audit_reports_failed_check_names(tmp_path: Path):
+    module = importlib.import_module("scripts.audit_lakehouse_evidence")
+    _write_complete_lakehouse_audit_artifacts(tmp_path)
+    minio_objects_path = tmp_path / "lakehouse_real_minio_objects.json"
     minio_objects = json.loads(minio_objects_path.read_text(encoding="utf-8"))
     minio_objects_path.write_text(
         json.dumps(
@@ -257,25 +260,27 @@ def test_stage1_evidence_audit_reports_failed_check_names(tmp_path: Path):
     assert "minio_has_required_medallion_prefixes" in summary["failed_checks"]
 
 
-def test_stage1_evidence_audit_reports_missing_json_artifact_without_traceback(tmp_path: Path):
-    module = importlib.import_module("scripts.audit_stage1_evidence")
-    _write_complete_stage1_audit_artifacts(tmp_path)
-    (tmp_path / "stage1_real_kafka_offsets.json").unlink()
+def test_lakehouse_evidence_audit_reports_missing_json_artifact_without_traceback(tmp_path: Path):
+    module = importlib.import_module("scripts.audit_lakehouse_evidence")
+    _write_complete_lakehouse_audit_artifacts(tmp_path)
+    (tmp_path / "lakehouse_real_kafka_offsets.json").unlink()
 
     summary = module.audit_evidence(tmp_path)
 
     assert summary["status"] == "fail"
-    assert "artifact_stage1_real_kafka_offsets.json_readable" in summary["failed_checks"]
+    assert "artifact_lakehouse_real_kafka_offsets.json_readable" in summary["failed_checks"]
     assert "all_kafka_topics_present" in summary["failed_checks"]
 
 
-def test_stage1_evidence_audit_reports_malformed_json_artifact_without_traceback(tmp_path: Path):
-    module = importlib.import_module("scripts.audit_stage1_evidence")
-    _write_complete_stage1_audit_artifacts(tmp_path)
-    (tmp_path / "stage1_real_duckdb_validation.json").write_text("{broken json", encoding="utf-8")
+def test_lakehouse_evidence_audit_reports_malformed_json_artifact_without_traceback(tmp_path: Path):
+    module = importlib.import_module("scripts.audit_lakehouse_evidence")
+    _write_complete_lakehouse_audit_artifacts(tmp_path)
+    (tmp_path / "lakehouse_real_duckdb_validation.json").write_text(
+        "{broken json", encoding="utf-8"
+    )
 
     summary = module.audit_evidence(tmp_path)
 
     assert summary["status"] == "fail"
-    assert "artifact_stage1_real_duckdb_validation.json_readable" in summary["failed_checks"]
+    assert "artifact_lakehouse_real_duckdb_validation.json_readable" in summary["failed_checks"]
     assert "duckdb_total_financial_statement_rows_ok" in summary["failed_checks"]

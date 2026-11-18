@@ -14,12 +14,12 @@ Externalised configuration (rubric bonus: connections and variables inside Airfl
 - ``Variable.get("financial_distress_bronze_window_start_year")`` /
   ``financial_distress_bronze_window_end_year`` - the historical window the collectors walk.
 - ``PROJECT_METADATA_DSN`` env var (read by ``metadata_writer_from_env``) - PostgreSQL DSN for the
-  ``project_metadata`` schema; Airflow Connections are surfaced into the env in the running
+  ``ops`` schema; Airflow Connections are surfaced into the env in the running
   cluster.
 
 This DAG is intentionally a coordinator: it does not duplicate collector or Bronze-write logic. It
 imports the existing collectors from ``src.collectors`` and the Bronze materializer from
-``src.jobs.stage1_evidence_job`` so the rubric graph shares the same data path as the Stage 1
+``src.jobs.lakehouse_evidence_job`` so the rubric graph shares the same data path as the platform
 real E2E pipeline.
 """
 
@@ -29,12 +29,12 @@ import json
 import os
 from pathlib import Path
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.collectors.company_list_collector import collect_companies
 from src.collectors.financial_statement_collector import collect_financial_statements
 from src.collectors.market_price_collector import collect_market_prices
 from src.io.minio_writer import write_minio_dataset
-from src.io.paths import DEFAULT_BUCKET
+from src.io.paths import DEFAULT_BUCKET, dataset_object_key
 
 DAG, PythonOperator = airflow_imports()
 
@@ -63,7 +63,7 @@ def _airflow_variable(name: str, default: str) -> str:
 
 
 def _project_metadata_dsn() -> str | None:
-    """Resolve the project_metadata PostgreSQL DSN.
+    """Resolve the ops PostgreSQL DSN.
 
     Prefers the AIRFLOW_CONN_PROJECT_METADATA Connection when running inside
     Airflow, then the ``PROJECT_METADATA_DSN`` env var, then ``None`` so the
@@ -72,7 +72,7 @@ def _project_metadata_dsn() -> str | None:
     try:
         from airflow.hooks.base import BaseHook  # type: ignore[import-not-found]
 
-        conn = BaseHook.get_connection("project_metadata")
+        conn = BaseHook.get_connection("ops")
         dsn = conn.get_uri() if conn else None
     except Exception:
         dsn = None
@@ -92,7 +92,7 @@ def _window_years() -> tuple[int, int]:
 
 
 def _evidence_dir() -> Path:
-    return Path(os.getenv("STAGE1_EVIDENCE_DIR", "/tmp/stage1-evidence"))
+    return Path(os.getenv("LAKEHOUSE_EVIDENCE_DIR", "/tmp/lakehouse-evidence"))
 
 
 def ingest_bronze_callable() -> dict[str, int]:
@@ -115,7 +115,7 @@ def ingest_bronze_callable() -> dict[str, int]:
 
     def _client():
         if "client" not in client_holder:
-            from src.jobs.stage1_evidence_job import _ensure_bucket, _minio_client
+            from src.jobs.lakehouse_evidence_job import _ensure_bucket, _minio_client
 
             client = _minio_client()
             _ensure_bucket(client, bucket)
@@ -123,17 +123,19 @@ def ingest_bronze_callable() -> dict[str, int]:
         return client_holder["client"]
 
     client = _client()
-    write_minio_dataset(client, bucket, f"{bucket}/bronze/companies/data.parquet", companies)
+    write_minio_dataset(
+        client, bucket, dataset_object_key(bucket, "bronze", "companies"), companies
+    )
     write_minio_dataset(
         client,
         bucket,
-        f"{bucket}/bronze/financial_statements/data.parquet",
+        dataset_object_key(bucket, "bronze", "financial_statements"),
         financials,
     )
     write_minio_dataset(
         client,
         bucket,
-        f"{bucket}/bronze/market_prices_daily/data.parquet",
+        dataset_object_key(bucket, "bronze", "market_prices_daily"),
         market_prices,
     )
 
@@ -147,12 +149,12 @@ def ingest_bronze_callable() -> dict[str, int]:
 def validate_bronze_callable() -> dict[str, int]:
     """Validate stage: read Bronze back and assert key invariants.
 
-    Uses the shared Stage 1 evidence builder so the row-count baseline matches
+    Uses the shared platform evidence builder so the row-count baseline matches
     what the rest of the pipeline already considers the contract. Writes a small
     JSON sidecar to the evidence dir so the rubric screenshot can be paired
     with a number, not just a graph.
     """
-    from src.jobs.stage1_evidence_job import build_evidence_payload
+    from src.jobs.lakehouse_evidence_job import build_evidence_payload
 
     bucket = _bucket()
     payload = build_evidence_payload(bucket)

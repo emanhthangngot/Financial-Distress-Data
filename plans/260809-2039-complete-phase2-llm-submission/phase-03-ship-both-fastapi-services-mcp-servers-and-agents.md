@@ -140,8 +140,8 @@ registration is not optional polish.
 - Modify (GitOps): `charts/feature-mcp/Chart.yaml`, `charts/drift-mcp/Chart.yaml`,
   `platform/agents/agent-sandbox.yaml`, `platform/agents/agentregistry.yaml`
   — **all four are placeholder comments today**
-- Create: 15 evidence files under `docs/phase2/evidence/llm/`
-- Regenerate (never hand-edit): `tests/phase2/requirements/test_llm_ac_03_registry.py`,
+- Create: 15 evidence files under `docs/platform/evidence/llm/`
+- Regenerate (never hand-edit): `tests/platform/requirements/test_llm_ac_03_registry.py`,
   `test_llm_ac_05_feature_rag_api.py`, `test_llm_ac_06_drift_mcp.py`,
   `test_llm_ac_08_coordinator.py`
 

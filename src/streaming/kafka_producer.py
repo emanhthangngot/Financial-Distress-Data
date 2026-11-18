@@ -2,7 +2,7 @@
 Kafka producer used by DAG 04 to publish synthetic market events.
 
 Serializes events from the streaming problem factory to JSON and writes them to the configured topic
-with idempotent producer settings. Failures are logged to ``project_metadata.failed_records``.
+with idempotent producer settings. Failures are logged to ``ops.failed_records``.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ def produce_events(
     except ImportError as exc:
         raise RuntimeError(
             "Kafka producer integration requires kafka-python. "
-            "Install runtime dependencies before running Stage 1 E2E jobs."
+            "Install runtime dependencies before running platform E2E jobs."
         ) from exc
 
     producer = KafkaProducer(

@@ -22,9 +22,9 @@ REPORT_PATH = (
     REPO_ROOT / "plans/260809-2039-complete-phase2-llm-submission/reports/phase05-web-coverage.xml"
 )
 TESTS = [
-    "tests/phase2/apps",
-    "tests/phase2/verification/test_equivalence_boundary.py",
-    "tests/phase2/verification/test_web_api_adapters.py",
+    "tests/platform/apps",
+    "tests/platform/verification/test_equivalence_boundary.py",
+    "tests/platform/verification/test_web_api_adapters.py",
 ]
 MINIMUM_COVERAGE_RATE = 90.0
 

@@ -68,7 +68,7 @@ $ kubectl exec -n kagent deploy/agentregistry -- python -c "..."
 ```
 
 Full evidence:
-[`LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori.md`](../../phase2/evidence/llm/LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori.md).
+[`LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori.md`](../../platform/evidence/llm/LLM-registry-for-agent-theo-t-registry-for-agent-theo-tutori.md).
 
 #### Image proof
 

@@ -19,7 +19,7 @@ contract-compliant evidence, then flip them in the generator.
 
 ## Requirements
 
-- Functional: 13 files at `docs/phase2/evidence/llm/<rubric_id>.md`, each with
+- Functional: 13 files at `docs/platform/evidence/llm/<rubric_id>.md`, each with
   the 8 contract fields, redacted per phase 1's proven template, and backed by raw
   command output; the 13 rows registered as executed against the artifact paths
   and assertion strings phase 1 fixed; matrix and requirement tests regenerated.
@@ -78,7 +78,7 @@ in `scripts/_phase2_rubric_items.py`, then regenerate:
 .venv-phase2/bin/python scripts/generate_phase2_requirement_tests.py
 ```
 
-`tests/phase2/requirements/*` are generator-owned; never hand-edit.
+`tests/platform/requirements/*` are generator-owned; never hand-edit.
 
 **Gate expectation in this phase.** Run the audit with `--require-executed
 --run-validations --track LLM`, but expect frozen-revision errors on rows whose
@@ -90,10 +90,10 @@ denylist reports zero hits.
 
 ## Related Code Files
 
-- Create: 13 × `docs/phase2/evidence/llm/<rubric_id>.md` (IDs copied from the CSV)
+- Create: 13 × `docs/platform/evidence/llm/<rubric_id>.md` (IDs copied from the CSV)
 - Modify: `scripts/_phase2_rubric_items.py` (`EXECUTED_RUBRIC_IDS`, `EXECUTED_BEHAVIORAL_ASSERTIONS`)
-- Regenerate: `docs/phase2/rubric-matrix.csv`, `tests/phase2/requirements/test_llm_ac_13_routing.py`, `test_llm_ac_15_observability.py`
-- Modify: `docs/submission/routing_gateway.md`, `docs/submission/observability.md`, `docs/phase2/evidence/index.md`
+- Regenerate: `docs/platform/rubric-matrix.csv`, `tests/platform/requirements/test_llm_ac_13_routing.py`, `test_llm_ac_15_observability.py`
+- Modify: `docs/submission/routing_gateway.md`, `docs/submission/observability.md`, `docs/platform/evidence/index.md`
 
 ## Implementation Steps
 
@@ -121,7 +121,7 @@ denylist reports zero hits.
 8. Run the audit as described above; fix any gap by fixing the system and
    re-capturing that scenario atomically. Never soften an `expected_result`.
 9. Update `docs/submission/routing_gateway.md`, `observability.md` and
-   `docs/phase2/evidence/index.md` to link the new files.
+   `docs/platform/evidence/index.md` to link the new files.
 10. Only when every capture is written and re-verified: hibernate — pools to
     zero, evidence VM stopped — and record the closing credit balance for the
     freeze phase to commit.
@@ -134,7 +134,7 @@ denylist reports zero hits.
 - [ ] Reviewer -> reads the six correlated files -> they cite one identical trace ID, and the traces file contains the persisted trace JSON.
 - [ ] Reviewer -> reads the token-metrics file -> it covers tokens, round-trip time, TTFT and PII-catch frequency, matching the canonical CSV requirement.
 - [ ] Reviewer -> reads the gateway files -> they cite the served certificate's serial and `notBefore`.
-- [ ] Maintainer -> diffs `tests/phase2/requirements/` -> matches generator output exactly.
+- [ ] Maintainer -> diffs `tests/platform/requirements/` -> matches generator output exactly.
 - [ ] Cost owner -> runs `make gcp-status` -> both pools at 0 nodes, evidence VM stopped.
 
 ## Risk Assessment

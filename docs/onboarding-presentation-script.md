@@ -43,7 +43,7 @@ Một câu ngắn hơn:
 
 ## Điều phải nói chính xác
 
-Phase 1 hiện đã có local-first runtime evidence end-to-end. Nó dùng Airflow,
+the platform hiện đã có local-first runtime evidence end-to-end. Nó dùng Airflow,
 Kafka, MinIO, PostgreSQL, PySpark, DuckDB và PyTest.
 
 Adapter hiện tại là fixture-backed để test ổn định. `SourceAdapter` đã được thiết
@@ -60,7 +60,7 @@ Không nói:
 
 > Hệ thống hiện đang chạy live production data từ vnstock.
 
-Phase 1 cũng chưa train ML model. `distress_label` hiện là rule-based proxy,
+the platform cũng chưa train ML model. `distress_label` hiện là rule-based proxy,
 không phải validated credit-risk model.
 
 ## Speaker script — deck stakeholder-centric hiện tại
@@ -525,7 +525,7 @@ Warning checks:
 - volume drop;
 - Silver retention.
 
-PostgreSQL `project_metadata` lưu:
+PostgreSQL `ops` lưu:
 
 ```text
 pipeline_run_log
@@ -598,7 +598,7 @@ Phần speaker notes chi tiết cho stakeholder research đã được tách san
 ### Slide 13 — Stakeholder signal formula
 
 Đây là công thức đề xuất cho production, không phải công thức đang implement
-trong Phase 1:
+trong the platform:
 
 ```text
 human_risk_signal =
@@ -635,18 +635,18 @@ ground-truth label nếu chưa có outcome definition và approval process.
 7. Cutover có versioned source registry và fallback.
 8. Rollback bằng đổi source-registry version, không xóa dữ liệu.
 
-### Slide 15 — Phase 2 AI/product direction
+### Slide 15 — the platform AI/product direction
 
 **Nói:**
 
-“Phase 2 xây trên Gold foundation. RAG pipeline fetches trusted documents,
+“the platform xây trên Gold foundation. RAG pipeline fetches trusted documents,
 normalizes, chunks, deduplicates theo content hash, kiểm tra license/access/PII,
 embed và lưu vào PGVector. Product plane phục vụ analyst; evidence plane chứa
 feature/RAG services, agents, MCP, observability và deployment controls.”
 
 Điểm cần nói thật:
 
-- Phase 2 là additive, không sửa semantic Phase 1.
+- the platform là additive, không sửa semantic the platform.
 - RAG evidence mặc định còn dùng committed text fixtures.
 - Không gọi fixture UI là live production data.
 - Không claim component là deployed nếu chưa có runtime evidence.
@@ -756,9 +756,9 @@ Nhớ 7 ý:
 
 ## References trong repo
 
-- [Phase 1 source of truth](mini_coursework.md)
+- [the platform source of truth](mini_coursework.md)
 - [Data generator contract](01_data_generator.md)
-- [Schema design](02_schema_design.md)
+- [Schema design](architecture/data-model.md)
 - [Data contracts](07_data_contracts.md)
 - [System architecture](system-architecture.md)
 - [Onboarding production research briefing](../plans/reports/research-260809-1944-financial-distress-onboard-production.md)

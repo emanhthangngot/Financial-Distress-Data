@@ -21,7 +21,7 @@ implementation code.
 
 ## Implementation Steps
 
-1. Read `docs/phase2/product.md`, the auth phase plan, adjacent auth code, and
+1. Read `docs/platform/product.md`, the auth phase plan, adjacent auth code, and
    the existing live smoke suite.
 2. Define acceptance as WHO -> ACTION -> RESULT and preserve existing auth
    contracts.

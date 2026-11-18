@@ -33,7 +33,7 @@ limit, and the full metrics/logs/traces set.
 
 | WHO -> ACTION -> RESULT |
 |---|
-| Phase 04 source tests -> run `PYTHONDONTWRITEBYTECODE=1 .venv-phase2/bin/python -m pytest -p no:cacheprovider tests/phase2/test_observability.py tests/phase2/apps tests/phase2/agents` -> exit 0, **16 passed, 0 failed, 0 skipped** in 1.90s. |
+| Phase 04 source tests -> run `PYTHONDONTWRITEBYTECODE=1 .venv-phase2/bin/python -m pytest -p no:cacheprovider tests/platform/test_observability.py tests/platform/apps tests/platform/agents` -> exit 0, **16 passed, 0 failed, 0 skipped** in 1.90s. |
 | Phase 04 Python syntax check -> run `PYTHONDONTWRITEBYTECODE=1 .venv-phase2/bin/python -m compileall -q apps/drift-mcp/app apps/feature-mcp/app src/agents src/observability` -> exit 0. |
 | Web behavior tests -> run `pnpm --filter @distresslens/web exec vitest run src/app/api/assistant/stream/route.test.ts src/lib/data/live-registry-adapter.test.ts` -> **19 tests passed**, but exit 1 because the narrow run produced 23.51% line and 72.54% branch coverage against the package-wide 90% threshold. |
 | Web behavior tests -> rerun `pnpm --filter @distresslens/web exec vitest run --coverage.enabled=false src/app/api/assistant/stream/route.test.ts src/lib/data/live-registry-adapter.test.ts` -> exit 0, **2 files and 19 tests passed** in 1.45s. |
@@ -166,8 +166,8 @@ leaks what the log redaction removed.
 - Modify: `apps/feature-mcp/app/main.py`, `apps/drift-mcp/app/main.py`,
   `src/agents/*.py` — emit TTFT, token, PII-safety, per-agent and per-tool
   metrics and OTel spans with redacted attributes
-- Create: 13 evidence files under `docs/phase2/evidence/llm/`
-- Regenerate (never hand-edit): `tests/phase2/requirements/test_llm_ac_13_routing.py`,
+- Create: 13 evidence files under `docs/platform/evidence/llm/`
+- Regenerate (never hand-edit): `tests/platform/requirements/test_llm_ac_13_routing.py`,
   `test_llm_ac_15_observability.py`
 
 ## Implementation Steps

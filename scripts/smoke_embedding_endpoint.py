@@ -6,13 +6,13 @@ run manually as evidence, per phase-06-embedding-slice-notes.md Phase E4.
 Usage (after `kubectl port-forward -n kourier-system svc/kourier-internal
 18080:80` in another terminal):
 
-    .venv-phase2/bin/python scripts/smoke_embedding_endpoint.py
+    .venv-platform/bin/python scripts/smoke_embedding_endpoint.py
 
 Or override the endpoint/host:
 
     EMBEDDING_ENDPOINT=http://127.0.0.1:18080/v1/embeddings \\
     EMBEDDING_HOST_HEADER=fd-embeddings-predictor.default.svc.cluster.local \\
-    .venv-phase2/bin/python scripts/smoke_embedding_endpoint.py
+    .venv-platform/bin/python scripts/smoke_embedding_endpoint.py
 """
 
 from __future__ import annotations

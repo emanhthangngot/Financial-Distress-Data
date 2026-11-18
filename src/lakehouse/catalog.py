@@ -4,7 +4,7 @@ The production deployment uses an Iceberg REST catalog (Lakekeeper).  The
 source repository deliberately keeps the unit-test contract local and
 network-free: :func:`load_catalog` validates the same connection settings and
 returns an in-memory catalog implementing the table/snapshot operations used by
-the Phase 2 jobs.  A real REST client can be substituted at the boundary
+the platform .obs.  A real REST client can be substituted at the boundary
 without changing callers.
 """
 
@@ -37,7 +37,7 @@ class CatalogConfig:
 
     name: str = "lakekeeper"
     uri: str = "http://lakekeeper:8181/catalog"
-    warehouse: str = "s3://financial-distress-lake/phase2"
+    warehouse: str = "s3://financial-distress-lake/platform"
     mode: str = "memory"
     token: str | None = field(default=None, repr=False)
 
@@ -56,7 +56,7 @@ class CatalogConfig:
         return cls(
             name=env.get("ICEBERG_CATALOG_NAME", "lakekeeper"),
             uri=env.get("ICEBERG_CATALOG_URI", "http://lakekeeper:8181/catalog"),
-            warehouse=env.get("ICEBERG_WAREHOUSE", "s3://financial-distress-lake/phase2"),
+            warehouse=env.get("ICEBERG_WAREHOUSE", "s3://financial-distress-lake/platform"),
             mode=env.get("ICEBERG_CATALOG_MODE", "memory"),
             token=env.get("ICEBERG_CATALOG_TOKEN"),
         )
@@ -112,6 +112,7 @@ class LocalIcebergTable:
                 f"partition fields not found in schema: {sorted(unknown_partitions)}"
             )
         self._snapshots: list[Snapshot] = []
+        self._tags: dict[str, str] = {}
         self._lock = threading.RLock()
 
     @property
@@ -213,9 +214,40 @@ class LocalIcebergTable:
                 return snapshot
         raise CatalogError(f"unknown snapshot {snapshot_id!r} for {self.identifier}")
 
+    def tag(self, name: str, snapshot_id: str | None = None) -> str:
+        """Point a named tag at a snapshot (defaults to the current one).
+
+        Tags are Iceberg's mechanism for a stable, human-readable reference to
+        an immutable snapshot — e.g. ``holdout-v1`` — so re-reading by tag
+        always resolves to the same byte-identical rows regardless of later
+        commits to the table's main history.
+        """
+        with self._lock:
+            resolved = self._resolve_snapshot(snapshot_id)
+            if resolved is None:
+                raise CatalogError(f"cannot tag {self.identifier}: no snapshot to reference")
+            self._tags[str(name)] = resolved.snapshot_id
+            return resolved.snapshot_id
+
+    def resolve_tag(self, name: str) -> str:
+        with self._lock:
+            try:
+                return self._tags[str(name)]
+            except KeyError as exc:
+                raise CatalogError(f"unknown tag {name!r} for {self.identifier}") from exc
+
+    @property
+    def tags(self) -> dict[str, str]:
+        with self._lock:
+            return dict(self._tags)
+
+    def read_tag(self, name: str) -> list[dict[str, Any]]:
+        """Time-travel read by tag — byte-identical across calls (same snapshot_id)."""
+        return self.read(self.resolve_tag(name))
+
 
 class LocalIcebergCatalog:
-    """In-memory implementation of the subset used by Phase 2 contracts."""
+    """In-memory implementation of the subset used by platform .ontracts."""
 
     def __init__(self, config: CatalogConfig | None = None) -> None:
         self.config = config or CatalogConfig()
@@ -230,7 +262,7 @@ class LocalIcebergCatalog:
     ) -> LocalIcebergTable:
         normalized = str(identifier).strip()
         if "." not in normalized:
-            raise CatalogError("table identifier must include a namespace, e.g. phase2.features")
+            raise CatalogError("table identifier must include a namespace, e.g. platform.features")
         with self._lock:
             if normalized in self._tables:
                 raise CatalogError(f"table already exists: {normalized}")
@@ -246,7 +278,7 @@ class LocalIcebergCatalog:
         except KeyError as exc:
             raise CatalogError(f"unknown table: {identifier}") from exc
 
-    def list_tables(self, namespace: str = "phase2") -> list[str]:
+    def list_tables(self, namespace: str = "platform") -> list[str]:
         prefix = f"{namespace}."
         return sorted(name for name in self._tables if name.startswith(prefix))
 
@@ -264,9 +296,9 @@ def load_catalog(
     """
     catalog = LocalIcebergCatalog(config or CatalogConfig.from_env())
     if register_defaults:
-        from .tables import register_phase2_tables
+        from .tables import register_platform_tables
 
-        register_phase2_tables(catalog)
+        register_platform_tables(catalog)
     return catalog
 
 

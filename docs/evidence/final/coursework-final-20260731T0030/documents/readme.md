@@ -120,7 +120,7 @@ uv run python scripts/audit_mini_coursework_rubric.py \
 - [Flink stream processing](docs/flink-stream-processing.md)
 - [Airflow orchestration](docs/data-pipeline-orchestration.md)
 - [DataHub governance](docs/data-governance.md)
-- [Schema design](docs/schema-design.md)
+- [Schema design](docs/architecture/data-model.md)
 - [Docker optimization](docs/docker-optimization.md)
 - [Novel idea: evidence manifest](docs/novel-idea-evidence-manifest.md)
 - [Novel idea: PIT leakage guard](docs/novel-idea-pit-leakage-guard.md)

@@ -1,4 +1,4 @@
-"""psycopg-backed repository for the ``ml_metadata`` RAG tables
+"""psycopg-backed repository for the ``ml`` RAG tables
 (sql/init_ml_metadata.sql): rag_document, rag_chunk, rag_quarantine,
 rag_ingestion_run.
 
@@ -19,7 +19,7 @@ runs, so the obligation is documented here instead. ``src.llm.rag_pipeline.
 run_ingestion_task`` is the one production caller and does call it before
 constructing ``PgVectorStore``, verified against a real
 ``pgvector/pgvector:pg16`` container (fresh insert + idempotent rerun).
-``tests/phase2/pipelines/test_pgvector_store.py`` still skips whenever the
+``tests/platform/pipelines/test_pgvector_store.py`` still skips whenever the
 pgvector extension itself is unavailable in the test environment.
 """
 
@@ -43,7 +43,7 @@ class PgVectorStore:
     def document_exists(self, document_hash: str) -> bool:
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT 1 FROM ml_metadata.rag_document WHERE document_hash = %s",
+                "SELECT 1 FROM ml.rag_document WHERE document_hash = %s",
                 (document_hash,),
             )
             return cur.fetchone() is not None
@@ -52,7 +52,7 @@ class PgVectorStore:
         with self.conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO ml_metadata.rag_document
+                INSERT INTO ml.rag_document
                     (document_hash, source_uri, source_name, company, report_date,
                      license, access_class, fetched_ts, first_ingested_ts)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -75,8 +75,7 @@ class PgVectorStore:
     def content_hash_exists(self, content_hash: str, embedding_version: str) -> bool:
         with self.conn.cursor() as cur:
             cur.execute(
-                "SELECT 1 FROM ml_metadata.rag_chunk WHERE content_hash = %s "
-                "AND embedding_version = %s",
+                "SELECT 1 FROM ml.rag_chunk WHERE content_hash = %s " "AND embedding_version = %s",
                 (content_hash, embedding_version),
             )
             return cur.fetchone() is not None
@@ -97,7 +96,7 @@ class PgVectorStore:
             for chunk, vector in chunks_with_vectors:
                 cur.execute(
                     """
-                    INSERT INTO ml_metadata.rag_chunk
+                    INSERT INTO ml.rag_chunk
                         (chunk_id, document_hash, content_hash, chunk_index, chunk_text,
                          source_uri, company, report_date, parser_version, embedding_model,
                          embedding_version, embedding, access_class, ingestion_version)
@@ -129,7 +128,7 @@ class PgVectorStore:
         with self.conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO ml_metadata.rag_quarantine
+                INSERT INTO ml.rag_quarantine
                     (chunk_id, document_hash, content_hash, source_uri, company, report_date,
                      access_class, violation_reason)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -164,12 +163,12 @@ class PgVectorStore:
         ``source_sha`` are DAG-run identity, not pipeline state, so this is
         deferred to whichever slice wires the DAG orchestrator (4C) or the
         evidence run (4D) rather than invented here. The method and the
-        ``ml_metadata.rag_ingestion_run`` table exist now so that caller has
+        ``ml.rag_ingestion_run`` table exist now so that caller has
         nothing left to design."""
         with self.conn.cursor() as cur:
             cur.execute(
                 """
-                INSERT INTO ml_metadata.rag_ingestion_run
+                INSERT INTO ml.rag_ingestion_run
                     (ingestion_version, run_id, started_ts, finished_ts, documents_fetched,
                      chunks_new, chunks_reused, chunks_quarantined, source_sha)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)

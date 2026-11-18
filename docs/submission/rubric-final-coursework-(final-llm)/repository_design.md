@@ -41,13 +41,13 @@ real logic — tool-budget enforcement and hop-bound enforcement respectively
 — the same bound (`max_hops=2`) proven live in `coordinator_agent.md`.
 
 ```text
-$ pytest tests/phase2/verification/test_contract_implementations.py -q
+$ pytest tests/platform/verification/test_contract_implementations.py -q
 .........                                                                 [100%]
 9 passed in 0.12s
 ```
 
 Full evidence:
-[`LLM-repository-design-clean-code-clean-repo-demonstr.md`](../../phase2/evidence/llm/LLM-repository-design-clean-code-clean-repo-demonstr.md).
+[`LLM-repository-design-clean-code-clean-repo-demonstr.md`](../../platform/evidence/llm/LLM-repository-design-clean-code-clean-repo-demonstr.md).
 
 ## Part II — Two-repository separation
 

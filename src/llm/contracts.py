@@ -1,7 +1,7 @@
 """LLM track contracts and dependency-injected reference implementations.
 
 The five abstract services are the stable ports described in
-``docs/phase2/low-level-design.md``. Concrete classes keep storage, benchmark,
+``docs/platform/low-level-design.md``. Concrete classes keep storage, benchmark,
 and GitOps effects behind injected adapters while the contracts own validation,
 state transitions, and bounded failure policies. Importing this module never
 opens a network connection or mutates a repository.

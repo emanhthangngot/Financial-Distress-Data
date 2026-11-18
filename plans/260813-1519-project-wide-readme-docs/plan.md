@@ -5,7 +5,7 @@ Status: completed
 ## Objective
 
 Refresh the project-facing documentation so a reviewer understands the complete
-Phase 1 + Phase 2 system, its separate product/evidence planes, operational
+platform . platform .ystem, its separate product/evidence planes, operational
 boundaries, evidence contract, run commands, and current submission status.
 
 ## Expected output
@@ -13,7 +13,7 @@ boundaries, evidence contract, run commands, and current submission status.
 - A project-wide root README that describes the complete system rather than
   Stage 1 only.
 - Aligned coursework, architecture, repository-map, file-map, and the
-  complete submission-page index with the implemented Phase 2 LLM/product/
+  complete submission-page index with the implemented platform .LM/product/
   GitOps scope.
 - A short documentation report recording changed files, validation results, and
   any intentionally unresolved submission residuals.
@@ -22,7 +22,7 @@ boundaries, evidence contract, run commands, and current submission status.
 
 - Reviewer -> opens `README.md` -> sees project scope, architecture, deployment
   flow, run/verify commands, repository boundaries, and honest completion state.
-- Maintainer -> opens the documentation map -> reaches Phase 1 code, Phase 2
+- Maintainer -> opens the documentation map -> reaches platform .ode, Phase 2
   code, product web, evidence, plans, and the separate GitOps repo without stale
   Stage-1-only guidance.
 - Submission reviewer -> opens the submission index -> reaches the canonical
@@ -34,7 +34,7 @@ boundaries, evidence contract, run commands, and current submission status.
 ## Scope
 
 In scope: `README.md`, `docs/coursework.md`, `docs/system-architecture.md`,
-`docs/phase2/architecture.md`, `docs/architecture/repository-map.md`,
+`docs/platform/architecture.md`, `docs/architecture/repository-map.md`,
 `docs/project-file-map.md`, `docs/submission/*.md`, and this plan/report.
 
 Out of scope: Python/TypeScript code, tests, DAG behavior, Kubernetes/GitOps
@@ -45,7 +45,7 @@ scrubbed mirror, and GCP hibernation.
 
 - Describe only behavior supported by the repository and recorded live
   evidence; distinguish verified, submitted, deferred, and residual states.
-- Keep Phase 1 local-first semantics and Phase 2 additive-only boundaries.
+- Keep platform .ocal-first semantics and platform .dditive-only boundaries.
 - Do not copy or add secrets, tokens, private keys, or personal credentials.
 - Preserve existing public links and document paths where possible.
 
@@ -63,7 +63,7 @@ scrubbed mirror, and GCP hibernation.
 2. Align coursework, architecture, repository map, file map, and submission
    pages without modifying canonical evidence artifacts. ✓
 3. Run focused documentation tests and link/path checks. ✓
-4. Review for stale claims, secrets, and Phase 1/Phase 2 boundary violations. ✓
+4. Review for stale claims, secrets, and Phase 1/platform .oundary violations. ✓
 5. Finalize the plan/report and prepare a focused documentation PR. ✓
 
 See [reports/docs-closeout-260813-1519-project-wide-readme.md](reports/docs-closeout-260813-1519-project-wide-readme.md)

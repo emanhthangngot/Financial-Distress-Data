@@ -42,14 +42,14 @@ Doing this by hand at 3am on day 7 is the most likely late failure in the plan.
   operations). Each capture records route, state, viewport, source SHA, GitOps
   SHA, data/model/agent version, expected/actual result and redaction status;
   the original approved binaries are retained unchanged when supplied.
-- Each major `docs/phase2/` section explains what an image proves. No orphan screenshot dump.
+- Each major `docs/platform/` section explains what an image proves. No orphan screenshot dump.
 - “Designed”, “configured”, “executed”, and “passed” remain distinct statuses.
 - Capture only the relevant window/region and redact account IDs, hosts where needed, tokens, emails and private data.
 
 ## Mandatory Evidence Runs
 
-1. Run the Phase 1 full quality/evidence gate to prove no regression — this also
-   proves `.venv` was never mutated by Phase 2 dependencies.
+1. Run the platform .ull quality/evidence gate to prove no regression — this also
+   proves `.venv` was never mutated by platform .ependencies.
 2. Run coverage, mutation (`mutmut`, on its declared module subset),
    equivalence/boundary, Hypothesis and security gates for the LLM track.
 3. Capture the GCP evidence run: `terraform apply` plan/output, the DuckDNS
@@ -84,20 +84,20 @@ Doing this by hand at 3am on day 7 is the most likely late failure in the plan.
     trial billing account was never upgraded to paid.
 12. Populate `docs/submission/*.md` (created as skeletons in phase-03) as the
     reviewer-facing index: one file per rubric section, each linking into its
-    `docs/phase2/evidence/` artifacts. `cost.md` records the GCP spend measured
+    `docs/platform/evidence/` artifacts. `cost.md` records the GCP spend measured
     in step 11 against the < USD 100 target.
 
 ## Reviewer Document Set
 
 - `README.md`: business, TOC, repo map and high-level numbered deployment diagram. Every deployable is a node, every primary edge is solid, numbered/described, and included in a flow legend; repository-wide file/module/class/function docstrings are checked.
-- `docs/phase2/ml.md`, `llm.md`, `data-and-feast.md`, `gitops.md`, `iac.md`, `security.md`, `observability.md`, `testing.md`, `cost-and-operations.md`.
-- `docs/phase2/evidence/index.md`: rubric-ID index linked to reports, screenshots and raw outputs.
-- `docs/phase2/low-level-design.md`: five classes per track and design patterns.
-- `docs/phase2/novel-ideas.md`: four ideas and executed proof.
+- `docs/platform/ml.md`, `llm.md`, `data-and-feast.md`, `gitops.md`, `iac.md`, `security.md`, `observability.md`, `testing.md`, `cost-and-operations.md`.
+- `docs/platform/evidence/index.md`: rubric-ID index linked to reports, screenshots and raw outputs.
+- `docs/platform/low-level-design.md`: five classes per track and design patterns.
+- `docs/platform/novel-ideas.md`: four ideas and executed proof.
 - `docs/submission/*.md`: one reviewer-facing file per rubric section (`iac.md`,
   `security.md`, `observability.md`, `ci_cd.md`, `cost.md`, `routing_gateway.md`,
   `validation_verification.md`, …), each linking into its
-  `docs/phase2/evidence/` artifacts rather than duplicating them. Skeletons
+  `docs/platform/evidence/` artifacts rather than duplicating them. Skeletons
   created in phase-03, populated here.
 
 ## Validation
@@ -110,9 +110,9 @@ behavior-validation gates. Added in phase-03; without it this command fails with
 57 errors regardless of how good the LLM evidence is.
 
 Before promotion, record `PHASE1_BASE_SHA` as the immutable 40-hex commit
-immediately before Phase 2 work. Do not substitute a moving branch name. The
+immediately before platform .ork. Do not substitute a moving branch name. The
 gate compares every evidence source/GitOps SHA with the two checked-out
-`HEAD`s and rejects protected Phase 1 changes against that frozen baseline.
+`HEAD`s and rejects protected platform .hanges against that frozen baseline.
 Both source and GitOps checkouts must be clean; the recorded commits therefore
 contain the implementation, manifests, and evidence that the auditor reads.
 - Link/image integrity, duplicate/stale screenshot, secret/PII, timestamp/version and rubric-total checks.

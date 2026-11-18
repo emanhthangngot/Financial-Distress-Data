@@ -1,0 +1,20 @@
+{
+  "scope": [
+    "src/ml/reproducibility_manifest.py",
+    "src/quality/dq_checks.py",
+    "src/transforms/silver/core.py"
+  ],
+  "test_selection": [
+    "tests/platform/verification/test_mutmut_target.py",
+    "tests/platform/requirements/test_ml_ac_04_validation.py",
+    "tests/test_dq_checks.py",
+    "tests/test_bronze_to_silver.py"
+  ],
+  "score": 61.71,
+  "killed": 427,
+  "survived": 265,
+  "timeout": 0,
+  "no_tests": 0,
+  "total": 692,
+  "mutmut_run_exit_code": 0
+}

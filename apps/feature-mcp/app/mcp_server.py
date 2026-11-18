@@ -12,7 +12,8 @@ from typing import Any, Protocol
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.observability.telemetry import Telemetry, inject_trace_headers, redact_fields
+from src.llm.http_endpoint import HttpEndpoint, endpoint_ready, mcp_allowed_hosts, reject_redirect
+from src.observability.telemetry import Telemetry, redact_fields
 
 _DEFAULT_TELEMETRY = Telemetry("feature-mcp")
 
@@ -38,7 +39,7 @@ class LoggingTraceSink:
     """Emit a structured, redaction-safe MCP audit event to container logs."""
 
     def emit(self, event: str, attributes: dict[str, Any]) -> None:
-        logging.getLogger("phase2.mcp.audit").info(
+        logging.getLogger("platform.mcp.audit").info(
             json.dumps(
                 redact_fields({"event": event, **attributes}),
                 sort_keys=True,
@@ -49,16 +50,19 @@ class LoggingTraceSink:
 class HttpxFeatureApiClient:
     """Async transport adapter to the FastAPI business API boundary."""
 
-    def __init__(self, base_url: str, timeout_seconds: float = 5.0) -> None:
-        self._base_url = base_url
+    def __init__(self, endpoint: HttpEndpoint | None, timeout_seconds: float = 5.0) -> None:
+        self._endpoint = endpoint
         self._timeout = timeout_seconds
         self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> HttpxFeatureApiClient:
-        self._client = httpx.AsyncClient(
-            base_url=self._base_url,
-            timeout=self._timeout,
-        )
+        if self._endpoint is not None:
+            self._client = httpx.AsyncClient(
+                base_url=self._endpoint.url,
+                timeout=self._timeout,
+                trust_env=self._endpoint.trust_env,
+                event_hooks={"response": [reject_redirect]},
+            )
         return self
 
     async def __aexit__(self, *_exc: Any) -> None:
@@ -66,25 +70,34 @@ class HttpxFeatureApiClient:
             await self._client.aclose()
             self._client = None
 
-    def _active_client(self) -> httpx.AsyncClient:
-        if self._client is None:
-            raise RuntimeError("feature API client is not running")
-        return self._client
+    async def ready(self) -> bool:
+        return (
+            self._client is not None
+            and self._endpoint is not None
+            and await endpoint_ready(self._client, self._endpoint.at("/readyz"))
+        )
+
+    def _configured_client(self) -> tuple[httpx.AsyncClient, HttpEndpoint]:
+        if self._client is None or self._endpoint is None:
+            raise httpx.HTTPError("feature API client is unavailable")
+        return self._client, self._endpoint
 
     async def feature_by_id(self, user_id: str, feature_names: tuple[str, ...]) -> dict[str, Any]:
-        response = await self._active_client().post(
+        client, endpoint = self._configured_client()
+        response = await client.post(
             "/v1/features/by-id",
             json={"user_id": user_id, "feature_names": list(feature_names)},
-            headers=inject_trace_headers(),
+            headers=endpoint.headers(),
         )
         response.raise_for_status()
         return dict(response.json()["features"])
 
     async def rag_by_id(self, chunk_id: str) -> dict[str, Any]:
-        response = await self._active_client().post(
+        client, endpoint = self._configured_client()
+        response = await client.post(
             "/v1/rag/by-id",
             json={"chunk_id": chunk_id},
-            headers=inject_trace_headers(),
+            headers=endpoint.headers(),
         )
         response.raise_for_status()
         return dict(response.json())
@@ -172,14 +185,7 @@ def create_mcp_server(service: FeatureMcpService):
         stateless_http=True,
         json_response=True,
         transport_security=TransportSecuritySettings(
-            allowed_hosts=[
-                "feature-mcp",
-                "feature-mcp:*",
-                "feature-mcp.phase2-data.svc.cluster.local",
-                "feature-mcp.phase2-data.svc.cluster.local:*",
-                "127.0.0.1:*",
-                "localhost:*",
-            ],
+            allowed_hosts=mcp_allowed_hosts(),
             allowed_origins=[],
         ),
     )
@@ -217,8 +223,7 @@ class McpRuntime:
 
 def create_mcp_runtime(telemetry: Telemetry | None = None) -> McpRuntime:
     """Assemble transport dependencies without opening sockets or sessions."""
-    base_url = os.getenv("FEATURE_API_BASE_URL", "http://127.0.0.1:8000")
-    api = HttpxFeatureApiClient(base_url)
+    api = HttpxFeatureApiClient(HttpEndpoint.from_env("FEATURE_API_BASE_URL", "FEATURE_API_TOKEN"))
     service = FeatureMcpService(
         api=api,
         grants=_grants_from_env(),

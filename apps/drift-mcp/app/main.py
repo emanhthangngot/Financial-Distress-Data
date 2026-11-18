@@ -1,4 +1,4 @@
-"""Async FastAPI facade over the pure Phase 2 drift generator."""
+"""Async FastAPI facade over the pure platform .rift generator."""
 
 from __future__ import annotations
 
@@ -235,6 +235,12 @@ def create_app(metrics: MetricsHook | None = None, mount_mcp: bool = True) -> Fa
     @application.get("/readyz", response_model=HealthResponse)
     async def readyz() -> HealthResponse:
         return HealthResponse(status="ready")
+
+    @application.get("/mcp-readyz", response_model=HealthResponse)
+    async def mcp_readyz() -> HealthResponse | JSONResponse:
+        if mcp_runtime is not None and await mcp_runtime.api.ready():
+            return HealthResponse(status="ready")
+        return _error(503, "not_ready", "MCP upstream is unavailable")
 
     @application.post("/v1/drift/report", response_model=DriftResponse)
     async def drift_report(payload: DriftRequest) -> DriftResponse:

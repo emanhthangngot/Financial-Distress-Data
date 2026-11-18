@@ -1,8 +1,8 @@
-# Phase 2 Review — Status Report (2026-08-03, local, uncommitted)
+# platform .eview — Status Report (2026-08-03, local, uncommitted)
 
 ## Verdict
 
-**Phase 2 chưa hoàn thành. Checklist KHÔNG tick** — chỉ mới xong phần foundation (DB/auth layer), chưa có product shell (UI) như tiêu đề phase yêu cầu.
+**platform .hưa hoàn thành. Checklist KHÔNG tick** — chỉ mới xong phần foundation (DB/auth layer), chưa có product shell (UI) như tiêu đề phase yêu cầu.
 
 Plan status field hiện: `status: todo` — giữ nguyên, đúng thực tế.
 
@@ -16,7 +16,7 @@ Plan status field hiện: `status: todo` — giữ nguyên, đúng thực tế.
 | Session state machine contract | `packages/contracts/src/session-state.ts`, `session-transitions.json` | OFF→...→DESTROYING + FAILED/EXPIRED, single source of truth |
 | Role/RBAC contract | `packages/contracts/src/role.ts` | analyst/platform_viewer/operator/admin |
 | Outbox event type | `packages/contracts/src/outbox-event.ts` | type only, chưa có worker/consumer |
-| RLS/RBAC test suite | `tests/phase2/product/test_rbac_rls.py` | 19 pytest case, real ephemeral Postgres |
+| RLS/RBAC test suite | `tests/platform/product/test_rbac_rls.py` | 19 pytest case, real ephemeral Postgres |
 | Contract vitest | `packages/contracts/src/*.test.ts` | |
 | CI job | `.github/workflows/ci.yml` | contracts job + Postgres binaries |
 | Next.js scaffold | `apps/web/` (pnpm workspace) | **default `create-next-app` template, chưa sửa** |
@@ -27,7 +27,7 @@ Plan status field hiện: `status: todo` — giữ nguyên, đúng thực tế.
 - Agent chat UI / agent registry UI — không có route nào ngoài `apps/web/src/app`.
 - Admin surfaces (session timeline, cost, GitOps revision, health, evidence export, promotion, rollback, teardown UI) — không có.
 - Fixed disclaimer ("educational coursework, not investment advice") — grep toàn repo không match, chưa render ở đâu.
-- `docs/phase2/product.md`, `docs/phase2/security/rbac.md`, `docs/phase2/evidence/product/` — không tồn tại (Files section của phase-02 yêu cầu tạo).
+- `docs/platform/product.md`, `docs/platform/security/rbac.md`, `docs/platform/evidence/product/` — không tồn tại (Files section của phase-02 yêu cầu tạo).
 - Playwright flows (analyst/viewer/operator/admin/EKS-off/cost-cap/fencing/chat/registry) — không có Playwright test project trong repo (chỉ `.venv` chứa lib Playwright do dependency khác).
 - Outbox worker (claim leases, reject stale fencing token) — chỉ có TS type, chưa có consumer process.
 - Preflight cost projection UI, rate limit/AI quota enforcement tại product boundary — chưa implement.
@@ -37,9 +37,9 @@ Plan status field hiện: `status: todo` — giữ nguyên, đúng thực tế.
 
 Tất cả 5 success criteria đều cần UI/E2E flow (Playwright) để verify — hiện tại không có UI thật nên không thể chứng minh criteria nào đạt. 0/5 tick được.
 
-## Phase 1 (`phase-01-start.md`) — tham chiếu nhanh
+## platform .`phase-01-start.md`) — tham chiếu nhanh
 
-Đã đóng, checklist tick đủ, qua 3 vòng review (Session 1-3), status `in_review`. Không phải phần review yêu cầu lần này nhưng đối chiếu để xác nhận Phase 2 build đúng trên nền spec đã lock (rubric matrix, ADR, class contracts) — không phát hiện lệch spec ở phần đã làm của Phase 2.
+Đã đóng, checklist tick đủ, qua 3 vòng review (Session 1-3), status `in_review`. Không phải phần review yêu cầu lần này nhưng đối chiếu để xác nhận platform .uild đúng trên nền spec đã lock (rubric matrix, ADR, class contracts) — không phát hiện lệch spec ở phần đã làm của Phase 2.
 
 ## Đề xuất
 

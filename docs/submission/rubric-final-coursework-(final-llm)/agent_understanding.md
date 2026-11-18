@@ -33,7 +33,7 @@ Port-forward feature-mcp; run with
 
 The agent never connects to Redis or PostgreSQL directly — every value comes
 through the governed MCP tool call. Full evidence:
-[`LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a.md`](../../phase2/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a.md).
+[`LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a.md`](../../platform/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebook-demonstrate-a.md).
 
 ## Part II — Two-tool notebook
 
@@ -51,7 +51,7 @@ Port-forward feature-mcp and drift-mcp; feature scope
 
 One bounded agent invocation calls both governed tools concurrently with
 distinct scopes per tool. Full evidence:
-[`LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra.md`](../../phase2/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra.md).
+[`LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra.md`](../../platform/evidence/llm/LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra.md).
 
 ## Limitations
 

@@ -3,7 +3,7 @@ digraph W22Deployment {
         rankdir=TB,
         fontname="Helvetica",
         fontsize=14,
-        label="Stage 1 Local Lakehouse - Deployable Units and Data Flow",
+        label="platform Local Lakehouse - Deployable Units and Data Flow",
         labelloc=t,
         pad=0.4,
         nodesep=0.4,
@@ -107,7 +107,7 @@ digraph W22Deployment {
         fontsize=10;
         labeljust=l;
         postgres [
-            label="PostgreSQL\nschema: project_metadata\npipeline_run_log\ndata_quality_result\ndataset_freshness\nfailed_records",
+            label="PostgreSQL\nschema: ops\npipeline_run_log\ndata_quality_result\ndataset_freshness\nfailed_records",
             fillcolor="#fecaca",
             color="#991b1b"
         ];

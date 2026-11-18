@@ -72,9 +72,9 @@ worker's operational contract.
 - Create: `scripts/phase2/outbox-worker.ts` — entrypoint, signal handling, backoff loop
 - Create: `apps/web/src/lib/server/outbox-handlers.ts` + test — registry, unknown-state failure, no-infrastructure placeholder handler
 - Modify: `apps/web/package.json` — `outbox:worker` script
-- Create: `tests/phase2/product/test_outbox_worker.py` — lease, concurrency and fencing behavior against the ephemeral Postgres the RLS suite already boots
-- Modify: `docs/phase2/product.md` — how to run the worker, what it guarantees, what it does not yet do
-- Modify: `docs/phase2/architecture.md` — the worker's place in the lifecycle path (only if the current diagram omits it)
+- Create: `tests/platform/product/test_outbox_worker.py` — lease, concurrency and fencing behavior against the ephemeral Postgres the RLS suite already boots
+- Modify: `docs/platform/product.md` — how to run the worker, what it guarantees, what it does not yet do
+- Modify: `docs/platform/architecture.md` — the worker's place in the lifecycle path (only if the current diagram omits it)
 
 ## Implementation Steps
 
@@ -87,7 +87,7 @@ worker's operational contract.
    derive a stable `workerId` from hostname + pid, run the loop, install signal
    handlers that stop after the current batch.
 4. Write the pytest integration cases against the ephemeral Postgres used by
-   `tests/phase2/product/conftest.py`: two workers claim disjoint sets; an
+   `tests/platform/product/conftest.py`: two workers claim disjoint sets; an
    expired lease returns the event to the pool; a completion after a superseding
    transition is refused as stale fencing and the event ends FAILED; attempts
    beyond `maxAttempts` stop being retried.
@@ -96,14 +96,14 @@ worker's operational contract.
 
 ## Success Criteria
 
-- [x] Operator -> requests a provision -> the worker claims the event within one poll interval, completes it, and the session advances to the target state. Proven at the SQL layer: `request_session_transition` sets the session's state atomically with the outbox insert; `test_two_workers_claim_disjoint_event_sets`/`test_fail_below_max_attempts_returns_to_pending` (`tests/phase2/product/test_outbox_worker.py`) exercise claim through complete against a real Postgres.
+- [x] Operator -> requests a provision -> the worker claims the event within one poll interval, completes it, and the session advances to the target state. Proven at the SQL layer: `request_session_transition` sets the session's state atomically with the outbox insert; `test_two_workers_claim_disjoint_event_sets`/`test_fail_below_max_attempts_returns_to_pending` (`tests/platform/product/test_outbox_worker.py`) exercise claim through complete against a real Postgres.
 - [x] Two workers -> run against the same queue -> claim disjoint event sets; no event is handled twice. `test_two_workers_claim_disjoint_event_sets`.
 - [x] A worker -> is killed mid-lease -> the event returns to the pool after the lease expires and another worker completes it. `test_expired_lease_returns_event_to_pool`.
 - [x] A transition supersedes an in-flight event -> the worker's `complete_outbox_event` is refused as stale fencing -> the event is FAILED and the session is unchanged. `test_completion_after_superseding_transition_is_stale_fencing`. Fixed a real defect this test caught: the original SQL raised an exception on stale fencing, which rolled back the very FAILED mark it was supposed to leave (Postgres aborts a statement's implicit transaction on an uncaught exception) — `complete_outbox_event` now returns the FAILED row instead of raising (`supabase/migrations/20260805100000_phase2_outbox_worker_service_role_access.sql`); `drainOutbox` reads `data.status` accordingly.
 - [x] An event whose `target_state` has no handler -> fails with a named error, increments attempts, and never reports success. `outbox-handlers.test.ts` (`NoOutboxHandlerError`) composes with the existing `drainOutbox` fail-path test.
 - [x] Worker receives `SIGTERM` -> finishes the in-flight batch, exits 0, leaves no event claimed past its lease. `outbox-worker-loop.test.ts` proves the shutdown ordering (`ShutdownController`); the entrypoint (`scripts/phase2/outbox-worker.ts`) wires it to `SIGTERM`/`SIGINT`.
 - [ ] Worker logs after a full run -> contain event ids and outcomes, and contain no fencing token and no service-role key. Not automated — no test captures and asserts on log output; code review confirms the `log()` calls in `scripts/phase2/outbox-worker.ts` never reference the fencing token or the service-role key, but that is inspection, not a runnable check.
-- [x] `.venv/bin/python -m pytest tests/phase2/product -q`, `pnpm test`, `pnpm typecheck`, `pnpm lint` -> pass. 44/44 pytest, 196/196 vitest (71 contracts + 125 web), typecheck and lint clean on this branch.
+- [x] `.venv/bin/python -m pytest tests/platform/product -q`, `pnpm test`, `pnpm typecheck`, `pnpm lint` -> pass. 44/44 pytest, 196/196 vitest (71 contracts + 125 web), typecheck and lint clean on this branch.
 
 ## Risk Assessment
 
@@ -120,7 +120,7 @@ worker's operational contract.
 > `fail_outbox_event`; the SQL guarantees (lease via `for update skip locked`,
 > stale-fencing refusal, `maxAttempts`) live in
 > `supabase/migrations/20260804150000_phase2_outbox_worker.sql`. The RLS pytest
-> harness (`tests/phase2/product/conftest.py`) boots an ephemeral real Postgres —
+> harness (`tests/platform/product/conftest.py`) boots an ephemeral real Postgres —
 > the worker integration cases reuse it.
 
 ### T3.1 — Handler registry
@@ -139,11 +139,11 @@ worker's operational contract.
 
 ### T3.3 — Lease/fencing integration pytest
 
-- **Files:** Create `tests/phase2/product/test_outbox_worker.py`.
+- **Files:** Create `tests/platform/product/test_outbox_worker.py`.
 - **Spec:** against the ephemeral Postgres from `conftest.py`, call the SQL functions directly with a fake `workerId`; cases: two workers (`w1`, `w2`) claim disjoint event sets (insert several `outbox_events` rows via `request_session_transition`); a claimed event whose lease has passed (`lease_expiry < now()`) is reclaimable by another worker; `complete_outbox_event` with a rotated fencing token (perform a second `request_session_transition`) -> raises `stale fencing token` and the event row ends `FAILED` with session unchanged; `fail_outbox_event` beyond `maxAttempts` -> event stays `FAILED`, before the cap -> returns to `PENDING`.
-- **Verify:** `.venv/bin/python -m pytest tests/phase2/product -q`.
+- **Verify:** `.venv/bin/python -m pytest tests/platform/product -q`.
 
 ### T3.4 — Package script + docs + full gates
 
-- **Files:** Modify `apps/web/package.json` (`"outbox:worker": "tsx scripts/phase2/outbox-worker.ts"` or the ts-node runner this repo uses — check `pnpm` workspace conventions first); Modify `docs/phase2/product.md` (how to run the worker, guarantees, what it does not yet do); Modify `docs/phase2/architecture.md` only if the lifecycle diagram omits the worker.
-- **Verify:** `.venv/bin/python -m pytest tests/phase2/product -q && pnpm test && pnpm typecheck && pnpm lint`.
+- **Files:** Modify `apps/web/package.json` (`"outbox:worker": "tsx scripts/phase2/outbox-worker.ts"` or the ts-node runner this repo uses — check `pnpm` workspace conventions first); Modify `docs/platform/product.md` (how to run the worker, guarantees, what it does not yet do); Modify `docs/platform/architecture.md` only if the lifecycle diagram omits the worker.
+- **Verify:** `.venv/bin/python -m pytest tests/platform/product -q && pnpm test && pnpm typecheck && pnpm lint`.

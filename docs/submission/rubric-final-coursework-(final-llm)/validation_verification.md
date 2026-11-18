@@ -27,17 +27,17 @@ Branches: 43/46 = 93.48%
 Gate (>=90% lines and branches): PASS
 ```
 
-`tests/phase2/verification/test_web_api_adapters.py` uses
+`tests/platform/verification/test_web_api_adapters.py` uses
 `unittest.mock.patch`/`MagicMock` fixtures at the Feast/MCP boundaries. Full
 evidence:
-[`LLM-validation-verification-validation-verification.md`](../../phase2/evidence/llm/LLM-validation-verification-validation-verification.md).
+[`LLM-validation-verification-validation-verification.md`](../../platform/evidence/llm/LLM-validation-verification-validation-verification.md).
 
 #### Image proof
 
 ![Coverage HTML report](../../pngs/validation_coverage_html_report.jpg)
 
 *Image note:* the coverage.py HTML report (canonical evidence capture)
-renders line-by-line coverage for the Phase 2 LLM Web API modules. It proves
+renders line-by-line coverage for the the platform LLM Web API modules. It proves
 the 96.17%/93.48% figures come from a real coverage tool run, not a
 hand-computed ratio. It does not show every module's coverage in one frame —
 consult the linked report for full detail.
@@ -45,21 +45,21 @@ consult the linked report for full detail.
 ### 2. Equivalence partitions and boundary values
 
 ```text
-$ pytest tests/phase2/verification/test_equivalence_boundary.py \
-    tests/phase2/verification/test_idempotency.py \
-    tests/phase2/verification/test_web_api_adapters.py -q
+$ pytest tests/platform/verification/test_equivalence_boundary.py \
+    tests/platform/verification/test_idempotency.py \
+    tests/platform/verification/test_web_api_adapters.py -q
 ...................                                                      [100%]
 19 passed in 1.30s
 ```
 
 Covers missing/unknown ticker, timestamp edges, and API limits against the
 Web API request/response contracts. Full evidence:
-[`LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p.md`](../../phase2/evidence/llm/LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p.md).
+[`LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p.md`](../../platform/evidence/llm/LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p.md).
 
 ### 3. Idempotency via property-based testing
 
 ```text
-$ pytest tests/phase2/verification/test_idempotency.py -q
+$ pytest tests/platform/verification/test_idempotency.py -q
 ..                                                                        [100%]
 2 passed in 0.21s
 ```
@@ -67,7 +67,7 @@ $ pytest tests/phase2/verification/test_idempotency.py -q
 Hypothesis generates many examples per test internally, confirming repeated
 retrieval and repeated tool invocation return the same result on retry. Full
 evidence:
-[`LLM-validation-verification-idempotency-testing-s-d-ng-pro.md`](../../phase2/evidence/llm/LLM-validation-verification-idempotency-testing-s-d-ng-pro.md).
+[`LLM-validation-verification-idempotency-testing-s-d-ng-pro.md`](../../platform/evidence/llm/LLM-validation-verification-idempotency-testing-s-d-ng-pro.md).
 
 ## Part II — Mutation testing and load testing
 
@@ -80,14 +80,14 @@ evidence:
 
 62/72 mutants killed against `src/llm/rag/chunking.py`, 86.11% — above the
 80% hard gate declared in the rubric CSV. Full evidence:
-[`LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g.md`](../../phase2/evidence/llm/LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g.md).
+[`LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g.md`](../../platform/evidence/llm/LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g.md).
 
 ### 5. Load test through the real public gateway
 
 ```text
 $ locust -f tests/load/locustfile.py --headless --users 20 --spawn-rate 5 \
     --run-time 90s --host https://distresslens.duckdns.org \
-    --html docs/phase2/evidence/llm/locust-report.html
+    --html docs/platform/evidence/llm/locust-report.html
 
 POST /v1/features/by-id   1352 reqs, 0 failures
   median 51ms, p95 140ms, p99 330ms, max 490ms, throughput 15.06 req/s
@@ -124,7 +124,7 @@ in the first place — those are text evidence only.
    minutes.
 
 Full evidence:
-[`LLM-validation-verification-load-test-the-web-api.md`](../../phase2/evidence/llm/LLM-validation-verification-load-test-the-web-api.md).
+[`LLM-validation-verification-load-test-the-web-api.md`](../../platform/evidence/llm/LLM-validation-verification-load-test-the-web-api.md).
 
 ## Limitations
 

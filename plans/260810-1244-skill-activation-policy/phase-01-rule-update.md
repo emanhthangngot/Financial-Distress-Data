@@ -1,4 +1,4 @@
-# Phase 1 — rule update
+# platform . rule update
 
 ## Context
 

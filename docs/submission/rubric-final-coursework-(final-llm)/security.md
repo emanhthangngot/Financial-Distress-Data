@@ -22,15 +22,15 @@ plainly rather than implied.
 ### 1. Apply a SealedSecret, watch it decrypt to a real Secret
 
 ```text
-$ kubectl apply -f platform/security/phase1-proof-sealed-secret.yaml
-sealedsecret.bitnami.com/phase1-sealed-secret-proof created
+$ kubectl apply -f platform/security/lakehouse-proof-sealed-secret.yaml
+sealedsecret.bitnami.com/lakehouse-sealed-secret-proof created
 
 $ kubectl get sealedsecret -n default
 NAME                         AGE
-phase1-sealed-secret-proof   15s
+lakehouse-sealed-secret-proof   15s
 
-$ kubectl get secret phase1-sealed-secret-proof -n default -o jsonpath='{.data.proof-token}' | base64 -d
-phase1-nonproduction-proof
+$ kubectl get secret lakehouse-sealed-secret-proof -n default -o jsonpath='{.data.proof-token}' | base64 -d
+lakehouse-nonproduction-proof
 
 $ kubectl get pods -n kube-system -l name=sealed-secrets-controller
 NAME                                         READY   STATUS    RESTARTS   AGE
@@ -40,7 +40,7 @@ sealed-secrets-controller-76b686947b-f6tr9   1/1     Running   0          <age>
 The controller decrypted the `SealedSecret` CRD into a real Kubernetes
 `Secret` within 15 seconds, and the decoded value matched the plaintext that
 was sealed. Full evidence:
-[`LLM-security-centralize-secret-management.md`](../../phase2/evidence/llm/LLM-security-centralize-secret-management.md).
+[`LLM-security-centralize-secret-management.md`](../../platform/evidence/llm/LLM-security-centralize-secret-management.md).
 
 ## Limitations — honesty note on scope
 

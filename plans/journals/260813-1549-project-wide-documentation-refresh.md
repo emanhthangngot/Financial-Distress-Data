@@ -17,7 +17,7 @@ tags: [docs, phase1, phase2, submission]
 
 ## What Happened
 
-We finished the repo-wide documentation refresh that had been overdue for too long. The job was to make the root README, architecture docs, coursework summary, repository/file maps, and submission pages tell the same story about the real system: Phase 1 local-first lakehouse, Phase 2 product plane, separate GitOps-owned GKE evidence plane, and an honest freeze status. The aligned set spans `README.md`, `docs/system-architecture.md`, `docs/phase2/architecture.md`, `docs/coursework.md`, `docs/architecture/repository-map.md`, `docs/project-file-map.md`, and `docs/submission/*.md`.
+We finished the repo-wide documentation refresh that had been overdue for too long. The job was to make the root README, architecture docs, coursework summary, repository/file maps, and submission pages tell the same story about the real system: platform .ocal-first lakehouse, platform .roduct plane, separate GitOps-owned GKE evidence plane, and an honest freeze status. The aligned set spans `README.md`, `docs/system-architecture.md`, `docs/platform/architecture.md`, `docs/coursework.md`, `docs/architecture/repository-map.md`, `docs/project-file-map.md`, and `docs/submission/*.md`.
 
 ## The Brutal Truth
 
@@ -54,5 +54,5 @@ When architecture pivots, doc alignment is not optional follow-up work. It needs
 AgentWiki publish skipped: `agentwiki` CLI was unavailable in this session, and no AgentWiki MCP publishing capability was exposed.
 
 Status: DONE_WITH_CONCERNS
-Summary: Completed the project-wide documentation refresh, aligned 11 reviewer-facing docs to the real Phase 1/Phase 2 architecture, and verified it with 65 focused tests plus link/path/secret checks.
+Summary: Completed the project-wide documentation refresh, aligned 11 reviewer-facing docs to the real Phase 1/platform .rchitecture, and verified it with 65 focused tests plus link/path/secret checks.
 Concerns/Blockers: Final submission freeze is still pending because source/GitOps SHA stamps need restamping at the final frozen revisions and the strict two-repository audit still needs a clean pass.

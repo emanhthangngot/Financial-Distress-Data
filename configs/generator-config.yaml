@@ -12,6 +12,9 @@ offline:
   dominant_exchange_rate: 0.70
   duplicate_rate: 0.02
   schema_change_quarter: 5
+  restatement_rate: 0.10
+  restatement_lag_days: 180
+  restatement_magnitude: 0.15
 
 streaming:
   events: 50000
@@ -40,6 +43,9 @@ profiles:
       high_cardinality_ids: 100
       quarters: 4
       schema_change_quarter: 3
+      restatement_rate: 0.10
+      restatement_lag_days: 180
+      restatement_magnitude: 0.15
     streaming:
       events: 200
       baseline_events_per_window: 10

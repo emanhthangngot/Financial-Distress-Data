@@ -13,13 +13,13 @@ created: 2026-08-14
 ## Scope
 
 - Deploy persistent MinIO for the existing `s3://financial-distress-lake` Feast contract.
-- Produce real Phase 1 Gold Parquet and materialize `company_risk_features` into Redis.
+- Produce real platform .old Parquet and materialize `company_risk_features` into Redis.
 - Provision a least-privilege GHCR pull credential without committing plaintext.
 - Verify cold pulls and the live analyst assistant end to end.
 
 ## Acceptance criteria
 
-- Phase 1 pipeline -> writes Gold datasets -> MinIO retains them across a verified pod restart. **Verified:** MinIO pod was recreated; PVC remained `Bound` at 10Gi and `mc ls --recursive` returned 19 persisted objects.
+- platform datasets -> MinIO retains them across a verified pod restart. **Verified:** MinIO pod was recreated; PVC remained `Bound` at 10Gi and `mc ls --recursive` returned 19 persisted objects.
 - Feast materializer -> reads `obt_company_quarter_risk` -> Redis returns non-null NVL risk fields. **Verified:** the cold-pull job completed with 843 Gold rows, 16 risk rows, and non-null NVL values.
 - Analyst -> asks why NVL is high risk after materialization -> receives a cited completed answer based on non-null features. **Open:** the cited browser response predates materialization, and the incident journal records null online values for that response.
 - Sealed Secrets controller -> reconciles `ghcr-pull-secret` -> a new web pod cold-pulls its immutable GHCR digest without pull-secret warnings. **Verified:** web pod was recreated after reconciliation, reached Ready with zero restarts, and no new `FailedToRetrieveImagePullSecret` event appeared; the remaining event is historical.
@@ -28,15 +28,15 @@ created: 2026-08-14
 
 ## Constraints
 
-- No fake/synthetic shortcut added solely for checks; use the existing Phase 1 generator and Gold transforms.
+- No fake/synthetic shortcut added solely for checks; use the existing platform .enerator and Gold transforms.
 - No plaintext credentials in Git, logs, reports, shell history, or conversation output.
 - Argo CD remains the only mutator for managed workload manifests.
-- Phase 1 contracts and Phase 2 MCP/RBAC/SSE contracts remain stable.
+- platform .ontracts and platform .CP/RBAC/SSE contracts remain stable.
 
 ## Phases
 
 1. Secure credential provisioning and GitOps secret contract — complete; dedicated read-only package credential provisioned and web pull-secret reconciliation verified.
-2. Persistent MinIO and Phase 1 Gold production workload — complete; persisted object listing survived a MinIO pod restart.
+2. Persistent MinIO and platform .old production workload — complete; persisted object listing survived a MinIO pod restart.
 3. Feast batch materialization and readiness verification — complete.
 4. GitOps rollout, cold-pull test, live analyst acceptance — mostly verified; batch and web cold-pull paths passed, while post-materialization cited analyst acceptance remains open.
 5. Full tests, review, documentation and plan sync — complete for recorded source checks and this evidence audit.

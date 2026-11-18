@@ -69,10 +69,10 @@ Source repo:
 
 - Create: `scripts/capture_phase2_evidence.py` — the one-command driver
 - Create: `configs/evidence-checklist.yaml` — per-section: what to capture, which command, what it proves
-- Create: `docs/phase2/evidence/README.md` — reference semantics + authoritative-sources table
-- Create: `docs/phase2/evidence/ml/00-run-summary.md` — numbered narrative + known issues
-- Create: `docs/phase2/evidence/llm/00-run-summary.md` — same for the LLM track
-- Create: `docs/phase2/evidence/validation-verification/` — coverage table, mutation summary, load SLA summary
+- Create: `docs/platform/evidence/README.md` — reference semantics + authoritative-sources table
+- Create: `docs/platform/evidence/ml/00-run-summary.md` — numbered narrative + known issues
+- Create: `docs/platform/evidence/llm/00-run-summary.md` — same for the LLM track
+- Create: `docs/platform/evidence/validation-verification/` — coverage table, mutation summary, load SLA summary
 - Modify: `scripts/capture_ui_screenshots.py` — invoked as a backend by the driver
 - Modify: `docs/ui-screenshot-runbook.md` — point at the driver
 
@@ -87,10 +87,10 @@ Source repo:
    screenshot capture where a screenshot is declared, and stamps every artifact
    with the eight evidence-contract fields via the existing
    `scripts/stamp_phase2_evidence.py`.
-3. Write `docs/phase2/evidence/README.md` with the reference-semantics convention
+3. Write `docs/platform/evidence/README.md` with the reference-semantics convention
    and the authoritative-sources table.
 4. Run the **concurrent soak**: bring up all five new subsystems plus the ML stack
-   plus the Phase 1 data plane simultaneously and hold for a defined window,
+   plus the platform data plane simultaneously and hold for a defined window,
    recording `kubectl top nodes`, pod status and dashboards. This is the direct
    evidence for the user's "all running concurrently" requirement.
 5. Run `capture_phase2_evidence.py --all` and produce the complete set.
@@ -131,7 +131,7 @@ Source repo:
 
 - [ ] `capture_phase2_evidence.py --all` -> single command -> regenerates the complete evidence set with zero manual capture
 - [ ] Every screenshot -> looked up in the checklist -> has a declared claim it supports; no orphans
-- [ ] Concurrent soak -> all five new subsystems plus ML stack plus Phase 1 plane up simultaneously -> held for the window, resource usage captured
+- [ ] Concurrent soak -> all five new subsystems plus ML stack plus platform .lane up simultaneously -> held for the window, resource usage captured
 - [ ] Strict auditor `--track LLM` -> PASS 100/100
 - [ ] Strict auditor `--track ML` -> PASS 100/100
 - [ ] `--check-artifacts` -> zero missing artifacts across both repos

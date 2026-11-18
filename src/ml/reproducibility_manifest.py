@@ -64,6 +64,10 @@ class ReproducibilityManifest:
     image_digest: str
     environment_digest: str
     data_version: str | None = None
+    compute_source: str = "local"
+    compute_seconds: float = 0.0
+    accelerator: str = "cpu"
+    marginal_cost_usd: float = 0.0
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -82,17 +86,33 @@ def build_manifest(
     image_digest: str = "unknown",
     environment: Mapping[str, Any] | None = None,
     data_version: str | None = None,
+    compute_source: str | None = None,
+    compute_seconds: float | None = None,
+    accelerator: str | None = None,
+    marginal_cost_usd: float | None = None,
 ) -> ReproducibilityManifest:
     """Build a deterministic manifest from explicit lineage inputs."""
 
     if not snapshot_id or not str(snapshot_id).strip():
         raise ValueError("snapshot_id is required")
+    if compute_source not in {"local", "gke", "kaggle"}:
+        raise ValueError("compute_source must be local, gke, or kaggle")
+    if compute_seconds is None or compute_seconds < 0:
+        raise ValueError("compute_seconds is required and must be non-negative")
+    if not accelerator or not str(accelerator).strip():
+        raise ValueError("accelerator is required")
+    if marginal_cost_usd is None or marginal_cost_usd < 0:
+        raise ValueError("marginal_cost_usd is required and must be non-negative")
     return ReproducibilityManifest(
         snapshot_id=str(snapshot_id),
         source_sha=source_sha or current_source_sha(),
         image_digest=str(image_digest),
         environment_digest=environment_digest(environment),
         data_version=data_version,
+        compute_source=compute_source,
+        compute_seconds=float(compute_seconds),
+        accelerator=str(accelerator),
+        marginal_cost_usd=float(marginal_cost_usd),
     )
 
 
@@ -105,6 +125,14 @@ def manifest_from_env(snapshot_id: str) -> ReproducibilityManifest:
         image_digest=os.getenv("IMAGE_DIGEST", "unknown"),
         environment={"requirements_lock_sha": os.getenv("REQUIREMENTS_LOCK_SHA", "unknown")},
         data_version=os.getenv("DATA_VERSION"),
+        compute_source=os.getenv("COMPUTE_SOURCE"),
+        compute_seconds=(
+            float(os.environ["COMPUTE_SECONDS"]) if os.getenv("COMPUTE_SECONDS") else None
+        ),
+        accelerator=os.getenv("ACCELERATOR"),
+        marginal_cost_usd=(
+            float(os.environ["MARGINAL_COST_USD"]) if os.getenv("MARGINAL_COST_USD") else None
+        ),
     )
 
 

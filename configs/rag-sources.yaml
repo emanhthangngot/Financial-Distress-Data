@@ -1,7 +1,7 @@
-# Phase 2 RAG trusted-source registry (RagIngestionService.fetch_documents).
+# platform .AG trusted-source registry (RagIngestionService.fetch_documents).
 #
 # Committed fixture corpus, not a live HTTP fetch (confirmed 2026-08-08 —
-# plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md,
+# plans/260802-1037-unified-platform-ml-llm-gitops/phase-04-implementation-notes.md,
 # Open Question Q4). source_uri is a repo-relative path to a committed text
 # extract; fetch_documents reads it directly — no network call, no scraping
 # code, byte-identical across runs. Mirrors the existing
@@ -25,7 +25,7 @@ governance_policy:
 
 sources:
   vnstock_news_vnm:
-    source_uri: tests/phase2/fixtures/rag_corpus/vnstock_news_vnm.txt
+    source_uri: tests/platform/fixtures/rag_corpus/vnstock_news_vnm.txt
     source_name: vnstock_news
     company: VNM
     report_date: null
@@ -35,7 +35,7 @@ sources:
     rate_limit_rps: 2
 
   vnstock_news_hpg:
-    source_uri: tests/phase2/fixtures/rag_corpus/vnstock_news_hpg.txt
+    source_uri: tests/platform/fixtures/rag_corpus/vnstock_news_hpg.txt
     source_name: vnstock_news
     company: HPG
     report_date: null
@@ -45,7 +45,7 @@ sources:
     rate_limit_rps: 2
 
   annual_report_fpt_2025:
-    source_uri: tests/phase2/fixtures/rag_corpus/annual_report_fpt_2025_extract.txt
+    source_uri: tests/platform/fixtures/rag_corpus/annual_report_fpt_2025_extract.txt
     source_name: annual_report_extract
     company: FPT
     report_date: "2025-12-31"

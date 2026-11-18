@@ -1,4 +1,4 @@
-# Phase 2 report — release inputs and platform preflight
+# platform .eport — release inputs and platform preflight
 
 Status: in progress. Steps 4-9 done; steps 1-3 blocked on `gh auth login`
 (token was invalid at phase start — user is re-authenticating).
@@ -12,8 +12,8 @@ a Next.js app — the real gate is `ci.yml`'s existing `contracts` job
 (`pnpm typecheck`, `pnpm test`, Playwright a11y), which already runs on every
 push/PR to `main`/`dev`. This caller's own `lint_paths`/`test_selector` point
 at the one real Python artifact touching the web deployable
-(`tests/phase2/verification/test_web_api_adapters.py`), verified locally:
-`pytest tests/phase2/verification -k web_api_adapters` → 4 passed.
+(`tests/platform/verification/test_web_api_adapters.py`), verified locally:
+`pytest tests/platform/verification -k web_api_adapters` → 4 passed.
 
 **Blocked**: opening the PR to `dev` needs `gh` (or an equivalent GitHub API
 credential); `gh auth status` reported an invalid token at phase start.

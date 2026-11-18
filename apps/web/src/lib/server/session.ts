@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { isRole, type Role } from "@distresslens/contracts";
 import type { RequestContext } from "../data/port";
 import { ACCESS_TOKEN_COOKIE } from "./auth-cookies";
+import { fixtureModeEnabled } from "./fixture-mode";
 import { readAssuranceLevel } from "./jwt-claims";
 import { createRequestClient, isSupabaseConfigured } from "./supabase";
 
@@ -37,10 +38,6 @@ export interface ResolvedSession {
   accessToken: string | null;
 }
 
-function isFixtureMode(): boolean {
-  return process.env[FIXTURE_SESSION_ENV] === "fixture";
-}
-
 /**
  * Fixture identity, overridable per Playwright run so one suite can exercise
  * every role and both plane states without a live Supabase project.
@@ -66,12 +63,7 @@ function fixtureSession(): ResolvedSession {
 }
 
 export async function resolveSession(): Promise<ResolvedSession> {
-  if (isFixtureMode()) {
-    if (process.env.NODE_ENV === "production" && process.env.VERCEL_ENV === "production") {
-      throw new Error(
-        "fixture session mode is not permitted in a production deployment; configure Supabase auth",
-      );
-    }
+  if (fixtureModeEnabled()) {
     return fixtureSession();
   }
 

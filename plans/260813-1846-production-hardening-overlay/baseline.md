@@ -5,7 +5,7 @@ Captured on 2026-08-13 before source changes on branch
 
 | Check | Result | Command |
 |---|---|---|
-| Phase 2 matrix | PASS — ML 100/100 (57 rows), LLM 100/100 (60 rows) | `python scripts/audit_phase2_evidence.py --matrix-only --strict` |
+| platform .atrix | PASS — ML 100/100 (57 rows), LLM 100/100 (60 rows) | `python scripts/audit_phase2_evidence.py --matrix-only --strict` |
 | Fast loop | PASS — 311 passed | `uv run --offline python -m pytest tests -q` |
 | Compose config | PASS | `docker compose config` |
 | Stage 1 evidence audit | PASS | `uv run --offline python scripts/audit_stage1_evidence.py docs/evidence --check` |

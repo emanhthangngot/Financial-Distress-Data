@@ -35,7 +35,7 @@ Level split, matching the reference's small-then-large pattern:
 
 ```text
 SMALL (Mermaid, inline in the owning narrative doc)
-  1. Phase 1 lakehouse       collectors -> Kafka -> Bronze/Silver/Gold -> DuckDB
+  1. platform lakehouse       collectors -> Kafka -> Bronze/Silver/Gold -> DuckDB
   2. LLM inference platform  gateway -> model config -> model serving -> response
   3. RAG pipeline            source -> chunk -> embed -> index -> retrieve -> cite
   4. Agent plane             registry -> coordinator -> sub-agents -> MCP tools
@@ -64,13 +64,13 @@ edge/client, service, store, model, result/observability.
 - Modify: `images/architecture/` — retire or supersede
   `architecture-stage-1.png` if the composed diagram replaces it; decide, do
   not leave two competing hero images
-- Read only: `docs/phase1_architecture.md`, `docs/phase2/architecture.md`,
+- Read only: `docs/phase1_architecture.md`, `docs/platform/architecture.md`,
   `docs/architecture/repository-map.md`
 
 ## Implementation Steps
 
 1. Extract the real component list per subsystem from
-   `docs/phase2/architecture.md`, `docs/phase1_architecture.md`, and
+   `docs/platform/architecture.md`, `docs/phase1_architecture.md`, and
    `docs/architecture/repository-map.md`. Every node name must be traceable to a
    file, service, or table in this repo.
 2. Fix the color legend in `docs/docs-style-contract.md` (five classes) and
@@ -87,7 +87,7 @@ edge/client, service, store, model, result/observability.
 6. Verify each small diagram renders on GitHub (Mermaid dialect, no unsupported
    syntax) by previewing the containing doc.
 7. Resolve the competing hero images: either regenerate
-   `images/architecture/architecture-stage-1.png` as the Phase 1 subsystem view
+   `images/architecture/architecture-stage-1.png` as the platform .ubsystem view
    or retire it and point everything at the new set. Record the decision in
    `docs/system-architecture.md`.
 

@@ -4,7 +4,7 @@
 
 Implemented additive GitOps artifacts for production-hardening phases 5–7 and
 11, plus a declarative lakehouse slice and capacity/run-control documentation.
-The source repository and protected Phase 1 code were not modified.
+The source repository and protected platform .ode were not modified.
 
 ## Delivered
 
@@ -29,7 +29,7 @@ were also rendered with `rollout.enabled=true` for both new charts.
 
 ## Phase 9 additions
 
-After scope expansion, added digest-placeholder Phase 1 Kafka, MinIO, Postgres,
+After scope expansion, added digest-placeholder platform .afka, MinIO, Postgres,
 Airflow, and Flink manifests under `platform/data-phase1/`, an Argo CD
 Application, and role-based `common`, `evidence-host`, and `benchmark-client`
 Ansible roles with an `evidence-host.yml` playbook. No live cluster or cloud
@@ -38,7 +38,7 @@ repository's `ansible.cfg` sets its role path); invoking Ansible from the GitOps
 root without that config correctly reports an unavailable `common` role.
 
 Status: DONE_WITH_CONCERNS
-Summary: GitOps runtime artifacts, Phase 1 declarative scaffolding, and
+Summary: GitOps runtime artifacts, platform .eclarative scaffolding, and
 offline validation are complete.
 Concerns/Blockers: Kubeconform was unavailable; all new images use explicit
 zero-digest placeholders that must be replaced by CI-produced digests before

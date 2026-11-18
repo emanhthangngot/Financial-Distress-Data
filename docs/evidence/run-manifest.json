@@ -1,0 +1,46 @@
+{
+  "artifacts": [
+    {
+      "path": "lakehouse_real_airflow_dag_test.txt",
+      "proof_type": "log",
+      "sha256": "b59236f696b5b0dea2573272b8da34e98f063229c4e4d4fdd82fc06a2687eddc",
+      "size_bytes": 34194
+    },
+    {
+      "path": "lakehouse_real_kafka_offsets.json",
+      "proof_type": "metrics",
+      "sha256": "707103bbe9fbef509a5efad09bb3b2a17006e75a735bf8d5a56288b87d9c7875",
+      "size_bytes": 407
+    },
+    {
+      "path": "lakehouse_real_minio_objects.json",
+      "proof_type": "metrics",
+      "sha256": "14bbc34c94479812530441f4f2decf3161c11dcd815b448ae040fef7e76b36d9",
+      "size_bytes": 12871
+    },
+    {
+      "path": "lakehouse_real_postgres_summary.json",
+      "proof_type": "query_output",
+      "sha256": "7dea33ca64e30bed1282f60c0790f17755bba08eb278175c24159ffa1c9c0010",
+      "size_bytes": 4313
+    },
+    {
+      "path": "lakehouse_duckdb_validation.json",
+      "proof_type": "query_output",
+      "sha256": "df257120387c68e13cdce66df7ec08a6ada0781818815b8f51b2202a45ebc001",
+      "size_bytes": 19812
+    },
+    {
+      "path": "lakehouse_real_duckdb_validation.json",
+      "proof_type": "query_output",
+      "sha256": "df257120387c68e13cdce66df7ec08a6ada0781818815b8f51b2202a45ebc001",
+      "size_bytes": 19812
+    }
+  ],
+  "completed_at": "2026-09-09T09:24:04.580285+00:00",
+  "config_sha256": "b659f1375fb6b3fa6464bdf1a40a5625baa3ecc9ff4e40759288c9931888ed86",
+  "git_sha": "c3525a338e93e28de9b37255110d535960c00b98",
+  "run_id": "lakehouse-real-2026-06-12T03-00-00-00-00",
+  "schema_version": 1,
+  "started_at": "2026-09-09T09:23:10.240586+00:00"
+}

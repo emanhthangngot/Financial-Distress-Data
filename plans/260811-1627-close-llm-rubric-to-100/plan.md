@@ -27,7 +27,7 @@ PATH="$PWD/.venv-phase2/bin:$PATH" .venv-phase2/bin/python scripts/audit_phase2_
   --phase1-base ddbcbe7bd41ae4883954b8a247efdc67c7329078 \
   --gitops-root ~/Studying/FSDS/financial-distress-gitops \
   --accept-design-only "<the 13 rows below>"
-# → "Phase 2 rubric matrix is complete and consistent."
+# → "platform .ubric matrix is complete and consistent."
 ```
 
 That run requires a **clean worktree**: an uncommitted sibling plan or an
@@ -46,7 +46,7 @@ manifests, and the evidence contract stay owned by
 redesigns the gateway or the observability stack — both are already built and
 Argo-wired; they have never run.
 
-Read before starting: `AGENTS.md`, `docs/phase2/evidence-contract.md`,
+Read before starting: `AGENTS.md`, `docs/platform/evidence-contract.md`,
 `plans/260809-2039-complete-phase2-llm-submission/phase-04-complete-gateway-uis-and-observability.md`.
 
 ## The Evidence Rule (non-negotiable)
@@ -59,7 +59,7 @@ these 13 rows — the rubric text says `Capture màn hình thể hiện từng s
 thành công` and `có thể coi trên các dashboard`, i.e. the routed, deployed thing.
 
 - Screenshots supplement machine-readable output; they never replace it
-  (`docs/phase2/evidence-contract.md`). Each of the 13 evidence files carries the
+  (`docs/platform/evidence-contract.md`). Each of the 13 evidence files carries the
   8 contract fields plus the raw command output that backs the screenshot.
 - A row that cannot be captured stays `design_only` and gets named in
   `--accept-design-only` **and** in `docs/submission/README.md`. Never flip a row
@@ -71,10 +71,10 @@ thành công` and `có thể coi trên các dashboard`, i.e. the routed, deploye
 
 | Fact | Value | Source |
 |---|---|---|
-| LLM points executed | **79 / 100**, 47 rows | `docs/phase2/rubric-matrix.csv` |
+| LLM points executed | **79 / 100**, 47 rows | `docs/platform/rubric-matrix.csv` |
 | Rows still `design_only` | 13 (Routing & Gateway 7 rows / 13 pts, Observability 6 rows / 8 pts) | same |
 | Full strict gate on the 79 | **passes**, 47 `validation_command` subprocesses included | audit run above |
-| Phase 1 no-regression gate | `.venv/bin/python scripts/run_stage1_quality_gates.py` → exit 0, `status: pass` | run 2026-08-11 |
+| platform .o-regression gate | `.venv/bin/python scripts/run_stage1_quality_gates.py` → exit 0, `status: pass` | run 2026-08-11 |
 | Source HEAD / GitOps HEAD | `d72f15f` / `921bdc1`, both worktrees clean; evidence `source_sha` `6dc70ba` is an ancestor with only SHA lines since | `git`, auditor ancestor rule |
 | `PHASE1_BASE_SHA` | **never recorded anywhere**; only `ddbcbe7bd41ae4883954b8a247efdc67c7329078` passes the protected-path diff | `grep`, empirical audit runs |
 | GitOps gateway assets | `platform/ingress/{f5-nginx-values,routes-ui,routes-viewers,duckdns-certificate,basic-auth-sealed-secret}.yaml` all present | gitops worktree |
@@ -93,8 +93,8 @@ thành công` and `có thể coi trên các dashboard`, i.e. the routed, deploye
 | CI digest rewrite | `gitops_target_type: values` rewrites `image.repository` + `image.digest` in a Helm values file — exactly what `apps/dev/web/values.yaml` needs | `phase2-ci.yaml` gitops-pr job |
 | Cost ledger | `docs/submission/cost.md` still says credit deltas / final balance "TBD phase-08" | file |
 | Mock grade | no row-by-row grade report exists | `plans/**/reports/` |
-| Flip mechanism | `behavioral_assertion` is matched against the **artifact file**, and all 7 gateway rows declare the same `f5-nginx-values.yaml` while the traces row declares a Loki values file with no Jaeger content — 8 rows cannot carry a distinct assertion as declared | `tests/phase2/requirements/conftest.py:143-187`, `scripts/_phase2_rubric_items.py:725-758` |
-| Frozen-revision rule | any GitOps commit invalidates the check for all 47 existing rows (the rule only allows SHA lines under `docs/phase2/evidence/`, which the GitOps repo does not have) | `scripts/audit_phase2_evidence.py:609-638` |
+| Flip mechanism | `behavioral_assertion` is matched against the **artifact file**, and all 7 gateway rows declare the same `f5-nginx-values.yaml` while the traces row declares a Loki values file with no Jaeger content — 8 rows cannot carry a distinct assertion as declared | `tests/platform/requirements/conftest.py:143-187`, `scripts/_phase2_rubric_items.py:725-758` |
+| Frozen-revision rule | any GitOps commit invalidates the check for all 47 existing rows (the rule only allows SHA lines under `docs/platform/evidence/`, which the GitOps repo does not have) | `scripts/audit_phase2_evidence.py:609-638` |
 | Denylist vs capture | the auditor rejects `Authorization:`, the ingress IP `34.21.242.110`, and the project ID in **any** evidence body — exactly what a gateway capture prints | `scripts/audit_phase2_evidence.py:712-741,753-770` |
 | Quota figure | the predecessor plan says `CPUS_ALL_REGIONS = 12`; `terraform/gcp/terraform.tfvars:5-6` records a measured regional `CPUS = 32` — unreconciled | both files |
 | `make gcp-up` | starts the evidence VM unconditionally and resizes `primary-pool` only; no target raises `secondary-pool` | gitops `Makefile:34-72` |
@@ -128,8 +128,8 @@ LLM-observability-t-ng-t-cho-logs                       1   logs                
 LLM-observability-t-ng-t-cho-traces                     1   traces                 (loki-otel-values.yaml)
 ```
 
-Evidence filenames are contractually `docs/phase2/evidence/llm/<rubric_id>.md`.
-Copy each ID from `docs/phase2/rubric-matrix.csv`; they truncate silently.
+Evidence filenames are contractually `docs/platform/evidence/llm/<rubric_id>.md`.
+Copy each ID from `docs/platform/rubric-matrix.csv`; they truncate silently.
 
 ## Goals
 
@@ -138,7 +138,7 @@ Copy each ID from `docs/phase2/rubric-matrix.csv`; they truncate silently.
 | 1 | 13 rows → `executed` with live-cluster proof, each at an `artifact_path` that can carry its own behavioral assertion | P0 |
 | 2 | Strict two-repo audit exits 0 with **no** `--accept-design-only` for the LLM track | P0 |
 | 3 | Freeze the submission: `PHASE1_BASE_SHA` recorded, SHAs stamped, docs truthful, mock grade written | P0 |
-| 4 | Phase 1 gate stays green; `.venv` never mutated; no Phase 1 DAG or pipeline touched | P0 |
+| 4 | platform .ate stays green; `.venv` never mutated; no platform .AG or pipeline touched | P0 |
 | 5 | One cluster window; end at the exact hibernation invariant; cost ledger finalized | P1 |
 
 ## Phases
@@ -170,7 +170,7 @@ verified against the repositories, not argued.
 
 - ML track. The 57 ML rows stay `design_only`; `--track LLM` excludes them and
   `--ml 100 --llm 100` keeps the deferral visible.
-- Any change to Phase 1 (`src/collectors`, `src/generator`, `src/streaming`,
+- Any change to platform .`src/collectors`, `src/generator`, `src/streaming`,
   `dags/*.py` outside `phase2/`, `docs/evidence/`). The auditor fails the run if
   a protected path moves.
 - New gateway or observability design. Those manifests exist; this plan deploys
@@ -216,8 +216,8 @@ on the same ingress being up.
 - [ ] Grader -> queries Grafana -> sees per-agent call counts, per-MCP-tool call counts, failures, per-request token counts, generation round-trip time, TTFT, PII-catch frequency, and Web API metrics from a real run, plus the matching Loki lines and Jaeger trace.
 - [ ] Grader -> opens the scrubbed GitOps mirror at a referenced commit -> reaches the manifests, and finds no tfstate, tfvars, inventory or key material in it.
 - [ ] Reviewer -> cross-checks the six correlated evidence files -> they cite one identical Jaeger trace ID, and the gateway files cite the served certificate's serial and `notBefore`.
-- [ ] Maintainer -> reads `docs/phase2/evidence-contract.md` -> finds the frozen 40-hex `PHASE1_BASE_SHA` recorded, not a placeholder.
-- [ ] Phase 1 maintainer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> exit 0, `.venv` unmutated.
+- [ ] Maintainer -> reads `docs/platform/evidence-contract.md` -> finds the frozen 40-hex `PHASE1_BASE_SHA` recorded, not a placeholder.
+- [ ] platform .aintainer -> runs `.venv/bin/python scripts/run_stage1_quality_gates.py` -> exit 0, `.venv` unmutated.
 - [ ] Reviewer -> opens the mock-grade report -> finds a row-by-row grade against the canonical CSV (not against this plan) totalling the claimed score.
 - [ ] Cost owner -> reads `docs/submission/cost.md` -> finds per-session credit deltas including the evidence VM, a final balance, and confirmation the trial billing account was never upgraded.
 - [ ] Cost owner -> runs `make gcp-status` -> primary pool 0 nodes, secondary pool 0 nodes, evidence VM stopped.
@@ -226,10 +226,10 @@ on the same ingress being up.
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Node capacity: the full transitive stack (observability + data plane + model plane + agents + MCP + web) does not fit the primary node | Observability and metric rows uncapturable | Phase 2 derives the budget from `helm template` output, not hand sums, and names what to disable (Loki `chunksCache`/`resultsCache`) and what to scale to zero; the secondary pool is raised only after the evidence VM is stopped, using a target added in phase 2 |
-| Certificate never issues (HTTP-01 solver cannot own a host already owned by the mergeable master) | All 7 gateway rows die | Phase 2 commits an issuance strategy that avoids the conflict (acme minion, DNS-01, or pre-issued) and phase 4 verifies `Ready=True` before any capture; staging-vs-prod is irrelevant to this failure |
+| Node capacity: the full transitive stack (observability + data plane + model plane + agents + MCP + web) does not fit the primary node | Observability and metric rows uncapturable | platform .erives the budget from `helm template` output, not hand sums, and names what to disable (Loki `chunksCache`/`resultsCache`) and what to scale to zero; the secondary pool is raised only after the evidence VM is stopped, using a target added in phase 2 |
+| Certificate never issues (HTTP-01 solver cannot own a host already owned by the mergeable master) | All 7 gateway rows die | platform .ommits an issuance strategy that avoids the conflict (acme minion, DNS-01, or pre-issued) and phase 4 verifies `Ready=True` before any capture; staging-vs-prod is irrelevant to this failure |
 | A ciphertext sealed for the wrong namespace or a missed placeholder | 503 instead of 401; Grafana never ready | Phase 4 gates on all six Secrets materializing before syncing routes |
-| Web image never built, or built but unpullable | Both UI rows die on `ImagePullBackOff` | Phase 2 merges the caller to `dev` (the only branch that opens a digest PR), verifies the job ran, and proves the pull path |
+| Web image never built, or built but unpullable | Both UI rows die on `ImagePullBackOff` | platform .erges the caller to `dev` (the only branch that opens a digest PR), verifies the job ran, and proves the pull path |
 | The auth plane is not finished before the window | UI rows uncapturable | Phase 3 runs with the cluster down and gates on a local container round-trip; if it slips, the cut ladder cuts the UI rows rather than capturing fixtures as live |
 | Late fix invalidates already-captured evidence | Silent staleness | Every evidence file records the SHAs/digests live at capture; any later system change forces atomic re-capture of that scenario |
 | Any commit after stamping | All 60 rows fail the frozen-revision rule | Phase 6 order: write and commit everything → stamp → gate → stop |
@@ -250,20 +250,20 @@ before adjudication.
 
 | # | Finding | Severity | Disposition | Applied To |
 |---|---------|----------|-------------|------------|
-| 1 | GitOps checkout is on a branch Argo never deploys; `921bdc1` is not an ancestor of `origin/master` | Critical | Accept | Phase 1 |
+| 1 | GitOps checkout is on a branch Argo never deploys; `921bdc1` is not an ancestor of `origin/master` | Critical | Accept | platform .
 | 2 | The frozen-revision rule makes a clean gate impossible before stamping — any GitOps commit fails all 47 rows | Critical | Accept | Phase 1, 5, 6 |
 | 3 | The freeze order stamps first and then commits documents, invalidating its own stamp | Critical | Accept | Phase 6 |
-| 4 | 8 of 13 rows cannot carry a row-specific behavioral assertion at their declared `artifact_path` | Critical | Accept | Phase 1 |
+| 4 | 8 of 13 rows cannot carry a row-specific behavioral assertion at their declared `artifact_path` | Critical | Accept | platform .
 | 5 | The web pod cannot start: `web-runtime-config` is referenced but never produced; provenance SHAs unset; data-source mode unset | Critical | Accept | Phase 2, 3 |
 | 6 | Five sealed-secret placeholders across three SealedSecrets and two namespaces, including Grafana's admin credentials | Critical | Accept | Phase 4 |
-| 7 | CI cannot open a digest PR from a feature branch (`gitops-pr` gated to `main`/`dev`) | Critical | Accept | Phase 2 |
+| 7 | CI cannot open a digest PR from a feature branch (`gitops-pr` gated to `main`/`dev`) | Critical | Accept | platform .
 | 8 | HTTP-01 issuance collides with the mergeable-Ingress master owning the same host | Critical | Accept | Phase 2, 4 |
 | 9 | The UI rows and the assistant round-trip need a sign-in flow that does not exist; "live registry" is fixture-backed without a session | Critical | Accept | Phase 3 |
 | 10 | The auditor's denylist rejects exactly the captures the plan mandates | High | Accept | Phase 1, 5 |
 | 11 | The automated gate cannot distinguish live evidence from prose | High | Accept | Phase 5 (liveness anchors) |
-| 12 | The capacity budget method undercounts chart defaults and omits the data/model planes | High | Accept | Phase 2 |
+| 12 | The capacity budget method undercounts chart defaults and omits the data/model planes | High | Accept | platform .
 | 13 | `gcp-up` restarts the evidence VM and never scales the secondary pool; the quota figure is unreconciled | High | Accept | Phase 2, 4 |
-| 14 | The web CI caller lacks `secrets:` and would run a Python-only gate over a Next.js app; `charts/web` cannot express a pull secret | High | Accept | Phase 2 |
+| 14 | The web CI caller lacks `secrets:` and would run a Python-only gate over a Next.js app; `charts/web` cannot express a pull secret | High | Accept | platform .
 | 15 | `/loki` publishes a write-capable API as a "viewer"; the credential-delivery path is undefined and the denylist misses `curl -u`/htpasswd shapes | Medium | Accept | Phase 1, 2 |
 
 #### User decisions taken during adjudication — 2026-08-11
@@ -298,9 +298,9 @@ before adjudication.
 
 - Is another GCP window affordable, and what is the current credit balance? Phase 4 step 0 records it; if it is short, take the cut ladder deliberately at window open, not at hour six.
 - Where does the scrubbed mirror live (same account, new repo name?), and who publishes it? Phase 6 step 3 needs that decided.
-- Which channel delivers the gateway credential out of band to the grader? Phase 2 decides; the repo records only the fact of delivery.
+- Which channel delivers the gateway credential out of band to the grader? platform .ecides; the repo records only the fact of delivery.
 - Does the grader accept DuckDNS as "domain + HTTPS", or is a real domain expected? DuckDNS is what the manifests use; if unacceptable, that is a phase-2 decision, not a phase-4 discovery.
-- Which vCPU quota figure governs — the predecessor plan's `CPUS_ALL_REGIONS = 12` or the measured regional `CPUS = 32` in `terraform.tfvars`? Phase 2 step 5 resolves it against the project's actual quota.
+- Which vCPU quota figure governs — the predecessor plan's `CPUS_ALL_REGIONS = 12` or the measured regional `CPUS = 32` in `terraform.tfvars`? platform .tep 5 resolves it against the project's actual quota.
 - Which Supabase project hosts the auth plane, and are its migrations already applied there? Phase 3 step 1 verifies rather than assumes.
 
 <!-- slug: close-llm-rubric-to-100 -->

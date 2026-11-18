@@ -16,7 +16,7 @@ dependencies: [7]
 
 Fix the architecture's one genuine ingestion weakness — `generator -> Kafka`
 direct, which no real system does — by adding a log-based CDC path that captures
-writes from an OLTP database. Added **in parallel**, so the Phase 1 path stays
+writes from an OLTP database. Added **in parallel**, so the platform .ath stays
 byte-for-byte untouched and both paths can be compared against each other.
 
 The comparison is the point: running both and reconciling them is stronger
@@ -25,7 +25,7 @@ evidence than either path alone, and it is a defensible novel-idea claim.
 ## Requirements
 
 - Functional: a Flink CDC job reads Postgres logical replication and lands changes
-  in the Phase 2 Iceberg Bronze layer; row counts reconcile with the generator
+  in the platform .ceberg Bronze layer; row counts reconcile with the generator
   path over the same window; the reconciliation is reported.
 - Non-functional: zero modification to `src/streaming/`, `src/generator/` or
   `dags/`; the CDC path uses its own Postgres instance.
@@ -42,9 +42,9 @@ replication. Net effect: the same capability, two fewer services than the
 reference architecture.
 
 **Own Postgres, deliberately.** CDC requires `wal_level=logical` and a replication
-slot. The Phase 1 compose Postgres is protected territory and reconfiguring it
-would be a Phase 1 mutation. This phase provisions a dedicated cluster Postgres as
-the OLTP source, fed by the Phase 2 product plane's writes — which is also the
+slot. The platform protected territory and reconfiguring it
+would be a platform .utation. This phase provisions a dedicated cluster Postgres as
+the OLTP source, fed by the platform .roduct plane's writes — which is also the
 more honest production story, since the OLTP database is where a real application
 writes.
 
@@ -66,9 +66,9 @@ Source repo (all new):
 
 - Create: `src/cdc/__init__.py`, `config.py`, `flink_cdc_job.py`, `reconcile.py`
 - Create: `infra/cdc/Dockerfile` (flattened layout — phase 1 removed the `infra/phase2/` tier)
-- Create: `tests/phase2/pipelines/test_cdc_config.py`, `test_cdc_reconcile.py`
+- Create: `tests/platform/pipelines/test_cdc_config.py`, `test_cdc_reconcile.py`
 - Create: `dags/phase2/phase2_cdc_reconciliation.py` (thin wrapper, zero import-time side effects)
-- Create: `docs/phase2/adr/adr-013-cdc-ingestion-path.md`
+- Create: `docs/platform/adr/adr-013-cdc-ingestion-path.md`
 - Modify: `configs/phase2-deployables.yaml` — add the CDC deployable
 
 GitOps repo:
@@ -103,7 +103,7 @@ GitOps repo:
 ## Verification
 
 ```bash
-.venv/bin/python -m pytest tests/phase2/pipelines -k cdc
+.venv/bin/python -m pytest tests/platform/pipelines -k cdc
 .venv/bin/python scripts/audit_phase2_evidence.py --matrix-only --strict
 git diff --name-only $PHASE1_BASE_SHA..HEAD | grep -E '^(src/(collectors|transforms|quality|catalog|metadata|streaming|generator)|sql|dags/[^p])' && echo "PROTECTED VIOLATION" || echo "clean"
 kubectl logs -l app=flink-cdc --tail=50
@@ -113,7 +113,7 @@ kubectl logs -l app=flink-cdc --tail=50
 
 - [ ] Flink CDC job -> runs against the CDC Postgres -> lands inserts, updates and deletes in Iceberg Bronze
 - [ ] Both ingestion paths -> run over the same window -> reconciliation report shows matching row counts and key sets
-- [ ] Protected-path diff -> checked at phase end -> clean, no Phase 1 file touched
+- [ ] Protected-path diff -> checked at phase end -> clean, no platform .ile touched
 - [ ] `dags/phase2/phase2_cdc_reconciliation.py` -> imported -> no side effects, no existing DAG ID changed
 - [ ] Strict `--track LLM` gate -> unchanged PASS 100/100
 

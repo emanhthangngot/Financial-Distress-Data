@@ -1,4 +1,4 @@
-"""Tests for src.jobs.stage1_spark_lakehouse_job._rows_with_schema.
+"""Tests for src.jobs.lakehouse_spark_lakehouse_job._rows_with_schema.
 
 Covers P-C from docs/_plans/codebase_recon_followups.md: deterministic type inference.
 """
@@ -13,7 +13,7 @@ from pyspark.sql.types import (
     StructType,
 )
 
-from src.jobs.stage1_spark_lakehouse_job import _rows_with_schema
+from src.jobs.lakehouse_spark_lakehouse_job import _rows_with_schema
 
 
 def test_homogeneous_strings_infer_string_type():

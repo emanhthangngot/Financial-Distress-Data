@@ -1,0 +1,73 @@
+[
+  {
+    "batch_id": "60a01f75-9bb0-4537-8224-2fdeb716913b",
+    "bronze_path": "s3a://financial-distress-lake/bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=60a01f75-9bb0-4537-8224-2fdeb716913b/",
+    "event_date": "2026-01-01",
+    "event_hour": "09",
+    "record_count": 2,
+    "records": [
+      {
+        "created_ts": "2026-01-01T09:00:01+00:00",
+        "event_id": "de4b6e8962e7357487330df7dfe4004491606d639806de1f40785aee1bda5e42",
+        "event_timestamp": "2026-01-01T09:00:00+00:00",
+        "event_type": "price_update",
+        "price": 10.0,
+        "ticker": "AAA",
+        "topic": "financial.price_events",
+        "volume": 100
+      },
+      {
+        "created_ts": "2026-01-01T09:00:03+00:00",
+        "event_id": "5b13bc8dab6e74f3a5467fe1b7edc1ef6b35fb17f7e8f54a77d2a2228ed77893",
+        "event_timestamp": "2026-01-01T09:00:02+00:00",
+        "event_type": "price_update",
+        "price": 10.1,
+        "ticker": "AAA",
+        "topic": "financial.price_events",
+        "volume": 120
+      }
+    ],
+    "topic": "financial.price_events"
+  },
+  {
+    "batch_id": "f37963e3-1c82-4b2a-a4e1-b1d5b42db6fb",
+    "bronze_path": "s3a://financial-distress-lake/bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=f37963e3-1c82-4b2a-a4e1-b1d5b42db6fb/",
+    "event_date": "2026-01-01",
+    "event_hour": "09",
+    "record_count": 1,
+    "records": [
+      {
+        "created_ts": "2026-01-01T09:00:07+00:00",
+        "event_id": "f3e1e461d59b47538e5f641e49c525c26cf86bae1de0d34fd275803e4548492d",
+        "event_timestamp": "2026-01-01T09:00:06+00:00",
+        "event_type": "news_sentiment",
+        "risk_keyword_flag": true,
+        "sentiment_score": -0.2,
+        "severity_score": 0.5,
+        "source_url": null,
+        "ticker": "AAA",
+        "topic": "financial.news_events"
+      }
+    ],
+    "topic": "financial.news_events"
+  },
+  {
+    "batch_id": "eb2f5fc1-3925-42b8-a55f-78d438b5220d",
+    "bronze_path": "s3a://financial-distress-lake/bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=eb2f5fc1-3925-42b8-a55f-78d438b5220d/",
+    "event_date": "2026-01-01",
+    "event_hour": "09",
+    "record_count": 1,
+    "records": [
+      {
+        "alert_type": "price_drop",
+        "created_ts": "2026-01-01T09:00:11+00:00",
+        "event_id": "cada07743b976bcadd53fe52651f3214460b5ba85139f9e68d49cfe2c482188b",
+        "event_timestamp": "2026-01-01T09:00:10+00:00",
+        "event_type": "market_alert",
+        "ticker": "BBB",
+        "topic": "financial.alert_events"
+      }
+    ],
+    "topic": "financial.alert_events"
+  }
+]

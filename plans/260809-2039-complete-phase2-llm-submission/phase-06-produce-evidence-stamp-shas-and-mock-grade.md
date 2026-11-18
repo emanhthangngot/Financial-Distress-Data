@@ -24,7 +24,7 @@ Rubric rows owned (9 points) — IDs and paths copied verbatim from the CSV:
 | 2 | `LLM-demonstrate-basic-underst-jupyter-notebooks-to-demonstra` | source — **retargeted in phase 1** to a distinct second notebook |
 | 2 | `LLM-novel-ideas-idea-1` | source `src/llm/embedding_registry.py` |
 | 2 | `LLM-novel-ideas-idea-2` | source `src/llm/citation_guard.py` |
-| 1 | `LLM-documentation-low-level-ml-design` | source `docs/phase2/low-level-design.md` |
+| 1 | `LLM-documentation-low-level-ml-design` | source `docs/platform/low-level-design.md` |
 
 Both notebook rows shipped pointing at the same file; phase 1 gives the second
 its own path so each row has distinct proof. The two novel ideas are **code
@@ -36,7 +36,7 @@ modules**, not just a prose document — `src/llm/embedding_registry.py` and
 - Project manager -> records the five live Phase 06 artifact proofs ->
   `notebooks/agent-understanding-demo.ipynb`, `notebooks/agent-mcp-demo.ipynb`,
   `src/llm/embedding_registry.py`,
-  `src/llm/citation_guard.py`, and `docs/phase2/low-level-design.md` were
+  `src/llm/citation_guard.py`, and `docs/platform/low-level-design.md` were
   captured -> live artifact capture is complete, while the five canonical
   evidence markdown files and SHA-stamping remain pending commit approval.
 - Project manager -> preserves rubric honesty -> six observability rows and
@@ -73,7 +73,7 @@ modules**, not just a prose document — `src/llm/embedding_registry.py` and
   output is blocked or rewritten, and the decision is linked to its OTel trace
   and the evidence manifest. This also feeds phase 4's PII-safety metric.
 
-**SHA stamping — now convergent.** Phase 1 changed the auditor to accept a
+**SHA stamping — now convergent.** platform .hanged the auditor to accept a
 `source_sha`/`gitops_sha` that is HEAD **or an ancestor of HEAD**, provided the
 diff from that commit to HEAD touches only SHA lines in evidence files. That
 makes the loop terminate:
@@ -104,7 +104,7 @@ PATH="$PWD/.venv-phase2/bin:$PATH" \
   # append --accept-design-only <rubric_id>,... for any row taken off the cut ladder
 ```
 
-`PHASE1_BASE_SHA` is the immutable 40-hex commit immediately before Phase 2 work
+`PHASE1_BASE_SHA` is the immutable 40-hex commit immediately before platform .ork
 — never a moving branch name.
 
 **Grader access to the private GitOps repo.** Decision 2026-08-09: the control
@@ -120,15 +120,15 @@ grading time.
   phase 1 retargeted
 - Create: `src/llm/embedding_registry.py`, `src/llm/citation_guard.py`
 - Create: `scripts/stamp_phase2_evidence.py`
-- Create: `docs/phase2/novel-ideas.md` (executed proof for both ideas)
+- Create: `docs/platform/novel-ideas.md` (executed proof for both ideas)
 - Modify: `docs/submission/README.md`, `iac.md`, `security.md`,
   `observability.md`, `ci_cd.md`, `cost.md`, `routing_gateway.md`,
   `validation_verification.md`
 - Modify: `README.md` (TOC, repo map, numbered deployment diagram),
-  `docs/coursework.md`, `docs/phase2/low-level-design.md`,
-  `docs/phase2/evidence/index.md`
-- Create: 5 evidence files under `docs/phase2/evidence/llm/`
-- Regenerate (never hand-edit): `tests/phase2/requirements/test_llm_ac_07_agent_understanding.py`,
+  `docs/coursework.md`, `docs/platform/low-level-design.md`,
+  `docs/platform/evidence/index.md`
+- Create: 5 evidence files under `docs/platform/evidence/llm/`
+- Regenerate (never hand-edit): `tests/platform/requirements/test_llm_ac_07_agent_understanding.py`,
   `test_llm_ac_19_documentation.py`, `test_llm_ac_20_novel.py`
 
 ## Implementation Steps
@@ -141,7 +141,7 @@ grading time.
    with query results before, during and after; the guard as a blocked or
    rewritten output linked to its trace ID.
 3. Populate `docs/submission/*.md` — one file per rubric section, each **linking
-   into** `docs/phase2/evidence/` rather than duplicating it. `cost.md` records
+   into** `docs/platform/evidence/` rather than duplicating it. `cost.md` records
    the per-session credit deltas since phase 1, including the evidence VM,
    against the < USD 100 target. `README.md` records the grader's GitOps read
    access and names any row taken off the cut ladder.
@@ -149,7 +149,7 @@ grading time.
    deployable a node, every primary edge described, with a flow legend), the
    repo map and the TOC. Update `docs/coursework.md` to state the LLM-only scope
    and the honest ML deferral.
-5. Re-run the Phase 1 gate (`.venv/bin/python scripts/run_stage1_quality_gates.py`)
+5. Re-run the platform .ate (`.venv/bin/python scripts/run_stage1_quality_gates.py`)
    to prove no regression and that `.venv` was never mutated.
 6. Flip the final five rows to `executed`, regenerate the CSV and requirement
    tests, and confirm all 60 LLM rows are `executed` except any cut row.
@@ -174,10 +174,10 @@ grading time.
 - [ ] Maintainer -> checks any evidence file's SHAs -> finds 40-hex commits that are ancestors of both HEADs with only SHA lines changed since, and both worktrees clean.
 - [ ] Grader account -> clicks a `gitops_sha` link -> reaches the private control repo instead of a 404.
 - [ ] Reader -> opens a notebook -> sees an agent calling an MCP server against the live feature store and RAG path, with outputs committed.
-- [ ] Reviewer -> reads `docs/phase2/novel-ideas.md` -> finds working proof for both ideas backed by the two named modules, not descriptions.
+- [ ] Reviewer -> reads `docs/platform/novel-ideas.md` -> finds working proof for both ideas backed by the two named modules, not descriptions.
 - [ ] Reviewer -> opens `README.md` -> finds a numbered deployment diagram where every deployable is a node and every primary edge is described.
 - [ ] Cost owner -> reads `docs/submission/cost.md` -> sees per-session deltas including the evidence VM, a final balance under USD 100 of the free-trial credit, and no billing upgrade.
-- [ ] Phase 1 maintainer -> runs the Stage 1 gate -> passes unchanged.
+- [ ] platform .aintainer -> runs the Stage 1 gate -> passes unchanged.
 
 ## Risk Assessment
 

@@ -139,7 +139,7 @@ not run here. Adapted, and the gaps are named rather than glossed over:
 - `pnpm --filter @distresslens/web exec eslint <changed files>` → clean.
 - `pnpm --filter @distresslens/web build` → succeeds.
 - `.venv/bin/python scripts/run_stage1_quality_gates.py` → exit 0, `status:
-  pass` (Phase 1 stage-1 evidence audit, ruff, black, pytest all green).
+  pass` (platform .tage-1 evidence audit, ruff, black, pytest all green).
 
 ## Outstanding for this phase
 

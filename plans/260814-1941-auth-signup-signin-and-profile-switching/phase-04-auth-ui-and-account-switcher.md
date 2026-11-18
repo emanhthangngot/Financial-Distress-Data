@@ -37,7 +37,7 @@ Non-functional:
 
 ## Architecture
 
-**Guest chrome.** Phase 2 makes `SessionUser.role` nullable. `analyst-shell.tsx`
+**Guest chrome.** platform .akes `SessionUser.role` nullable. `analyst-shell.tsx`
 and `user-menu.tsx` branch on it: a null role renders an auth pair
 (`Đăng nhập` primary, `Đăng ký` secondary) in place of the avatar menu, and the
 nav hides the destinations a guest cannot use rather than rendering them into a

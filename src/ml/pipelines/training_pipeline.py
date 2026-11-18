@@ -222,6 +222,10 @@ class TrainingPipeline:
             source_sha=source_sha,
             image_digest=image_digest,
             data_version=version.version,
+            compute_source=str(config.get("compute_source", "local")),
+            compute_seconds=float(config.get("compute_seconds", 0.0)),
+            accelerator=str(config.get("accelerator", "cpu")),
+            marginal_cost_usd=float(config.get("marginal_cost_usd", 0.0)),
         )
         model_version = None
         if self.registry is not None:

@@ -12,7 +12,7 @@ created: 2026-08-02
 
 ## Overview
 
-Repair the submission package without changing Phase 1 pipeline behavior. The current CSV is authoritative; package hashes are regenerated only after all evidence and mappings are final.
+Repair the submission package without changing platform .ipeline behavior. The current CSV is authoritative; package hashes are regenerated only after all evidence and mappings are final.
 
 ## Goals
 

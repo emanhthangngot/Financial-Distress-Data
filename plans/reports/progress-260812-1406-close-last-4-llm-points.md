@@ -5,7 +5,7 @@ Branch: `codex/phase06-llm-submission`
 
 ## Completed
 
-- Phase 1 reproduced the configured drift-MCP topology under bare uvicorn and
+- platform .eproduced the configured drift-MCP topology under bare uvicorn and
   the built image with `--cpus 0.5 --memory 512m`; both MCP calls returned
   `ok=True` in under 0.1s and emitted the `/v1/drift/report` access line.
 - Added `InProcessDriftApiClient` with lazy imports and async-context-manager

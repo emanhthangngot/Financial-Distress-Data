@@ -58,7 +58,7 @@ GitOps repo (`~/Studying/FSDS/financial-distress-gitops`):
 Source repo:
 
 - Create: `scripts/run_phase2_quality_gates.py`
-- Modify: `AGENTS.md` — add the Phase 2 gate to Verify Commands
+- Modify: `AGENTS.md` — add the platform .ate to Verify Commands
 
 ## Implementation Steps
 
@@ -83,7 +83,7 @@ Source repo:
    download rather than by API-querying installer scripts (the reference repo
    documents rate-limiting pain with the latter).
 5. Add `scripts/run_phase2_quality_gates.py` in the source repo: `bash -n` over
-   every shell script, the Phase 2 pytest selection, and — when `--gitops-root`
+   every shell script, the platform .ytest selection, and — when `--gitops-root`
    is supplied — a delegated call to the GitOps validate script.
 6. Record the gate in `AGENTS.md` Verify Commands.
 

@@ -17,7 +17,7 @@ No source or test files were modified.
 | `scripts/run_phase2_quality_gates.py` | PASS — 72 passed, 1 skipped; shell syntax passed |
 | sibling `make validate` | PASS — kubeconform unavailable (explicit non-fatal SKIP) |
 | Ansible syntax (`ansible/`, both playbooks) | PASS — deprecation warnings only |
-| `tests/phase2/test_rollout_evidence.py -q` | PASS — 2 passed |
+| `tests/platform/test_rollout_evidence.py -q` | PASS — 2 passed |
 
 The live rollout capture command exits `2` with `required cluster tools are missing: kubectl-argo-rollouts`; this is the expected fail-closed behavior when cluster tooling is unavailable.
 

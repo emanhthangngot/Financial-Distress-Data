@@ -23,7 +23,7 @@ unsatisfiable, contradictory, or silently wrong today. No rubric row is claimed.
   strings are pre-written and reviewable; a redaction convention exists that the
   auditor's denylist accepts; the plan's own gate expectations match what the
   auditor actually enforces.
-- Non-functional: no Phase 1 (coursework stage 1) protected path is touched; the
+- Non-functional: no platform protected path is touched; the
   47 already-executed rows keep passing after every change here.
 
 ## Architecture
@@ -48,7 +48,7 @@ baseline gate, and make every later GitOps commit land on `master`.
 **The gate is not clean until after stamping.**
 `_only_evidence_sha_lines_changed` (`scripts/audit_phase2_evidence.py:609-638`)
 allows post-evidence commits only when every changed line is a
-`source_sha`/`gitops_sha` line under `docs/phase2/evidence/`. The GitOps repo has
+`source_sha`/`gitops_sha` line under `docs/platform/evidence/`. The GitOps repo has
 no such directory, so **any** GitOps commit invalidates the frozen-revision check
 for all 47 existing rows until they are re-stamped. The plan therefore expects a
 clean strict gate **only** in the final phase, immediately after the stamp.
@@ -56,7 +56,7 @@ Earlier phases run the gate expecting exactly these frozen-revision errors and
 nothing else.
 
 **Behavioral assertions are matched against the artifact file, not the
-evidence** (`tests/phase2/requirements/conftest.py:143-187`). All 7 Routing &
+evidence** (`tests/platform/requirements/conftest.py:143-187`). All 7 Routing &
 Gateway rows declare `artifact_path: platform/ingress/f5-nginx-values.yaml` —
 an F5 controller values file with no token meaning "agent-test UI",
 "registry UI", "authentication", "log viewer" or "trace viewer" — and the traces
@@ -73,7 +73,7 @@ they are reviewed before any capture.
 
 **Redaction convention.** `_audit_all_evidence_bodies`
 (`scripts/audit_phase2_evidence.py:753-770`) scans every `.md` under
-`docs/phase2/evidence/` against `EVIDENCE_SECRET_DENYLIST` (`:712-741`), which
+`docs/platform/evidence/` against `EVIDENCE_SECRET_DENYLIST` (`:712-741`), which
 trips on `Authorization\s*:` (even with the value redacted), the literal ingress
 IP `34.21.242.110`, the GCP project ID, and any ≥200-char base64 run. Those are
 exactly what a gateway capture prints. Define substitutions
@@ -86,7 +86,7 @@ before any real capture.
 line — the three shapes most likely to leak the gateway credential into a public
 repo. Extend it, so the safety net exists before captures start.
 
-**Two contract contradictions to fix.** `docs/phase2/evidence-contract.md:62-63`
+**Two contract contradictions to fix.** `docs/platform/evidence-contract.md:62-63`
 says SHAs must *equal* checkout HEAD, while the auditor implements the ancestor
 rule the freeze depends on. And the token-metrics row's canonical CSV
 `requirement` names TTFT and PII-catch frequency in addition to token counts and
@@ -95,11 +95,11 @@ grade is scored against the CSV.
 
 ## Related Code Files
 
-- Modify: `docs/phase2/evidence-contract.md` (frozen `PHASE1_BASE_SHA`; ancestor-rule correction)
+- Modify: `docs/platform/evidence-contract.md` (frozen `PHASE1_BASE_SHA`; ancestor-rule correction)
 - Modify: `docs/submission/README.md` (truthful status: 47 executed and stamped, 13 outstanding)
 - Modify: `scripts/_phase2_rubric_items.py` (`EXPLICIT_IMPLEMENTATION` re-point for the 8 mismatched rows)
 - Modify: `scripts/audit_phase2_evidence.py` (`EVIDENCE_SECRET_DENYLIST` additions)
-- Regenerate (never hand-edit): `docs/phase2/rubric-matrix.csv`, `tests/phase2/requirements/test_llm_ac_13_routing.py`, `test_llm_ac_15_observability.py`
+- Regenerate (never hand-edit): `docs/platform/rubric-matrix.csv`, `tests/platform/requirements/test_llm_ac_13_routing.py`, `test_llm_ac_15_observability.py`
 - Create: `plans/260811-1627-close-llm-rubric-to-100/reports/` — the 13 pre-written assertion strings, the redaction convention, the baseline gate output
 - GitOps: branch merge only, no manifest change in this phase
 
@@ -114,7 +114,7 @@ grade is scored against the CSV.
    locally. Confirm `git merge-base --is-ancestor 921bdc1 origin/master` now
    succeeds and re-run step 1's gate.
 3. Record `PHASE1_BASE_SHA=ddbcbe7bd41ae4883954b8a247efdc67c7329078` in
-   `docs/phase2/evidence-contract.md` with one sentence on why that commit, and
+   `docs/platform/evidence-contract.md` with one sentence on why that commit, and
    correct the HEAD-vs-ancestor contradiction in the same file.
 4. Re-point `EXPLICIT_IMPLEMENTATION` for the 8 rows whose declared artifact
    cannot carry a distinct assertion; regenerate the matrix and the two
@@ -140,7 +140,7 @@ grade is scored against the CSV.
 ## Success Criteria
 
 - [ ] Operator -> runs `git merge-base --is-ancestor 921bdc1 origin/master` in the GitOps repo -> succeeds, and `git branch --show-current` prints `master`.
-- [ ] Maintainer -> greps `docs/phase2/evidence-contract.md` -> finds a 40-hex `PHASE1_BASE_SHA` and no HEAD-equality claim that contradicts the ancestor rule.
+- [ ] Maintainer -> greps `docs/platform/evidence-contract.md` -> finds a 40-hex `PHASE1_BASE_SHA` and no HEAD-equality claim that contradicts the ancestor rule.
 - [ ] Maintainer -> reads this phase's report -> finds 13 assertion strings, each verified present in its re-pointed artifact file today.
 - [ ] Auditor -> scans the synthetic redacted capture -> zero denylist hits, and the sample is kept as phase 5's template.
 - [ ] Auditor -> re-runs the baseline gate after every change here -> the 47 executed rows still pass; no new finding class appears.

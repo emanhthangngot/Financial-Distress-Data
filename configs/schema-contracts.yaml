@@ -20,7 +20,7 @@ datasets:
   financial_statements:
     version: v2
     required: [ticker, report_period, fiscal_year, fiscal_quarter, total_assets, total_liabilities, equity, created_ts]
-    nullable: [current_assets, current_liabilities, revenue, ebit, interest_expense, net_income, operating_cash_flow, retained_earnings, statement_type, report_release_date, event_timestamp]
+    nullable: [current_assets, current_liabilities, revenue, ebit, interest_expense, net_income, operating_cash_flow, retained_earnings, statement_type, statement_variant, report_release_date, event_timestamp]
     blank_as_null: true
     field_types:
       ticker: string
@@ -40,11 +40,13 @@ datasets:
       operating_cash_flow: float
       retained_earnings: float
       statement_type: string
+      statement_variant: string
       report_release_date: date
       event_timestamp: timestamp
     enums:
       fiscal_quarter: [1, 2, 3, 4]
       statement_type: [consolidated, separate]
+      statement_variant: [consolidated_audited, consolidated_unaudited, separate_audited, separate_unaudited]
   market_prices_daily:
     version: v2
     required: [ticker, trading_date, close_price, volume, created_ts]

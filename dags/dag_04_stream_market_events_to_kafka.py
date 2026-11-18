@@ -1,6 +1,6 @@
 """DAG 04 — Stream market events to Kafka (Flink-opt-in).
 
-This DAG is the Stage 1 streaming entry point. It has two execution
+This DAG is the platform streaming entry point. It has two execution
 modes, picked at task-call time via the ``ENABLE_FLINK`` env var:
 
 * **Default (opt-out)** — ``ENABLE_FLINK`` unset. Use the original
@@ -20,14 +20,14 @@ when a Flink service is part of the compose profile.
 
 from __future__ import annotations
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.streaming.events import StreamEvent
 from src.streaming.flink import client as flink_client
 from src.streaming.kafka_to_bronze_consumer import MicroBatchConsumer
 
 DAG, PythonOperator = airflow_imports()
 
-FLINK_JAR_ID = "stage1-burst-handler"
+FLINK_JAR_ID = "lakehouse-burst-handler"
 
 
 def _stream_smoke():

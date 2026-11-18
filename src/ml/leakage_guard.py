@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 
@@ -29,18 +29,23 @@ def _rows(value: Any) -> list[dict[str, Any]]:
 def _time(value: Any) -> Any:
     if value is None:
         return None
-    if isinstance(value, (datetime, date)):
-        return value
-    text = str(value).strip()
-    if not text:
-        return None
-    try:
-        return datetime.fromisoformat(text.replace("Z", "+00:00"))
-    except ValueError:
+    if isinstance(value, datetime):
+        parsed = value
+    elif isinstance(value, date):
+        parsed = datetime.combine(value, datetime.min.time(), tzinfo=UTC)
+    else:
+        text = str(value).strip()
+        if not text:
+            return None
         try:
-            return float(text)
-        except ValueError as exc:
-            raise ValueError(f"unsupported timestamp value {value!r}") from exc
+            parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            try:
+                return float(text)
+            except ValueError as exc:
+                raise ValueError(f"unsupported timestamp value {value!r}") from exc
+    parsed = parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def find_leakage(
@@ -61,6 +66,7 @@ def find_leakage(
         return []
     feature_names = [
         feature_timestamp_col,
+        "known_from_ts",
         "feature_timestamp",
         "feature_ts",
         "event_timestamp",
@@ -68,6 +74,7 @@ def find_leakage(
     ]
     label_names = [
         label_timestamp_col,
+        "decision_ts",
         "label_timestamp",
         "label_ts",
         "decision_timestamp",
@@ -85,7 +92,12 @@ def find_leakage(
     for index, row in enumerate(records):
         feature_time = _time(row.get(feature_name))
         label_time = _time(row.get(label_name))
-        if feature_time is not None and label_time is not None and feature_time > label_time:
+        if feature_time is None or label_time is None:
+            raise ValueError(
+                "feature and label timestamps must be present on every row; "
+                f"index={index}, feature_column={feature_name!r}, label_column={label_name!r}"
+            )
+        if feature_time > label_time:
             offending.append({"index": index, "row": row})
     return offending
 

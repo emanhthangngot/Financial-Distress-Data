@@ -13,7 +13,7 @@ sandboxed drift agent under HPA autoscaling that reaches 3 replicas, and
 published on the registry. It does not prove drift detection accuracy on
 real production data — the drift scenario is synthetic (`market_stress`).
 
-**Active deployment facts:** namespace `phase2-data` (drift-mcp, drift-api),
+**Active deployment facts:** namespace `platform-data` (drift-mcp, drift-api),
 namespace `agents-sandbox` (drift-agent, HPA min 2 max 3). FastAPI 0.141.1,
 Pydantic 2.13.4, Helm 3, drift-mcp chart 0.1.0.
 
@@ -22,26 +22,26 @@ Pydantic 2.13.4, Helm 3, drift-mcp chart 0.1.0.
 ### 1. Async, idempotent drift API
 
 ```text
-$ .venv-phase2/bin/python -m pytest tests/phase2/apps/test_drift_api_and_mcp.py -q
+$ .venv-platform/bin/python -m pytest tests/platform/apps/test_drift_api_and_mcp.py -q
 -> focused tests passed, including async offload of the pure domain
    calculation and a repeated identical response (idempotency)
 ```
 
 Full evidence:
-[`LLM-web-api-cho-real-time-dri-s-d-ng-async.md`](../../phase2/evidence/llm/LLM-web-api-cho-real-time-dri-s-d-ng-async.md),
-[`LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati.md`](../../phase2/evidence/llm/LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati.md).
+[`LLM-web-api-cho-real-time-dri-s-d-ng-async.md`](../../platform/evidence/llm/LLM-web-api-cho-real-time-dri-s-d-ng-async.md),
+[`LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati.md`](../../platform/evidence/llm/LLM-web-api-cho-real-time-dri-c-s-d-ng-fastapi-data-validati.md).
 
 ### 2. MCP tool deployed via Helm
 
 ```text
-$ helm upgrade --install drift-mcp charts/drift-mcp -n phase2-data \
+$ helm upgrade --install drift-mcp charts/drift-mcp -n platform-data \
     -f apps/dev/drift-mcp/values.yaml --atomic --timeout 5m
 -> release revision 3; atomic rollback on a bad image verified for the
    shared MCP chart family (same chart used by feature-mcp)
 ```
 
 Full evidence:
-[`LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s.md`](../../phase2/evidence/llm/LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s.md).
+[`LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s.md`](../../platform/evidence/llm/LLM-web-api-cho-real-time-dri-in-the-form-of-mcp-tool-to-k8s.md).
 
 ### 3. Registry publication
 
@@ -52,7 +52,7 @@ $ kubectl exec -n kagent deploy/agentregistry -- python -c "..." /v1/agents/drif
 ```
 
 Full evidence:
-[`LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr.md`](../../phase2/evidence/llm/LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr.md).
+[`LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr.md`](../../platform/evidence/llm/LLM-web-api-cho-real-time-dri-publish-agent-tr-n-l-n-registr.md).
 
 ## Part II — Agent call, autoscaling, and sandbox boundary
 
@@ -77,7 +77,7 @@ reachable by the metrics pipeline. It does not by itself prove the HPA
 settled at 3 replicas — that is the CLI evidence quoted above.
 
 Full evidence:
-[`LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v.md`](../../phase2/evidence/llm/LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v.md).
+[`LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v.md`](../../platform/evidence/llm/LLM-web-api-cho-real-time-dri-1-agent-s-d-ng-mcp-tool-tr-n-v.md).
 
 ### 5. Sandbox boundary: same negative-proof suite as the feature agent
 
@@ -91,7 +91,7 @@ model bypass, filesystem write) were denied, while drift MCP/gateway
 readiness and the positive drift path were allowed — the same control set
 proven for feature-agent in `web_api_user_data.md`, applied identically here.
 Full evidence:
-[`LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o.md`](../../phase2/evidence/llm/LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o.md).
+[`LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o.md`](../../platform/evidence/llm/LLM-web-api-cho-real-time-dri-agent-ch-y-trong-sandbox-m-b-o.md).
 
 ## Limitations
 

@@ -81,9 +81,9 @@ Record in the evidence file that the PII is synthetic.
 
 - Read: `src/observability/telemetry.py` — exact metric and label names for the
   PromQL queries; write them out **before** the window opens
-- Read: `docs/phase2/evidence-contract.md` — the 8 required fields
-- Create: `docs/phase2/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md`
-- Create: `docs/phase2/evidence/llm/LLM-observability-agent-tool-call-metrics.md`
+- Read: `docs/platform/evidence-contract.md` — the 8 required fields
+- Create: `docs/platform/evidence/llm/LLM-observability-m-b-o-t-nh-t-c-c-metrics.md`
+- Create: `docs/platform/evidence/llm/LLM-observability-agent-tool-call-metrics.md`
 - Create: `plans/260812-1320-close-last-4-llm-points/reports/phase-03-window-log.md`
 - Modify: none in `src/` — this phase captures, it does not fix. A source fix
   discovered here goes back through phase 2's CI path, or the stop rule fires.

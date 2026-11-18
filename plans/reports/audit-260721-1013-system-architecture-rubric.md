@@ -156,7 +156,7 @@ Impact:
 Recommendation:
 
 - Persist failed rows with dataset, reason, raw payload, run ID, and timestamp.
-- Add an integration test verifying rejected Bronze input appears in `project_metadata.failed_records` before the task completes.
+- Add an integration test verifying rejected Bronze input appears in `ops.failed_records` before the task completes.
 
 ### 4. Freshness Check Uses A Fixed Historical Reference
 
@@ -344,7 +344,7 @@ The project is **not complete against the checked-in mini-coursework rubric**. M
 
 ## Unresolved Questions
 
-- Does the instructor still require all 100 rubric points, or was an officially accepted Phase 1 subset issued outside this repository?
+- Does the instructor still require all 100 rubric points, or was an officially accepted platform .ubset issued outside this repository?
 - Is Flink mandatory for this submission date, or deferred by an instructor decision?
 - Is DataHub mandatory, or can PostgreSQL metadata plus an ERD substitute with explicit approval?
 - Will fixture-backed generation be accepted, or must the generator expose configurable problem rates and summary metrics exactly as written?

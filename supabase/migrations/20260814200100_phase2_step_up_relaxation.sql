@@ -1,4 +1,4 @@
--- Phase 2 auth: relax the AAL2 step-up requirement for this demo environment.
+-- platform .uth: relax the AAL2 step-up requirement for this demo environment.
 --
 -- is_aal2() keeps telling the truth about the caller's assurance level; it is
 -- not touched. meets_step_up() is a separate, named predicate that encodes the

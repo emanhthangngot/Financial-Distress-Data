@@ -17,9 +17,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SQL_VIEWS = REPO_ROOT / "sql" / "duckdb_create_views.sql"
-JOB_FILE = REPO_ROOT / "src" / "jobs" / "stage1_spark_lakehouse_job.py"
+JOB_FILE = REPO_ROOT / "src" / "jobs" / "lakehouse_spark_lakehouse_job.py"
 README_FILE = REPO_ROOT / "README.md"
-SCHEMA_DOC = REPO_ROOT / "docs" / "02_schema_design.md"
+SCHEMA_DOC = REPO_ROOT / "docs" / "architecture/data-model.md"
 OPERATOR_RUNBOOK = REPO_ROOT / "docs" / "operator-runbook.md"
 SYSTEM_ARCHITECTURE_DOC = REPO_ROOT / "docs" / "system-architecture.md"
 
@@ -93,7 +93,7 @@ def test_gold_storage_paths_in_spark_job() -> None:
     text = _read(JOB_FILE)
     layers_used = _collect_gold_layers(text)
 
-    assert layers_used, "No s3a://.../gold/.../ paths found in stage1_spark_lakehouse_job.py"
+    assert layers_used, "No s3a://.../gold/.../ paths found in lakehouse_spark_lakehouse_job.py"
     illegal = layers_used - ALLOWED_GOLD_LAYERS
     assert not illegal, (
         f"Spark job writes to illegal Gold layers {sorted(illegal)}; "
@@ -110,7 +110,7 @@ def test_gold_layers_actually_used() -> None:
         "dim_company",
         "fact_financial_statement",
         "feat_company_unified",
-        "distress_labels",
+        "fact_distress_label",
     ):
         assert (
             required in folders_used
@@ -140,11 +140,11 @@ def test_schema_design_doc_documents_naming_convention() -> None:
     text = _read(SCHEMA_DOC)
     assert re.search(
         r"(?i)naming convention", text
-    ), "docs/02_schema_design.md is missing a 'naming convention' reference"
+    ), "docs/architecture/data-model.md is missing a 'naming convention' reference"
     for token in ("dim_", "fact_", "obt_", "feat_", "distress_labels"):
         assert (
             token in text
-        ), f"docs/02_schema_design.md does not mention required Gold token {token!r}"
+        ), f"docs/architecture/data-model.md does not mention required Gold token {token!r}"
 
 
 def test_schema_design_doc_documents_bronze_silver_naming() -> None:
@@ -152,22 +152,23 @@ def test_schema_design_doc_documents_bronze_silver_naming() -> None:
     text = _read(SCHEMA_DOC)
     assert re.search(
         r"(?i)bronze and silver naming", text
-    ), "docs/02_schema_design.md is missing a 'Bronze And Silver Naming' section"
+    ), "docs/architecture/data-model.md is missing a 'Bronze And Silver Naming' section"
     for token in ("bronze.companies", "silver.companies", "raw_", "stg_"):
-        assert (
-            token in text
-        ), f"docs/02_schema_design.md does not mention required Bronze/Silver token {token!r}"
+        assert token in text, (
+            "docs/architecture/data-model.md does not mention required "
+            f"Bronze/Silver token {token!r}"
+        )
 
 
 def test_readme_documents_deployment_diagram() -> None:
-    """The README embeds the Phase 1 architecture image directly and points to
+    """The README embeds the platform architecture image directly and points to
     docs/system-architecture.md, which is the diagram home (see
     plans/260814-1223-recsys-format-docs-overhaul/phase-03-architecture-diagram-set.md)
     and still embeds the DOT-rendered system_deployment_diagram.png."""
     readme_text = _read(README_FILE)
     assert (
         "images/architecture/architecture-stage-1.png" in readme_text
-    ), "README must embed the Phase 1 architecture-stage-1.png diagram"
+    ), "README must embed the platform architecture-stage-1.png diagram"
     assert (
         "docs/system-architecture.md" in readme_text
     ), "README must link to docs/system-architecture.md"
@@ -187,3 +188,71 @@ def _extract_section(text: str, heading: str) -> str:
     if not match:
         return ""
     return match.group("body")
+
+
+def test_naming_convention_lint_script_passes() -> None:
+    """scripts/lint_naming_convention.py (phase-02 §Naming Convention, F9/F10/F18) exits 0
+    against the repo's bronze/silver/gold/ops SQL DDL."""
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "lint_naming_convention.py")],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+    )
+    assert (
+        result.returncode == 0
+    ), f"naming convention lint failed:\n{result.stdout}\n{result.stderr}"
+
+
+def test_naming_convention_lint_catches_missing_gold_prefix(tmp_path: Path) -> None:
+    """A gold table without a dim_/fact_/obt_/feat_ prefix must fail the linter."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lint_naming_convention", REPO_ROOT / "scripts" / "lint_naming_convention.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    bad_sql = tmp_path / "bad.sql"
+    bad_sql.write_text("CREATE TABLE gold.unprefixed_table (\n    id VARCHAR PRIMARY KEY\n);\n")
+    findings = module.lint_file(bad_sql)
+    assert findings, "expected a finding for a gold table with no declared prefix"
+    assert any("no declared prefix" in finding for finding in findings)
+
+
+def test_naming_convention_lint_catches_version_token(tmp_path: Path) -> None:
+    """A table name carrying a version token (e.g. _v1) must fail the linter."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lint_naming_convention", REPO_ROOT / "scripts" / "lint_naming_convention.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    bad_sql = tmp_path / "bad.sql"
+    bad_sql.write_text("CREATE TABLE gold.fact_events_v1 (\n    id VARCHAR PRIMARY KEY\n);\n")
+    findings = module.lint_file(bad_sql)
+    assert any("version token" in finding for finding in findings)
+
+
+def test_naming_convention_lint_catches_at_suffix_in_ops() -> None:
+    """An ops column with the banned _at suffix must fail the linter (F3 rename target)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "lint_naming_convention", REPO_ROOT / "scripts" / "lint_naming_convention.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+
+    columns = ["run_id", "created_at", "checked_ts"]
+    findings = module.lint_ops_columns("ops.example", columns)
+    assert any("created_at" in finding and "_ts" in finding for finding in findings)

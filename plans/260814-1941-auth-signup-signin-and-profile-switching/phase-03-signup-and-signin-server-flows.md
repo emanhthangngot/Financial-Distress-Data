@@ -54,7 +54,7 @@ export async function registerWithPassword(
 ```
 
 It calls `auth.signUp({ email, password, options: { data: { full_name } } })`.
-`full_name` lands in `raw_user_meta_data`, which the Phase 1 trigger copies into
+`full_name` lands in `raw_user_meta_data`, which the platform .rigger copies into
 `profiles.display_name`. The exported action validates input (email shape,
 password length matching the project's `minimum_password_length`), maps errors to
 copy, writes cookies through `setSessionCookies`, and redirects.

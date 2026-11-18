@@ -2,7 +2,7 @@
 
 ## Scope
 
-Phase 2 / Phase 05 only. Reviewed the parent plan and Phase 05 acceptance
+platform . Phase 05 only. Reviewed the parent plan and Phase 05 acceptance
 criteria. No source, GitOps, generated evidence, requirement tests, commits,
 or staging state changed.
 

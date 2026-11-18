@@ -39,7 +39,7 @@ Proposed taxonomy — three markers, everything unmarked is fast-by-default:
 | Marker | Means | Known members |
 |---|---|---|
 | `services` | needs the running `docker compose` stack (Kafka/MinIO/Postgres/Airflow) | `tests/test_real_e2e_contracts.py` |
-| `postgres` | needs local `initdb`/`pg_ctl` binaries; spins an ephemeral cluster per session | `tests/phase2/product/*` (see `tests/phase2/product/conftest.py`) |
+| `postgres` | needs local `initdb`/`pg_ctl` binaries; spins an ephemeral cluster per session | `tests/platform/product/*` (see `tests/platform/product/conftest.py`) |
 | `slow` | >2s wall clock, no external dependency | assigned from measurement, step 2 |
 
 `services` and `postgres` also imply `slow`, so `-m "not slow"` is the single
@@ -47,7 +47,7 @@ Proposed taxonomy — three markers, everything unmarked is fast-by-default:
 inventing marker inheritance.
 
 **One availability gate already exists; markers do not replace it.**
-`tests/phase2/product/conftest.py:56-58` skips that suite when `initdb`/`pg_ctl`
+`tests/platform/product/conftest.py:56-58` skips that suite when `initdb`/`pg_ctl`
 are absent, unless `PHASE2_REQUIRE_PG=1` — which `.github/workflows/ci.yml` sets
 in the `test` job specifically so a missing Postgres fails CI instead of silently
 skipping the authorization rules. Validation session 1 decided to keep both, as
@@ -75,7 +75,7 @@ prose was wrong, and a marker that repeats a wrong claim is worse than no marker
 
 - Modify: `pyproject.toml` (`[tool.pytest.ini_options]`: `markers`, `addopts`)
 - Modify: `tests/test_real_e2e_contracts.py` (module-level `pytestmark`)
-- Modify: `tests/phase2/product/conftest.py` (apply markers to that package)
+- Modify: `tests/platform/product/conftest.py` (apply markers to that package)
 - Modify: `AGENTS.md` "Time-Costly" section (replace `-k <name>` guidance with
   marker selectors; correct the Flink claim if step 2 disproves it)
 - Modify: `README.md` test-command section, if it documents pytest invocations
@@ -107,7 +107,7 @@ prose was wrong, and a marker that repeats a wrong claim is worse than no marker
    ```
    in `tests/test_real_e2e_contracts.py`.
 4. Mark the Postgres-cluster package. Add a `pytest_collection_modifyitems`
-   hook to the existing `tests/phase2/product/conftest.py` that stamps
+   hook to the existing `tests/platform/product/conftest.py` that stamps
    `pytest.mark.postgres` and `pytest.mark.slow` on every item in that package —
    one place, no per-file churn, cannot drift as files are added. Leave the
    `PHASE2_REQUIRE_PG` skip at lines 56-58 of that same file untouched; the two
@@ -155,7 +155,7 @@ prose was wrong, and a marker that repeats a wrong claim is worse than no marker
 - Risk: `--strict-markers` in `addopts` breaks an existing unregistered marker.
   Mitigation: the current suite uses only `pytest.mark.parametrize` (built in);
   step 7's full run confirms.
-- Risk: the collection hook in `tests/phase2/product/conftest.py` also stamps
+- Risk: the collection hook in `tests/platform/product/conftest.py` also stamps
   items from sibling packages. Mitigation: the hook only receives items from its
   own directory subtree; assert that with the step-7 `-m "postgres"` count
   matching the file count in that package.

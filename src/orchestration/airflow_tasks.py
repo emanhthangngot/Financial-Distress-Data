@@ -9,17 +9,17 @@ from src.io.minio_publish import promote_staged_prefixes
 from src.io.minio_writer import write_minio_dataset
 from src.io.paths import DEFAULT_BUCKET
 from src.jobs.kafka_to_bronze_job import (
-    build_stage1_stream_events,
-    consume_stage1_stream_events_to_bronze,
-    produce_stage1_stream_events,
+    build_lakehouse_stream_events,
+    consume_lakehouse_stream_events_to_bronze,
+    produce_lakehouse_stream_events,
 )
-from src.jobs.stage1_evidence_job import (
+from src.jobs.lakehouse_evidence_job import (
     _ensure_bucket,
     _minio_client,
     build_evidence_payload,
     current_evidence_run_id,
 )
-from src.jobs.stage1_spark_lakehouse_job import run_stage1_spark_lakehouse
+from src.jobs.lakehouse_spark_lakehouse_job import run_lakehouse_spark_lakehouse
 from src.orchestration.pipeline_contracts import (
     stable_pipeline_run_id,
     validate_feature_audit,
@@ -64,11 +64,11 @@ def ingest_batch_to_bronze() -> dict[str, int]:
 def ingest_stream_to_bronze() -> dict[str, int | str]:
     """Publish correlated Kafka events and consume them into Bronze storage."""
     run_id = current_evidence_run_id()
-    produced = produce_stage1_stream_events(run_id)
-    batches = consume_stage1_stream_events_to_bronze(
+    produced = produce_lakehouse_stream_events(run_id)
+    batches = consume_lakehouse_stream_events_to_bronze(
         run_id,
         _bucket(),
-        len(build_stage1_stream_events(run_id)),
+        len(build_lakehouse_stream_events(run_id)),
     )
     return {"run_id": run_id, "records_produced": produced, "batches_written": len(batches)}
 
@@ -92,7 +92,7 @@ def validate_bronze(**context: Any) -> dict[str, int]:
 
 def spark_build_silver_gold() -> dict[str, int]:
     """Run the verified Spark Bronze-to-Silver/Gold implementation."""
-    return run_stage1_spark_lakehouse(_bucket())
+    return run_lakehouse_spark_lakehouse(_bucket())
 
 
 def validate_silver_gold(**context: Any) -> dict[str, int]:

@@ -1,4 +1,4 @@
-source_mode: online
+source_mode: fixture
 primary_library: vnstock
 fallback_sources:
   - cafe_f

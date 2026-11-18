@@ -1,4 +1,4 @@
-# Phase 2 Stage 2 — Completion Review
+# platform .tage 2 — Completion Review
 
 Target: `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`
 Branch: `dev` @ `e638b95` + 42 uncommitted files (working tree ahead of last commit).
@@ -16,7 +16,7 @@ Method: file/code evidence check per requirement + success criterion, `pnpm test
 | 2 | Separate LLM surfaces: assistant UI + registry UI | Built | `components/assistant/*`, `app/agents/registry/page.tsx` |
 | 3 | Admin surfaces (session/cost/GitOps/health/exports/promote/rollback/teardown) | Built (UI) | `app/ops/evidence/page.tsx` |
 | 4 | Fixed disclaimer on company/explanation/assistant/compare/export | Built | `components/shell/disclaimer-banner.tsx`, `components/assistant/assistant-message.tsx` both reference `DISCLAIMER_TEXT`; contract `DISCLAIMER_SURFACES` lists all 5 |
-| 5 | RBAC in Supabase RLS + Next.js server boundary, never client-only | Built | `supabase/migrations/20260803214600_phase2_rls.sql`, `apps/web/src/lib/server/guards.ts` (`guardRequest`), pytest `tests/phase2/product/test_rbac_rls.py` at 653 lines |
+| 5 | RBAC in Supabase RLS + Next.js server boundary, never client-only | Built | `supabase/migrations/20260803214600_phase2_rls.sql`, `apps/web/src/lib/server/guards.ts` (`guardRequest`), pytest `tests/platform/product/test_rbac_rls.py` at 653 lines |
 | 6 | 3 approved UI refs as responsive routes + deterministic screenshot fixtures, no boilerplate | Built | routes above + `e2e/evidence-manifest.ts` writes manifest per capture; PR #42 replaced create-next-app shell |
 | 7 | Loading/empty/stale/degraded/forbidden/timeout/policy-blocked states per route | Built | `assistant-message.tsx` maps `timeout`, `policy_blocked`, `eks_off`, etc.; `lib/states/route-states.ts` |
 | 8 | Registry/analyst/ops nav separated, shared contracts, assistant is overlay not substitute | Built | separate route trees + `packages/contracts` shared types |
@@ -33,7 +33,7 @@ All 9 requirements now have code-level evidence. None were checked in the file �
 | 3 | Idempotent retry -> one transition, one outbox action | Built | `session-actions.ts` idempotency key path, `outbox_events` schema |
 | 4 | Stale promotion -> fencing error, no GitOps mutation | Built | fencing token check in `session-actions.ts` + migration |
 | 5 | Disclaimer on every decision-support surface | Built | see requirement 4 |
-| 6 | UI-APPROVED-01 states in deterministic screenshots | Partial | `analyst-surfaces.spec.ts` exists and captures via `evidence-manifest.ts`; **not yet published** to `docs/phase2/evidence/product/` (only `design/` refs there) |
+| 6 | UI-APPROVED-01 states in deterministic screenshots | Partial | `analyst-surfaces.spec.ts` exists and captures via `evidence-manifest.ts`; **not yet published** to `docs/platform/evidence/product/` (only `design/` refs there) |
 | 7 | UI-APPROVED-02 assistant: stream, citations, tool trace, model version, no secret leak | Built (server) / Partial (evidence) | `POST /api/assistant/stream` route + test live; e2e specs (`assistant-streaming.spec.ts`, `assistant-quota.spec.ts`, `assistant-plane-off.spec.ts`) exist; not yet published as committed evidence |
 | 8 | UI-APPROVED-03 registry + evidence lifecycle, unauthorized actions disabled server-side | Built | `platform-surfaces.spec.ts`, ops route + guards |
 | 9 | Accessibility audit: keyboard, focus, labels, contrast, reduced-motion | **Missing** | no `@axe-core/playwright` in `apps/web/package.json`, no `a11y.spec.ts`, no axe config — confirmed via grep, zero hits |
@@ -46,7 +46,7 @@ All 9 requirements now have code-level evidence. None were checked in the file �
 | 2 — AI request path + SSE transport | Done, uncommitted. `app/api/assistant/stream/route.ts` + test, `inference-stream.ts`, `streaming-transport.ts`, 3 e2e specs + 3 Playwright configs |
 | 3 — outbox worker runtime | **Not started.** No `scripts/phase2/` directory, no `outbox-handlers.ts`. `drainOutbox` (`apps/web/src/lib/server/outbox-worker.ts`) still has no caller — a provision request has nothing to claim its outbox event |
 | 4 — coverage gate + component tests | **Not started.** No `coverage` key in either `vitest.config.ts`; 90/90 threshold unenforced, real number unknown |
-| 5 — accessibility + evidence publication | **Not started.** No axe spec/dep, no `publish-evidence.ts`, `docs/phase2/evidence/product/` holds only the 3 original design refs |
+| 5 — accessibility + evidence publication | **Not started.** No axe spec/dep, no `publish-evidence.ts`, `docs/platform/evidence/product/` holds only the 3 original design refs |
 
 Sub-phases 1-2 explain most of requirement-level "Built" status above; sub-phases 3-5 are exactly why success criteria 6/7/9 stay "Partial"/"Missing" and why the file's checkboxes are correctly still unticked.
 

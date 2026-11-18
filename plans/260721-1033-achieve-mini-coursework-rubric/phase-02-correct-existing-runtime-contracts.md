@@ -26,7 +26,7 @@ Fix reproduced defects so later rubric work builds on trustworthy data.
 - Modify: `src/jobs/stage1_spark_lakehouse_job.py`
 - Modify: `src/transforms/silver/`, `src/transforms/gold/`, `src/transforms/features/`
 - Modify: `src/quality/`, `src/metadata/`, `src/streaming/`
-- Modify: `configs/*.yaml`, `sql/init_project_metadata.sql`
+- Modify: `configs/*.yaml`, `sql/init_ops.sql`
 - Create focused integration tests under `tests/`
 
 ## Implementation Steps
@@ -70,7 +70,7 @@ python -m black --check src tests
 - Two-run SCD2 query output.
 - Atomic-publication failure probe.
 - Rejected-record PostgreSQL query output.
-- Completion report: [Phase 2 runtime contracts](./reports/phase-02-260722-1349-runtime-contracts.md).
+- Completion report: [platform .untime contracts](./reports/phase-02-260722-1349-runtime-contracts.md).
 
 ## Success Criteria
 

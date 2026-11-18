@@ -1,4 +1,4 @@
-"""Phase 2 Iceberg table definitions and schema-evolution helpers."""
+"""platform Iceberg table definitions and schema-evolution helpers."""
 
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ class TableDefinition:
     partition_spec: tuple[str, ...]
 
 
-PHASE2_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
+PLATFORM_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
     TableDefinition(
-        "phase2.features",
+        "platform.features",
         {
             "ticker": "string",
             "event_timestamp": "timestamp",
@@ -27,7 +27,7 @@ PHASE2_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
         ("ticker",),
     ),
     TableDefinition(
-        "phase2.labels",
+        "platform.labels",
         {
             "ticker": "string",
             "event_timestamp": "timestamp",
@@ -37,7 +37,7 @@ PHASE2_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
         ("ticker",),
     ),
     TableDefinition(
-        "phase2.drift_reference",
+        "platform.drift_reference",
         {
             "ticker": "string",
             "event_timestamp": "timestamp",
@@ -50,16 +50,16 @@ PHASE2_TABLE_DEFINITIONS: tuple[TableDefinition, ...] = (
 )
 
 
-def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebergTable]:
-    """Register all Phase 2 tables and return them by identifier.
+def register_platform_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebergTable]:
+    """Register all platform tables and return them by identifier.
 
     Existing registrations are accepted when their schema and partition spec
     still match; this makes repeated setup calls idempotent without hiding a
     contract drift.
     """
     tables: dict[str, LocalIcebergTable] = {}
-    for definition in PHASE2_TABLE_DEFINITIONS:
-        if definition.identifier in catalog.list_tables("phase2"):
+    for definition in PLATFORM_TABLE_DEFINITIONS:
+        if definition.identifier in catalog.list_tables("platform"):
             table = catalog.load_table(definition.identifier)
             if (
                 table.schema != dict(definition.schema)
@@ -78,14 +78,14 @@ def register_phase2_tables(catalog: LocalIcebergCatalog) -> dict[str, LocalIcebe
     return tables
 
 
-def phase2_table_definitions() -> tuple[TableDefinition, ...]:
+def platform_table_definitions() -> tuple[TableDefinition, ...]:
     """Return immutable definitions for callers that need to inspect them."""
-    return PHASE2_TABLE_DEFINITIONS
+    return PLATFORM_TABLE_DEFINITIONS
 
 
 __all__ = [
-    "PHASE2_TABLE_DEFINITIONS",
+    "PLATFORM_TABLE_DEFINITIONS",
     "TableDefinition",
-    "phase2_table_definitions",
-    "register_phase2_tables",
+    "platform_table_definitions",
+    "register_platform_tables",
 ]

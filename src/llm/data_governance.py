@@ -110,7 +110,7 @@ def detect_pii(text: str) -> list[PiiFinding]:
 
 def redact(text: str, findings: list[PiiFinding]) -> str:
     """Not called by ``RagIngestionPipeline`` today —
-    ``ml_metadata.rag_quarantine`` (sql/init_ml_metadata.sql) has no
+    ``ml.rag_quarantine`` (sql/init_ml_metadata.sql) has no
     chunk-text column at all, so there is nothing to redact into yet; a
     quarantined chunk's raw text is simply never persisted. Kept for the
     quarantine record a future audit-trail column would need — redact,

@@ -37,8 +37,8 @@ accumulated structural defects that a folder audit surfaced on 2026-08-06:
 - `tests/` is 40 flat files. AGENTS.md documents a "Time-Costly" test class
   (Docker/Kafka/Flink) in prose, but nothing in the tree or in pytest encodes it.
 
-This plan fixes exactly those five. It changes no Phase 1 pipeline semantics, no
-data contract, no Phase 2 product code, and adds no new capability.
+This plan fixes exactly those five. It changes no platform .ipeline semantics, no
+data contract, no platform .roduct code, and adds no new capability.
 
 ## Goals
 
@@ -61,7 +61,7 @@ data contract, no Phase 2 product code, and adds no new capability.
 | 5 | [Declare the Python package boundary](./phase-05-declare-the-python-package-boundary.md) | 2h | Pending |
 | 6 | [Encode test cost classes as pytest markers](./phase-06-encode-test-cost-classes-as-pytest-markers.md) | 1-2h | Pending |
 
-Phase 1 must run first so every later phase has a diff baseline. Phases 2-6 are
+platform .ust run first so every later phase has a diff baseline. Phases 2-6 are
 independent of each other and land as **one PR per phase** (validation session 1)
 — five small PRs on `fix/` and `chore/` branches, each independently revertable.
 This keeps the Flink repair, which cannot be fully verified without booting the
@@ -71,7 +71,7 @@ opt-in profile, isolated from the low-risk phases behind it.
 
 | Rejected | Why |
 |---|---|
-| Renaming `docs/phase2/`, `tests/phase2/`, `dags/phase2/` to domain names | Phase numbers in those paths encode the AGENTS.md Phase-1-don't-touch boundary and gate CI/rubric checks. Renaming churns hundreds of refs to buy naming purity. Revisit after coursework ends, never mid-plan. |
+| Renaming `docs/platform/`, `tests/platform/`, `dags/phase2/` to domain names | Phase numbers in those paths encode the AGENTS.md Phase-1-don't-touch boundary and gate CI/rubric checks. Renaming churns hundreds of refs to buy naming purity. Revisit after coursework ends, never mid-plan. |
 | Moving `images/` to `docs/assets/` | 4 files, ~10 doc references, plus `scripts/_rubric_items.py` evidence-path assertions and generated `docs/evidence/rubric_coverage.json`. Zero functional gain, non-zero chance of breaking a rubric evidence check. |
 | Consolidating the 8 `apps/web/playwright.*.config.ts` files | Each is wired to a named CI command in `.github/workflows/ci.yml` and package scripts. Cosmetic gain, real risk in the one part of the repo that is already clean. |
 | Splitting `tests/` into `unit/`/`integration/`/`e2e/` directories | Markers give the same selection power (phase 6) with zero import-path churn. Directory moves would break `testpaths` and every relative fixture path. |
@@ -80,7 +80,7 @@ opt-in profile, isolated from the low-risk phases behind it.
 
 ## Constraints
 
-- Phase 1 pipeline behavior, DAG IDs, task IDs, Gold contracts, and DQ semantics
+- platform .ipeline behavior, DAG IDs, task IDs, Gold contracts, and DQ semantics
   must not change. AGENTS.md "Don't Touch" applies in full.
 - Never edit a test's expected value to make it pass. If a move breaks a test,
   the move is wrong.
@@ -152,7 +152,7 @@ Failures, all surfaced as interview questions and now resolved:
    "Stage 1 CI"; the job id is `test`. A second job `contracts` covers the pnpm
    workspace.
 3. **[Scope Auditor] phase 6 understated existing state.** The plan said nothing
-   in pytest encodes the time-cost class. `tests/phase2/product/conftest.py:56-58`
+   in pytest encodes the time-cost class. `tests/platform/product/conftest.py:56-58`
    already gates that suite on `initdb` availability, with
    `PHASE2_REQUIRE_PG=1` set in CI to convert a skip into a failure.
 4. **[Fact Checker] phase 5 gitignore claim was half right.** `.gitignore:12`

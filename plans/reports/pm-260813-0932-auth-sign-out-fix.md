@@ -13,7 +13,7 @@ Status: **completed** — 4/4 phases, 23/23 tasks
   intentional no-sign-up contract with live Supabase Playwright.
 - Preserved the existing cookie, session, Supabase schema, RLS, and env
   contracts.
-- Updated `docs/phase2/product.md` with the auth boundary and logout caveat.
+- Updated `docs/platform/product.md` with the auth boundary and logout caveat.
 - Wrote the technical journal at
   `plans/journals/260813-0928-auth-sign-out-fix.md`.
 
@@ -25,7 +25,7 @@ Status: **completed** — 4/4 phases, 23/23 tasks
 | Live auth browser | 6/6 passed |
 | Cross-device analyst browser suite | 60/60 passed |
 | Web typecheck/lint/build | Passed |
-| Phase 1 repository gate | 311 pytest passed; Ruff, Black, Compose config, evidence audit passed |
+| platform .epository gate | 311 pytest passed; Ruff, Black, Compose config, evidence audit passed |
 | Code review | 9/10; zero critical issues |
 
 ## Risks and follow-up

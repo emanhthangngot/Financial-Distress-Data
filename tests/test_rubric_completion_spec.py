@@ -79,7 +79,7 @@ def test_reviewer_screenshot_html_sources_exist() -> None:
         path = SCREENSHOTS / name
         assert path.exists(), f"Missing screenshot source HTML: {path}"
         text = _read(path)
-        assert "Generated from checked-in Stage 1 evidence" in text
+        assert "Generated from checked-in platform evidence" in text
 
 
 def test_reviewer_screenshot_pngs_exist_and_are_nontrivial() -> None:

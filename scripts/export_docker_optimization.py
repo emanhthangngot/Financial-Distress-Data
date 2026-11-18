@@ -36,7 +36,7 @@ def comparison(baseline_bytes: int, optimized_bytes: int) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", default="financial-distress-airflow:baseline")
-    parser.add_argument("--optimized", default="financial-distress-airflow:stage1")
+    parser.add_argument("--optimized", default="financial-distress-airflow:lakehouse")
     parser.add_argument(
         "--output",
         type=Path,

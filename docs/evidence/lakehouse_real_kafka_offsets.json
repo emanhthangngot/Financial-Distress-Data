@@ -1,0 +1,17 @@
+{
+  "financial.price_events": [
+    "financial.price_events:0:13",
+    "financial.price_events:1:7",
+    "financial.price_events:2:7"
+  ],
+  "financial.news_events": [
+    "financial.news_events:0:6",
+    "financial.news_events:1:7",
+    "financial.news_events:2:5"
+  ],
+  "financial.alert_events": [
+    "financial.alert_events:0:5",
+    "financial.alert_events:1:3",
+    "financial.alert_events:2:1"
+  ]
+}

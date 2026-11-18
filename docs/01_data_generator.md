@@ -4,7 +4,7 @@
 
 Stage 1 uses deterministic source adapters to exercise the same data contracts that later live Vietnamese market collectors must satisfy. Fast contract tests retain `VnstockFixtureAdapter`; rubric-scale problem simulation uses the typed configurable generator documented in [Configurable Problem Generator](data-generator.md). The repository does not call live HOSE, HNX, SSI, or `vnstock` endpoints during tests or evidence runs.
 
-This document describes the current implemented contract, not a Phase 2 or cloud roadmap.
+This document describes the current implemented contract, not a the platform or cloud roadmap.
 
 ## Scope
 
@@ -20,7 +20,7 @@ In scope:
 Out of scope:
 
 - live-source scraping or paid API integration
-- Phase 2 drift simulation
+- the platform drift simulation
 - ML training, scoring, feature store serving, or model registry
 - AWS S3, Glue, Athena, RDS, EMR, MSK, SageMaker, Kubernetes
 
@@ -58,7 +58,7 @@ Feature/OBT builder -> joins market features to a report row -> excludes feature
 
 ## Batch Dataset Contracts
 
-The authoritative schema contracts live in `src/metadata/schema_registry.py` and are seeded into `project_metadata.schema_version_registry` by `sql/init_project_metadata.sql`.
+The authoritative schema contracts live in `src/metadata/schema_registry.py` and are seeded into `ops.schema_version_registry` by `sql/init_project_metadata.sql`.
 
 ### companies
 
@@ -295,7 +295,7 @@ materialize_bronze_batch_objects
   -> run_duckdb_validation_and_publish_evidence
 ```
 
-This mode writes Bronze/Silver/Gold Parquet to MinIO, persists metadata and DQ rows to local PostgreSQL, validates Gold objects through DuckDB, and publishes evidence artifacts under `evidence/stage1/run_id=...` in MinIO.
+This mode writes Bronze/Silver/Gold Parquet to MinIO, persists metadata and DQ rows to local PostgreSQL, validates Gold objects through DuckDB, and publishes evidence artifacts under `evidence/lakehouse/run_id=...` in MinIO.
 
 ## Volume Strategy
 

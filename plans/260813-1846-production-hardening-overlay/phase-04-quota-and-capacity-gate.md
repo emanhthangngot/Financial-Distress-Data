@@ -47,7 +47,7 @@ Target component budget for the final concurrent soak:
 | Phase 6 | External Secrets Operator, Linkerd control plane | ~1.5 |
 | Phase 7 | Lakekeeper, catalog Postgres | ~1.5 |
 | Phase 8 | Flink CDC job, CDC Postgres | ~2 |
-| Phase 9 | Phase 1 data plane (Kafka, MinIO, Airflow, Flink, Postgres) | ~5 |
+| Phase 9 | platform data plane (Kafka, MinIO, Airflow, Flink, Postgres) | ~5 |
 | Phase 10 | MLflow, training job, KServe models | ~4 |
 | Phase 11 | Argo Rollouts controller, extra exporters | ~1 |
 | Headroom | scheduling slack, rollout surge | ~3 |
@@ -185,7 +185,7 @@ kubectl describe nodes | grep -A5 "Allocated resources"
 
 - **IaC x2 (4 pts)** — "Dùng Terraform để setup GKE" and "Dùng Ansible để configure
   và deploy các service lên VM". The Terraform half lands here; the Ansible half
-  lands in phase 9 when the Phase 1 data plane is provisioned.
+  lands in phase 9 when the platform data plane is provisioned.
 
 ## Risk Assessment
 

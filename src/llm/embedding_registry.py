@@ -1,7 +1,7 @@
 """Versioned embedding registry with a dual-read, atomic alias swap.
 
 The registry is intentionally transport-neutral.  A deployment can persist
-the version records in ``ml_metadata`` and provide a reader that queries the
+the version records in ``ml`` and provide a reader that queries the
 old and candidate vector namespaces.  The state transition itself remains
 small and testable: validate both reads first, then change the active alias
 under one lock so a query never observes a mixed version.

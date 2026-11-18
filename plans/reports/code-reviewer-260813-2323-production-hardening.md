@@ -8,7 +8,7 @@ Scope: source-repo and sibling `financial-distress-gitops` worktree changes for 
 
 The new GitOps manifests and API chart defaults pin images to all-zero SHA-256 values (for example `platform/data-phase1/*.yaml`, `platform/data/lakehouse/*.yaml`, and `charts/{drift-api,feature-api}/values.yaml`). These are syntactically digest-shaped but cannot be pulled and cannot have a cosign signature. The resulting cluster cannot start the data plane or APIs, and this violates the repository rule against fake evidence/data. The image-pin validator only checks the shape, so it currently misses this blocker.
 
-### High — invalid Kubernetes API kind prevents Phase 1 deployment
+### High — invalid Kubernetes API kind prevents platform .eployment
 
 `platform/data-phase1/airflow.yaml:1-3` declares `kind: Deployment` under `apiVersion: batch/v1`; Deployments are `apps/v1`. A cluster apply will reject this object before Airflow starts.
 
@@ -16,9 +16,9 @@ The new GitOps manifests and API chart defaults pin images to all-zero SHA-256 v
 
 Both API applications expose only `/health` (`apps/drift-api/app/main.py` and `apps/feature-api/app/main.py`). The sibling Helm charts probe `/readyz` and `/healthz`, and their ServiceMonitors scrape `/metrics`. Consequently the pods remain unready (and rollout analyses have no application metrics), so the progressive-delivery acceptance path cannot succeed.
 
-### High — Phase 1 runtime image is missing its declared runtime dependencies
+### High — platform .untime image is missing its declared runtime dependencies
 
-`infra/phase1-cluster/Dockerfile.pipeline:21-22` installs only `pandas` and `pyyaml`, but its entrypoint `scripts.run_stage1_evidence` imports the Phase 1 runtime stack (`duckdb`, `kafka-python`, `minio`, `pyarrow`, `psycopg`, and related packages). The image will fail at import time in the cluster; copying `pyproject.toml`/`uv.lock` without installing the runtime extra does not provide those packages.
+`infra/phase1-cluster/Dockerfile.pipeline:21-22` installs only `pandas` and `pyyaml`, but its entrypoint `scripts.run_stage1_evidence` imports the platform .untime stack (`duckdb`, `kafka-python`, `minio`, `pyarrow`, `psycopg`, and related packages). The image will fail at import time in the cluster; copying `pyproject.toml`/`uv.lock` without installing the runtime extra does not provide those packages.
 
 ### High — CDC reconciliation can report a false successful match with no data
 
@@ -54,7 +54,7 @@ Both API charts suppress the Deployment when `rollout.enabled` is true, but the 
 
 ## Verification performed
 
-- Focused Phase 2 tests: **50 passed**.
+- Focused platform .ests: **50 passed**.
 - Focused Ruff and Black checks: **pass**.
 - `scripts/validate-gitops.sh`: exits 0, but skips kubeconform because it is not installed and accepts all-zero digest strings as valid pins.
 - `audit_phase2_evidence.py --matrix-only --strict --check-artifacts --gitops-root ../financial-distress-gitops --track LLM`: exits 0; this validates matrix/path shape, not live image existence, runtime readiness, or evidence completeness.

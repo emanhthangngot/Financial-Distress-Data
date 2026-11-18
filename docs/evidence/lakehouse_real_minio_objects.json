@@ -1,0 +1,378 @@
+[
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=2ba858f4-3b40-4280-9bf0-c0981a83fcdc/data.parquet",
+    "size": 3679
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=311c197b-9efb-4be4-bc6b-9193827f6ac8/data.parquet",
+    "size": 3693
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=6b374fe3-4bf7-44c2-8342-361a35422efb/data.parquet",
+    "size": 3811
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=89d29237-da55-47aa-ada7-3f0c01546ebd/data.parquet",
+    "size": 3693
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=8b64e337-885c-48b2-a917-39249e39d772/data.parquet",
+    "size": 3693
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=c48b786b-44ac-4da1-bd5e-cc66f0fdda59/data.parquet",
+    "size": 3693
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=cb84f8dd-7e7c-4e1f-9117-18bf74e90960/data.parquet",
+    "size": 3693
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=da133395-82ee-47bc-ae9b-5ed83e994c1d/data.parquet",
+    "size": 3812
+  },
+  {
+    "object_name": "bronze/kafka/financial.alert_events/event_date=2026-01-01/event_hour=09/batch_id=f6606078-2813-4a14-beed-6c219e6eb7ea/data.parquet",
+    "size": 3811
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=1e11f2b9-fdb3-4353-be73-0b28da82ae89/data.parquet",
+    "size": 5125
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=23624e97-c346-47a1-acf2-cd77ed0cfe45/data.parquet",
+    "size": 5125
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=2370e017-be3a-47c6-9cb7-2d17130a19fb/data.parquet",
+    "size": 5244
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=39818338-ec28-4690-b7e7-8a10c87ab155/data.parquet",
+    "size": 5243
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=6c11e2bc-eaad-409d-9ec0-75a4f238710e/data.parquet",
+    "size": 5243
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=8dc935a5-96e9-46bc-86fd-fefb0c107934/data.parquet",
+    "size": 5111
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=c91d178e-17d0-4c59-bfd8-6ce98375b35d/data.parquet",
+    "size": 5125
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=ddccda38-d78f-4b65-9f21-21eacc6743d1/data.parquet",
+    "size": 5125
+  },
+  {
+    "object_name": "bronze/kafka/financial.news_events/event_date=2026-01-01/event_hour=09/batch_id=f865b014-76a9-47e9-b401-c7773e307a2e/data.parquet",
+    "size": 5125
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=0f655a0b-6ef2-423b-a58d-261283355dfe/data.parquet",
+    "size": 4304
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=1ee123dc-0c28-4674-b171-899ac222480d/data.parquet",
+    "size": 4434
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=25f8b188-57e7-46d5-895c-3fe2bb1dce5d/data.parquet",
+    "size": 4318
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=a24f2b06-4df7-4e67-9237-b7638bd38fcb/data.parquet",
+    "size": 4318
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=b59337d5-9097-45e8-b1eb-f8e3f281c6a9/data.parquet",
+    "size": 4318
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=d8255f82-0e54-4a80-9a32-d1d14702d6a6/data.parquet",
+    "size": 4437
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=dbff07e1-8cb1-4b33-874a-11570df9ff20/data.parquet",
+    "size": 4318
+  },
+  {
+    "object_name": "bronze/kafka/financial.price_events/event_date=2026-01-01/event_hour=09/batch_id=f2bf0d6b-86c2-4129-895b-b62d3a6fb237/data.parquet",
+    "size": 4316
+  },
+  {
+    "object_name": "bronze/raw_companies/data.parquet",
+    "size": 3850
+  },
+  {
+    "object_name": "bronze/raw_financial_statements/data.parquet",
+    "size": 8580
+  },
+  {
+    "object_name": "bronze/raw_market_prices_daily/data.parquet",
+    "size": 5095
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=2026-09-09T08_43_54_00_00/lakehouse_duckdb_validation.json",
+    "size": 20769
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=2026-09-09T08_43_54_00_00/lakehouse_minio_objects.txt",
+    "size": 1134
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=2026-09-09T08_43_54_00_00/lakehouse_row_counts.json",
+    "size": 610
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=2026-09-09T08_43_54_00_00/lakehouse_stream_batches.json",
+    "size": 2652
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-06T03-00-00-00-00/lakehouse_duckdb_validation.json",
+    "size": 19812
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-06T03-00-00-00-00/lakehouse_minio_objects.txt",
+    "size": 1134
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-06T03-00-00-00-00/lakehouse_row_counts.json",
+    "size": 610
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-06T03-00-00-00-00/lakehouse_stream_batches.json",
+    "size": 2652
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-12T03-00-00-00-00/lakehouse_duckdb_validation.json",
+    "size": 19812
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-12T03-00-00-00-00/lakehouse_minio_objects.txt",
+    "size": 939
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-12T03-00-00-00-00/lakehouse_row_counts.json",
+    "size": 610
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-2026-06-12T03-00-00-00-00/lakehouse_stream_batches.json",
+    "size": 2652
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260912/lakehouse_duckdb_validation.json",
+    "size": 19812
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260912/lakehouse_minio_objects.txt",
+    "size": 1134
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260912/lakehouse_row_counts.json",
+    "size": 610
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260912/lakehouse_stream_batches.json",
+    "size": 2652
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260913/lakehouse_duckdb_validation.json",
+    "size": 19812
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260913/lakehouse_minio_objects.txt",
+    "size": 939
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260913/lakehouse_row_counts.json",
+    "size": 610
+  },
+  {
+    "object_name": "evidence/lakehouse/run_id=lakehouse-real-20260913/lakehouse_stream_batches.json",
+    "size": 2652
+  },
+  {
+    "object_name": "gold/dim_company/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/dim_company/part-00000-db3de22b-92fd-4d25-9c80-318505815e35-c000.snappy.parquet",
+    "size": 3086
+  },
+  {
+    "object_name": "gold/dim_date/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/dim_date/part-00000-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2655
+  },
+  {
+    "object_name": "gold/dim_date/part-00001-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2660
+  },
+  {
+    "object_name": "gold/dim_date/part-00002-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2677
+  },
+  {
+    "object_name": "gold/dim_date/part-00003-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2661
+  },
+  {
+    "object_name": "gold/dim_date/part-00004-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2677
+  },
+  {
+    "object_name": "gold/dim_date/part-00005-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2663
+  },
+  {
+    "object_name": "gold/dim_date/part-00006-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2672
+  },
+  {
+    "object_name": "gold/dim_date/part-00007-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2665
+  },
+  {
+    "object_name": "gold/dim_date/part-00008-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2682
+  },
+  {
+    "object_name": "gold/dim_date/part-00009-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2660
+  },
+  {
+    "object_name": "gold/dim_date/part-00010-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2678
+  },
+  {
+    "object_name": "gold/dim_date/part-00011-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2661
+  },
+  {
+    "object_name": "gold/dim_date/part-00012-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2678
+  },
+  {
+    "object_name": "gold/dim_date/part-00013-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2659
+  },
+  {
+    "object_name": "gold/dim_date/part-00014-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2658
+  },
+  {
+    "object_name": "gold/dim_date/part-00015-864e0f84-a392-471f-84a4-eb9ed0b95ca5-c000.snappy.parquet",
+    "size": 2816
+  },
+  {
+    "object_name": "gold/fact_distress_label/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/fact_distress_label/part-00000-3581b271-7844-4c08-8971-bd5093889875-c000.snappy.parquet",
+    "size": 5012
+  },
+  {
+    "object_name": "gold/fact_financial_statement/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/fact_financial_statement/part-00000-181c1b68-e8b9-4220-87f8-3e12841817eb-c000.snappy.parquet",
+    "size": 7881
+  },
+  {
+    "object_name": "gold/fact_market_alert/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/fact_market_alert/part-00000-d1d1cd07-0ffc-4cd6-b2e2-7a35c6605afd-c000.snappy.parquet",
+    "size": 4224
+  },
+  {
+    "object_name": "gold/fact_market_price/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/fact_market_price/part-00000-7c9e71a0-32b9-47f2-a4b8-ebc6ba0264c5-c000.snappy.parquet",
+    "size": 5386
+  },
+  {
+    "object_name": "gold/fact_news_sentiment/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/fact_news_sentiment/part-00000-6e554e23-da10-4c55-8c3a-8ef00aac3c94-c000.snappy.parquet",
+    "size": 5122
+  },
+  {
+    "object_name": "gold/feat_company_financial_4q/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/feat_company_financial_4q/part-00000-ff6d0ba5-f37f-42b6-b102-acb465b98b14-c000.snappy.parquet",
+    "size": 4225
+  },
+  {
+    "object_name": "gold/feat_company_market_30d/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/feat_company_market_30d/part-00000-5fa7eb8e-2fc5-402b-9fe1-3d87989240fa-c000.snappy.parquet",
+    "size": 3198
+  },
+  {
+    "object_name": "gold/feat_company_news_30d/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/feat_company_news_30d/part-00000-60043d9a-9852-458a-bab6-3b84870a87ec-c000.snappy.parquet",
+    "size": 2128
+  },
+  {
+    "object_name": "gold/feat_company_unified/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/feat_company_unified/part-00000-5ccb7986-9b8a-4d66-9e07-c887f1275437-c000.snappy.parquet",
+    "size": 17272
+  },
+  {
+    "object_name": "gold/obt_company_quarter_risk/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "gold/obt_company_quarter_risk/part-00000-2600e6d3-6799-4cba-ada4-633887e39fb8-c000.snappy.parquet",
+    "size": 11891
+  },
+  {
+    "object_name": "silver/stg_companies/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "silver/stg_companies/part-00000-629b8465-cdb7-4b13-8885-5f47d4c144de-c000.snappy.parquet",
+    "size": 2654
+  },
+  {
+    "object_name": "silver/stg_financial_statements/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "silver/stg_financial_statements/part-00000-cfedb107-3e85-4644-9196-677ab28d06d2-c000.snappy.parquet",
+    "size": 6838
+  },
+  {
+    "object_name": "silver/stg_market_prices_daily/_SUCCESS",
+    "size": 0
+  },
+  {
+    "object_name": "silver/stg_market_prices_daily/part-00000-4cc74db4-4402-404c-9211-9e67dcdd8604-c000.snappy.parquet",
+    "size": 4130
+  }
+]

@@ -1,8 +1,8 @@
-"""ML track class contracts (Phase 2 design contract, phase-01).
+"""ML track class contracts (platform .esign contract, phase-01).
 
 These are *signature contracts*, not implementations. They lock the five
 named ML classes before implementation begins. Each method carries a
-docstring that states its behaviour and the Phase 2 design reference.
+docstring that states its behaviour and the platform .esign reference.
 
 The contracts are intentionally side-effect free (documentation-level):
 implementations live under ``src/ml/`` in later phases and must satisfy
@@ -19,7 +19,7 @@ class TrainingDataService(ABC):
     """Reads Feast historical features, joins labels, and returns a validated
     training frame with snapshot lineage.
 
-    Design reference: docs/phase2/low-level-design.md (ML-1).
+    Design reference: docs/platform/low-level-design.md (ML-1).
     """
 
     @abstractmethod

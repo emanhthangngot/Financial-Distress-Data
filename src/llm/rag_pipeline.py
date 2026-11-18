@@ -111,7 +111,7 @@ class RagIngestionPipeline(RagIngestionService):
     that splits these five methods across separate Airflow tasks (as
     phase-04-implementation-notes.md section 7's per-subtask table implies)
     would lose that state across task boundaries. Whichever slice wires
-    ``dags/phase2/phase2_rag_ingest.py`` (4C) must call all five methods from
+    ``dags/rag_ingest.py`` (4C) must call all five methods from
     a single task, or carry ``license`` on ``Chunk`` itself so
     ``enforce_licensing_and_metadata`` doesn't need the lookup."""
 
@@ -236,7 +236,7 @@ class RagIngestionPipeline(RagIngestionService):
         would silently mislabel the vectors it just computed. Parent
         documents are registered *before* their chunks: ``rag_chunk.
         document_hash`` is ``NOT NULL REFERENCES rag_document`` (see
-        sql/init_ml_metadata.sql), so inserting chunks first would violate
+        sql/init_ml.sql), so inserting chunks first would violate
         that foreign key on every write against real Postgres."""
         if not chunks:
             return ""
@@ -270,11 +270,11 @@ def run_ingestion(
     """Runs all five contract methods in order against one pipeline instance
     — see ``RagIngestionPipeline``'s class docstring for why they must not
     be split across separate Airflow tasks. This is the single callable
-    ``dags/phase2/phase2_rag_ingest.py`` wraps in one ``PythonOperator``.
+    ``dags/rag_ingest.py`` wraps in one ``PythonOperator``.
 
     Lineage emission (Flow E, phase-04-implementation-notes.md section 2) is
-    deliberately not wired here — ``src/governance/phase2_lineage.py`` and
-    ``configs/phase2-governance.yaml`` are slice 4D's files, not 4C's."""
+    deliberately not wired here — ``src/governance/lineage.py`` and
+    ``configs/platform-governance.yaml`` are slice 4D's files, not 4C's."""
     documents = pipeline.fetch_documents(source, window)
     chunks = pipeline.parse_and_chunk(documents)
     chunks = pipeline.deduplicate_chunks(chunks)
@@ -293,10 +293,10 @@ def run_ingestion(
 def run_ingestion_task() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
-    dags/phase2/phase2_rag_ingest.py's only job is to point a
-    PythonOperator at this callable). ``PHASE2_PG_DSN`` required;
-    ``PHASE2_EMBEDDING_ENDPOINT`` unset falls back to the network-free hash
-    embedder, matching D5's CI default; ``PHASE2_RAG_SOURCE`` defaults to
+    dags/rag_ingest.py's only job is to point a
+    PythonOperator at this callable). ``PLATFORM_PG_DSN`` required;
+    ``PLATFORM_EMBEDDING_ENDPOINT`` unset falls back to the network-free hash
+    embedder, matching D5's CI default; ``PLATFORM_RAG_SOURCE`` defaults to
     the first registered source."""
     import os
     import uuid
@@ -307,14 +307,14 @@ def run_ingestion_task() -> dict[str, Any]:
     from src.llm.rag.embedding import DeterministicHashEmbedder, TeiHttpEmbedder
     from src.llm.rag.pgvector_store import PgVectorStore
 
-    source = os.environ.get("PHASE2_RAG_SOURCE", "vnstock_news_vnm")
-    embedding_endpoint = os.environ.get("PHASE2_EMBEDDING_ENDPOINT")
+    source = os.environ.get("PLATFORM_RAG_SOURCE", "vnstock_news_vnm")
+    embedding_endpoint = os.environ.get("PLATFORM_EMBEDDING_ENDPOINT")
     embedder = (
         TeiHttpEmbedder(endpoint=embedding_endpoint)
         if embedding_endpoint
         else DeterministicHashEmbedder()
     )
-    with psycopg.connect(os.environ["PHASE2_PG_DSN"]) as conn:
+    with psycopg.connect(os.environ["PLATFORM_PG_DSN"]) as conn:
         # PgVectorStore's own docstring documents this obligation: without
         # it, psycopg3 adapts list[float] to float8[] and there is no
         # implicit float8[] -> vector cast for a real vector(384) column.
@@ -322,16 +322,16 @@ def run_ingestion_task() -> dict[str, Any]:
         pipeline = RagIngestionPipeline(PgVectorStore(conn), embedder)
         result = run_ingestion(pipeline, source)
 
-    from src.governance.phase2_lineage import (
-        audit_phase2_lineage,
-        emit_phase2_lineage_if_configured,
+    from src.governance.lineage import (
+        audit_lineage,
+        emit_lineage_if_configured,
     )
 
-    result["lineage_audit"] = audit_phase2_lineage(pipeline_name="phase2_rag_ingest")
-    result["lineage_emit"] = emit_phase2_lineage_if_configured(
-        run_id=uuid.uuid4().hex, pipeline_name="phase2_rag_ingest"
+    result["lineage_audit"] = audit_lineage(pipeline_name="platform_rag_ingest")
+    result["lineage_emit"] = emit_lineage_if_configured(
+        run_id=uuid.uuid4().hex, pipeline_name="platform_rag_ingest"
     )
     return result
 
 
-# Touched to trigger phase2-rag-pipeline.yaml after the gitops-pr base-branch fix.
+# Touched to trigger platform-rag-pipeline.yaml after the gitops-pr base-branch fix.

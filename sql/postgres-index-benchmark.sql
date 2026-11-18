@@ -41,4 +41,4 @@ LIMIT 25;
 ROLLBACK;
 
 CREATE INDEX IF NOT EXISTS idx_source_request_log_run_status_requested_at
-ON project_metadata.source_request_log (run_id, request_status, requested_at DESC);
+ON ops.source_request_log (run_id, request_status, requested_at DESC);

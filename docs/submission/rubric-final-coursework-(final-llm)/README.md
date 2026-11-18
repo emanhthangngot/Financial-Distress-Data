@@ -9,8 +9,8 @@ scope: "docs/submission/rubric-final-coursework-(final-llm)/**"
 
 60 rubric rows, 100 points, mapped exclusively (no row claimed twice, no row
 unclaimed) across 21 narrative docs. Source of truth for the mapping is
-`docs/phase2/rubric-matrix.csv` (`track=LLM`). Each doc follows the skeleton in
-`docs/docs-style-contract.md`. `docs/phase2/evidence/llm/*.md` stays the
+`docs/platform/rubric-matrix.csv` (`track=LLM`). Each doc follows the skeleton in
+`docs/docs-style-contract.md`. `docs/platform/evidence/llm/*.md` stays the
 canonical, audit-pinned evidence — these docs tell the story and link down into
 it, they never move or duplicate it.
 
@@ -101,5 +101,5 @@ accumulates before the docs that assume it:
 - [Docs style contract](../../docs-style-contract.md)
 - [Mini-coursework rubric index](<../rubric-(mini-coursework)/README.md>)
 - [ML-track deferred index](../ml-track-deferred.md)
-- [Canonical LLM evidence rows](../../phase2/evidence/llm/)
-- [Rubric matrix](../../phase2/rubric-matrix.csv)
+- [Canonical LLM evidence rows](../../platform/evidence/llm/)
+- [Rubric matrix](../../platform/rubric-matrix.csv)

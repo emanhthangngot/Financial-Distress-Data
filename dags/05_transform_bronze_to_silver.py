@@ -3,7 +3,7 @@ DAG 05 - Transform Bronze to Silver (PySpark).
 
 Runs the PySpark Bronze-to-Silver job that normalises raw collector output, applies
 schema validation against the in-memory registry, and writes idempotent, partitioned
-Parquet to the Silver zone. Used by the Stage 1 evidence pipeline.
+Parquet to the Silver zone. Used by the platform evidence pipeline.
 
 W9 fail-fast: the smoke helper ``_transform_smoke_run`` captures the ``failed`` list
 returned by ``bronze_to_silver`` and raises ``AirflowFailException`` (or a clear
@@ -13,7 +13,7 @@ This prevents a single invalid bronze row from silently passing the smoke gate.
 
 from __future__ import annotations
 
-from dags.utils.stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.metadata.schema_registry import InMemorySchemaRegistry
 from src.transforms.bronze_to_silver import bronze_to_silver
 

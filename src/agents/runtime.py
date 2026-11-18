@@ -1,4 +1,4 @@
-"""HTTP runtime for the three Phase 2 agents.
+"""HTTP runtime for the three platform agents.
 
 The runtime only assembles the tested agent classes with MCP and model
 transports. Agent reasoning, scope enforcement and hop bounds remain in the
@@ -9,8 +9,10 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import time
+from collections.abc import Awaitable, Callable
 from contextlib import nullcontext
 from typing import Any
 from urllib.parse import urlsplit
@@ -21,14 +23,15 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.agents.coordinator import Coordinator
+from src.agents.coordinator import CoordinatorResponse
 from src.agents.drift_agent import DriftAgent
 from src.agents.feature_agent import FeatureAgent
+from src.agents.langgraph_runtime import build_langgraph_coordinator, coordinate_langgraph
 from src.agents.models import AgentFailure, SpecialistResponse
+from src.llm.http_endpoint import HttpEndpoint, absolute_http_url, reject_redirect
 from src.observability.telemetry import (
     CONTENT_TYPE_LATEST,
     Telemetry,
-    inject_trace_headers,
     metadata_from_headers,
     pii_finding_types,
 )
@@ -42,8 +45,8 @@ class RunRequest(BaseModel):
 
 
 class McpFeatureToolClient:
-    def __init__(self, url: str, telemetry: Telemetry | None = None) -> None:
-        self.url = url
+    def __init__(self, endpoint: HttpEndpoint, telemetry: Telemetry | None = None) -> None:
+        self.endpoint = endpoint
         self.telemetry = telemetry
 
     async def lookup(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -55,12 +58,14 @@ class McpFeatureToolClient:
         )
         try:
             with span_context:
-                async with httpx.AsyncClient(headers=inject_trace_headers()) as http_client:
-                    async with streamable_http_client(self.url, http_client=http_client) as (
-                        read,
-                        write,
-                        _,
-                    ):
+                async with httpx.AsyncClient(
+                    headers=self.endpoint.headers(),
+                    trust_env=self.endpoint.trust_env,
+                    event_hooks={"response": [reject_redirect]},
+                ) as http_client:
+                    async with streamable_http_client(
+                        self.endpoint.url, http_client=http_client
+                    ) as (read, write, _):
                         async with ClientSession(read, write) as session:
                             await session.initialize()
                             result = await session.call_tool(
@@ -74,8 +79,8 @@ class McpFeatureToolClient:
 
 
 class McpDriftToolClient:
-    def __init__(self, url: str, telemetry: Telemetry | None = None) -> None:
-        self.url = url
+    def __init__(self, endpoint: HttpEndpoint, telemetry: Telemetry | None = None) -> None:
+        self.endpoint = endpoint
         self.telemetry = telemetry
 
     async def report(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -90,12 +95,14 @@ class McpDriftToolClient:
         )
         try:
             with span_context:
-                async with httpx.AsyncClient(headers=inject_trace_headers()) as http_client:
-                    async with streamable_http_client(self.url, http_client=http_client) as (
-                        read,
-                        write,
-                        _,
-                    ):
+                async with httpx.AsyncClient(
+                    headers=self.endpoint.headers(),
+                    trust_env=self.endpoint.trust_env,
+                    event_hooks={"response": [reject_redirect]},
+                ) as http_client:
+                    async with streamable_http_client(
+                        self.endpoint.url, http_client=http_client
+                    ) as (read, write, _):
                         async with ClientSession(read, write) as session:
                             await session.initialize()
                             result = await session.call_tool(
@@ -111,12 +118,12 @@ class McpDriftToolClient:
 class OpenAICompatibleRenderer:
     def __init__(
         self,
-        base_url: str,
+        endpoint: HttpEndpoint,
         model: str,
         timeout_seconds: float = 30.0,
         telemetry: Telemetry | None = None,
     ) -> None:
-        self.url = base_url.rstrip("/") + "/chat/completions"
+        self.endpoint = endpoint.at("/chat/completions")
         self.model = model
         self.timeout_seconds = timeout_seconds
         self.telemetry = telemetry
@@ -129,7 +136,7 @@ class OpenAICompatibleRenderer:
         started = time.monotonic()
         first_response_at: float | None = None
         body: bytes
-        request_headers = inject_trace_headers({"Authorization": "Bearer not-required-local-model"})
+        request_headers = self.endpoint.headers()
         payload = {
             "model": self.model,
             "temperature": 0,
@@ -153,11 +160,16 @@ class OpenAICompatibleRenderer:
             with span_context:
                 async with httpx.AsyncClient(
                     timeout=self.timeout_seconds,
+                    trust_env=self.endpoint.trust_env,
+                    event_hooks={"response": [reject_redirect]},
                     headers=request_headers,
                 ) as client:
                     try:
-                        async with client.stream("POST", self.url, json=payload) as response:
-                            response.raise_for_status()
+                        async with client.stream(
+                            "POST", self.endpoint.url, json=payload
+                        ) as response:
+                            if not response.is_success:
+                                raise RuntimeError("model_unavailable")
                             chunks: list[bytes] = []
                             async for chunk in response.aiter_bytes():
                                 if chunk:
@@ -167,9 +179,10 @@ class OpenAICompatibleRenderer:
                             body = b"".join(chunks)
                     except AttributeError:
                         # Keeps small test doubles and older HTTP clients compatible.
-                        response = await client.post(self.url, json=payload)
+                        response = await client.post(self.endpoint.url, json=payload)
                         first_response_at = time.monotonic()
-                        response.raise_for_status()
+                        if not response.is_success:
+                            raise RuntimeError("model_unavailable") from None
                         body = response.content
             decoded = decode_model_response(body)
             usage = decoded.get("usage") or {}
@@ -240,8 +253,9 @@ def decode_model_response(body: bytes) -> dict[str, Any]:
 
 
 class HttpSpecialistClient:
-    def __init__(self, base_url: str, telemetry: Telemetry | None = None) -> None:
-        self.base_url = base_url
+    def __init__(self, endpoint: HttpEndpoint, telemetry: Telemetry | None = None) -> None:
+        self.endpoint = endpoint
+        self.run_url = endpoint.at("/v1/run").url
         self.telemetry = telemetry
 
     async def run(self, request: dict[str, Any]) -> SpecialistResponse:
@@ -253,86 +267,137 @@ class HttpSpecialistClient:
             )
             with span_context:
                 async with httpx.AsyncClient(
-                    base_url=self.base_url,
+                    trust_env=self.endpoint.trust_env,
+                    event_hooks={"response": [reject_redirect]},
                     timeout=45.0,
-                    headers=inject_trace_headers(),
+                    headers=self.endpoint.headers(),
                 ) as client:
-                    response = await client.post("/v1/run", json=request)
-                    response.raise_for_status()
-        except httpx.HTTPError as exc:
+                    response = await client.post(self.run_url, json=request)
+                    if not response.is_success:
+                        raise httpx.HTTPError("specialist_unavailable")
+            return SpecialistResponse.model_validate(response.json())
+        except (httpx.HTTPError, ValueError) as exc:
             if self.telemetry is not None:
                 self.telemetry.observe_failure("agent.specialist_http.run", type(exc).__name__)
-            raise OSError(f"specialist_unavailable:{self.base_url}") from exc
-        return SpecialistResponse.model_validate(response.json())
+            raise OSError(f"specialist_unavailable:{self.endpoint.url}") from exc
 
 
-async def dependencies_ready(role: str) -> tuple[bool, list[str]]:
-    """Probe only dependencies needed by this role, with a strict time bound."""
-    model_url = os.getenv(
-        "MODEL_BASE_URL",
-        "http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1",
-    ).rstrip("/")
+def mcp_health_endpoint(url_key: str, endpoint: HttpEndpoint) -> HttpEndpoint | None:
+    health_key = url_key.removesuffix("_URL") + "_HEALTH_URL"
+    override = os.getenv(health_key)
+    if override is None:
+        parsed = urlsplit(endpoint.url)
+        return HttpEndpoint(f"{parsed.scheme}://{parsed.netloc}/mcp-readyz", endpoint.token)
+    url = absolute_http_url(override)
+    if url is None:
+        return None
+    health = HttpEndpoint(url)
+    return HttpEndpoint(url, endpoint.token) if health.origin == endpoint.origin else health
 
-    def service_health(url: str) -> str:
-        parsed = urlsplit(url)
-        return f"{parsed.scheme}://{parsed.netloc}/healthz"
 
-    if role == "feature":
-        urls = [
-            service_health(os.getenv("FEATURE_MCP_URL", "http://feature-mcp/mcp/")),
-            f"{model_url}/models",
-        ]
-    elif role == "drift":
-        urls = [
-            service_health(os.getenv("DRIFT_MCP_URL", "http://drift-mcp/mcp/")),
-            f"{model_url}/models",
-        ]
-    elif role == "coordinator":
-        urls = [
-            os.getenv("FEATURE_AGENT_URL", "http://feature-agent").rstrip("/") + "/readyz",
-            os.getenv("DRIFT_AGENT_URL", "http://drift-agent").rstrip("/") + "/readyz",
-        ]
-    else:
-        return False, [f"unsupported_role:{role}"]
+async def dependencies_ready(probes: tuple[HttpEndpoint, ...]) -> list[str]:
+    """Probe only the configured dependencies needed by this role."""
     failures: list[str] = []
-    async with httpx.AsyncClient(timeout=2.0, headers=inject_trace_headers()) as client:
-        for url in urls:
+    for endpoint in probes:
+        async with httpx.AsyncClient(
+            timeout=2.0,
+            trust_env=endpoint.trust_env,
+            event_hooks={"response": [reject_redirect]},
+        ) as client:
             try:
-                response = await client.get(url)
+                response = await client.get(endpoint.url, headers=endpoint.headers())
                 response.raise_for_status()
-            except httpx.HTTPError:
-                failures.append(url)
-    return not failures, failures
+            except (httpx.HTTPError, httpx.InvalidURL):
+                failures.append(endpoint.url)
+    return failures
 
 
 def create_app() -> FastAPI:
     role = os.getenv("AGENT_ROLE", "feature")
     telemetry = Telemetry(service=f"{role}-agent")
-    model = OpenAICompatibleRenderer(
-        os.getenv(
-            "MODEL_BASE_URL",
-            "http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1",
-        ),
-        os.getenv("MODEL_NAME", "qwen2.5-0.5b-instruct"),
-        telemetry=telemetry,
-    )
-    feature = FeatureAgent(
-        McpFeatureToolClient(os.getenv("FEATURE_MCP_URL", "http://feature-mcp/mcp/"), telemetry),
-        model,
-        telemetry=telemetry,
-    )
-    drift = DriftAgent(
-        McpDriftToolClient(os.getenv("DRIFT_MCP_URL", "http://drift-mcp/mcp/"), telemetry),
-        model,
-        telemetry=telemetry,
-    )
-    coordinator = Coordinator(
-        HttpSpecialistClient(os.getenv("FEATURE_AGENT_URL", "http://feature-agent"), telemetry),
-        HttpSpecialistClient(os.getenv("DRIFT_AGENT_URL", "http://drift-agent"), telemetry),
-        max_hops=int(os.getenv("MAX_AGENT_HOPS", "2")),
-        timeout_seconds=float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0")),
-        telemetry=telemetry,
-    )
+    failures: list[str] = []
+    probes: tuple[HttpEndpoint, ...] = ()
+    run_agent: (
+        Callable[
+            [dict[str, Any]], Awaitable[SpecialistResponse | CoordinatorResponse | AgentFailure]
+        ]
+        | None
+    ) = None
+
+    def configured(url_key: str, token_key: str) -> HttpEndpoint | None:
+        endpoint = HttpEndpoint.from_env(url_key, token_key)
+        if endpoint is None:
+            failures.append(url_key)
+        return endpoint
+
+    if role in {"feature", "drift"}:
+        mcp_key = f"{role.upper()}_MCP"
+        mcp = configured(f"{mcp_key}_URL", f"{mcp_key}_TOKEN")
+        model_endpoint = configured("MODEL_BASE_URL", "MODEL_API_TOKEN")
+        if mcp is not None and model_endpoint is not None:
+            health = mcp_health_endpoint(f"{mcp_key}_URL", mcp)
+            if health is None:
+                failures.append(f"{mcp_key}_HEALTH_URL")
+            else:
+                model = OpenAICompatibleRenderer(
+                    model_endpoint,
+                    os.getenv("MODEL_NAME", "qwen2.5-0.5b-instruct"),
+                    telemetry=telemetry,
+                )
+                probes = (health, model_endpoint.at("/models"))
+                if role == "feature":
+                    run_agent = FeatureAgent(
+                        McpFeatureToolClient(mcp, telemetry), model, telemetry=telemetry
+                    ).run
+                else:
+                    run_agent = DriftAgent(
+                        McpDriftToolClient(mcp, telemetry), model, telemetry=telemetry
+                    ).run
+    elif role == "coordinator":
+        feature = configured("FEATURE_AGENT_URL", "FEATURE_AGENT_TOKEN")
+        drift = configured("DRIFT_AGENT_URL", "DRIFT_AGENT_TOKEN")
+        try:
+            max_hops = int(os.getenv("MAX_AGENT_HOPS", "2"))
+        except ValueError:
+            max_hops = 0
+        if max_hops < 1:
+            failures.append("MAX_AGENT_HOPS")
+        try:
+            timeout_seconds = float(os.getenv("AGENT_TIMEOUT_SECONDS", "50.0"))
+        except ValueError:
+            timeout_seconds = 0.0
+        if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+            failures.append("AGENT_TIMEOUT_SECONDS")
+        if feature is not None and drift is not None and not failures:
+            probes = (feature.at("/readyz"), drift.at("/readyz"))
+            graph = build_langgraph_coordinator(
+                HttpSpecialistClient(feature, telemetry),
+                HttpSpecialistClient(drift, telemetry),
+                max_hops=max_hops,
+                max_parallel=2,
+            )
+
+            async def run_coordinator(
+                payload: dict[str, Any],
+            ) -> CoordinatorResponse | AgentFailure:
+                operation = "agent.coordinator.coordinate"
+                telemetry.observe_agent_call("coordinator")
+                try:
+                    with telemetry.span(operation, {"agent": "coordinator"}):
+                        result = await coordinate_langgraph(
+                            graph, payload, timeout_seconds=timeout_seconds
+                        )
+                except Exception as exc:
+                    telemetry.observe_failure(operation, type(exc).__name__)
+                    raise
+                if isinstance(result, AgentFailure):
+                    telemetry.observe_failure(operation, result.error)
+                    LOGGER.warning("coordinator agent failure: %s", result.error)
+                return result
+
+            run_agent = run_coordinator
+    else:
+        failures.append(f"unsupported_role:{role}")
     application = FastAPI(title=f"{role}-agent", version="1.0.0")
     application.state.telemetry = telemetry
 
@@ -372,10 +437,14 @@ def create_app() -> FastAPI:
 
     @application.get("/readyz")
     async def readyz(response: Response) -> dict[str, Any]:
-        ready, failures = await dependencies_ready(role)
-        if not ready:
+        unavailable = failures or await dependencies_ready(probes)
+        if unavailable:
             response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {"status": "ready" if ready else "not_ready", "role": role, "failures": failures}
+        return {
+            "status": "not_ready" if unavailable else "ready",
+            "role": role,
+            "failures": unavailable,
+        }
 
     @application.get("/metrics", include_in_schema=False)
     async def metrics() -> Response:
@@ -384,16 +453,17 @@ def create_app() -> FastAPI:
     @application.post("/v1/run")
     async def run(payload: dict[str, Any]) -> dict[str, Any]:
         RunRequest.model_validate(payload)
-        if role == "feature":
-            result: SpecialistResponse | AgentFailure = await feature.run(payload)
-        elif role == "drift":
-            result = await drift.run(payload)
-        elif role == "coordinator":
-            result = await coordinator.coordinate(payload)
-            if isinstance(result, AgentFailure):
-                LOGGER.warning("coordinator agent failure: %s", result.error)
+        result: SpecialistResponse | CoordinatorResponse | AgentFailure
+        if run_agent is None:
+            result = AgentFailure(
+                error=(
+                    "dependency_unavailable"
+                    if role in {"feature", "drift", "coordinator"}
+                    else f"unsupported agent role: {role}"
+                )
+            )
         else:
-            result = AgentFailure(error=f"unsupported agent role: {role}")
+            result = await run_agent(payload)
         return result.model_dump()
 
     return application

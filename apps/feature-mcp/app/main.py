@@ -93,6 +93,7 @@ class FeastOnlineFeatureClient:
     def __init__(self, repo_path: str | Path) -> None:
         self.repo_path = str(repo_path)
         self._store: Any | None = None
+        self._readiness_probe: asyncio.Task[bool] | None = None
 
     def _feature_store(self) -> Any:
         if self._store is None:
@@ -125,19 +126,23 @@ class FeastOnlineFeatureClient:
         except Exception as exc:
             raise ServiceUnavailable("online feature lookup failed") from exc
 
-    async def ready(self) -> bool:
+    async def _probe_store(self) -> bool:
         try:
-            await asyncio.to_thread(self._feature_store)
-            host = os.getenv("FEAST_REDIS_HOST", "phase2-redis")
-            reader, writer = await asyncio.wait_for(
-                asyncio.open_connection(host, int(os.getenv("FEAST_REDIS_PORT", "6379"))),
-                timeout=2.0,
+            await self.get_by_id(
+                "PORTABILITY_READINESS_PROBE", ("company_risk_features:current_ratio",)
             )
-            del reader
-            writer.close()
-            await writer.wait_closed()
             return True
-        except Exception:
+        except ServiceUnavailable:
+            return False
+
+    async def ready(self) -> bool:
+        if self._readiness_probe is None or self._readiness_probe.done():
+            self._readiness_probe = asyncio.create_task(self._probe_store())
+        # A timed-out await cannot cancel Feast's synchronous I/O. Reuse the
+        # in-flight probe so repeated readiness requests cannot queue workers.
+        try:
+            return await asyncio.wait_for(asyncio.shield(self._readiness_probe), timeout=2.0)
+        except TimeoutError:
             return False
 
 
@@ -154,7 +159,7 @@ class PostgresRagLookupClient:
             cursor.execute(
                 """
                 SELECT chunk_id, chunk_text, source_uri, company, report_date, access_class
-                FROM ml_metadata.rag_chunk
+                FROM ml.rag_chunk
                 WHERE chunk_id = %s
                 """,
                 (chunk_id,),
@@ -185,17 +190,43 @@ class PostgresRagLookupClient:
             return False
 
 
+def _rag_dsn_from_env() -> str | None:
+    dsn = os.getenv("RAG_DATABASE_URL")
+    if dsn is not None:
+        from psycopg import ProgrammingError
+        from psycopg.conninfo import conninfo_to_dict
+
+        try:
+            settings = conninfo_to_dict(dsn)
+        except ProgrammingError:
+            return None
+        return dsn if settings.get("host") or settings.get("hostaddr") else None
+
+    host = os.getenv("PLATFORM_PG_HOST", "").strip()
+    password = os.getenv("PLATFORM_PG_PASSWORD")
+    if not host or not password:
+        return None
+    try:
+        port = int(os.getenv("PLATFORM_PG_PORT", "5432"))
+    except ValueError:
+        return None
+    if not 0 < port < 65536:
+        return None
+    from psycopg.conninfo import make_conninfo
+
+    return make_conninfo(
+        host=host,
+        port=port,
+        dbname=os.getenv("PLATFORM_PG_DATABASE", "ml"),
+        user=os.getenv("PLATFORM_PG_USER", "platform"),
+        password=password,
+        connect_timeout=3,
+    )
+
+
 def production_clients_from_env() -> tuple[OnlineFeatureClient, RagLookupClient]:
-    feast_repo = os.getenv("FEAST_REPO_PATH")
-    rag_dsn = os.getenv("RAG_DATABASE_URL")
-    if not rag_dsn and os.getenv("PHASE2_PG_PASSWORD"):
-        rag_dsn = (
-            f"host={os.getenv('PHASE2_PG_HOST', 'phase2-postgres')} "
-            f"port={os.getenv('PHASE2_PG_PORT', '5432')} "
-            f"dbname={os.getenv('PHASE2_PG_DATABASE', 'ml_metadata')} "
-            f"user={os.getenv('PHASE2_PG_USER', 'phase2')} "
-            f"password={os.environ['PHASE2_PG_PASSWORD']} connect_timeout=3"
-        )
+    feast_repo = os.getenv("FEAST_REPO_PATH", "").strip()
+    rag_dsn = _rag_dsn_from_env()
     features: OnlineFeatureClient = (
         FeastOnlineFeatureClient(feast_repo) if feast_repo else UnconfiguredFeatureClient()
     )
@@ -362,6 +393,12 @@ def create_app(
         if await features.ready() and await rag.ready():
             return HealthResponse(status="ready")
         return _error(503, "not_ready", "one or more lookup dependencies are unavailable")
+
+    @application.get("/mcp-readyz", response_model=HealthResponse)
+    async def mcp_readyz() -> HealthResponse | JSONResponse:
+        if mcp_runtime is not None and await mcp_runtime.api.ready():
+            return HealthResponse(status="ready")
+        return _error(503, "not_ready", "MCP upstream is unavailable")
 
     @application.post("/v1/features/by-id", response_model=FeatureResponse)
     async def feature_by_id(payload: FeatureRequest) -> FeatureResponse:

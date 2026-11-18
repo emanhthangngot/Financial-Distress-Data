@@ -1,5 +1,5 @@
 /**
- * Route state contract. Every route in the Phase 2 inventory renders one of
+ * Route state contract. Every route in the platform .nventory renders one of
  * these states, and every non-success state must answer the same three
  * questions: what is unavailable, what is cached or last known, and what the
  * user can safely do next.

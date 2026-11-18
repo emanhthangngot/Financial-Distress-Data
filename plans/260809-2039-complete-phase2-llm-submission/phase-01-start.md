@@ -31,12 +31,12 @@ at empty placeholder files, so their evidence would cite a comment.
 ## Requirements
 
 - Functional: `--require-executed` is satisfiable in principle; `artifact_path`
-  and `rubric_id` collisions resolved; a Phase 2 dependency manifest exists and
+  and `rubric_id` collisions resolved; a platform .ependency manifest exists and
   CI installs it; sealed-secrets actually runs; the Terraform row's declared
   artifact is the real entrypoint; NetworkPolicy is enforced; every GitOps path
   phases 2-5 write to has an Argo Application watching it.
 - Non-functional: `.venv` (Phase 1) is not mutated — proven by re-running the
-  Phase 1 gate; the cluster returns to zero nodes and the evidence VM stops when
+  platform .ate; the cluster returns to zero nodes and the evidence VM stops when
   the session ends.
 
 ## Architecture
@@ -125,12 +125,12 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
   notebook retarget, `behavioral_assertion` column)
 - Modify: `scripts/generate_phase2_requirement_tests.py` (per-row assertion,
   non-placeholder check)
-- Regenerate: `docs/phase2/rubric-matrix.csv`, `tests/phase2/requirements/*`
+- Regenerate: `docs/platform/rubric-matrix.csv`, `tests/platform/requirements/*`
 - Create: `requirements-phase2.txt` (or a `[project.optional-dependencies] phase2`
   group in `pyproject.toml`)
 - Modify: `.github/workflows/phase2-ci.yaml` (install the phase-2 deps; replace
   the `eval` on the `test_selector` input with an array form)
-- Modify: `docs/phase2/evidence/llm/LLM-ci-cd-job-1.md`,
+- Modify: `docs/platform/evidence/llm/LLM-ci-cd-job-1.md`,
   `LLM-ci-cd-job-2.md` (redaction status)
 - Create/modify (GitOps): `terraform/gcp/gke.tf` (network policy, lifecycle),
   `terraform/envs/evidence/main.tf` (make it the real entrypoint),
@@ -139,7 +139,7 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
   `argocd/applications/platform-agents.yaml`,
   `argocd/applications/platform-observability.yaml`,
   `argocd/applications/platform-llm.yaml`, `apps/dev/.gitkeep`
-- Create: 3 evidence files under `docs/phase2/evidence/llm/` (IDs copied from
+- Create: 3 evidence files under `docs/platform/evidence/llm/` (IDs copied from
   the table above)
 
 ## Implementation Steps
@@ -150,7 +150,7 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
    phase-04 rows to `executed`, regenerating the CSV and tests, and running
    `--strict --require-executed --track LLM --accept-design-only <the 53 not yet
    done>` — it must pass on the seven.
-3. Create the Phase 2 dependency manifest with `fastapi`, `feast`, `hypothesis`,
+3. Create the platform .ependency manifest with `fastapi`, `feast`, `hypothesis`,
    `mutmut`, `locust`, `mcp` and the rest; install into **`.venv-phase2` only**;
    wire it into `phase2-ci.yaml`. Then run
    `.venv/bin/python scripts/run_stage1_quality_gates.py` to prove `.venv` is
@@ -183,14 +183,14 @@ correct manifests, see everything `Synced Healthy`, and deploy nothing.
 ## Success Criteria
 
 - [x] Maintainer -> runs the strict audit with the seven phase-04 rows flipped -> passes, proving the executed gate is satisfiable end to end. (verified: `--strict --require-executed --track LLM --accept-design-only <53 remaining>` exits 0)
-- [x] Maintainer -> stamps a test evidence file and commits -> the ancestor-SHA rule accepts it, and a tampered non-ancestor SHA is rejected. (`test_ancestor_sha_allows_only_evidence_sha_delta`, `test_nonancestor_sha_is_rejected` in `tests/phase2/test_rubric_matrix.py`)
+- [x] Maintainer -> stamps a test evidence file and commits -> the ancestor-SHA rule accepts it, and a tampered non-ancestor SHA is rejected. (`test_ancestor_sha_allows_only_evidence_sha_delta`, `test_nonancestor_sha_is_rejected` in `tests/platform/test_rubric_matrix.py`)
 - [x] Maintainer -> runs the audit against an evidence file containing a fake `ghp_` token -> the secret denylist fails it. (`test_secret_denylist_rejects_adversarial_forms`)
 - [x] Test runner -> regenerates the requirement tests -> each row's test asserts something behavioral, and a placeholder-comment artifact fails the non-placeholder check. (`test_generated_contract_rejects_placeholder_artifacts` + friends; 72 requirement tests pass)
-- [x] Phase 1 maintainer -> runs the Stage 1 quality gate after the phase-2 install -> passes, proving `.venv` untouched. (`.venv/bin/python -m pytest tests -m "not slow"` → 658 passed; ruff/black clean)
+- [x] platform .aintainer -> runs the Stage 1 quality gate after the phase-2 install -> passes, proving `.venv` untouched. (`.venv/bin/python -m pytest tests -m "not slow"` → 658 passed; ruff/black clean)
 - [x] Operator -> deploys a deny-all NetworkPolicy in a scratch namespace -> a pod inside it cannot reach the internet. (`platform/security/default-deny-networkpolicy.yaml`, GitOps-tracked via `platform-security` Argo app, live in `networkpolicy-negative-test` ns; probe pod log: `curl: (28) Resolving timed out` → `EGRESS_BLOCKED`)
 - [x] Operator -> reads the capacity budget -> knows the vCPU/GiB ceiling for phases 2-5 and whether a second node is available. (`docs/submission/cost.md`: 8+2=10/12 with VM up, 8+4=12/12 only after VM stop, secondary pool must return to 0 before VM restart)
-- [x] Platform operator -> runs `terraform plan` with the cluster up -> gets "No changes", captured with `terraform output`. (`terraform/envs/evidence` init + plan against live cluster: "No changes. Your infrastructure matches the configuration." — `docs/phase2/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`, flipped to `executed`)
-- [x] Platform operator -> runs the Ansible playbook twice -> healthy host, `changed=0` on the second run. (run 1 `changed=1`, run 2 `changed=0`; `docs/phase2/evidence/llm/LLM-iac-d-ng-ansible-configure-v-deplo.md`, flipped to `executed`)
+- [x] Platform operator -> runs `terraform plan` with the cluster up -> gets "No changes", captured with `terraform output`. (`terraform/envs/evidence` init + plan against live cluster: "No changes. Your infrastructure matches the configuration." — `docs/platform/evidence/llm/LLM-iac-d-ng-terraform-setup-gke-ho-c-.md`, flipped to `executed`)
+- [x] Platform operator -> runs the Ansible playbook twice -> healthy host, `changed=0` on the second run. (run 1 `changed=1`, run 2 `changed=0`; `docs/platform/evidence/llm/LLM-iac-d-ng-ansible-configure-v-deplo.md`, flipped to `executed`)
 - [ ] Operator -> runs `make gcp-down` then `gcp-status` -> node pools at zero **and** the evidence VM stopped. **Deliberately deferred** — user decision 2026-08-10: keep the cluster up across phases 2-6 in this session rather than hibernate between every phase; run this at the true end of the multi-phase session.
 
 ## Risk Assessment

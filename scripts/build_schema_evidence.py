@@ -18,9 +18,14 @@ def build_schema_evidence(sql_path: Path, output: Path) -> dict[str, object]:
     try:
         connection.execute(sql_path.read_text(encoding="utf-8"))
         connection.execute("""
-            INSERT INTO gold.dim_company VALUES
-              ('aaa-v1', 'aaa', 'AAA', 'Alpha Old', '2025-01-01', '2026-01-01', false),
-              ('aaa-v2', 'aaa', 'AAA', 'Alpha New', '2026-01-01', NULL, true)
+            INSERT INTO gold.dim_company
+              (company_version_key, ticker, company_name, exchange, industry, sector,
+               listing_date, delisted_flag, valid_from_ts, valid_to_ts, is_current)
+            VALUES
+              ('aaa-v1', 'AAA', 'Alpha Old', 'HOSE', NULL, NULL, NULL, false,
+               '2025-01-01', '2026-01-01', false),
+              ('aaa-v2', 'AAA', 'Alpha New', 'HOSE', NULL, NULL, NULL, false,
+               '2026-01-01', NULL, true)
             """)
         tables = connection.execute("""
             SELECT table_schema, table_name
@@ -48,7 +53,7 @@ def build_schema_evidence(sql_path: Path, output: Path) -> dict[str, object]:
     finally:
         connection.close()
 
-    required_timestamps = {"event_timestamp", "created_ts"}
+    required_timestamps = {"event_timestamp", "created_timestamp", "known_from_ts"}
     missing_feature_timestamps = [
         table for table, columns in feature_columns if not required_timestamps.issubset(columns)
     ]

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Runs dags/phase2/phase2_stream_feature_offline.py's callable
+# Runs dags/platform/phase2_stream_feature_offline.py's callable
 # (src.ml.feast.offline_job.run_offline_job) as a standalone deployable —
 # see phase-04-implementation-notes.md section 2, "two processes, two
 # images" (this is the offline half; stream-feature-online is the other).

@@ -4,21 +4,18 @@ date: 2026-08-14
 status: active
 ---
 
-# CI/CD: six deployables through the same reusable lint→test→build→sign→GitOps-PR template
+# CI/CD: six coursework deployables through a reusable build, signing and GitOps handoff
 
-This doc proves the six rows in "CI/CD": one reusable template
-(`.github/workflows/phase2-ci.yaml`) drives lint, test, build, cosign sign,
-push an immutable GHCR digest, and open a GitOps digest-bump/manifest-rewrite
-PR — for the coordinator agent, feature agent, drift agent, and RAG data
-pipeline deployables, plus the two Feast stream-feature jobs. No secret is
-embedded in code — GHCR auth and cosign signing use GitHub Actions' own
-token/OIDC identity. It does not prove blue/green or canary deployment
-strategy — every merge here is a rolling digest bump.
+This document records the coursework CI/CD runs: a reusable workflow linted,
+tested, built, signed and published immutable GHCR image digests, then opened
+GitOps PRs for the coordinator, feature and drift agents, RAG data pipeline,
+and the two Feast stream-feature jobs. The capture used GitHub Actions identity
+for registry authentication and Sigstore signing. The recorded deployments
+were rolling digest bumps, not blue/green or canary releases.
 
-**Active deployment facts:** `.github/workflows/phase2-ci.yaml` (reusable
-template) called by 6 caller workflows; `sigstore/cosign-installer@v3.7.0`;
-GitOps target repo `financial-distress-gitops` (private, default branch
-`master`).
+The [reusable workflow executed by the RAG run](https://github.com/emanhthangngot/Financial-Distress-Data/blob/41940f6c1ed1fa16a80ef886b95302e6c53d8239/.github/workflows/phase2-ci.yaml)
+shows the historical GitOps handoff. The [current source workflow](../../../.github/workflows/phase2-ci.yaml)
+publishes signed images without opening deployment PRs.
 
 ## Part I — Six real CI runs
 
@@ -40,18 +37,30 @@ image: ghcr.io/emanhthangngot/financial-distress-data/drift-agent@sha256:b29bdbf
 ```
 
 Full evidence, one file per deployable:
-[`LLM-ci-cd-agent-l-m-coordinator.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-l-m-coordinator.md) (coordinator),
-[`LLM-ci-cd-agent-k-o-d-li-u.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-k-o-d-li-u.md) (feature-agent),
-[`LLM-ci-cd-agent-drift-detection.md`](../../phase2/evidence/llm/LLM-ci-cd-agent-drift-detection.md) (drift-agent),
-[`LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md`](../../phase2/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md) (RAG pipeline),
-[`LLM-ci-cd-job-1.md`](../../phase2/evidence/llm/LLM-ci-cd-job-1.md) (stream-feature-offline),
-[`LLM-ci-cd-job-2.md`](../../phase2/evidence/llm/LLM-ci-cd-job-2.md) (stream-feature-online).
+[`LLM-ci-cd-agent-l-m-coordinator.md`](../../platform/evidence/llm/LLM-ci-cd-agent-l-m-coordinator.md) (coordinator),
+[`LLM-ci-cd-agent-k-o-d-li-u.md`](../../platform/evidence/llm/LLM-ci-cd-agent-k-o-d-li-u.md) (feature-agent),
+[`LLM-ci-cd-agent-drift-detection.md`](../../platform/evidence/llm/LLM-ci-cd-agent-drift-detection.md) (drift-agent),
+[`LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md`](../../platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md) (RAG pipeline),
+[`LLM-ci-cd-job-1.md`](../../platform/evidence/llm/LLM-ci-cd-job-1.md) (stream-feature-offline),
+[`LLM-ci-cd-job-2.md`](../../platform/evidence/llm/LLM-ci-cd-job-2.md) (stream-feature-online).
+
+### RAG run attribution
+
+The [GitHub Actions REST record for run 31405317841](https://api.github.com/repos/emanhthangngot/Financial-Distress-Data/actions/runs/31405317841)
+reports `41940f6c1ed1fa16a80ef886b95302e6c53d8239` for both the
+[RAG caller](https://github.com/emanhthangngot/Financial-Distress-Data/blob/41940f6c1ed1fa16a80ef886b95302e6c53d8239/.github/workflows/phase2-rag-pipeline.yaml)
+(`head_sha`) and the reusable workflow (`referenced_workflows[].sha`).
+The [original receipt](../../platform/evidence/llm/LLM-ci-cd-ci-cd-cho-rag-data-pipeline.md)
+points to that successful run but records `source_sha`
+`9ec6f065276d316bad1e308c88028c5662edc4db`. The receipt is preserved
+unchanged; its stamp is not the executed workflow revision. The requirement
+check uses local Git history to inspect the executed workflow and verifies the
+receipt's original stamp and run URL without calling GitHub.
 
 ## Part II — Real bugs found and fixed while building the reusable template
 
 Three infrastructure bugs surfaced on the first CI runs and were fixed once
-in `phase2-ci.yaml`, benefiting all six caller workflows — not patched
-per-workflow:
+in the reusable workflow, benefiting all six historical callers.
 
 1. **Missing `packages: write` permission.** The repo's default
    `GITHUB_TOKEN` is read-only; the `build` job's GHCR push was rejected

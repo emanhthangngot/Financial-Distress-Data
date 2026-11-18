@@ -110,8 +110,8 @@ per 24h quota, 5 requests per 60s rate limit.
 - Modify: `apps/web/src/lib/server/guards.ts` — import `RateLimitState` from contracts instead of declaring it
 - Create: `apps/web/src/lib/server/ai-budget.ts` + `ai-budget.test.ts` — server wrapper over both RPCs, translating errors to user-facing copy
 - Modify: `apps/web/src/lib/data/port.ts`, `supabase-adapter.ts`, `fixture-adapter.ts` — `readAiBudget(userId)` for the remaining-quota display
-- Modify: `tests/phase2/product/test_rbac_rls.py` — role/action pairs for the new objects
-- Modify: `docs/phase2/security/rbac.md` — the two new RPCs and their grants
+- Modify: `tests/platform/product/test_rbac_rls.py` — role/action pairs for the new objects
+- Modify: `docs/platform/security/rbac.md` — the two new RPCs and their grants
 
 ## Implementation Steps
 
@@ -145,7 +145,7 @@ per 24h quota, 5 requests per 60s rate limit.
 - [x] Analyst -> direct `insert`/`update` on `ai_request_usage` -> permission denied; only the RPC writes. `test_analyst_cannot_insert_usage_directly`, `test_analyst_cannot_update_usage_directly`.
 - [x] `platform_viewer` -> reads `audit_log` -> sees rows; `analyst` -> reads another user's audit rows -> zero rows. `test_platform_viewer_can_read_audit_log`, `test_analyst_cannot_read_another_users_audit_log`.
 - [x] `record_audit_event` -> called with a metadata key outside the whitelist -> raises and writes nothing. `test_record_audit_event_rejects_a_non_whitelisted_metadata_key`, `test_record_audit_event_rejects_a_compound_metadata_value`.
-- [x] `.venv/bin/python -m pytest tests/phase2/product -q`, `pnpm test`, `pnpm typecheck`, `pnpm lint` -> all pass. Reconfirmed this session: 514 pytest, 254 vitest (86 contracts + 168 web), typecheck and lint clean.
+- [x] `.venv/bin/python -m pytest tests/platform/product -q`, `pnpm test`, `pnpm typecheck`, `pnpm lint` -> all pass. Reconfirmed this session: 514 pytest, 254 vitest (86 contracts + 168 web), typecheck and lint clean.
 
 ## Risk Assessment
 
@@ -160,7 +160,7 @@ per 24h quota, 5 requests per 60s rate limit.
 > in `apps/web/src/lib/server/guards.ts:68`; `QuotaState` + `quotaRemaining` /
 > `isQuotaExhausted` already live in `packages/contracts/src/agent.ts:104`;
 > `audit_log` already exists (seeded/truncated in
-> `tests/phase2/product/conftest.py:168`); migration naming is
+> `tests/platform/product/conftest.py:168`); migration naming is
 > `YYYYMMDDHHMMSS_phase2_*.sql` and **there is no `supabase/migrations/rollback/`
 > directory yet** — this phase introduces that convention.
 
@@ -176,13 +176,13 @@ per 24h quota, 5 requests per 60s rate limit.
 - **Files:** Create `supabase/migrations/20260805HHMMSS_phase2_ai_usage_audit.sql`; Create `supabase/migrations/rollback/20260805HHMMSS_phase2_ai_usage_audit_down.sql`.
 - **Spec:** `create type ai_usage_kind as enum ('QUOTA','RATE_LIMIT')`; table `ai_request_usage(user_id, kind, window_start, used default 0 check used>=0, updated_at default now(), primary key(user_id,kind,window_start))`; `consume_ai_quota(p_quota_limit int, p_quota_window interval, p_rate_limit int, p_rate_window interval)` `returns table(allowed bool, denial text, quota_used int, quota_limit int, quota_resets_at timestamptz, rate_used int, rate_limit int, rate_resets_at timestamptz)`; `record_audit_event(p_action text, p_outcome text, p_context_id text, p_metadata jsonb)` `returns uuid`. `consume_ai_quota` increments BOTH counters only when both pass; on denial increments neither; prunes rows older than two windows for the calling user in the same call. `record_audit_event` whitelists metadata keys in-function (`reason`, `quota_remaining`, `rate_remaining`, `attempt`, nothing else) and raises on unknown keys. Follow the hardening pattern of `20260804160000_phase2_function_grant_hardening.sql`: `revoke all ... from public, anon, authenticated` then `grant execute ... to authenticated` for the two RPCs only.
 - **Convention note:** this is the first rollback script in the repo; the down script drops the RPCs, table and enum in dependency order and is executed by hand against a scratch DB in T1.3 verification.
-- **Verify:** apply via the `phase2_conn` fixture; run `.venv/bin/python -m pytest tests/phase2/product -q`.
+- **Verify:** apply via the `phase2_conn` fixture; run `.venv/bin/python -m pytest tests/platform/product -q`.
 
 ### T1.3 — RLS + atomicity pytest cases (write failing first)
 
-- **Files:** Modify `tests/phase2/product/test_rbac_rls.py`.
+- **Files:** Modify `tests/platform/product/test_rbac_rls.py`.
 - **Spec:** add `ai_request_usage`, the two RPCs and `audit_log` rows to the `seeded_db` truncate list in `conftest.py`. Cases, using the existing `run_as(conn, user_id, aal, sql, params, pg_role)` helper: analyst reads own usage row; analyst selects another user's row -> zero rows; analyst direct `insert`/`update` on `ai_request_usage` -> error; `platform_viewer` reads `audit_log` -> sees rows; analyst reads another's audit rows -> zero rows; `anon` reaches neither table and neither RPC; `record_audit_event` with a non-whitelisted metadata key -> raises and writes nothing. Atomicity: open two `psycopg` connections against `phase2_conn`, call `consume_ai_quota` concurrently with one unit of quota remaining, assert exactly one `allowed = true`.
-- **Verify:** `.venv/bin/python -m pytest tests/phase2/product -q`.
+- **Verify:** `.venv/bin/python -m pytest tests/platform/product -q`.
 
 ### T1.4 — Server wrapper `apps/web/src/lib/server/ai-budget.ts` + tests
 
@@ -200,5 +200,5 @@ per 24h quota, 5 requests per 60s rate limit.
 
 ### T1.6 — Docs + full gates
 
-- **Files:** Modify `docs/phase2/security/rbac.md` (the two new RPCs, their grants and the no-direct-write rule).
-- **Verify:** `.venv/bin/python -m pytest tests/phase2/product -q && pnpm test && pnpm typecheck && pnpm lint` and, at phase end, `.venv/bin/python scripts/run_stage1_quality_gates.py`.
+- **Files:** Modify `docs/platform/security/rbac.md` (the two new RPCs, their grants and the no-direct-write rule).
+- **Verify:** `.venv/bin/python -m pytest tests/platform/product -q && pnpm test && pnpm typecheck && pnpm lint` and, at phase end, `.venv/bin/python scripts/run_stage1_quality_gates.py`.

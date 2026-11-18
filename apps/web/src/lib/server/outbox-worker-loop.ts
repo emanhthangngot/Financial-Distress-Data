@@ -2,7 +2,7 @@ import "server-only";
 
 /**
  * The pure scheduling core of the outbox worker loop, split out from
- * `scripts/phase2/outbox-worker.ts` so the backoff schedule and shutdown
+ * `scripts/platform/outbox-worker.ts` so the backoff schedule and shutdown
  * ordering are unit-testable without a real Supabase connection.
  */
 

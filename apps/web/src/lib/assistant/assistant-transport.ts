@@ -4,7 +4,7 @@ import type { AssistantContext } from "./assistant-context";
 /**
  * The boundary between the assistant UI and whatever answers it.
  *
- * Phase 2 has not shipped the agent request path yet: there is no route handler
+ * platform .as not shipped the agent request path yet: there is no route handler
  * that authorises a request, enforces the AI quota and streams from the
  * evidence plane. Rather than fake an answer, the UI talks to this interface
  * and the default implementation reports the integration as missing, with the

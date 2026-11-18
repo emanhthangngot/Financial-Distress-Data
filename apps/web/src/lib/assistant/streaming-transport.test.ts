@@ -96,6 +96,17 @@ describe("StreamingAssistantTransport", () => {
     expect(turn.nextAction).toBeNull();
   });
 
+  it("rejects an unterminated stream instead of completing a partial answer", async () => {
+    mockFetch();
+    const transport = new StreamingAssistantTransport("/api/assistant/stream");
+    const promise = transport.send(REQUEST);
+    lastFetch?.respond(streamResponse([{ type: "token", text: "Unconfirmed" }]));
+
+    const turn = await promise;
+    expect(turn.state).toBe("error");
+    expect(turn.body).not.toContain("Unconfirmed");
+  });
+
   it("accumulates citations and tool entries from typed frames", async () => {
     mockFetch();
     const transport = new StreamingAssistantTransport("/api/assistant/stream");

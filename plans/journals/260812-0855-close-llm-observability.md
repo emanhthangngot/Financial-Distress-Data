@@ -26,7 +26,7 @@ and per-MCP-tool call metrics, and per-request token/latency/PII metrics.
   agent-call, MCP-tool-call, and invocation-failure families.
 - Registered both rows, regenerated the matrix, and passed the strict two-repo
   audit at 60/60 LLM rows and 100/100 points without design-only cuts.
-- Ran Phase 1 and Phase 2 test gates successfully, then hibernated the cluster:
+- Ran platform .nd platform .est gates successfully, then hibernated the cluster:
   the evidence VM is `TERMINATED` and both node pools have zero active nodes.
 
 ## Decisions
@@ -39,7 +39,7 @@ note and is not claimed as evidence.
 
 ## Verification
 
-- Strict Phase 2 evidence audit: passed, no `--accept-design-only`.
+- Strict platform .vidence audit: passed, no `--accept-design-only`.
 - Stage 1 quality gates: `311 passed`, all four gates passed.
-- Phase 2 suite: `503 passed, 35 skipped`.
+- platform .uite: `503 passed, 35 skipped`.
 - Observability requirement tests with GitOps checkout: `6 passed`.

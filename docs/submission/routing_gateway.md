@@ -14,13 +14,13 @@ depends on post-commit source/GitOps SHA restamping.
 
 | Row | Evidence |
 |---|---|
-| Hide services behind the gateway | [LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md](../phase2/evidence/llm/LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md) |
-| Feature Web API through the gateway | [LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md](../phase2/evidence/llm/LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md) |
-| Agent-test UI through the gateway | [LLM-routing-gateway-ui-test-agent.md](../phase2/evidence/llm/LLM-routing-gateway-ui-test-agent.md) |
-| Agent-registry UI through the gateway | [LLM-routing-gateway-ui-cho-agent-registry.md](../phase2/evidence/llm/LLM-routing-gateway-ui-cho-agent-registry.md) |
-| Gateway auth (401/200) | [LLM-routing-gateway-authentication-cho-ui-test-age.md](../phase2/evidence/llm/LLM-routing-gateway-authentication-cho-ui-test-age.md) |
-| Log viewer through the gateway | [LLM-routing-gateway-service-coi-log.md](../phase2/evidence/llm/LLM-routing-gateway-service-coi-log.md) |
-| Trace viewer through the gateway | [LLM-routing-gateway-service-coi-trace.md](../phase2/evidence/llm/LLM-routing-gateway-service-coi-trace.md) |
+| Hide services behind the gateway | [LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md](../platform/evidence/llm/LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md) |
+| Feature Web API through the gateway | [LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md](../platform/evidence/llm/LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md) |
+| Agent-test UI through the gateway | [LLM-routing-gateway-ui-test-agent.md](../platform/evidence/llm/LLM-routing-gateway-ui-test-agent.md) |
+| Agent-registry UI through the gateway | [LLM-routing-gateway-ui-cho-agent-registry.md](../platform/evidence/llm/LLM-routing-gateway-ui-cho-agent-registry.md) |
+| Gateway auth (401/200) | [LLM-routing-gateway-authentication-cho-ui-test-age.md](../platform/evidence/llm/LLM-routing-gateway-authentication-cho-ui-test-age.md) |
+| Log viewer through the gateway | [LLM-routing-gateway-service-coi-log.md](../platform/evidence/llm/LLM-routing-gateway-service-coi-log.md) |
+| Trace viewer through the gateway | [LLM-routing-gateway-service-coi-trace.md](../platform/evidence/llm/LLM-routing-gateway-service-coi-trace.md) |
 
 All seven rows are captured; none is cut on this track. This page is a
 reviewer index, not the final freeze seal.
@@ -41,5 +41,5 @@ reviewer index, not the final freeze seal.
 
 ## Verification
 
-- `.venv-phase2/bin/python -m pytest tests/phase2/requirements/ -k llm -q` — 31 passed.
-- `.venv-phase2/bin/python scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --gitops-root <gitops-repo> --phase1-base <sha>` — rerun after SHA restamping; the strict final freeze gate must report zero findings without acceptance cuts.
+- `.venv-platform/bin/python -m pytest tests/platform/requirements/ -k llm -q` — 31 passed.
+- `.venv-platform/bin/python scripts/audit_phase2_evidence.py --require-executed --run-validations --track LLM --gitops-root <gitops-repo> --lakehouse-base <sha>` — rerun after SHA restamping; the strict final freeze gate must report zero findings without acceptance cuts.

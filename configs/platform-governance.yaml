@@ -1,0 +1,91 @@
+# platform .ataHub governance registry — mirrors configs/datahub/governance.yaml's
+# shape (same loader: src.governance.datahub_model.load_governance_model),
+# kept in a separate file rather than appended to the platform .ne because
+# AGENTS.md forbids editing platform .onfig for a platform .ask, and because
+# `ops` vs `ml` is already a hard schema boundary this
+# file mirrors at the lineage level.
+#
+# gold.fact_financial_statement / gold.obt_company_quarter_risk /
+# gold.fact_market_price are declared here too even though
+# configs/datahub/governance.yaml already owns two of the three names — this
+# is intentional, not duplication: they are the same physical Gold datasets,
+# read by both a platform lakehouse pipeline and a platform .ne, so both lineage graphs
+# correctly point at the same DataHub dataset URN. Caveat: emit_governance
+# (src/governance/datahub_emitter.py) stamps `custom_properties.
+# governance_run_id` on every dataset it upserts, so a platform .mit
+# overwrites the `governance_run_id` a platform .mit last wrote for these
+# three shared datasets, and vice versa — last-writer-wins on that one
+# property. The dataset schemas themselves cannot conflict (both files
+# declare the same field lists for the shared names).
+schema_version: 1
+datahub_version: 1.6.0
+environment: PROD
+platform_instance: financial-distress-local
+owner: data-platform
+datasets:
+  source.rag_corpus:
+    platform: file
+    fields: [[source_uri, string], [license, string], [access_class, string]]
+  source.generator_config:
+    platform: file
+    fields: [[schema_version, number], [seed, number]]
+  gold.fact_financial_statement:
+    platform: s3
+    fields: [[company_version_key, string], [report_period, string], [known_from_ts, time]]
+  gold.obt_company_quarter_risk:
+    platform: s3
+    fields: [[ticker, string], [report_period, string], [z_score, number]]
+  gold.fact_market_price:
+    platform: s3
+    fields: [[company_version_key, string], [trading_date, date], [known_from_ts, time]]
+  ml.rag_document:
+    platform: postgres
+    fields: [[document_hash, string], [source_uri, string], [license, string]]
+  ml.rag_chunk:
+    platform: postgres
+    fields: [[chunk_id, string], [document_hash, string], [embedding_version, string]]
+  ml.rag_quarantine:
+    platform: postgres
+    fields: [[chunk_id, string], [violation_reason, string], [quarantined_ts, time]]
+  ml.label_table:
+    platform: postgres
+    fields: [[ticker, string], [event_timestamp, time], [label, number]]
+  platform.drift_report:
+    platform: file
+    fields: [[scenario, string], [observed_direction, string], [passed, boolean]]
+  online.feast_redis_structured:
+    platform: redis
+    fields: [[ticker, string], [feature_view, string]]
+  source.kafka_price_events:
+    platform: kafka
+    fields: [[ticker, string], [price, number], [event_timestamp, time]]
+  platform.stream_features_offline:
+    platform: s3
+    fields: [[ticker, string], [last_price, number], [event_timestamp, time]]
+  online.feast_redis_stream:
+    platform: redis
+    fields: [[ticker, string], [last_price, number]]
+pipelines:
+  platform_rag_ingest:
+    inputs: [source.rag_corpus]
+    outputs: [ml.rag_document, ml.rag_chunk, ml.rag_quarantine]
+    contract_dataset: ml.rag_chunk
+  platform_label_drift_build:
+    inputs: [source.generator_config, gold.fact_financial_statement]
+    outputs: [ml.label_table, platform.drift_report]
+    contract_dataset: ml.label_table
+  platform_feature_materialize:
+    inputs:
+      - gold.fact_financial_statement
+      - gold.obt_company_quarter_risk
+      - gold.fact_market_price
+    outputs: [online.feast_redis_structured]
+    contract_dataset: online.feast_redis_structured
+  platform_stream_feature_offline:
+    inputs: [source.kafka_price_events]
+    outputs: [platform.stream_features_offline]
+    contract_dataset: platform.stream_features_offline
+  platform_stream_feature_online:
+    inputs: [source.kafka_price_events]
+    outputs: [online.feast_redis_stream]
+    contract_dataset: online.feast_redis_stream

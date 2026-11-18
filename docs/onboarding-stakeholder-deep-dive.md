@@ -204,7 +204,7 @@ thành sự thật. Với material conflict, human review vẫn là gate.
 
 #### 12H. Stakeholder signal và cách tính
 
-Đây là công thức đề xuất cho ranking/feature, không phải công thức Phase 1 đã
+Đây là công thức đề xuất cho ranking/feature, không phải công thức the platform đã
 implement:
 
 ```text

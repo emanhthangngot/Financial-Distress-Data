@@ -14,7 +14,7 @@ dependencies: [2]
 The parent phase requires axe accessibility checks and deterministic screenshot
 fixtures a reviewer can open. Today the Playwright suites assert keyboard access
 and no-horizontal-scroll but run no axe pass, and every captured frame lands in
-gitignored `apps/web/e2e/.artifacts/`, so `docs/phase2/evidence/product/` holds
+gitignored `apps/web/e2e/.artifacts/`, so `docs/platform/evidence/product/` holds
 only the three approved design references. This phase closes both, and then
 reconciles the parent phase's checklist against what now exists.
 
@@ -27,7 +27,7 @@ Functional:
 - Zero serious or critical violations; any accepted moderate violation is listed
   with its reason in the accessibility evidence document.
 - The evidence run publishes manifests for every captured frame and PNGs for the
-  rubric-named states into `docs/phase2/evidence/product/`.
+  rubric-named states into `docs/platform/evidence/product/`.
 - Each manifest records route, state, role, viewport, plane availability, data
   origin, data/model/agent version, source SHA and GitOps SHA — the fields
   `evidence-manifest.ts` already writes.
@@ -50,12 +50,12 @@ regression is legible on its own rather than buried in the evidence run, and so
 `pnpm --filter @distresslens/web e2e:a11y` is a command a reviewer can run.
 
 `scripts/phase2/publish-evidence.ts` copies from `e2e/.artifacts/evidence/` into
-`docs/phase2/evidence/product/`: every `.json` manifest, and only the PNGs whose
+`docs/platform/evidence/product/`: every `.json` manifest, and only the PNGs whose
 slug appears in an explicit allowlist of rubric-named states. The allowlist lives
 in the script, so what is committed is a reviewed decision rather than whatever
 the last run happened to produce.
 
-`docs/phase2/evidence/product/README.md` indexes the frames by route and state
+`docs/platform/evidence/product/README.md` indexes the frames by route and state
 and states plainly that fixture-backed frames are `REFERENCE_FIXTURE`, not proof
 of a live runtime — the same honesty rule the UI itself follows.
 
@@ -65,8 +65,8 @@ of a live runtime — the same honesty rule the UI itself follows.
 - Create: `apps/web/playwright.a11y.config.ts` — three viewports, both roles, plane on and off
 - Modify: `apps/web/package.json` — `@axe-core/playwright` dev dependency, `e2e:a11y` script
 - Create: `scripts/phase2/publish-evidence.ts` — manifest + allowlisted PNG publication
-- Create: `docs/phase2/evidence/product/README.md` — index, provenance rules, regeneration command
-- Create: `docs/phase2/evidence/product/accessibility.md` — axe results, accepted moderates with reasons, keyboard and reduced-motion notes
+- Create: `docs/platform/evidence/product/README.md` — index, provenance rules, regeneration command
+- Create: `docs/platform/evidence/product/accessibility.md` — axe results, accepted moderates with reasons, keyboard and reduced-motion notes
 - Modify: `.github/workflows/ci.yml` — run `e2e:a11y`
 - Modify: `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md` — tick boxes, set `status`
 - Modify: `plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` — phase 2 row status
@@ -85,15 +85,15 @@ of a live runtime — the same honesty rule the UI itself follows.
 6. Reconcile the parent phase-02 file: tick each requirement and success criterion
    that now has an artifact, and leave unticked anything that genuinely depends
    on phases 03-08, naming the dependency inline.
-7. Run every gate, including the Phase 1 gate, to prove nothing regressed.
+7. Run every gate, including the platform .ate, to prove nothing regressed.
 
 ## Success Criteria
 
 - [x] Accessibility reviewer -> runs `pnpm --filter @distresslens/web e2e:a11y` -> zero serious or critical violations across every route, role and viewport. 9/9 pass (analyst, plane on); `e2e:a11y-roles` (platform operator, plane off) also 9/9.
-- [x] Reviewer -> reads `docs/phase2/evidence/product/accessibility.md` -> finds every accepted moderate violation with a stated reason. None found this run — the table is present and empty, with the note explaining what goes there.
+- [x] Reviewer -> reads `docs/platform/evidence/product/accessibility.md` -> finds every accepted moderate violation with a stated reason. None found this run — the table is present and empty, with the note explaining what goes there.
 - [x] Keyboard user -> tabs through each route -> reaches every interactive control with a visible focus ring; the assistant traps and restores focus correctly. `e2e/a11y.spec.ts` focus-visible check; `analyst-surfaces.spec.ts` keyboard-navigation test for the assistant panel.
 - [x] User with `prefers-reduced-motion: reduce` -> loads any route -> sees no animated transform. `e2e/a11y.spec.ts` reduced-motion check.
-- [x] Reviewer -> opens `docs/phase2/evidence/product/` -> finds a manifest per captured frame and PNGs for the rubric-named states, each carrying route, state, role, viewport, plane availability and both SHAs. 30 manifests, 21 images published.
+- [x] Reviewer -> opens `docs/platform/evidence/product/` -> finds a manifest per captured frame and PNGs for the rubric-named states, each carrying route, state, role, viewport, plane availability and both SHAs. 30 manifests, 21 images published.
 - [x] Reviewer -> reads the evidence README -> can tell a fixture-backed frame from an executed-runtime frame without opening the JSON. README states the `REFERENCE_FIXTURE` rule up front.
 - [x] Maintainer -> runs `node apps/web/scripts/phase2/publish-evidence.mjs` after a fresh evidence run -> `git status` shows only intended frame changes. Script is additive-only (never deletes an unrecognized file) and prints a per-run summary; path is `.mjs` under `apps/web/scripts/phase2/`, not TypeScript at the repo root — no TS runner exists there (see phase-03's same decision for the outbox worker).
 - [x] Maintainer -> opens parent `phase-02` -> every box is either ticked with an artifact or explicitly deferred to a named later phase. All 9 requirements and 9 success criteria ticked with a named artifact; the one explicit forward-reference (GitOps promotion/rollback's actual dispatch) names the unified plan's phase-03 control repo.
@@ -110,7 +110,7 @@ of a live runtime — the same honesty rule the UI itself follows.
 > Grounded against `dev` at `e638b95`. Verified: `@axe-core/playwright` is **not**
 > yet in `apps/web/package.json`; the evidence frames land in gitignored
 > `apps/web/e2e/.artifacts/evidence/` and are captured with a manifest by
-> `e2e/evidence-manifest.ts`; `docs/phase2/evidence/product/` currently holds only
+> `e2e/evidence-manifest.ts`; `docs/platform/evidence/product/` currently holds only
 > the three `design/UI-APPROVED-*` references. Route inventory and roles come from
 > the parent phase-02 (`analyst`, `platform_operator`, `platform_viewer`).
 
@@ -129,12 +129,12 @@ of a live runtime — the same honesty rule the UI itself follows.
 ### T5.3 — Evidence publication script
 
 - **Files:** Create `scripts/phase2/publish-evidence.ts`.
-- **Spec:** copies from `apps/web/e2e/.artifacts/evidence/` into `docs/phase2/evidence/product/`: every `*.json` manifest, and only the PNGs whose slug is in an explicit in-script allowlist of rubric-named states — three approved routes x three viewports, plus `degraded`, `forbidden`, `cost-cap-denied`, `stale-fencing`, `quota-exhausted`, `streaming`. Does not delete sibling files it did not write. Prereqs: run `pnpm --filter @distresslens/web e2e` and `e2e:roles` first so `.artifacts/evidence/` is fresh.
+- **Spec:** copies from `apps/web/e2e/.artifacts/evidence/` into `docs/platform/evidence/product/`: every `*.json` manifest, and only the PNGs whose slug is in an explicit in-script allowlist of rubric-named states — three approved routes x three viewports, plus `degraded`, `forbidden`, `cost-cap-denied`, `stale-fencing`, `quota-exhausted`, `streaming`. Does not delete sibling files it did not write. Prereqs: run `pnpm --filter @distresslens/web e2e` and `e2e:roles` first so `.artifacts/evidence/` is fresh.
 - **Verify:** `node scripts/phase2/publish-evidence.ts`; then `git status` shows only intended frame changes.
 
 ### T5.4 — Evidence README + accessibility doc
 
-- **Files:** Create `docs/phase2/evidence/product/README.md`, `docs/phase2/evidence/product/accessibility.md`.
+- **Files:** Create `docs/platform/evidence/product/README.md`, `docs/platform/evidence/product/accessibility.md`.
 - **Spec:** README indexes frames by route+state, states plainly which are `REFERENCE_FIXTURE` (not proof of a live runtime), and names the regeneration command. `accessibility.md` records the axe results, every accepted moderate violation with its reason, and the keyboard/reduced-motion notes.
 - **Verify:** manual review of both docs.
 
@@ -146,4 +146,4 @@ of a live runtime — the same honesty rule the UI itself follows.
 
 ### T5.6 — Full gates including Phase 1
 
-- **Verify:** `pnpm test && pnpm typecheck && pnpm lint && pnpm --filter @distresslens/web e2e && pnpm --filter @distresslens/web e2e:roles && pnpm --filter @distresslens/web e2e:a11y` and `.venv/bin/python scripts/run_stage1_quality_gates.py` all pass, proving no Phase 1 regression.
+- **Verify:** `pnpm test && pnpm typecheck && pnpm lint && pnpm --filter @distresslens/web e2e && pnpm --filter @distresslens/web e2e:roles && pnpm --filter @distresslens/web e2e:a11y` and `.venv/bin/python scripts/run_stage1_quality_gates.py` all pass, proving no platform .egression.

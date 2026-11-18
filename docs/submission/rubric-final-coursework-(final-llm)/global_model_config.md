@@ -45,7 +45,7 @@ it references a nonexistent Ollama host and is inert. It does not affect
 references.
 
 Full evidence:
-[`LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen.md`](../../phase2/evidence/llm/LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen.md).
+[`LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen.md`](../../platform/evidence/llm/LLM-1-global-model-config-c-c-1-global-model-config-c-c-agen.md).
 
 ## Limitations
 

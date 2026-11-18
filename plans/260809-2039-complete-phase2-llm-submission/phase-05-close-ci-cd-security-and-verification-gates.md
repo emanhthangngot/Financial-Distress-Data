@@ -23,7 +23,7 @@ Rubric rows owned (23 points) — IDs and paths copied verbatim from the CSV:
 | 2 | `LLM-ci-cd-agent-k-o-d-li-u` | source `.github/workflows/phase2-ci.yaml` |
 | 2 | `LLM-ci-cd-agent-drift-detection` | source `.github/workflows/phase2-ci.yaml` |
 | 2 | `LLM-ci-cd-agent-l-m-coordinator` | source `.github/workflows/phase2-ci.yaml` |
-| 1 | `LLM-validation-verification-validation-verification` | source `tests/phase2/requirements/test_llm_ac_10_validation.py` |
+| 1 | `LLM-validation-verification-validation-verification` | source `tests/platform/requirements/test_llm_ac_10_validation.py` |
 | 2 | `LLM-validation-verification-c-s-d-ng-k-thu-t-equivalence-p` | same |
 | 2 | `LLM-validation-verification-c-s-d-ng-mutation-testing-nh-g` | same |
 | 2 | `LLM-validation-verification-idempotency-testing-s-d-ng-pro` | same |
@@ -74,7 +74,7 @@ and nothing signs today.
 
 Note the three real bugs phase-04 already fixed in that template (hardcoded
 `--base main` when the GitOps default branch is `master`; missing
-`packages: write`; startup failure) and do not reintroduce them. Phase 1 already
+`packages: write`; startup failure) and do not reintroduce them. platform .lready
 replaced the `eval` on the `test_selector` input and wired in the phase-2
 dependency manifest — without that, these four workflows would run against an
 environment that cannot import FastAPI, Feast or MCP.
@@ -88,7 +88,7 @@ latency, throughput, error rate, concurrency and test parameters in the HTML.
 Reuse the GitOps `ansible/roles/benchmark-client/files/locustfile.py`.
 
 The five verification rows all resolve to
-`tests/phase2/requirements/test_llm_ac_10_validation.py`, which is
+`tests/platform/requirements/test_llm_ac_10_validation.py`, which is
 **generator-owned**. Do not hand-edit it: add each row's behavioral assertion
 through the `behavioral_assertion` column phase 1 introduced, then regenerate.
 
@@ -106,7 +106,7 @@ the evidence must show both revisions serving at once.
 
 **Repository design** resolves to `src/llm/contracts.py`: the implemented
 classes matching their documented contracts and design patterns
-(`docs/phase2/low-level-design.md`), plus the two-repo separation.
+(`docs/platform/low-level-design.md`), plus the two-repo separation.
 
 ## Related Code Files
 
@@ -115,22 +115,22 @@ classes matching their documented contracts and design patterns
   (`phase2-rag-pipeline.yaml` already exists — wire its evidence)
 - Modify: `.github/workflows/phase2-ci.yaml` (deployable-list matrix, real
   digest key, `cosign sign`, `id-token: write`)
-- Create: `tests/phase2/verification/` — equivalence/boundary, Hypothesis
+- Create: `tests/platform/verification/` — equivalence/boundary, Hypothesis
   idempotency, fixture/mock-based Web API unit tests
 - Create: `tests/load/locustfile.py` (or reuse the GitOps one) + the generated
-  HTML under `docs/phase2/evidence/llm/`
+  HTML under `docs/platform/evidence/llm/`
 - Modify: `src/llm/contracts.py` and its implementing classes
 - Modify (GitOps): `platform/agents/warm-pool.yaml`, `platform/llm/ab-testing.yaml`
   — **placeholders today**; `apps/dev/<service>/` digest keys
-- Create: 13 evidence files under `docs/phase2/evidence/llm/`
-- Regenerate (never hand-edit): `tests/phase2/requirements/test_llm_ac_09_warmup.py`,
+- Create: 13 evidence files under `docs/platform/evidence/llm/`
+- Regenerate (never hand-edit): `tests/platform/requirements/test_llm_ac_09_warmup.py`,
   `test_llm_ac_10_validation.py`, `test_llm_ac_12_cicd.py`,
   `test_llm_ac_16_ab.py`, `test_llm_ac_18_repository.py`
 
 ## Implementation Steps
 
 1. (Cluster down) Write the equivalence/boundary, Hypothesis and fixture/mock
-   Web API tests. Reach >90% coverage on the Phase 2 LLM code; capture the
+   Web API tests. Reach >90% coverage on the platform .LM code; capture the
    report showing both the figure and the fixture/mock usage.
 2. (Cluster down) Run `mutmut` on the declared subset. **Drive it to >80%** —
    this is scored text. Record the real score and the surviving-mutant list.
@@ -156,7 +156,7 @@ classes matching their documented contracts and design patterns
 
 - [x] Developer -> merges source code for any of the four new deployables -> obtains one **signed** immutable digest and one GitOps PR whose merge visibly changes the running pod's image.
 - [x] Maintainer -> adds a hypothetical new deployable -> edits one list entry, not the workflow body.
-- [x] Test runner -> runs the Phase 2 LLM suite -> reports >90% coverage with visible fixture and mock usage on the Web API tests, plus passing equivalence/boundary and Hypothesis idempotency tests.
+- [x] Test runner -> runs the platform .LM suite -> reports >90% coverage with visible fixture and mock usage on the Web API tests, plus passing equivalence/boundary and Hypothesis idempotency tests.
 - [x] Test runner -> runs `mutmut` on the declared subset -> reports a score **above 80%**, with the surviving-mutant list recorded.
 - [x] Load tester -> runs Locust against the Web API kéo dữ liệu through the gateway -> receives an HTML report with p95 latency, throughput, error rate, concurrency and test parameters.
 - [x] Operator -> compares cold and warm agent modes -> sees improved startup and TTFT with a documented cost difference and replica spread.
@@ -172,9 +172,9 @@ revisions and both independent RWO weight clones ready on separate nodes.
 
 | Acceptance criterion | Verified state | Reconciliation |
 |---|---|---|
-| Signed digest and GitOps PR change a running pod image | 4 real CI runs (rag-pipeline, feature-agent, drift-agent, coordinator), each signed the pushed digest, opened a GitOps PR rewriting the real manifest, and was merged. `kubectl get cronjob/deployment` confirmed the pinned `image:` field changed to the new digest after Argo synced. | **Executed.** See `docs/phase2/evidence/llm/LLM-ci-cd-*.md`. |
+| Signed digest and GitOps PR change a running pod image | 4 real CI runs (rag-pipeline, feature-agent, drift-agent, coordinator), each signed the pushed digest, opened a GitOps PR rewriting the real manifest, and was merged. `kubectl get cronjob/deployment` confirmed the pinned `image:` field changed to the new digest after Argo synced. | **Executed.** See `docs/platform/evidence/llm/LLM-ci-cd-*.md`. |
 | One list entry adds a deployable | The reusable CI consumes a deployables JSON matrix; the 3 new agent workflows each add one entry. | **Executed** alongside the row above. |
-| LLM suite proves coverage, equivalence/boundary, and idempotency | Web API coverage 96.17% lines / 93.48% branches; equivalence/boundary and Hypothesis idempotency suites pass. | **Executed.** See `docs/phase2/evidence/llm/LLM-validation-verification-*.md`. |
+| LLM suite proves coverage, equivalence/boundary, and idempotency | Web API coverage 96.17% lines / 93.48% branches; equivalence/boundary and Hypothesis idempotency suites pass. | **Executed.** See `docs/platform/evidence/llm/LLM-validation-verification-*.md`. |
 | `mutmut` reports above 80% | 62 of 72 mutants killed (86.11%). | **Executed.** |
 | Locust HTML proves gateway load behavior | Ran against the live `https://distresslens.duckdns.org` gateway: 1352 requests, 0 failures, p95 140ms, p99 330ms, 15.06 req/s at 20 concurrent users. | **Executed.** Found and fixed 5 real bugs to get a live run (wrong gateway path, a Locust `catch_response` misuse that silently dropped every request from stats, a nonexistent feature name, an orphaned Ingress claiming the gateway host, and the gateway auth/TLS never having been provisioned). |
 | Warm mode improves startup and TTFT with controlled scale-down | Measured against the live `feature-agent` Deployment: `cold_start_seconds=7.732`, `warm_start_seconds=9.058`, `cold_ttft_seconds=0.743`, `warm_ttft_seconds=0.671` (median of 5). | **Executed.** The policy's declared measurement CLI never existed; wrote `scripts/run_phase5_warmup_measurement.py` to do the real measurement and pointed the policy at it. |
@@ -191,7 +191,7 @@ rows not yet in scope>"` passes.
   modules with the tightest tests, timebox the tooling shakeout on cluster-down
   time (step 2), and if the bar proves unreachable, record the real score
   honestly rather than restating the threshold as retired.
-- **Coverage >90% on brand-new Phase 2 code.** Mitigation: step 1 runs with the
+- **Coverage >90% on brand-new platform .ode.** Mitigation: step 1 runs with the
   cluster down, before the capture rush; mock the model and cluster boundaries.
 - **Rewiring the digest key touches the one CI path that already works.**
   Mitigation: prove the loop on a single service before adding the four callers;

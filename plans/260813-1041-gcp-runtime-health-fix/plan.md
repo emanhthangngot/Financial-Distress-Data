@@ -33,7 +33,7 @@ existing uncommitted operational changes.
   coordinator E2E continues to export Jaeger traces and Prometheus targets
   remain healthy.
 - Source and GitOps validation -> runs without new lint, manifest, or contract
-  failures -> live Phase 2 E2E and applicable repository tests pass.
+  failures -> live platform .2E and applicable repository tests pass.
 - Secret handling -> uses the existing SealedSecret only -> no plaintext
   Supabase values, service-role key, or credentials are added to Git.
 
@@ -42,7 +42,7 @@ existing uncommitted operational changes.
 In scope: `argocd/applications/platform-agents.yaml`, the already-dirty
 GitOps operational files (`Makefile`, `apps/dev/web/values.yaml`,
 `platform/agents/agent-sandbox.yaml`), and cleanup of the exact orphan
-`default/web` Deployment. Out of scope: Phase 1 DAGs, application API/schema
+`default/web` Deployment. Out of scope: platform .AGs, application API/schema
 changes, new cloud infrastructure, and routine credential rotation. An
 emergency Grafana Viewer token rotation was performed only to invalidate a
 diagnostic-exposed token; no plaintext credential was committed.
@@ -69,7 +69,7 @@ diagnostic-exposed token; no plaintext credential was committed.
 
 - `helm template` and Kubernetes server-side dry-run for the kagent CRDs.
 - GitOps YAML/Helm validation and `git diff --check`.
-- Source Phase 2 focused tests and web typecheck/lint/test where applicable.
+- Source platform .ocused tests and web typecheck/lint/test where applicable.
 - `scripts/run_phase2_e2e.py --json --timeout 120`.
 - ArgoCD application health, workload readiness, Prometheus targets, and
   Jaeger service/trace checks.
@@ -89,7 +89,7 @@ diagnostic-exposed token; no plaintext credential was committed.
 - SealedSecret controller -> unseals the active Grafana token -> condition
   `Synced=True`; the intermediate stale-certificate ciphertext was replaced
   through PR `#65`.
-- `scripts/run_phase2_e2e.py` after the fix -> validates full Phase 2 runtime
+- `scripts/run_phase2_e2e.py` after the fix -> validates full platform .untime
   path -> PASS `28/28`.
 - Source gate -> validates repo health -> PASS (`311` pytest, `ruff`, `black`,
   `docker compose config`, Stage 1 evidence audit).

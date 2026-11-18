@@ -10,7 +10,7 @@ AGENTS.md
 .coverage
 mutants/
 .venv/
-.venv-phase2/
+.venv-platform/
 *.pyc
 *.egg-info/
 build/

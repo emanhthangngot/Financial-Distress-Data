@@ -31,7 +31,7 @@ NodePort, no LoadBalancer of its own. `platform/ingress/routes-ui.yaml` sets
 `nginx.org/use-cluster-ip: "true"` on every mergeable-Ingress route; the F5
 NGINX Ingress Controller's `LoadBalancer` Service is the only path exposed to
 `0.0.0.0/0`. Full evidence:
-[`LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md`](../../phase2/evidence/llm/LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md).
+[`LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md`](../../platform/evidence/llm/LLM-routing-gateway-c-c-service-c-n-c-hide-ng-sau-.md).
 
 ### 2. Basic-auth challenge on every protected route
 
@@ -53,7 +53,7 @@ WWW-Authenticate: Basic realm="FSDS evidence platform"
 Credential stored as a `SealedSecret` (`gateway-basic-auth`), ciphertext
 only, never the source htpasswd line. No rate-limit is configured on these
 routes — its absence is stated honestly rather than claimed. Full evidence:
-[`LLM-routing-gateway-authentication-cho-ui-test-age.md`](../../phase2/evidence/llm/LLM-routing-gateway-authentication-cho-ui-test-age.md).
+[`LLM-routing-gateway-authentication-cho-ui-test-age.md`](../../platform/evidence/llm/LLM-routing-gateway-authentication-cho-ui-test-age.md).
 
 ## Part II — Real services through the gateway
 
@@ -70,7 +70,7 @@ renamed `feature_store.yaml` **file** instead of its **directory**, so
 `feast.FeatureStore(repo_path=...)` raised `FileNotFoundError` on every
 request and the route answered `503`. Fixed in
 `apps/dev/feature-mcp/values.yaml`, redeployed via Argo. Full evidence:
-[`LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md`](../../phase2/evidence/llm/LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md).
+[`LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md`](../../platform/evidence/llm/LLM-routing-gateway-l-m-c-i-n-y-cho-web-api-k-o-d-.md).
 
 ### 4. Log viewer — real correlated log lines
 
@@ -80,7 +80,7 @@ the nginx-ingress access log and `feature-mcp`'s uvicorn access log, both
 used `parse_to: body` but `timestamp.parse_from: attributes.time` — every log
 entry failed silently and nothing reached Loki. Fixed by correcting
 `parse_from` to `body.time`. Full evidence:
-[`LLM-routing-gateway-service-coi-log.md`](../../phase2/evidence/llm/LLM-routing-gateway-service-coi-log.md).
+[`LLM-routing-gateway-service-coi-log.md`](../../platform/evidence/llm/LLM-routing-gateway-service-coi-log.md).
 
 ### 5. Trace viewer — real span for the same request
 
@@ -90,7 +90,7 @@ across Loki, Jaeger, and Prometheus for one single request. **Real bug found
 and fixed:** the deployed `feature-mcp`/`drift-mcp` images predated the
 OpenTelemetry SDK dependency actually landing in the built layer
 (`ModuleNotFoundError`); rebuilt and redeployed both images. Full evidence:
-[`LLM-routing-gateway-service-coi-trace.md`](../../phase2/evidence/llm/LLM-routing-gateway-service-coi-trace.md).
+[`LLM-routing-gateway-service-coi-trace.md`](../../platform/evidence/llm/LLM-routing-gateway-service-coi-trace.md).
 
 ### 6. Agent registry UI — live adapter, not static markup
 
@@ -106,7 +106,7 @@ These three names match exactly the three live `agents-sandbox` Deployments
 — the page reflects live cluster state via
 `apps/web/src/lib/data/live-registry-adapter.ts`, not a hardcoded list. Full
 evidence:
-[`LLM-routing-gateway-ui-cho-agent-registry.md`](../../phase2/evidence/llm/LLM-routing-gateway-ui-cho-agent-registry.md).
+[`LLM-routing-gateway-ui-cho-agent-registry.md`](../../platform/evidence/llm/LLM-routing-gateway-ui-cho-agent-registry.md).
 
 ### 7. Agent-test UI — a real signed-in round-trip, with a disclosed defect
 
@@ -124,7 +124,7 @@ but returned an empty `answer` field — a known coordinator/drift-mcp
 round-trip defect, recorded and accepted as a named gap rather than hidden.
 The row's requirement — a routed, authenticated round-trip — is proven; the
 AI answer's correctness is not claimed. Full evidence:
-[`LLM-routing-gateway-ui-test-agent.md`](../../phase2/evidence/llm/LLM-routing-gateway-ui-test-agent.md).
+[`LLM-routing-gateway-ui-test-agent.md`](../../platform/evidence/llm/LLM-routing-gateway-ui-test-agent.md).
 
 ## Limitations
 

@@ -4,7 +4,7 @@ Status: completed (verified 2026-08-12)
 
 ## Objective
 
-Make the Phase 2 product/evidence path reproducibly runnable end to end through the existing GitOps/GKE runtime: web request → coordinator → specialist agents → MCP tools → live model gateway/inference, with readiness, drift data, and telemetry checks. Keep the Phase 1 local-first pipeline unchanged.
+Make the platform data, and telemetry checks. Keep the platform .ocal-first pipeline unchanged.
 
 ## Expected output
 
@@ -27,11 +27,11 @@ Make the Phase 2 product/evidence path reproducibly runnable end to end through 
 
 In scope: source-repo E2E orchestration and contract tests, the web assistant drift-input boundary, GitOps NetworkPolicy/readiness/warm-up integration, and docs needed to operate the path.
 
-Out of scope: replacing GitOps/GKE with a new local Docker Compose architecture, changing Phase 1 DAGs or data contracts, retraining/replacing the model, redesigning the web UI, changing Supabase authentication policy, or adding cloud infrastructure outside the existing GitOps repo.
+Out of scope: replacing GitOps/GKE with a new local Docker Compose architecture, changing platform data contracts, retraining/replacing the model, redesigning the web UI, changing Supabase authentication policy, or adding cloud infrastructure outside the existing GitOps repo.
 
 ## Non-negotiable constraints
 
-- Phase 2 is additive-only in the source repo; do not edit Phase 1 DAGs or generated `warehouse.db`, `outputs/**`, or `docs/evidence/**`.
+- platform .s additive-only in the source repo; do not edit platform .AGs or generated `warehouse.db`, `outputs/**`, or `docs/evidence/**`.
 - GitOps remains the deployment source of truth; no production-only manual patch is accepted as the implementation.
 - Do not fabricate feature or drift observations. The compatibility path must tolerate absent optional observations and only forward values supplied by the real caller/context.
 - Preserve existing public web stream/API contracts and existing coordinator specialist payload shape unless a deliberately additive field is required.
@@ -44,8 +44,8 @@ Source repository:
 
 - `apps/web/src/app/api/assistant/stream/route.ts` and its assistant context/types/tests for the additive drift observation contract.
 - `scripts/` for the E2E runner and focused runner tests.
-- `apps/web/package.json`, `apps/web/README.md`, and/or the appropriate Phase 2 docs for the operator command.
-- Existing coordinator/agent/MCP contract tests as regression surfaces; no Phase 1 pipeline modules.
+- `apps/web/package.json`, `apps/web/README.md`, and/or the appropriate platform .ocs for the operator command.
+- Existing coordinator/agent/MCP contract tests as regression surfaces; no platform .ipeline modules.
 
 GitOps repository (`/home/pearspringmind/Studying/FSDS/financial-distress-gitops`):
 
@@ -65,7 +65,7 @@ GitOps repository (`/home/pearspringmind/Studying/FSDS/financial-distress-gitops
 - `.venv/bin/python -m pytest tests -k 'assistant or phase2 or e2e'`
 - `pnpm --dir apps/web typecheck && pnpm --dir apps/web lint && pnpm --dir apps/web test`
 - GitOps manifest validation plus the new E2E command against the existing GKE context.
-- `.venv/bin/python scripts/run_stage1_quality_gates.py` only if touched shared Python contracts require the full repository gate; otherwise run the narrowest applicable Phase 2 gates and record the rationale.
+- `.venv/bin/python scripts/run_stage1_quality_gates.py` only if touched shared Python contracts require the full repository gate; otherwise run the narrowest applicable platform .ates and record the rationale.
 
 ## Risks and rollback
 
@@ -76,6 +76,6 @@ GitOps repository (`/home/pearspringmind/Studying/FSDS/financial-distress-gitops
 ## Verification result
 
 - Source and GitOps changes are implemented in the working trees; the detailed evidence is recorded in [`plans/reports/e2e-integration-260812-1742-end-to-end-verification.md`](reports/e2e-integration-260812-1742-end-to-end-verification.md).
-- The live Phase 2 request path passed against GKE: all required workloads and service endpoints were ready, the model gateway returned HTTP 200, the coordinator returned both specialists and citations, Prometheus reported five healthy targets, and Jaeger exposed spans for coordinator, feature, drift, and MCP services.
+- The live platform .equest path passed against GKE: all required workloads and service endpoints were ready, the model gateway returned HTTP 200, the coordinator returned both specialists and citations, Prometheus reported five healthy targets, and Jaeger exposed spans for coordinator, feature, drift, and MCP services.
 - The browser manual test passed on NVL using the new web/source chain: the UI displayed both tool steps and the drift report with `relative_change=0.6` and `passed=True`.
-- The remaining Argo `platform-agents` `OutOfSync/Degraded` condition is pre-existing kagent CRD synchronization failure (`agents.kagent.dev` annotation size/resource mapping errors), not a failure of the Phase 2 service path. The new OTLP policy is present in the GitOps working tree and was applied for the telemetry proof; it still needs the normal Git commit/PR/Argo sync to become durable.
+- The remaining Argo `platform-agents` `OutOfSync/Degraded` condition is pre-existing kagent CRD synchronization failure (`agents.kagent.dev` annotation size/resource mapping errors), not a failure of the platform .ervice path. The new OTLP policy is present in the GitOps working tree and was applied for the telemetry proof; it still needs the normal Git commit/PR/Argo sync to become durable.

@@ -1,10 +1,10 @@
-"""Phase 2 label table build.
+"""platform .abel table build.
 
-Wraps ``src.transforms.compute_distress_labels.compute_labels`` (Phase 1,
-read-only import — AGENTS.md forbids editing Phase 1) and reshapes its
-output to the ``ml_metadata.label_table`` contract. Registered as offline
+Wraps ``src.transforms.compute_distress_labels.compute_labels`` (platform,
+read-only import — AGENTS.md forbids editing platform) and reshapes its
+output to the ``ml.label_table`` contract. Registered as offline
 parquet + a Postgres row, never as a Feast FeatureView — see
-``plans/260802-1037-unified-phase2-ml-llm-gitops/phase-04-implementation-notes.md``,
+``plans/260802-1037-unified-platform-ml-llm-gitops/phase-04-implementation-notes.md``,
 section 5, for why: a training-time label must never be reachable through
 the online feature-serving path.
 """
@@ -45,7 +45,7 @@ def build_labels(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
-    """Upsert into ``ml_metadata.label_table``, keeping the latest
+    """Upsert into ``ml.label_table``, keeping the latest
     ``created_ts`` per (ticker, event_timestamp, label_version) — AGENTS.md
     dedupe-by-latest-created_ts rule. Lazy psycopg import per the two-venv
     rule (D4, phase-04-implementation-notes.md section 0) is the caller's
@@ -56,7 +56,7 @@ def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
         for row in rows:
             cur.execute(
                 """
-                INSERT INTO ml_metadata.label_table
+                INSERT INTO ml.label_table
                     (ticker, event_timestamp, label, label_version, created_ts,
                      training_eligible, label_source)
                 VALUES (%(ticker)s, %(event_timestamp)s, %(label)s, %(label_version)s,
@@ -66,7 +66,7 @@ def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
                     created_ts = EXCLUDED.created_ts,
                     training_eligible = EXCLUDED.training_eligible,
                     label_source = EXCLUDED.label_source
-                WHERE EXCLUDED.created_ts >= ml_metadata.label_table.created_ts
+                WHERE EXCLUDED.created_ts >= ml.label_table.created_ts
                 """,
                 row,
             )
@@ -75,12 +75,12 @@ def write_labels_postgres(rows: list[dict[str, Any]], conn: Any) -> int:
 
 
 def run_label_build(
-    generator_config_path: str | Path, profile: str = "ci", pg_dsn_env: str = "PHASE2_PG_DSN"
+    generator_config_path: str | Path, profile: str = "ci", pg_dsn_env: str = "PLATFORM_PG_DSN"
 ) -> dict[str, Any]:
     """Generate offline financial-statement rows, build labels, and persist
     to Postgres when ``pg_dsn_env`` is set (no-op write otherwise — unit
     tests never reach a real Postgres). This is the single callable
-    ``dags/phase2/phase2_label_drift_build.py``'s label step wraps."""
+    ``dags/label_drift_build.py``'s label step wraps."""
     from src.generator.config import load_generator_config
     from src.generator.offline import generate_offline_data
 
@@ -117,7 +117,7 @@ def _fail(message: str) -> None:
 def run_label_drift_build_task() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
-    dags/phase2/phase2_label_drift_build.py's only job is to point a
+    dags/label_drift_build.py's only job is to point a
     PythonOperator at this callable).
 
     Runs both drift-report generation (the evidence for the two
@@ -128,10 +128,10 @@ def run_label_drift_build_task() -> dict[str, Any]:
     its input), so the label table is never trained on synthetically
     corrupted figures. Raises (fails the task) when the drift assertion
     itself fails — AGENTS.md's critical-failure-halts-downstream rule,
-    matching scripts/run_phase2_drift_report.py's CLI exit-1 behaviour so
+    matching scripts/run_platform_drift_report.py's CLI exit-1 behaviour so
     the two entrypoints agree.
 
-    ``PHASE2_DRIFT_OUTPUT_ROOT`` is read but **not yet mounted** into the
+    ``PLATFORM_DRIFT_OUTPUT_ROOT`` is read but **not yet mounted** into the
     Airflow containers (docker-compose.yml's airflow-* services mount
     ``dags``/``src``/``configs``/``sql``/``docs``, not ``outputs``) — a
     report written here from inside a container does not survive a
@@ -141,13 +141,13 @@ def run_label_drift_build_task() -> dict[str, Any]:
 
     from src.drift.generator import run_scenario_against_generator
 
-    scenario_name = os.environ.get("PHASE2_DRIFT_SCENARIO", "financial_deterioration")
+    scenario_name = os.environ.get("PLATFORM_DRIFT_SCENARIO", "financial_deterioration")
     generator_config_path = os.environ.get(
-        "PHASE2_GENERATOR_CONFIG", "configs/generator-config.yaml"
+        "PLATFORM_GENERATOR_CONFIG", "configs/generator-config.yaml"
     )
-    drift_config_path = os.environ.get("PHASE2_DRIFT_CONFIG", "configs/drift-config.yaml")
-    profile = os.environ.get("PHASE2_GENERATOR_PROFILE", "ci")
-    output_root_env = os.environ.get("PHASE2_DRIFT_OUTPUT_ROOT")
+    drift_config_path = os.environ.get("PLATFORM_DRIFT_CONFIG", "configs/drift-config.yaml")
+    profile = os.environ.get("PLATFORM_GENERATOR_PROFILE", "ci")
+    output_root_env = os.environ.get("PLATFORM_DRIFT_OUTPUT_ROOT")
     kwargs: dict[str, Any] = {}
     if output_root_env:
         kwargs["output_root"] = Path(output_root_env)
@@ -171,17 +171,17 @@ def run_label_drift_build_task() -> dict[str, Any]:
 
     import uuid
 
-    from src.governance.phase2_lineage import (
-        audit_phase2_lineage,
-        emit_phase2_lineage_if_configured,
+    from src.governance.lineage import (
+        audit_lineage,
+        emit_lineage_if_configured,
     )
 
     return {
         "drift_report_path": str(drift_directory),
         "drift_passed": drift_report["passed"],
-        "lineage_audit": audit_phase2_lineage(pipeline_name="phase2_label_drift_build"),
-        "lineage_emit": emit_phase2_lineage_if_configured(
-            run_id=uuid.uuid4().hex, pipeline_name="phase2_label_drift_build"
+        "lineage_audit": audit_lineage(pipeline_name="platform_label_drift_build"),
+        "lineage_emit": emit_lineage_if_configured(
+            run_id=uuid.uuid4().hex, pipeline_name="platform_label_drift_build"
         ),
         **label_result,
     }

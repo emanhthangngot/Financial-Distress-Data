@@ -1,3 +1,6 @@
+import { once } from "node:events";
+import { createServer } from "node:http";
+import { promisify } from "node:util";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { decodeSseChunk, type AssistantFrame } from "@distresslens/contracts";
@@ -49,6 +52,7 @@ function harness(overrides: Partial<AssistantStreamDeps> = {}): Harness {
     readConfig: () => ({
       url: "https://infer.example.com/v1",
       token: "sk-secret",
+      model: "fixture-model",
       timeoutMs: 55_000,
       isConfigured: true,
     }),
@@ -56,7 +60,7 @@ function harness(overrides: Partial<AssistantStreamDeps> = {}): Harness {
       new Response(
         streamOf(
           [
-            JSON.stringify({ choices: [{ delta: { content: "NVL rủi ro cao" } }] }),
+            JSON.stringify({ choices: [{ delta: { content: "A measure of liquidity." } }] }),
             JSON.stringify({ choices: [{ delta: {}, finish_reason: "stop" }] }),
           ],
           (text) => `data: ${text}\n\n`,
@@ -109,6 +113,10 @@ function request(overrides: Record<string, unknown> = {}): NextRequest {
   });
 }
 
+function explanationRequest(): NextRequest {
+  return request({ question: "What is the current ratio?", context: null });
+}
+
 async function readFrames(response: Response): Promise<AssistantFrame[]> {
   const buffer = await new Response(response.body).text();
   const { frames } = decodeSseChunk(buffer);
@@ -122,6 +130,7 @@ function clearAudits(): void {
 describe("assistant stream route", () => {
   afterEach(() => {
     delete process["env"]["DISTRESSLENS_COORDINATOR_URL"];
+    delete process["env"]["DISTRESSLENS_COORDINATOR_TOKEN"];
     delete process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"];
     delete process["env"]["DISTRESSLENS_COORDINATOR_FEATURE_NAMES"];
   });
@@ -221,9 +230,9 @@ describe("assistant stream route", () => {
   it("returns a 200 eks_off stream when the inference url is unset", async () => {
     clearAudits();
     const { deps } = harness({
-      readConfig: () => ({ url: null, token: null, timeoutMs: 55_000, isConfigured: false }),
+      readConfig: () => ({ url: null, token: null, model: null, timeoutMs: 55_000, isConfigured: false }),
     });
-    const response = await handleAssistantStream(request(), deps);
+    const response = await handleAssistantStream(explanationRequest(), deps);
     expect(response.status).toBe(200);
     const frames = await readFrames(response);
     expect(frames.map((frame) => frame.type)).toEqual(["state", "done"]);
@@ -234,23 +243,80 @@ describe("assistant stream route", () => {
   it("streams translated frames and audits ALLOWED exactly once", async () => {
     clearAudits();
     const { deps, consumeCalls } = harness();
-    const response = await handleAssistantStream(request(), deps);
+    const fetchImpl = vi.fn(deps.fetchImpl);
+    const response = await handleAssistantStream(
+      request({
+        question: "What is the current ratio?",
+        context: null,
+        history: [{ role: "user", body: "Tell me the current ratio for NVL." }],
+      }),
+      { ...deps, fetchImpl },
+    );
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/event-stream");
     const frames = await readFrames(response);
     expect(frames).toEqual([
       { type: "state", state: "streaming", reason: null },
-      { type: "token", text: "NVL rủi ro cao" },
+      { type: "token", text: "A measure of liquidity." },
       { type: "done", agentVersion: null, modelVersion: null },
     ]);
     expect(consumeCalls()).toBe(1);
     expect(AUDITS).toHaveLength(1);
-    expect(AUDITS[0]).toMatchObject({ action: "ai.request", outcome: "ALLOWED", contextId: "NVL" });
+    expect(AUDITS[0]).toMatchObject({ action: "ai.request", outcome: "ALLOWED", contextId: "assistant" });
+    const body = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body));
+    expect(body.messages).toEqual([
+      expect.objectContaining({ role: "system" }),
+      { role: "user", content: "What is the current ratio?" },
+    ]);
+  });
+
+  it.each([
+    {},
+    { question: "What is NVL’s current ratio?", context: null },
+    {
+      question: "What is NVL’s current ratio?",
+      context: { scope: "portfolio", ticker: null, selectedTickers: [] },
+    },
+    { question: "What is the current ratio? Now give NVL's value.", context: null },
+  ])("does not ask the bare model for evidence without a coordinator (%j)", async (overrides) => {
+    clearAudits();
+    const fetchImpl = vi.fn();
+    const { deps } = harness({ fetchImpl });
+    const response = await handleAssistantStream(request(overrides), deps);
+
+    expect(response.status).toBe(200);
+    expect(await readFrames(response)).toEqual([
+      { type: "state", state: "eks_off", reason: null },
+      { type: "done", agentVersion: null, modelVersion: null },
+    ]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(AUDITS.map((event) => event.outcome)).toEqual(["PLANE_OFF"]);
+  });
+
+  it.each([
+    ["https://regional.example.test:wrong/v1/run", ""],
+    ["https://regional.example.test/v1/run", "invalid token"],
+    ["http://regional.example.test/v1/run", "valid-token"],
+  ])("does not fall back to inference when explicit coordinator config is invalid", async (url, token) => {
+    clearAudits();
+    process["env"]["DISTRESSLENS_COORDINATOR_URL"] = url;
+    process["env"]["DISTRESSLENS_COORDINATOR_TOKEN"] = token;
+    const fetchImpl = vi.fn();
+    const { deps } = harness({ fetchImpl });
+
+    const response = await handleAssistantStream(explanationRequest(), deps);
+
+    expect(await readFrames(response)).toContainEqual(
+      expect.objectContaining({ type: "error", code: "UPSTREAM_UNAVAILABLE" }),
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(AUDITS.map((event) => event.outcome)).toEqual(["FAILED"]);
   });
 
   it("routes a live company request through the coordinator with citations and tool status", async () => {
     clearAudits();
-    process["env"]["DISTRESSLENS_COORDINATOR_URL"] = "http://coordinator.test/v1/run";
+    process["env"]["DISTRESSLENS_COORDINATOR_URL"] = "https://coordinator.test/region/v1/run";
+    process["env"]["DISTRESSLENS_COORDINATOR_TOKEN"] = "test-coordinator-token";
     process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"] = JSON.stringify({
       name: "financial_deterioration",
       seed: 4001,
@@ -276,7 +342,7 @@ describe("assistant stream route", () => {
       ),
     );
     const { deps } = harness({
-      readConfig: () => ({ url: null, token: null, timeoutMs: 55_000, isConfigured: false }),
+      readConfig: () => ({ url: null, token: null, model: null, timeoutMs: 55_000, isConfigured: false }),
       fetchImpl,
     });
 
@@ -284,8 +350,12 @@ describe("assistant stream route", () => {
     const frames = await readFrames(response);
 
     expect(fetchImpl).toHaveBeenCalledWith(
-      "http://coordinator.test/v1/run",
-      expect.objectContaining({ method: "POST" }),
+      "https://coordinator.test/region/v1/run",
+      expect.objectContaining({
+        method: "POST",
+        redirect: "error",
+        headers: expect.objectContaining({ Authorization: "Bearer test-coordinator-token" }),
+      }),
     );
     const coordinatorRequest = JSON.parse(String(fetchImpl.mock.calls[0]?.[1]?.body));
     expect(coordinatorRequest.feature_request.feature_names).toEqual([
@@ -301,6 +371,68 @@ describe("assistant stream route", () => {
       { type: "done", agentVersion: "coordinator-hop-1", modelVersion: null },
     ]);
     expect(AUDITS.map((event) => event.outcome)).toEqual(["ALLOWED"]);
+  });
+
+  it("executes the alternate coordinator profile over HTTP at its exact path with bearer auth", async () => {
+    clearAudits();
+    const path = "/alternate/provider/v1/run";
+    const token = "test-alternate-token";
+    process["env"]["DISTRESSLENS_COORDINATOR_TOKEN"] = token;
+    process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"] = "{}";
+    const seen: [string | undefined, string | undefined, string | undefined][] = [];
+    const server = createServer((request, response) => {
+      seen.push([request.method, request.url, request.headers.authorization]);
+      response.setHeader("connection", "close");
+      if (request.method !== "POST" || request.url !== path) {
+        response.writeHead(404).end();
+      } else if (request.headers.authorization !== `Bearer ${token}`) {
+        response.writeHead(401).end();
+      } else {
+        request.resume();
+        response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+          answer: "Grounded response",
+          citations: [{ source_uri: "feature://user/NVL", label: "features" }],
+          hops_used: 1,
+        }));
+      }
+    });
+    server.listen(0, "127.0.0.1");
+    try {
+      await once(server, "listening");
+      const address = server.address();
+      if (address === null || typeof address === "string") throw new Error("no test TCP address");
+      process["env"]["DISTRESSLENS_COORDINATOR_URL"] = `http://127.0.0.1:${address.port}${path}`;
+      const { deps } = harness({ fetchImpl: fetch });
+
+      const response = await handleAssistantStream(request(), deps);
+
+      expect(await readFrames(response)).toContainEqual({ type: "token", text: "Grounded response" });
+      expect(seen).toEqual([["POST", path, `Bearer ${token}`]]);
+      expect(AUDITS.map((event) => event.outcome)).toEqual(["ALLOWED"]);
+    } finally {
+      if (server.listening) await promisify(server.close).call(server);
+    }
+  });
+
+  it("terminates and audits failure when a coordinator flushes headers but stalls the body", async () => {
+    clearAudits();
+    process["env"]["DISTRESSLENS_COORDINATOR_URL"] = "https://coordinator.test/v1/run";
+    process["env"]["DISTRESSLENS_COORDINATOR_DRIFT_SCENARIO"] = "{}";
+    const upstream = new ReadableStream<Uint8Array>();
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(new Response(upstream));
+    const { deps } = harness({
+      fetchImpl,
+      readConfig: () => ({ url: null, token: null, model: null, timeoutMs: 25, isConfigured: false }),
+    });
+
+    const response = await handleAssistantStream(request(), deps);
+
+    expect(await readFrames(response)).toEqual([
+      { type: "state", state: "streaming", reason: null },
+      { type: "state", state: "timeout", reason: null },
+    ]);
+    expect(fetchImpl.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+    expect(AUDITS.map((event) => event.outcome)).toEqual(["FAILED"]);
   });
 
   it("forwards validated numeric drift observations from the assistant context", async () => {
@@ -329,7 +461,7 @@ describe("assistant stream route", () => {
       ),
     );
     const { deps } = harness({
-      readConfig: () => ({ url: null, token: null, timeoutMs: 55_000, isConfigured: false }),
+      readConfig: () => ({ url: null, token: null, model: null, timeoutMs: 55_000, isConfigured: false }),
       fetchImpl,
     });
 
@@ -383,7 +515,7 @@ describe("assistant stream route", () => {
       ),
     );
     const { deps } = harness({
-      readConfig: () => ({ url: null, token: null, timeoutMs: 55_000, isConfigured: false }),
+      readConfig: () => ({ url: null, token: null, model: null, timeoutMs: 55_000, isConfigured: false }),
       fetchImpl,
     });
 
@@ -416,12 +548,28 @@ describe("assistant stream route", () => {
         throw new Error("upstream refused");
       },
     });
-    const response = await handleAssistantStream(request(), deps);
+    const response = await handleAssistantStream(explanationRequest(), deps);
     expect(response.status).toBe(200);
     const frames = await readFrames(response);
     const error = frames.find((frame) => frame.type === "error");
     expect(error).toMatchObject({ type: "error", code: "UPSTREAM_UNAVAILABLE" });
     expect(error?.type === "error" && error.reason).not.toContain("upstream refused");
+    expect(AUDITS.map((event) => event.outcome)).toEqual(["FAILED"]);
+  });
+
+  it("reports a premature model EOF as failure without a done frame", async () => {
+    clearAudits();
+    const { deps } = harness({
+      fetchImpl: async () => new Response('data: {"choices":[{"delta":{"content":"Partial"}}]}\n\n'),
+    });
+
+    const frames = await readFrames(await handleAssistantStream(explanationRequest(), deps));
+
+    expect(frames).toEqual([
+      { type: "state", state: "streaming", reason: null },
+      { type: "token", text: "Partial" },
+      expect.objectContaining({ type: "error", code: "UPSTREAM_UNAVAILABLE" }),
+    ]);
     expect(AUDITS.map((event) => event.outcome)).toEqual(["FAILED"]);
   });
 
@@ -431,12 +579,13 @@ describe("assistant stream route", () => {
       readConfig: () => ({
         url: "https://infer.example.com/v1",
         token: "sk-secret",
+        model: "fixture-model",
         timeoutMs: 25,
         isConfigured: true,
       }),
       fetchImpl: () => new Promise<Response>(() => {}),
     });
-    const response = await handleAssistantStream(request(), deps);
+    const response = await handleAssistantStream(explanationRequest(), deps);
     expect(response.status).toBe(200);
     const frames = await readFrames(response);
     expect(frames).toEqual([
@@ -469,7 +618,7 @@ describe("assistant stream route", () => {
   it("never leaks the upstream url or token into the response", async () => {
     clearAudits();
     const { deps } = harness();
-    const response = await handleAssistantStream(request(), deps);
+    const response = await handleAssistantStream(explanationRequest(), deps);
     const text = await new Response(response.body).text();
     expect(text).not.toContain("infer.example.com");
     expect(text).not.toContain("sk-secret");

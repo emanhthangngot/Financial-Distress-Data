@@ -20,6 +20,7 @@ const baseURL = `http://127.0.0.1:${PORT}`;
 /** Fixture identity shared by every project; roles are overridden per project. */
 const fixtureEnv = {
   DISTRESSLENS_DATA_SOURCE: "fixture",
+  DISTRESSLENS_ALLOW_LOCAL_FIXTURES: "1",
   DISTRESSLENS_FIXTURE_AAL: "aal2",
   // Fixed timezone so timestamps in screenshots are byte-stable across machines.
   TZ: "Asia/Ho_Chi_Minh",

@@ -25,7 +25,7 @@
 </div>
 <div class="mermaid">
 graph LR
-  A[ingest_bronze<br/><i>collect_companies</i><br/><i>collect_financial_statements</i><br/><i>collect_market_prices</i><br/><i>write_minio_dataset → bronze/</i><br/>Variable.get: financial_distress_bucket] --> B[validate_bronze<br/><i>build_evidence_payload</i><br/><i>assert non-empty row counts</i><br/><i>sidecar: dp1_bronze_validation.json</i><br/>BaseHook: project_metadata]
+  A[ingest_bronze<br/><i>collect_companies</i><br/><i>collect_financial_statements</i><br/><i>collect_market_prices</i><br/><i>write_minio_dataset → bronze/</i><br/>Variable.get: financial_distress_bucket] --> B[validate_bronze<br/><i>build_evidence_payload</i><br/><i>assert non-empty row counts</i><br/><i>sidecar: dp1_bronze_validation.json</i><br/>BaseHook: ops]
 
   classDef ingestStage fill:#ddf4ff,stroke:#0969da,color:#0969da
   classDef validateStage fill:#dafbe1,stroke:#1a7f37,color:#1a7f37

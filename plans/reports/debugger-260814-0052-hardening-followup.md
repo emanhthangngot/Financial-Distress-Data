@@ -27,7 +27,7 @@
 | Ruff / Black | pass; 337 files unchanged |
 | Docker Compose config | pass |
 | Stage 1 quality gate | pass |
-| Phase 2 quality gate with GitOps | 72 passed, 1 skipped; GitOps pass; kubeconform 302 resources, 190 valid, 0 invalid/errors |
+| platform .uality gate with GitOps | 72 passed, 1 skipped; GitOps pass; kubeconform 302 resources, 190 valid, 0 invalid/errors |
 | Matrix strict | pass |
 | LLM executed gate | pass |
 | Evidence/workflow/catalog focused tests | 51 passed |

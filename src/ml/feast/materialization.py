@@ -18,7 +18,7 @@ from src.ml.feast.feature_definitions import FEATURE_VIEW_TTL
 
 
 class FeastMaterializationService(FeatureMaterializationService):
-    def __init__(self, repo_path: str, pg_dsn_env: str = "PHASE2_PG_DSN") -> None:
+    def __init__(self, repo_path: str, pg_dsn_env: str = "PLATFORM_PG_DSN") -> None:
         self.repo_path = repo_path
         self.pg_dsn_env = pg_dsn_env
 
@@ -74,7 +74,7 @@ class FeastMaterializationService(FeatureMaterializationService):
 
     def record_registry_revision(self, store: Any) -> str:
         """Hashes the registry proto and records a row in
-        ``ml_metadata.feast_registry_revision`` (sql/init_ml_metadata.sql).
+        ``ml.feast_registry_revision`` (sql/init_ml_metadata.sql).
         No-ops (returns the digest without writing) when ``pg_dsn_env`` isn't
         set — unit tests exercise ``materialize_offline_to_online`` against a
         disposable local registry with no Postgres attached.
@@ -104,7 +104,7 @@ class FeastMaterializationService(FeatureMaterializationService):
 
         with psycopg.connect(dsn) as conn:
             conn.execute(
-                "INSERT INTO ml_metadata.feast_registry_revision "
+                "INSERT INTO ml.feast_registry_revision "
                 "(revision_id, project, registry_digest, feature_view_count) "
                 "VALUES (%s, %s, %s, %s) ON CONFLICT (revision_id) DO NOTHING",
                 (digest, project, digest, feature_view_count),
@@ -127,10 +127,10 @@ def _bucket() -> str:
 
 
 def record_stream_checkpoint(
-    job_name: str, last_offset: int, last_event_ts: str | None, pg_dsn_env: str = "PHASE2_PG_DSN"
+    job_name: str, last_offset: int, last_event_ts: str | None, pg_dsn_env: str = "PLATFORM_PG_DSN"
 ) -> None:
     """Shared by both stream deployables (offline_job.py, online_job.py) so
-    ``ml_metadata.stream_feature_checkpoint`` has one writer. No-ops when
+    ``ml.stream_feature_checkpoint`` has one writer. No-ops when
     ``pg_dsn_env`` isn't set (unit tests never reach a real Postgres)."""
     import os
 
@@ -141,7 +141,7 @@ def record_stream_checkpoint(
 
     with psycopg.connect(dsn) as conn:
         conn.execute(
-            "INSERT INTO ml_metadata.stream_feature_checkpoint "
+            "INSERT INTO ml.stream_feature_checkpoint "
             "(job_name, last_offset, last_event_ts) VALUES (%s, %s, %s) "
             "ON CONFLICT (job_name) DO UPDATE SET "
             "last_offset = EXCLUDED.last_offset, last_event_ts = EXCLUDED.last_event_ts, "
@@ -154,31 +154,48 @@ def record_stream_checkpoint(
 def run_materialize_task() -> dict[str, Any]:
     """Airflow entrypoint, no args: reads every setting from environment
     inside this function (never at DAG-module import time —
-    dags/phase2/phase2_feature_materialize.py's only job is to point a
-    PythonOperator at this callable). ``PHASE2_MATERIALIZE_START_TS``/
+    dags/feature_materialize.py's only job is to point a
+    PythonOperator at this callable). ``PLATFORM_MATERIALIZE_START_TS``/
     ``_END_TS`` default to the last 24h so a manual run has a sane window
     without requiring every env var to be set."""
     import os
     from datetime import UTC, datetime, timedelta
 
-    repo_path = os.environ.get("PHASE2_FEAST_REPO_PATH", "feature_repo/structured")
-    feature_view = os.environ.get("PHASE2_FEATURE_VIEW", "company_financial_features")
+    repo_path = os.environ.get("PLATFORM_FEAST_REPO_PATH", "feature_repo/structured")
+    feature_view = os.environ.get("PLATFORM_FEATURE_VIEW", "company_financial_features")
     now = datetime.now(UTC)
-    start_ts = os.environ.get("PHASE2_MATERIALIZE_START_TS", (now - timedelta(days=1)).isoformat())
-    end_ts = os.environ.get("PHASE2_MATERIALIZE_END_TS", now.isoformat())
+    start_ts = os.environ.get(
+        "PLATFORM_MATERIALIZE_START_TS", (now - timedelta(days=1)).isoformat()
+    )
+    end_ts = os.environ.get("PLATFORM_MATERIALIZE_END_TS", now.isoformat())
 
     import uuid
 
     service = FeastMaterializationService(repo_path)
     result = service.materialize_offline_to_online(feature_view, start_ts, end_ts)
 
-    from src.governance.phase2_lineage import (
-        audit_phase2_lineage,
-        emit_phase2_lineage_if_configured,
+    from src.governance.lineage import (
+        audit_lineage,
+        emit_lineage_if_configured,
     )
 
-    result["lineage_audit"] = audit_phase2_lineage(pipeline_name="phase2_feature_materialize")
-    result["lineage_emit"] = emit_phase2_lineage_if_configured(
-        run_id=uuid.uuid4().hex, pipeline_name="phase2_feature_materialize"
+    result["lineage_audit"] = audit_lineage(pipeline_name="platform_feature_materialize")
+    result["lineage_emit"] = emit_lineage_if_configured(
+        run_id=uuid.uuid4().hex, pipeline_name="platform_feature_materialize"
     )
     return result
+
+
+def validate_materialization_task(**context: Any) -> dict[str, Any]:
+    """Validate the ingest result before the DAG publishes its run."""
+    result = context["ti"].xcom_pull(task_ids="ingest_features") or {}
+    feature_view = result.get("feature_view")
+    if feature_view not in FEATURE_VIEW_TTL:
+        raise ValueError(f"unsupported materialized feature view: {feature_view!r}")
+    if not result.get("registry_revision"):
+        raise ValueError("materialization did not return a registry revision")
+    return {
+        "feature_view": feature_view,
+        "registry_revision": result["registry_revision"],
+        "validated": True,
+    }

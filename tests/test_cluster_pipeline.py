@@ -25,11 +25,11 @@ def test_gold_event_timestamp_is_written_as_timezone_aware_parquet_type() -> Non
     assert str(table.schema.field("event_timestamp").type) == "timestamp[us, tz=UTC]"
 
 
-def test_produce_gold_uses_configured_phase1_adapter_and_canonical_writer(
+def test_produce_gold_uses_configured_lakehouse_adapter_and_canonical_writer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     written: dict[str, object] = {}
-    monkeypatch.setenv("PHASE1_CLUSTER_CONFIG", "configs/cluster-collector-config.yaml")
+    monkeypatch.setenv("LAKEHOUSE_CLUSTER_CONFIG", "configs/cluster-collector-config.yaml")
     monkeypatch.setattr(
         run_cluster_pipeline,
         "write_minio_outputs",
@@ -72,7 +72,7 @@ def test_configure_s3_environment_maps_minio_without_logging_secrets(
     assert os.environ["AWS_ENDPOINT_URL"] == "http://minio.internal:9000"
     assert os.environ["AWS_ACCESS_KEY_ID"] == "access"
     assert os.environ["AWS_SECRET_ACCESS_KEY"] == "secret"
-    assert os.environ["FEAST_REDIS_HOST"] == "phase2-redis"
+    assert os.environ["FEAST_REDIS_HOST"] == "platform-redis"
     assert os.environ["FEAST_REGISTRY_PATH"].startswith("s3://financial-distress-lake/")
 
 
@@ -106,7 +106,7 @@ def test_materialize_risk_features_applies_repo_materializes_and_verifies(
 
 
 def test_cluster_image_exposes_both_runtime_commands() -> None:
-    dockerfile = Path("infra/phase1-cluster/Dockerfile.pipeline").read_text(encoding="utf-8")
+    dockerfile = Path("infra/lakehouse-cluster/Dockerfile.pipeline").read_text(encoding="utf-8")
 
     assert 'ENTRYPOINT ["python", "-m", "scripts.run_cluster_pipeline"]' in dockerfile
     assert 'CMD ["produce-gold"]' in dockerfile

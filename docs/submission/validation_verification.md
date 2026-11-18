@@ -1,7 +1,7 @@
 # Validation & Verification
 
 Row: `LLM-AC-10-VALIDATION`. 60 executable requirement contract tests
-(`tests/phase2/requirements/test_llm_ac_01..20_*.py`) — one parametrized case
+(`tests/platform/requirements/test_llm_ac_01..20_*.py`) — one parametrized case
 per rubric row, node id = exact `rubric_id`, so each row's
 `validation_command` selects exactly one case and never pytest's exit code 5.
 
@@ -13,7 +13,7 @@ per rubric row, node id = exact `rubric_id`, so each row's
 
 ## Phase 05 static CI gates
 
-Run these commands from the repository root with the Phase 2 dependencies
+Run these commands from the repository root with the the platform dependencies
 installed:
 
 ```bash
@@ -31,7 +31,7 @@ installed:
   coverage, 93.48% branch coverage, and 62 of 72 mutants killed (86.11%).
   These results are static gate verification, not a deployed-service claim.
 
-The reusable Phase 2 workflow executes both gates after its test job and
+The reusable the platform workflow executes both gates after its test job and
 before image builds.
 
 ## Evidence status

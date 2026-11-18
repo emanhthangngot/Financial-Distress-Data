@@ -57,6 +57,65 @@ def check_unique(rows: Iterable[dict[str, Any]], dataset_name: str, fields: list
     )
 
 
+def check_latest_vintage_unique(
+    rows: Iterable[dict[str, Any]],
+    dataset_name: str,
+    business_key_fields: list[str],
+    vintage_flag_field: str = "is_latest_vintage",
+) -> DQResult:
+    """AC-P2-4: exactly one row per business key has ``vintage_flag_field`` true.
+
+    A restatement fixture that keeps every vintage but forgets the ``WHERE
+    is_latest_vintage`` filter downstream fans out silently (plan Risk
+    section); this check is the runtime half of the partial-unique-index
+    invariant declared in the ERD.
+    """
+    latest_counts: dict[tuple[Any, ...], int] = {}
+    for row in rows:
+        if not row.get(vintage_flag_field):
+            continue
+        key = tuple(row.get(field) for field in business_key_fields)
+        latest_counts[key] = latest_counts.get(key, 0) + 1
+    violations = sum(1 for count in latest_counts.values() if count != 1)
+    return DQResult(
+        dataset_name,
+        "_".join(business_key_fields) + "_latest_vintage_unique",
+        "pass" if violations == 0 else "fail",
+        "critical",
+        float(violations),
+        0.0,
+        None if violations == 0 else f"{violations} business keys have != 1 latest vintage",
+    )
+
+
+def check_null_rate_ceiling(
+    rows: Iterable[dict[str, Any]],
+    dataset_name: str,
+    field: str,
+    ceiling: float = 0.05,
+) -> DQResult:
+    """F16: a nullable FK column's NULL rate must stay under ``ceiling``.
+
+    "Zero orphans" on a column that is entirely NULL passes trivially —
+    Postgres does not enforce a foreign key on NULL (MATCH SIMPLE). This
+    check makes an all-NULL or mostly-NULL column a real, visible failure
+    instead of a silently vacuous pass.
+    """
+    materialized = list(rows)
+    total = len(materialized)
+    nulls = sum(1 for row in materialized if row.get(field) is None)
+    rate = 0.0 if total == 0 else nulls / total
+    return DQResult(
+        dataset_name,
+        f"{field}_null_rate_ceiling",
+        "pass" if rate <= ceiling else "fail",
+        "critical",
+        rate,
+        ceiling,
+        None if rate <= ceiling else f"{field} null rate {rate:.2%} exceeds ceiling {ceiling:.2%}",
+    )
+
+
 def check_referential_integrity(
     fact_rows: Iterable[dict[str, Any]],
     dimension_keys: set[Any],

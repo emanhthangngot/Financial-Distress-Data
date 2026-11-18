@@ -8,14 +8,14 @@ estimate: "3-4 days"
 
 ## Context
 
-Phase 2 is explicit, but `docs/coursework.md` still describes LLM/Kubernetes/AWS as optional or excluded. This phase replaces that stale boundary with one accepted architecture and a machine-checkable, 200-point evidence contract before implementation begins.
+platform .s explicit, but `docs/coursework.md` still describes LLM/Kubernetes/AWS as optional or excluded. This phase replaces that stale boundary with one accepted architecture and a machine-checkable, 200-point evidence contract before implementation begins.
 
 Start checklist:
 
-- Active phase: explicit Phase 2 final coursework.
+- Active phase: explicit platform .inal coursework.
 - Specs read: `AGENTS.md`, `docs/spec.md`, `docs/mini_coursework.md`, `docs/coursework.md`, ML rubric CSV, LLM rubric CSV.
 - Skills: `ak:plan`, then `ak:devops`; `financial-distress-sdd` was requested by repo law but is not installed in this checkout.
-- Verification target: rubric linter returns no unmapped scored row, no unowned evidence, and no Phase 1 contract mutation.
+- Verification target: rubric linter returns no unmapped scored row, no unowned evidence, and no platform .ontract mutation.
 
 ## Requirements
 
@@ -28,14 +28,14 @@ Start checklist:
 ## Files
 
 - Modify: `docs/coursework.md`, `docs/system-architecture.md`, `README.md`.
-- Create: `docs/phase2/requirements.md`, `docs/phase2/acceptance-criteria.md`, `docs/phase2/rubric-matrix.{md,csv}`, `docs/phase2/architecture.md`, `docs/phase2/evidence-contract.md`, `docs/phase2/adr/`.
-- Create tests/scripts: `tests/phase2/test_rubric_matrix.py`, `scripts/audit_phase2_evidence.py`.
-- Do not modify Phase 1 data contracts, collectors, transforms, or evidence outputs.
+- Create: `docs/platform/requirements.md`, `docs/platform/acceptance-criteria.md`, `docs/platform/rubric-matrix.{md,csv}`, `docs/platform/architecture.md`, `docs/platform/evidence-contract.md`, `docs/platform/adr/`.
+- Create tests/scripts: `tests/platform/test_rubric_matrix.py`, `scripts/audit_phase2_evidence.py`.
+- Do not modify platform data contracts, collectors, transforms, or evidence outputs.
 
 ## Implementation Steps
 
 1. Give every non-header rubric row a semantic ID; do not rely on spreadsheet line numbers, which shift with multiline cells and headers.
-2. Rewrite `docs/coursework.md` as the accepted Phase 2 source of truth while linking to, not duplicating, Phase 1 contracts.
+2. Rewrite `docs/coursework.md` as the accepted platform .ource of truth while linking to, not duplicating, platform .ontracts.
 3. Add numbered data flows for analyst, training, inference, agent, platform operator, CI/GitOps, observability, and teardown. Diagram nodes must be deployable units.
 4. Add ADRs for two gateways, one source monorepo plus GitOps control repo, ephemeral EKS, KServe 0.18 pin, Feast stores, MLflow promotion, mixed Helm/Kustomize ownership, product-plane degradation, and active F5 NGINX OSS.
 5. Seed failing rubric-matrix tests before implementing the linter; fail on a deleted/substituted source row even if totals remain 100, altered digest, unresolved acceptance ID, missing Proof/Deliverables, synthetic artifact directory, wrong repo, or absent behavior-validation command.
@@ -49,21 +49,21 @@ Start checklist:
 ## Validation
 
 - `python scripts/audit_phase2_evidence.py --matrix-only --strict`
-- `pytest tests/phase2/test_rubric_matrix.py tests/test_stage1_quality_gates.py`
+- `pytest tests/platform/test_rubric_matrix.py tests/test_stage1_quality_gates.py`
 - Markdown link and Mermaid syntax checks.
 - Canonical source audit asserts exactly 57 ML + 60 LLM rows and 100 points per track.
 
 ## Success Criteria
 
 - [x] Coursework reviewer -> selects any scored row in either CSV -> finds an exact implementation, validation command, and planned artifact without inference.
-- [x] Phase 1 maintainer -> compares the accepted Phase 2 spec to `docs/mini_coursework.md` -> finds additive boundaries and no silent change to Phase 1 semantics.
+- [x] platform .aintainer -> compares the accepted platform .pec to `docs/mini_coursework.md` -> finds additive boundaries and no silent change to platform .emantics.
 - [x] Developer -> runs the rubric linter on a deliberately incomplete fixture -> receives a failing result naming the missing contract field.
 - [x] Auditor -> deletes one canonical rubric row and transfers its points to another -> rejects the altered matrix by source digest/count, even though the point total remains 100.
 
 ## AK Re-audit Closure (2026-08-02)
 
 - Every row resolves to a section-level WHO -> ACTION -> RESULT ID in
-  `docs/phase2/acceptance-criteria.md`; no 117-row prose duplication.
+  `docs/platform/acceptance-criteria.md`; no 117-row prose duplication.
 - `test` remains the mapping-contract test; `validation_command` is explicitly
   the future feature-specific behavior gate and must execute before Phase 8.
 - `artifact_repo` distinguishes source from GitOps, and `artifact_path` is a
@@ -85,7 +85,7 @@ Start checklist:
 ## Risks and Rollback
 
 - Risk: chasing all 200 points expands scope. Mitigation: use the cut policy in `plan.md`; never cut a scored item.
-- Rollback: revert only Phase 2 documentation/linter commits; Phase 1 runtime stays untouched.
+- Rollback: revert only platform .ocumentation/linter commits; platform .untime stays untouched.
 
 ## Validation Decisions (Session 1)
 
@@ -94,12 +94,12 @@ Start checklist:
 Locked by `/ak:plan validate` 2026-08-02 before implementation:
 
 - Semantic IDs are slugs derived from requirement text (never spreadsheet line numbers).
-- Class contracts ship as Python signature stubs in `src/ml/contracts.py` and `src/llm/contracts.py` plus `docs/phase2/low-level-design.md`.
+- Class contracts ship as Python signature stubs in `src/ml/contracts.py` and `src/llm/contracts.py` plus `docs/platform/low-level-design.md`.
 - `owner` is role-based: `ml_engineer`, `llm_engineer`, `data_engineer`, `platform_operator`.
 - Acceptance criteria are written per deliverable and per class (~20-30 total), not one per scored row.
 - Work happens on branch `codex/phase2-spec-lock` off `dev`, merged via PR.
 - `docs/coursework.md` is replaced wholesale; no archive copy kept.
-- The linter's `--matrix-only --strict` validates a planned `docs/phase2/evidence/...` path per row (file need not exist); `--require-executed` is deferred to phase-08.
+- The linter's `--matrix-only --strict` validates a planned `docs/platform/evidence/...` path per row (file need not exist); `--require-executed` is deferred to phase-08.
 
 ## Review Findings & Resolutions (Session 1 — 2026-08-02)
 
@@ -117,7 +117,7 @@ Spec-compliance review flagged 8 findings (3 P1, 3 P2, 2 P3). Resolutions:
   the exhaustive `EXPLICIT_IMPLEMENTATION` map locks each row's reviewed
   owner/repository/file and fails on any missing or divergent entry; linter
   still fails if any role owns no scored row.
-- [P2] Phase 1 no-mutation: linter now also runs `git diff --name-only` against
+- [P2] platform .o-mutation: linter now also runs `git diff --name-only` against
   the base ref (`--git-base`, default `origin/dev` since Session 2) and flags
   protected-path changes.
 - [P2] Architecture flows: rewritten with deployable-unit nodes only, every
@@ -125,14 +125,14 @@ Spec-compliance review flagged 8 findings (3 P1, 3 P2, 2 P3). Resolutions:
   + model (not the reverse).
 - [P3] Plan status aligned: phase table shows "In Review" until PR opens;
   phase file status `in_review`; PR action item remains unchecked.
-- [P3] README marks `src/drift/` and `src/agents/` as planned Phase 2 dirs,
+- [P3] README marks `src/drift/` and `src/agents/` as planned platform .irs,
   not yet existing.
 
 ## Review Findings & Resolutions (Session 2 — 2026-08-02, re-review)
 
 Re-review still blocked merge with 4 P1 + 4 P2. Resolutions:
 
-- [P1] Validation commands now run real tests: `tests/phase2/test_rubric_row_
+- [P1] Validation commands now run real tests: `tests/platform/test_rubric_row_
   contracts.py` generates one parametrized contract test per rubric row keyed
   by rubric_id, so `pytest tests/phase2 -k '<rubric_id>'` collects ≥1 test
   (previously exit 5, "no tests ran"). A collection pass asserts every id is
@@ -156,9 +156,9 @@ Re-review still blocked merge with 4 P1 + 4 P2. Resolutions:
   (admin UI, promotion bot, EventBridge Scheduler, CodeBuild) were added to
   the table.
 - [P2] Linter smoke test now requires exit 0 (was accepting exit 2/crash).
-- [P2] `tests/phase2/test_rubric_matrix.py` reformatted with black.
-- [P2] The placeholder evidence file moved out of `docs/phase2/evidence/` into
-  `tests/phase2/fixtures/ML-evidence-empty.md` (fixture mode skips the
+- [P2] `tests/platform/test_rubric_matrix.py` reformatted with black.
+- [P2] The placeholder evidence file moved out of `docs/platform/evidence/` into
+  `tests/platform/fixtures/ML-evidence-empty.md` (fixture mode skips the
   evidence-path prefix rule).
 - [P2] Class-contract tests now import `src/ml/contracts.py` and
   `src/llm/contracts.py` and verify all five classes per track, their exact
@@ -170,7 +170,7 @@ Re-review still blocked merge with 4 P1 + 4 P2. Resolutions:
   added exhaustive map-parity assertions and parametrized tests.
 - [P1] Bound every behavior-validation command to its acceptance file and exact
   rubric selector; the auditor rejects command substitution.
-- [P1] Extended the Phase 1 protected-path check to promotion mode with an
+- [P1] Extended the platform protected-path check to promotion mode with an
   immutable baseline SHA instead of a moving branch ref.
 - [P2] Promotion now verifies every evidence SHA is an existing commit and
   equals the source/GitOps checkout `HEAD`, not merely 40-hex syntax; both

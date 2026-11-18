@@ -1,56 +1,52 @@
-# Financial Distress Data + AI Engineering — Phase 2 Coursework (Accepted Source of Truth)
+# Financial Distress Data + AI Engineering — Platform Coursework
 
 ## 1. Purpose
 
-This document is the **accepted Phase 2 source of truth** for the Financial
-Distress Data + AI Engineering coursework. It supersedes the earlier vision
-draft that described Kubernetes, AWS, and LLM as "optional future
-extensions." Phase 2 is explicit, planned, and rubric-scored.
+This document records the accepted platform coursework scope. It supersedes
+the early vision draft that treated Kubernetes and LLM work as optional
+extensions; the LLM deployment is part of the coursework rubric.
 
-Phase 1 remains the verified local lakehouse foundation; its contracts are
-linked, not duplicated, here. Phase 2 builds an AI system on top of it with a
-disposable GKE evidence plane and a persistent product plane.
+For current setup, use the [operator runbook](operator-runbook.md).
+The GKE and GitOps references below describe the coursework submission,
+not a default deployment target for this source checkout.
+
+The local lakehouse is the foundation; its contracts are linked here rather
+than duplicated. The coursework adds a persistent product plane and a
+disposable GKE evidence plane without changing the lakehouse contract.
 
 > **Submission scope — 2026-08-13
-> ([ADR-010](./phase2/adr/adr-010-llm-only-scope-and-platform-simplification.md)).**
+> ([ADR-010](./platform/adr/adr-010-llm-only-scope-and-platform-simplification.md)).**
 > The coursework accepts delivery of one of the two tracks. This submission
 > delivers the **LLM track: 60 rows / 100 points**. The 57 ML rows remain in
-> `docs/phase2/rubric-matrix.csv` and in the acceptance catalog as a deferred,
-> post-deadline retrofit (`plans/260802-1037-unified-phase2-ml-llm-gitops/phase-05-deliver-ml-track.md`);
-> they are not claimed as delivered. Evidence runs on the cost-bounded GKE
-> cluster owned by the private `financial-distress-gitops` repository. The
-> runtime is live-verified and the 60 rows are logically covered; the final
-> submission freeze remains pending until the post-commit source/GitOps SHA
-> restamp and strict two-repository audit pass.
+> `docs/platform/rubric-matrix.csv` and in the acceptance catalog as a deferred,
+> post-deadline retrofit ([ML-track plan](../plans/260802-1037-unified-phase2-ml-llm-gitops/phase-05-deliver-ml-track.md));
+> they are not claimed as delivered. The recorded GKE checks and the
+> submission freeze rules are separate; see [historical evidence](operator-runbook.md#historical-phase-2-evidence).
 
 ## 2. Normative Documents
 
 | Document | Role |
 |---|---|
-| `docs/mini_coursework.md` | Phase 1 technical spec and source of truth (unchanged) |
-| `docs/01_data_generator.md` | Phase 1 data generator contract |
-| `docs/02_schema_design.md` | Phase 1 schema design contract |
-| `docs/phase2/requirements.md` | Phase 2 top-level requirements |
-| `docs/phase2/acceptance-criteria.md` | Resolvable WHO -> ACTION -> RESULT acceptance catalog |
-| `docs/phase2/rubric-matrix.csv` | Machine-readable 200-point evidence contract |
-| `docs/phase2/rubric-matrix.md` | Human-readable rubric matrix |
-| `docs/phase2/architecture.md` | Phase 2 two-plane architecture |
-| `docs/phase2/low-level-design.md` | Phase 2 class contracts |
-| `docs/phase2/evidence-contract.md` | Evidence format and linter contract |
-| `docs/phase2/product.md` | Product UI contract and the three approved visual reference IDs |
-| `docs/phase2/security/rbac.md` | Product route/action RBAC and server/RLS security boundary |
-| `docs/phase2/adr/adr-001..010-*.md` | Phase 2 architecture decision records; ADR-010 supersedes 001/003/004/007, amends 005, defers 006 |
-| `plans/260802-1037-unified-phase2-ml-llm-gitops/` | Phase 2 execution plan (phase-01..08) |
+| `docs/mini_coursework.md` | Local lakehouse technical spec |
+| `docs/01_data_generator.md` | Data generator contract |
+| `docs/architecture/data-model.md` | Lakehouse schema design contract |
+| `docs/platform/requirements.md` | Platform requirements |
+| `docs/platform/acceptance-criteria.md` | Resolvable WHO -> ACTION -> RESULT acceptance catalog |
+| `docs/platform/rubric-matrix.csv` | Machine-readable 200-point evidence contract |
+| `docs/platform/rubric-matrix.md` | Human-readable rubric matrix |
+| `docs/platform/architecture.md` | Two-plane coursework architecture |
+| `docs/platform/low-level-design.md` | Platform class contracts |
+| `docs/platform/evidence-contract.md` | Evidence format and linter contract |
+| `docs/platform/product.md` | Product UI contract and the three approved visual reference IDs |
+| `docs/platform/security/rbac.md` | Product route/action RBAC and server/RLS security boundary |
+| [Architecture decisions](platform/adr/) | The coursework-specific scope decision is ADR-010 |
+| [Execution plan](../plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md) | Coursework implementation phases |
 
 ## 3. One-Sentence Summary
 
-Phase 2 delivers a two-plane AI system: a **persistent product plane**
-(Next.js + Supabase Auth/Postgres) and a **disposable evidence plane** (GKE,
-F5 NGINX, Argo CD, agentgateway, a KServe/Knative CPU model server, agents,
-MCP tools, Feast/PGVector and the observability stack), orchestrated by GitOps
-through a separate private repository. This submission targets the 100-point
-LLM track; the ML track remains a documented retrofit. Live runtime checks have
-passed; final evidence freeze is pending SHA convergence.
+The coursework pairs a **persistent product plane** with a **disposable
+evidence plane**. See the [coursework architecture](platform/architecture.md)
+for the captured topology and the rationale for the two-plane split.
 
 ## 4. Scope
 
@@ -78,7 +74,7 @@ passed; final evidence freeze is pending SHA convergence.
   (Prometheus/Grafana/Loki/OpenTelemetry/Jaeger), and one timeboxed GCP session
   for Terraform, TLS and cost evidence.
 - **Novel ideas:** two for the LLM track, recorded before implementation, each
-  with a proof path (see `docs/phase2/novel-ideas.md`).
+  with a proof path (see `docs/platform/novel-ideas.md`).
 
 ### Deferred (not claimed in this submission)
 
@@ -86,7 +82,7 @@ passed; final evidence freeze is pending SHA convergence.
   splits, Kubeflow Pipelines/Trainer, MLflow experiment tracking and the
   promotion contract (ADR-006), KServe ML inference, Knative Eventing drift.
   Backlog and retrofit contract:
-  `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-05-deliver-ml-track.md`.
+  [ML-track plan](../plans/260802-1037-unified-phase2-ml-llm-gitops/phase-05-deliver-ml-track.md).
   The 57 ML rows stay in the rubric matrix as `design_only` rather than being
   deleted.
 
@@ -98,8 +94,7 @@ passed; final evidence freeze is pending SHA convergence.
   ML-only KServe/Knative/MLflow training or retraining path remain deferred or
   dropped per ADR-010. The submitted LLM serving path does use the restored
   KServe/Knative CPU model server through agentgateway.
-- Changes to Phase 1 pipeline semantics; Phase 1 continues to run with
-  identical outputs.
+- Changes to the local lakehouse pipeline semantics.
 - Anything not in the rubric matrix.
 
 ## 5. Design Constraints
@@ -111,20 +106,17 @@ passed; final evidence freeze is pending SHA convergence.
 - The evidence plane is disposable: no long-lived cloud credential, private
   key, real `.env`, or production Supabase credential is
   placed on it, and any token there is short-lived and revoked at session end.
-- Local-first development remains; GCP is an explicit, deliberate deployment
-  target owned by the GitOps repo, not a Phase 1 mutation.
+- Local-first development remains. GCP was selected for the coursework
+  evidence plane, not as a prerequisite or default for the source checkout.
 - One resource has one owner. Helm is the only render tool, so this holds by
   construction (ADR-007 as superseded by ADR-010).
 
-## 6. Phase 1 Relationship
+## 6. Lakehouse boundary
 
-- Phase 1 is the verified foundation: Airflow, Kafka, PySpark, MinIO,
-  PostgreSQL, DuckDB, DBeaver, and Bronze/Silver/Gold evidence.
-- Phase 2 reads Gold tables/features and writes Phase 2 evidence under
-  `docs/phase2/evidence/{ml,llm}/`, never mutating `docs/evidence/`.
-- Phase 2 code lives under `src/ml/`, `src/drift/`, `src/llm/`,
-  `src/agents/`, and `apps/`; thin Phase 2 orchestration wrappers may live in
-  `dags/phase2/` and import all business logic from those roots.
+The platform consumes lakehouse Gold outputs without changing the lakehouse
+contracts. See [repository ownership](architecture/repository-map.md) for
+source boundaries and [the evidence contract](platform/evidence-contract.md)
+for the separate coursework evidence locations.
 
 ## 7.1 Mandatory Closure Paths (LLM track)
 
@@ -147,55 +139,34 @@ passed; final evidence freeze is pending SHA convergence.
   Evidently -> Pushgateway -> threshold -> Kubeflow Pipelines API run) is
   deferred with the ML track and is not claimed in this submission.
 
-## 7.2 Current implementation and submission state
+## 7.2 Historical verification and submission state
 
-The complete product/evidence path is implemented and has been live-verified
-on the GKE evidence plane as of 2026-08-13:
+The [dated verification snapshot](platform/architecture.md#6-verification-and-residuals)
+records the GKE and product checks and remaining gaps. It is not a claim of
+current runtime health or proof of a submission freeze. See the [submission
+reviewer index](submission/README.md) for the submission checklist.
 
-- 13/13 Argo CD applications are `Synced` and `Healthy`.
-- kagent CRDs are established and 10 agents report `Ready`.
-- The feature/drift MCP path, agentgateway model route, and
-  KServe/Knative CPU model server respond through the declared boundaries.
-- The coordinator round-trip returns HTTP 200 with feature and drift
-  citations; Prometheus targets are healthy and Jaeger services are visible.
-- The product plane has authenticated analyst/report, registry, chat, and
-  evidence-session surfaces covered by product/browser checks.
+## 7.3 Coursework delivery model
 
-This is a runtime verification snapshot, not the final submission seal. The
-canonical Phase 2 evidence package represents 60/60 LLM rows and 100/100
-logical points, but source and GitOps SHA stamps must be regenerated after the
-latest commits and the strict two-repository audit must pass without an
-acceptance cut before submission.
-
-## 7. Implementation Model
-
-```text
-Phase 2 code -> source CI (test/build/scan/sign) -> immutable image digest
-  -> GitOps repo PR (desired digest) -> Argo CD reconcile -> evidence plane
-Product plane <-> Supabase <-> evidence-session worker <-> outbox <-> GKE cluster
-```
-
-Full step-by-step execution is in
-`plans/260802-1037-unified-phase2-ml-llm-gitops/plan.md` (phase-01..08).
+The historical coursework run promoted signed images through reviewed
+GitOps PRs and Argo CD, as recorded in the [CI/CD narrative](<submission/rubric-final-coursework-(final-llm)/ci_cd.md>).
+For the current source-only workflow, use the [external deployment handoff](operator-runbook.md#external-deployment-handoff).
 
 ## 8. Evidence Contract
 
-Every rubric point must be proven by evidence under
-`docs/phase2/evidence/{ml,llm}/` recording rubric_id, timestamps, source SHA,
-GitOps SHA, versions, reproduction steps, and redaction status
-(`docs/phase2/evidence-contract.md`). The linter
-(`scripts/audit_phase2_evidence.py`) enforces canonical 57+60 source coverage
-at specification time and, with `--require-executed --run-validations
---gitops-root ...`, gates both repositories at phase-08.
+See the [evidence contract](platform/evidence-contract.md) for the required
+metadata and evidence locations. The [historical audit route](operator-runbook.md#historical-phase-2-evidence)
+identifies the CLI and why the checkouts must match the capture. Do not
+regenerate canonical receipts to validate a different checkout.
 
 ## 9. Exit Criteria
 
 - The submitted LLM rows have machine-checked evidence and the final strict
   two-repository linter (`--require-executed --run-validations --track LLM`)
   passes without `--accept-design-only`; the 57 ML rows remain visibly
-  `design_only`. At this documentation refresh, this freeze criterion is
-  still pending SHA restamping.
-- Phase 1 regression suite stays green; `docs/mini_coursework.md` semantics
-  unchanged.
-- Two-plane architecture runs within the cost envelope.
-- Four novel ideas (2 ML, 2 LLM) are implemented and evidenced.
+  `design_only`. Runtime verification is not a substitute for the strict audit.
+- The lakehouse regression suite passes without changing the mini-coursework
+  contract.
+- The coursework evidence plane meets the cost envelope.
+- The two LLM novel ideas have evidence; ML novel ideas remain with the
+  deferred ML track.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from dags._stage1_dag_utils import DEFAULT_ARGS, airflow_imports
+from dags.utils.dag_utils import DEFAULT_ARGS, airflow_imports
 from src.orchestration import airflow_tasks
 
 DAG, PythonOperator = airflow_imports()

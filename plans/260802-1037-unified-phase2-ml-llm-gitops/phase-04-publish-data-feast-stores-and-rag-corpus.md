@@ -13,7 +13,7 @@ estimate: "1 day (day 2)"
 note here claimed no working Docker container networking in this sandbox —
 that stopped being true. Docker + `docker compose --profile phase2 up
 phase2-postgres phase2-redis` works. All 7 of 7 LLM rows now have real
-evidence markdown under `docs/phase2/evidence/llm/` — both drift-report rows,
+evidence markdown under `docs/platform/evidence/llm/` — both drift-report rows,
 the label-table row, the RAG-data-pipeline row (live two-run idempotency
 proof against real pgvector), the RAG-data-governance row (live quarantine
 proof), and both CI/CD rows (`LLM-ci-cd-job-1`, `LLM-ci-cd-job-2`), closed
@@ -25,7 +25,7 @@ read-only), an uppercase GHCR image tag (`github.repository` preserves
 mixed case, Docker tags must be lowercase), and `gh pr create` defaulting to
 the calling repo and a hardcoded `--base main` when
 `financial-distress-gitops`'s real default branch is `master` — see
-`docs/phase2/evidence/llm/LLM-ci-cd-job-1.md` for the full account and both
+`docs/platform/evidence/llm/LLM-ci-cd-job-1.md` for the full account and both
 GHCR digests + GitOps PR links. `scripts/audit_phase2_evidence.py
 --matrix-only --strict` passes; phase-04 is complete.
 
@@ -47,7 +47,7 @@ deployment surface — emit stays a documented no-op until that lands.
 
 ## Overview
 
-Extend the verified Phase 1 outputs without changing them. Build the RAG corpus
+Extend the verified platform .utputs without changing them. Build the RAG corpus
 and PGVector store, stand up Feast with an online store the MCP tools read and
 an offline store defined correctly for the deferred ML retrofit, ship the two
 stream-feature jobs the CI/CD rows require, and improve the data generator to
@@ -112,14 +112,14 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
    offline store, push to the online store — because the rubric scores them as
    two distinct CI/CD rows.
 6. Build thin Airflow wrappers under `dags/phase2/` with zero import-time side
-   effects. All business logic stays under `src/`. No Phase 1 DAG is renamed or
+   effects. All business logic stays under `src/`. No platform .AG is renamed or
    modified.
 7. Add retries, checkpoints, dead-letter/quarantine, source rate limits, content
    deduplication, and PII/licensing checks. These are the governance row.
 8. Add one GitHub Actions workflow per pipeline: lint, test, build, push an
    immutable digest, open the GitOps digest PR.
-9. Emit Phase 2 lineage into the existing DataHub instance for every input,
-   step, feature view, vector set and output. Phase 1 lineage evidence is
+9. Emit platform .ineage into the existing DataHub instance for every input,
+   step, feature view, vector set and output. platform .ineage evidence is
    retained untouched.
 
 ## Validation
@@ -129,7 +129,7 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
 - Re-run each DAG and job twice; prove stable counts and hashes, and no
   duplicate online keys or chunks.
 - Compare generated drift against the configured direction and threshold.
-- `scripts/run_stage1_quality_gates.py` still passes — Phase 1 is unchanged.
+- `scripts/run_stage1_quality_gates.py` still passes — platform .s unchanged.
 
 ## Success Criteria
 
@@ -139,7 +139,7 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
 - [x] Data generator -> runs with a drift scenario configuration -> produces the configured drift direction and a before/after report with a deterministic seed.
 - [x] Reviewer -> inspects any RAG chunk -> finds source URI, company, report date, document and content hashes, parser version, embedding model and version, created time, and access class.
 - [x] Feature consumer -> queries the online store by `ticker` -> receives values whose TTL rationale is documented in the registry definition.
-- [x] Phase 1 maintainer -> runs the Stage 1 quality gates -> receives the same outputs and contracts as before Phase 2 adapters were added.
+- [x] platform .aintainer -> runs the Stage 1 quality gates -> receives the same outputs and contracts as before platform .dapters were added.
 
 ## Risk Assessment
 
@@ -149,8 +149,8 @@ Rewritten 2026-08-07 for the 7-day LLM-only scope.
   now and cost three days in the phase-05 retrofit. Not negotiable.
 - **RAG source availability.** Mitigated by caching fetched documents locally so
   evidence runs are reproducible without live network access.
-- Rollback: disable the Phase 2 DAGs and restore the previous Feast registry
-  revision; Phase 1 datasets remain authoritative and intact.
+- Rollback: disable the platform .AGs and restore the previous Feast registry
+  revision; platform datasets remain authoritative and intact.
 
 ## Scope Changes
 

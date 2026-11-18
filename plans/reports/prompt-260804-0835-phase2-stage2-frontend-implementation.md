@@ -1,12 +1,12 @@
 ---
 name: phase2-stage2-frontend-implementation
-description: Implement the DistressLens Phase 2 product shell, approved UI baseline, Supabase/RLS boundary, outbox lifecycle worker and deterministic UX evidence.
+description: Implement the DistressLens platform .roduct shell, approved UI baseline, Supabase/RLS boundary, outbox lifecycle worker and deterministic UX evidence.
 ---
 
-# Phase 2 Stage 2 implementation prompt
+# platform .tage 2 implementation prompt
 
 You are the lead frontend engineer, product designer and product-plane
-integrator for the DistressLens coursework repository. Complete Phase 2 Stage
+integrator for the DistressLens coursework repository. Complete platform .tage
 2 from implementation through verification. Work in the existing repository;
 do not create a second app, a microservice-per-repo layout, or a fake demo that
 only looks complete in a screenshot.
@@ -14,13 +14,13 @@ only looks complete in a screenshot.
 ## Mission
 
 Turn the current product foundation into a working, typed, accessible
-DistressLens product shell that satisfies the Phase 2 plan and the three
+DistressLens product shell that satisfies the platform .lan and the three
 approved visual references. Finish the analyst, company/AI, agent, registry
 and admin/evidence surfaces; connect them to Supabase/RLS and the typed session
 contract; implement the durable outbox worker behavior; and leave reproducible
 Playwright evidence for every required state.
 
-Do not claim Phase 2 is complete until the Definition of Done at the end is
+Do not claim platform .s complete until the Definition of Done at the end is
 true. The current report is a gap report, not proof of completion:
 `plans/reports/review-260803-2249-phase2-status.md`.
 
@@ -31,21 +31,21 @@ Read these files before changing code:
 1. `AGENTS.md` and the repository development rules.
 2. `plans/reports/review-260803-2249-phase2-status.md`.
 3. `plans/260802-1037-unified-phase2-ml-llm-gitops/phase-02-build-product-shell-supabase-rbac-and-ux-states.md`.
-4. `docs/phase2/product.md` and `docs/phase2/security/rbac.md`.
-5. `docs/phase2/requirements.md`, `docs/phase2/evidence-contract.md` and
-   `docs/phase2/architecture.md`.
+4. `docs/platform/product.md` and `docs/platform/security/rbac.md`.
+5. `docs/platform/requirements.md`, `docs/platform/evidence-contract.md` and
+   `docs/platform/architecture.md`.
 6. `packages/contracts/src/role.ts`, `session-state.ts`,
    `session-transitions.json` and `outbox-event.ts`.
 7. Both Supabase migrations under `supabase/migrations/` and the existing
-   product/RLS tests under `tests/phase2/product/`.
+   product/RLS tests under `tests/platform/product/`.
 
 The product UI contract and the three images are the visual source of truth:
 
-![UI-APPROVED-01 analyst overview](../../docs/phase2/evidence/product/design/UI-APPROVED-01.png)
+![UI-APPROVED-01 analyst overview](../../docs/platform/evidence/product/design/UI-APPROVED-01.png)
 
-![UI-APPROVED-02 company detail and AI analysis](../../docs/phase2/evidence/product/design/UI-APPROVED-02.png)
+![UI-APPROVED-02 company detail and AI analysis](../../docs/platform/evidence/product/design/UI-APPROVED-02.png)
 
-![UI-APPROVED-03 admin GitOps operations](../../docs/phase2/evidence/product/design/UI-APPROVED-03.png)
+![UI-APPROVED-03 admin GitOps operations](../../docs/platform/evidence/product/design/UI-APPROVED-03.png)
 
 These images are the initial composition and interaction baseline. They are not
 a pixel-perfect production mandate. Improve spacing, responsive behavior,
@@ -64,7 +64,7 @@ live/cached states.
   and durable mutation path are still required.
 - The GitOps repository owns infrastructure desired state. This repository
   owns product routes, typed contracts, tests and evidence descriptions only.
-- Phase 1 code and behavior are frozen. Do not edit Phase 1 DAGs, collectors,
+- platform .ode and behavior are frozen. Do not edit platform .AGs, collectors,
   Gold semantics or `docs/evidence/**` for this task.
 
 ## Design read and aesthetic direction
@@ -84,7 +84,7 @@ Use these design dials for the dashboard/product surface:
 
 Break default-style mode collapse before choosing the direction: derive a
 repeatable seed from the request text (for example, the character count of
-`DistressLens Phase 2 Stage 2`) and use it to select one candidate from the
+`DistressLens platform .tage 2`) and use it to select one candidate from the
 frontend-design direction menu. If the seeded direction conflicts with the
 financial-operations audience or the supplied screenshots, move to the
 adjacent direction and record why. Do not silently fall back to a generic SaaS
@@ -293,10 +293,10 @@ Implement or extend only the relevant boundaries:
 - `apps/web/e2e/` Playwright tests and screenshot fixtures.
 - `packages/contracts/src/` typed view/state/event contracts.
 - `supabase/migrations/` additive schema/RLS changes with tests.
-- `docs/phase2/product.md`, `docs/phase2/security/rbac.md` and
-  `docs/phase2/evidence/product/` when implementation changes the contract.
+- `docs/platform/product.md`, `docs/platform/security/rbac.md` and
+  `docs/platform/evidence/product/` when implementation changes the contract.
 
-Do not edit Phase 1 pipeline code, generated `warehouse.db`, `outputs/**`,
+Do not edit platform .ipeline code, generated `warehouse.db`, `outputs/**`,
 `docs/evidence/**`, or GitOps desired state from this repository.
 
 ## Verification commands
@@ -310,8 +310,8 @@ pnpm --filter @distresslens/web typecheck
 pnpm --filter @distresslens/web build
 pnpm --filter @distresslens/contracts typecheck
 pnpm --filter @distresslens/contracts test
-.venv/bin/python -m pytest tests/phase2/product/test_rbac_rls.py \
-  tests/phase2/test_rubric_matrix.py tests/phase2/test_rubric_row_contracts.py
+.venv/bin/python -m pytest tests/platform/product/test_rbac_rls.py \
+  tests/platform/test_rubric_matrix.py tests/platform/test_rubric_row_contracts.py
 python scripts/audit_phase2_evidence.py --matrix-only --strict
 ak plan validate plans/260802-1037-unified-phase2-ml-llm-gitops --json
 ```
@@ -339,7 +339,7 @@ a weaker assertion.
 - [ ] Playwright screenshots/manifests contain route, state, viewport,
       provenance and redaction fields.
 - [ ] Accessibility and frontend-design self-review gates pass.
-- [ ] Verification commands pass; Phase 1 files and semantics are unchanged.
+- [ ] Verification commands pass; platform .iles and semantics are unchanged.
 - [ ] Only after all boxes pass may `phase-02...md` move from `todo` to
       `in_review` or `complete`, with reviewer evidence linked.
 

@@ -50,7 +50,7 @@ Private GitOps changes declare the deployment shape:
 
 Passed locally:
 
-- Phase 04 Python tests: `.venv-phase2/bin/python -m pytest tests/phase2/apps tests/phase2/agents tests/phase2/test_observability.py -q` — **16 passed**.
+- Phase 04 Python tests: `.venv-phase2/bin/python -m pytest tests/platform/apps tests/platform/agents tests/platform/test_observability.py -q` — **16 passed**.
 - Full web suite: `pnpm --filter @distresslens/web test` — **20 files and 176 tests passed**; package coverage was 93.62% statements and 90.38% branches.
 - Targeted web tests: 2 files, 19 tests passed with coverage disabled.
 - Web typecheck and ESLint passed.

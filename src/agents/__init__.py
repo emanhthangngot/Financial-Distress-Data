@@ -1,1 +1,1 @@
-"""Bounded Phase 2 specialist and coordinator agents."""
+"""Bounded platform .pecialist and coordinator agents."""

@@ -35,7 +35,7 @@ $ .venv/bin/python scripts/run_phase2_drift_report.py --scenario financial_deter
 
 `apply_drift` uses its own seeded `random.Random(scenario.seed)`, never the
 global RNG — verified byte-identical across two runs. Full evidence:
-[`LLM-improve-the-data-generato-simulate-data-drift.md`](../../phase2/evidence/llm/LLM-improve-the-data-generato-simulate-data-drift.md).
+[`LLM-improve-the-data-generato-simulate-data-drift.md`](../../platform/evidence/llm/LLM-improve-the-data-generato-simulate-data-drift.md).
 
 ### 2. Config-driven, not hardcoded — a second scenario proves it
 
@@ -54,7 +54,7 @@ $ .venv/bin/python scripts/run_phase2_drift_report.py --scenario market_stress
 metric, dataset (`market_prices` vs `financial_statements`), and threshold —
 purely by changing `configs/drift-config.yaml`, no code path is
 scenario-specific. Full evidence:
-[`LLM-improve-the-data-generato-using-generator-configuration.md`](../../phase2/evidence/llm/LLM-improve-the-data-generato-using-generator-configuration.md).
+[`LLM-improve-the-data-generato-using-generator-configuration.md`](../../platform/evidence/llm/LLM-improve-the-data-generato-using-generator-configuration.md).
 
 ## Part II — Label table
 
@@ -78,7 +78,7 @@ financial-sector tickers) — expected, not missing data, and correctly
 carries `training_eligible=False`. `PROXY_LABEL_NOTICE` stamps every row
 with `label_source="proxy_not_ground_truth"` — never presented as verified
 ground truth. Full evidence:
-[`LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la.md`](../../phase2/evidence/llm/LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la.md).
+[`LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la.md`](../../platform/evidence/llm/LLM-improve-the-data-generato-t-o-b-ng-label-c-2-c-t-id-v-la.md).
 
 ## Limitations
 

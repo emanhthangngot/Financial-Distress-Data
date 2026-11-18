@@ -2,24 +2,24 @@
 
 ## 0. Document Purpose
 
-This is the Phase 1 mini-coursework source of truth for the current repository state.
+This is the the platform mini-coursework source of truth for the current repository state.
 
 It is intentionally written as an as-built specification, not an aspirational roadmap. If this document says a feature is implemented, there must be code, SQL, tests, DAGs, runtime evidence, or configuration in this repository that supports that statement.
 
-Phase 1 scope remains limited to:
+the platform scope remains limited to:
 
 ```text
 01_data_generator.md
-02_schema_design.md
+architecture/data-model.md
 ```
 
-Phase 2 items such as ML training, model serving, drift monitoring, LLM assistants, managed cloud services, and Kubernetes are out of scope unless explicitly requested.
+the platform items such as ML training, model serving, drift monitoring, LLM assistants, managed cloud services, and Kubernetes are out of scope unless explicitly requested.
 
 ## 1. Current Repository Status
 
 The repository currently implements a local-first Stage 1 data engineering foundation with:
 
-- Documentation contracts in `docs/01_data_generator.md` and `docs/02_schema_design.md`.
+- Documentation contracts in `docs/01_data_generator.md` and `docs/architecture/data-model.md`.
 - Local Docker service definitions in `docker-compose.yml`.
 - Airflow DAGs in `dags/`, including the lightweight evidence DAG and the
   connected real E2E evidence DAG.
@@ -48,22 +48,22 @@ local Docker services, writes Bronze/Silver/Gold Parquet objects to MinIO,
 persists metadata and DQ rows to PostgreSQL, validates Gold views through
 DuckDB, and writes a machine-readable audit summary. Host-side evidence exports
 can be stored under `docs/evidence/` or `/tmp/...`; Airflow itself writes
-runtime artifacts to `/tmp/stage1-evidence` and MinIO to avoid bind-mounted
+runtime artifacts to `/tmp/lakehouse-evidence` and MinIO to avoid bind-mounted
 repository permission issues.
 
 ## 2. Active Phase and Boundaries
 
 ```text
-PHASE: Phase 1 mini-coursework
+PHASE: the platform mini-coursework
 SCOPE: Data collection contracts, local lakehouse schema, pipeline scaffolding, DQ, metadata, and evidence targets
 ```
 
-Allowed Phase 1 stack:
+Allowed the platform stack:
 
 - Apache Airflow in local Docker.
 - Kafka single-node KRaft in local Docker.
 - PySpark local-mode design and transform-compatible helpers.
-- PostgreSQL local Docker with schema `project_metadata`.
+- PostgreSQL local Docker with schema `ops`.
 - MinIO local S3-compatible storage with bucket `financial-distress-lake`.
 - DuckDB `httpfs` SQL for local Parquet inspection.
 - DBeaver for SQL evidence screenshots and inspection.
@@ -72,10 +72,10 @@ Allowed Phase 1 stack:
 DuckDB is used only as a local, single-node SQL inspection engine for DBeaver
 and reviewer evidence over MinIO Parquet. It is not a horizontally scalable
 serving/query layer, and the system does not depend on DuckDB for correctness.
-Authoritative governance state lives in PostgreSQL `project_metadata`, with
+Authoritative governance state lives in PostgreSQL `ops`, with
 MinIO Parquet evidence mirrors for local inspection.
 
-Not allowed in Phase 1:
+Not allowed in the platform:
 
 - AWS S3, Glue, Athena, RDS, EMR, MSK, Redshift, SageMaker.
 - Kubernetes.
@@ -131,7 +131,7 @@ The system is designed in a highly advanced "Dual-Mode Architecture" to support 
      -> MicroBatchConsumer (buffers and flushes stream events partitioned by date/hour)
      -> MinIO Bronze Storage (Parquet paths with ingest_ts and batch_id)
      -> PySpark Bronze-to-Silver Spark DataFrame jobs (windowed deduplication by created_ts)
-     -> PostgreSQL project_metadata Schema (PostgresMetadataWriter live client writes logs/DQ/failed records)
+     -> PostgreSQL ops Schema (PostgresMetadataWriter live client writes logs/DQ/failed records)
      -> PySpark Silver-to-Gold Spark jobs (partitioned Parquet fact & dimension writes using overwrite mode)
      -> MinIO Gold Storage (dimensions, financial/market/news/alert facts, distress labels, OBT, and feature tables)
      -> DuckDB local inspection engine (reads MinIO Parquet via httpfs views)
@@ -212,7 +212,7 @@ Current collectors use `VnstockFixtureAdapter`:
 - `collect_financial_statements()` returns deterministic quarterly statement rows.
 - `collect_market_prices()` returns deterministic daily market price rows.
 
-The adapter returns fields that match the Phase 1 schema contracts and supports tests without network access.
+The adapter returns fields that match the the platform schema contracts and supports tests without network access.
 
 ### 8.2 Target online adapter boundary
 
@@ -440,9 +440,9 @@ Current implementation supports:
 - `financial.alert_events`
 - `financial.news_events`
 
-Price, news, and alert events are fixture-backed in Phase 1 and are exercised
+Price, news, and alert events are fixture-backed in the platform and are exercised
 through the local Kafka broker in the real E2E evidence DAG. Live market/news
-source adapters remain out of scope for Phase 1.
+source adapters remain out of scope for the platform.
 
 Required record fields from `StreamEvent.as_record()`:
 
@@ -562,7 +562,7 @@ valid_to_ts
 is_current
 ```
 
-Facts currently store `company_key` and `date_key` only. They do not store `company_version_key`. Historical joins resolve the correct dimension version through the temporal range policy already documented in `docs/02_schema_design.md`:
+Facts currently store `company_key` and `date_key` only. They do not store `company_version_key`. Historical joins resolve the correct dimension version through the temporal range policy already documented in `docs/architecture/data-model.md`:
 
 ```text
 dim_company.company_key = fact.company_key
@@ -710,7 +710,7 @@ The Python DQ helpers return result objects. `DQRunner` executes those checks,
 persists results through `PostgresMetadataWriter.log_dq_result()`, and raises
 `CriticalDQFailure` after critical failures are written. Runtime E2E checks read
 actual Silver/Gold Parquet rows from MinIO and persist DQ, freshness, and
-failure-probe evidence to `project_metadata`.
+failure-probe evidence to `ops`.
 
 ## 16. Metadata Contract
 
@@ -734,7 +734,7 @@ In-memory helper lists:
 PostgreSQL schema:
 
 ```text
-project_metadata
+ops
 ```
 
 PostgreSQL tables defined in SQL:
@@ -751,7 +751,7 @@ PostgreSQL tables defined in SQL:
 Acceptance criteria:
 
 ```text
-Metadata SQL -> runs against local PostgreSQL -> creates project_metadata schema and Phase 1 metadata tables.
+Metadata SQL -> runs against local PostgreSQL -> creates ops schema and the platform metadata tables.
 Metadata writer -> logs collector run -> appends run record with run_id, dag_id, task_id, dataset_name, status, and row counts.
 Metadata writer -> logs failed record -> appends record_id, dataset_name, failure_reason, raw_payload, and created_at.
 Metadata writer -> logs source request -> appends source system, endpoint, status, retry count, and payload hash evidence.
@@ -764,7 +764,7 @@ Runtime note:
 `MetadataWriter` remains an in-memory test/smoke helper. `PostgresMetadataWriter` is the runtime PostgreSQL client for local evidence jobs.
 Airflow smoke tasks choose `PostgresMetadataWriter` when `PROJECT_METADATA_DSN` is set and otherwise keep the in-memory helper for local unit tests.
 The real E2E metadata task writes run logs, DQ results, freshness, backfill,
-source request, and collector checkpoint evidence to `project_metadata`.
+source request, and collector checkpoint evidence to `ops`.
 
 ## 17. DuckDB and DBeaver Contract
 
@@ -805,7 +805,7 @@ Acceptance criteria:
 ```text
 DuckDB catalog helper -> receives endpoint and credentials -> returns httpfs setup SQL for local MinIO.
 DuckDB catalog helper -> receives view name and Parquet path -> returns CREATE OR REPLACE VIEW SQL.
-DBeaver user -> connects to DuckDB/PostgreSQL -> can inspect Gold views and project_metadata tables after runtime evidence is generated.
+DBeaver user -> connects to DuckDB/PostgreSQL -> can inspect Gold views and ops tables after runtime evidence is generated.
 ```
 
 ## 18. Airflow DAG Contract
@@ -826,7 +826,7 @@ Current behavior:
 - DAGs are import-safe when Airflow is not installed.
 - DAGs use `PythonOperator` if Airflow imports are available.
 - DAG tasks call fixture-backed collectors or smoke helper functions.
-- `stage1_real_e2e_pipeline` executes the Phase 1 local runtime path: fixture
+- `stage1_real_e2e_pipeline` executes the the platform local runtime path: fixture
   Bronze materialization, Kafka produce/consume, Spark Bronze/Silver/Gold,
   DQ gate, PostgreSQL metadata writes, DuckDB validation, and MinIO evidence
   publishing.
@@ -938,7 +938,7 @@ Expected evidence artifacts:
 
 - `scripts/run_stage1_quality_gates.py` output.
 - `scripts/check_stage1_services.py` output after the local stack starts.
-- PostgreSQL table screenshots or query exports for `project_metadata`.
+- PostgreSQL table screenshots or query exports for `ops`.
 - MinIO bucket screenshots showing Bronze/Silver/Gold paths after data is written.
 - DuckDB SQL query outputs against Gold views.
 - DBeaver screenshots for PostgreSQL metadata and DuckDB views.
@@ -966,18 +966,18 @@ implemented and exercised:
     orchestration, storage, DQ, metadata, and queryability; it does not prove
     high-throughput or enterprise-scale performance.
 * **Enterprise Data Platform Gap**:
-  - Phase 1 uses raw Parquet folders rather than Iceberg/Delta/Hudi.
+  - the platform uses raw Parquet folders rather than Iceberg/Delta/Hudi.
   - Kafka contracts are implemented in Python, not in an external schema registry.
   - Lineage is limited to run logs, DQ rows, freshness, backfill metadata, and
     evidence artifacts; there is no OpenLineage/DataHub/Marquez-style platform.
   - Observability is based on logs, query exports, and audit JSON rather than
     metrics dashboards, traces, and alerting.
   - Secrets/RBAC remain local-development defaults.
-* **Phase 2 Gap**:
+* **the platform Gap**:
   - Drift scenarios, ML training, model serving, model monitoring, and LLM
-    functionality remain out of scope for Phase 1.
+    functionality remain out of scope for the platform.
 
-Phase 1 should be described as a production-inspired local-first lakehouse
+the platform should be described as a production-inspired local-first lakehouse
 foundation with runtime evidence, not as enterprise-ready production.
 
 ## 23. Evidence Run Order
@@ -997,7 +997,7 @@ Recommended evidence refresh steps:
 8. Run `scripts/audit_stage1_evidence.py docs/evidence --check` after copying
    the export artifacts into the submission evidence package.
 9. Run `scripts/stage1_readiness_report.py --json --output /tmp/stage1_readiness_report.json`
-   for the final reviewer-facing Phase 1 readiness summary.
+   for the final reviewer-facing the platform readiness summary.
 10. Capture optional DBeaver screenshots for PostgreSQL metadata and DuckDB views.
 11. Keep evidence claims tied only to artifacts that were produced by an actual
    local run.
@@ -1009,18 +1009,18 @@ Future engineer -> reads mini_coursework.md -> understands the exact current Sta
 Future engineer -> follows repository layout -> finds every referenced module, DAG, SQL file, config file, and test file.
 Future engineer -> runs listed verification commands -> can validate the current code contracts.
 Coursework reviewer -> inspects documentation -> can distinguish implemented code from remaining runtime evidence work.
-Coding agent -> starts new Phase 1 task -> preserves local-first boundaries and does not introduce cloud-only services.
+Coding agent -> starts new the platform task -> preserves local-first boundaries and does not introduce cloud-only services.
 ```
 
-## 25. Phase 2 Boundary
+## 25. the platform Boundary
 
-Phase 2 must remain separate from the current Phase 1 pipeline foundation.
+the platform must remain separate from the current the platform pipeline foundation.
 
-If Phase 2 is explicitly requested later:
+If the platform is explicitly requested later:
 
 - ML code belongs under `src/ml/`.
 - Drift code belongs under `src/drift/`.
-- ML metadata belongs under `ml_metadata`.
-- Phase 2 must not silently change Phase 1 collectors, schema contracts, DQ rules, or Gold output semantics.
+- ML metadata belongs under `ml`.
+- the platform must not silently change the platform collectors, schema contracts, DQ rules, or Gold output semantics.
 
 Until then, this repository should continue to treat Stage 1 as a local-first data engineering coursework platform.

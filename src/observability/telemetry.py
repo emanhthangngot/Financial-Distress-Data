@@ -1,4 +1,4 @@
-"""Small, safe telemetry layer shared by the Phase 2 HTTP, MCP and agents.
+"""Small, safe telemetry layer shared by the platform .TTP, MCP and agents.
 
 The module deliberately does not configure exporters, open sockets, or create
 network clients at import time.  Prometheus and OpenTelemetry are optional:
@@ -283,7 +283,7 @@ def trace_span(
 
 
 _current_telemetry: ContextVar[Telemetry | NoopTelemetry | None] = ContextVar(
-    "phase2_telemetry", default=None
+    "platform_telemetry", default=None
 )
 
 

@@ -1,7 +1,7 @@
 ---
 title: "Full system and browser QA"
 date: 2026-08-13
-scope: "Phase 1, Phase 2 LLM track, web UI, live service path"
+scope: "Phase 1, platform .LM track, web UI, live service path"
 status: "PASS; UI FINDING RESOLVED IN PR #75"
 ---
 
@@ -12,13 +12,13 @@ status: "PASS; UI FINDING RESOLVED IN PR #75"
 | Layer | Result |
 |---|---|
 | Stage 1 Python gate | **311 passed**; Ruff, Black, Compose config, evidence audit passed |
-| Phase 2 Python suite | **510 passed, 35 skipped**; skips are dependency/infra-marked |
+| platform .ython suite | **510 passed, 35 skipped**; skips are dependency/infra-marked |
 | Web Vitest | **183 passed**; 92.91% statements, 90.10% branches, 90.99% functions |
 | `@distresslens/contracts` | **86 passed**; 100% statements, 97.7% branches, 100% functions |
 | Web typecheck/lint/build | **PASS** |
 | Playwright fixture + role + assistant + a11y | **102 passed** |
 | Playwright live Supabase smoke | **3 passed** |
-| Live Phase 2 service runner | **PASS** |
+| Live platform .ervice runner | **PASS** |
 | LLM evidence matrix audit | **PASS** (non-promotion mode) |
 
 ## Playwright/UI Results

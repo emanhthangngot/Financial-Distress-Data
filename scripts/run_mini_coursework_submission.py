@@ -39,7 +39,7 @@ PROOFS = (
     Proof("documents/flink.md", "document", "docs/flink-stream-processing.md"),
     Proof("documents/orchestration.md", "document", "docs/data-pipeline-orchestration.md"),
     Proof("documents/governance.md", "document", "docs/data-governance.md"),
-    Proof("documents/schema.md", "document", "docs/schema-design.md"),
+    Proof("documents/schema.md", "document", "docs/architecture/data-model.md"),
     Proof("documents/docker.md", "document", "docs/docker-optimization.md"),
     Proof("documents/evidence-manifest.md", "document", "docs/novel-idea-evidence-manifest.md"),
     Proof("documents/pit-leakage.md", "document", "docs/novel-idea-pit-leakage-guard.md"),

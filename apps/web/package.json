@@ -15,12 +15,12 @@
     "e2e:assistant-quota": "playwright test --config playwright.assistant-quota.config.ts",
     "e2e:assistant-plane-off": "playwright test --config playwright.assistant-plane-off.config.ts",
     "e2e:live": "playwright test --config playwright.live.config.ts",
-    "outbox:worker": "tsx --conditions=react-server scripts/phase2/outbox-worker.ts",
+    "outbox:worker": "tsx --conditions=react-server scripts/platform/outbox-worker.ts",
     "seed:demo-accounts": "tsx --conditions=react-server scripts/seed-demo-accounts.ts",
     "e2e:a11y": "playwright test --config playwright.a11y.config.ts",
     "e2e:a11y-roles": "playwright test --config playwright.a11y-roles.config.ts",
     "e2e:a11y-guest": "playwright test --config playwright.a11y-guest.config.ts",
-    "publish:evidence": "node scripts/phase2/publish-evidence.mjs"
+    "publish:evidence": "node scripts/platform/publish-evidence.mjs"
   },
   "dependencies": {
     "@distresslens/contracts": "workspace:*",
