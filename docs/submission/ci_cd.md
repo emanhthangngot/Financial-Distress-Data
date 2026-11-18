@@ -3,7 +3,7 @@
 Historical evidence for `LLM-AC-12-CICD`: the captured workflow tested, signed,
 and pushed an image, then opened a GitOps PR for Argo CD to reconcile. See the
 [reusable workflow executed by RAG run 31405317841](https://github.com/emanhthangngot/Financial-Distress-Data/blob/41940f6c1ed1fa16a80ef886b95302e6c53d8239/.github/workflows/phase2-ci.yaml)
-and the [run attribution note](./rubric-final-coursework-(final-llm)/ci_cd.md#rag-run-attribution)
+and the [run attribution note](<./rubric-final-coursework-(final-llm)/ci_cd.md#rag-run-attribution>)
 for that historical deployment path. [Current source CI](../../.github/workflows/phase2-ci.yaml)
 publishes signed images without deploying them.
 
